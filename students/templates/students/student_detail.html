@@ -1,0 +1,468 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% block title %}
+	<title>Student Details</title>
+    {% endblock title %}
+	
+	<!-- FAVICONS ICON -->
+    {% block favicon %}
+	<link rel="shortcut icon" type="image/png" href="images/favicon.png" />
+	<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+	<link href="{% static 'pages/vendor/lightgallery/css/lightgallery.min.css' %}" rel="stylesheet">
+    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+    {% endblock %}
+
+</head>
+
+<body>
+
+    <!--*******************
+        Preloader start
+    ********************-->
+   <div id="preloader">
+		<div class="lds-ripple">
+			<div></div>
+			<div></div>
+		</div>
+    </div>
+    <!--*******************
+        Preloader end
+    ********************-->
+
+
+    <!--**********************************
+        Main wrapper start
+    ***********************************-->
+    <div id="main-wrapper">
+
+        <!--**********************************
+            Nav header start
+        ***********************************-->
+       
+        <!--**********************************
+            Nav header end
+        ***********************************-->
+		
+		<!--**********************************
+            Chat box start
+        ***********************************-->
+		
+		<!--**********************************
+            Chat box End
+        ***********************************-->
+				
+        <!--**********************************
+            Header start
+        ***********************************-->
+                            
+        <!--**********************************
+            Header end ti-comment-alt
+        ***********************************-->
+
+        <!--**********************************
+            Sidebar start
+        ***********************************-->
+       
+        <!--**********************************
+            Sidebar end
+        ***********************************-->
+
+        <!--**********************************
+            Content body start
+        ***********************************-->
+        {% block content_body %}
+        <div class="content-body">
+            <div class="container-fluid">
+				
+				
+				<div class="row page-titles">
+					<ol class="breadcrumb">
+						<li class="breadcrumb-item active"><a href="javascript:void(0)">Profile</a></li>
+						<li class="breadcrumb-item"><a href="javascript:void(0)">Detail</a></li>
+					</ol>
+                </div>
+                <!-- row -->
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="profile card card-body px-3 pt-3 pb-0">
+                            <div class="profile-head">
+                                <div class="photo-content">
+                                    <div class="cover-photo rounded"></div>
+                                </div>
+                                <div class="profile-info">
+									<div class="profile-photo">
+										<img src="{{user.profile.image.url}}" class="img-fluid rounded-circle" alt="">
+									</div>
+									<div class="profile-details">
+										<div class="profile-name px-3 pt-2">
+											<h4 class="text-primary mb-0">{{ student.first_name }} {{ student.middle_name }} {{ student.last_name }} </h4>
+											<p>Full Name</p>
+										</div>
+										<div class="profile-email px-2 pt-2">
+											<h4 class="text-muted mb-0">{{ student.standard}}</h4>
+											<p>Current Class</p>
+										</div>
+										<div class="dropdown ms-auto">
+											<a href="#" class="btn btn-primary light sharp" data-bs-toggle="dropdown" aria-expanded="true"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="18px" height="18px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg></a>
+											<ul class="dropdown-menu dropdown-menu-end">
+												<li class="dropdown-item"><i class="fa fa-user-circle text-primary me-2"></i> View profile</li>
+												<li class="dropdown-item"><i class="fa fa-users text-primary me-2"></i> Add to </li>
+																								
+											</ul>
+										</div>
+									</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xl-4">
+						<div class="row">
+							<div class="col-xl-12">
+								<div class="card">
+									<div class="card-body">
+										<div class="profile-statistics">
+											<div class="text-center">
+												<div class="row">
+                                                    <div>
+                                                       <h4>Student's Status : <span style="color:brown; font-size: 25px;">{{student.student_status |capfirst}}</span></h4>
+                                                    </div>                                                               
+												
+												</div>
+												<div class="mt-4">
+													<a href="{% url 'students:student-update' student.USN %}" class="btn btn-primary mb-1 me-1">Update Profile</a> 
+													<!-- <a href="javascript:void(0);" class="btn btn-primary mb-1" data-bs-toggle="modal" data-bs-target="#sendMessageModal">School Bus</a> -->
+												</div>
+											</div>
+											<!-- Modal -->
+											<div class="modal fade" id="sendMessageModal">
+												<div class="modal-dialog modal-dialog-centered" role="document">
+													<div class="modal-content">
+														<div class="modal-header">
+															<h5 class="modal-title">School Bus Details</h5>
+															<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+														</div>
+														<div class="modal-body">
+															<form class="comment-form">
+																<div class="row"> 
+																	<div class="col-lg-6">
+																		<div class="mb-3">
+																			<label class="text-black font-w600 form-label">Route Name <span class="required">*</span></label>
+																			<!-- <input type="text" class="form-control" value="Author" name="Author" placeholder="Author"> -->
+																		</div>
+																	</div>
+																	<div class="col-lg-6">
+																		<div class="mb-3">
+																			<label class="text-black font-w600 form-label">Route ID <span class="required">*</span></label>
+																			<!-- <input type="text" class="form-control" value="Email" placeholder="Email" name="Email"> -->
+																		</div>
+																	</div>
+																	<div class="col-lg-12">
+																		<div class="mb-3">
+																			<label class="text-black font-w600 form-label">Full Description</label>
+																			<!-- <textarea rows="8" class="form-control" name="comment" placeholder="Comment"></textarea> -->
+																		</div>
+																	</div>
+																	<div class="col-lg-12">
+																		<div class="mb-3 mb-0">
+																			<input type="submit" value="Back To Profile" class="submit btn btn-primary" name="submit">
+																		</div>
+																	</div>
+																</div>
+															</form>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="col-xl-12">
+								<div class="card">
+									<div class="card-body">
+										<div class="profile-blog">
+											<h5 class="text-primary d-inline">Student's Bio</h5>
+											<img src="images/profile/1.jpg" alt="" class="img-fluid mt-4 mb-4 w-100">
+											<h4><a href="post-details.html" class="text-black">{{ student.user.first_name }} {{ student.user.last_name}}</a></h4>
+											
+                                            {% if student.user.profile.bio %}
+                                            <p class="mb-0">{{ student.user.profile.bio }}</p>
+                                            {% else %}
+                                            <p class="mb-0">Profile has not been updated yet</p>
+                                            {% endif %}
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="col-xl-12">
+								<div class="card">
+									<div class="card-body">
+										<div class="profile-interest">
+											<h5 class="text-primary d-inline">FOR BOARDING STUDENTS</h5>
+                                            <P>HOSTEL: </P>
+										
+										</div>
+									</div> 
+								</div>
+							</div>
+							<div class="col-xl-12">
+								<div class="card">
+									<div class="card-body">
+										<div class="profile-news">
+											<h5 class="text-primary d-inline">School Transport Route</h5>
+											<div class="media pt-3 pb-3">
+                                                <i class="fa fa-bus me-3 rounded" aria-hidden="true"  style="font-size: 32px;"></i>
+												<div class="media-body">
+													<h5 class="m-b-5"><a href="" class="text-black"><u>Check Route</u></a></h5>
+												</div>
+											</div>
+																					
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+                    </div>
+                    <div class="col-xl-8">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="profile-tab">
+                                    <div class="custom-tab-1">
+                                        <ul class="nav nav-tabs">
+                                            <li class="nav-item"><a href="#my-posts" data-bs-toggle="tab" class="nav-link active show">User Detail Information</a>
+                                            </li>
+                                           
+                                        </ul>
+                                        
+                                              <div id="my-posts" class="tab-pane fade active show"></div>
+                                                <div class="my-post-content pt-3">
+                                            <!-- <div id="about-me" class="tab-pane fade">
+                                                <div class="profile-about-me"> -->
+                                                    <div class="pt-4 border-bottom-1 pb-3">
+                                                        <h4 class="text-primary">Helpful Tip</h4>
+                                                        <p class="mb-2">If there are information you find not correct or you need to modify or or update; user the "UPDATE PROFILE " button on this page.</p>
+                                                    </div>
+                                                </div>
+                                               
+                                                <div class="profile-personal-info">
+                                                    <h4 class="text-primary mb-4">Personal Information</h4>
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-3 col-5">                                                          
+                                                            <h5 class="f-w-500">Full Name <span class="pull-end">:</span>
+                                                            </h5>                                                            
+                                                        </div>
+                                                        <div class="col-sm-9 col-7"><span>{{ student.first_name }} {% if student.middle_name %}{{ student.middle_name }}{% endif %} {{ student.last_name }}</span>
+                                                        </div>
+                                                           
+                                                    </div>
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-3 col-5">
+                                                            <h5 class="f-w-500">Email <span class="pull-end">:</span>
+                                                            </h5>
+                                                        </div>
+                                                        <div class="col-sm-9 col-7"><span>{{ student.user.email }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-3 col-5">
+                                                            <h5 class="f-w-500">Current Class <span class="pull-end">:</span></h5>
+                                                        </div>
+                                                        <div class="col-sm-9 col-7"><span>{{ student.standard }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-3 col-5">
+                                                            <h5 class="f-w-500">Date Of Birth <span class="pull-end">:</span>
+                                                            </h5>
+                                                        </div>
+                                                        <div class="col-sm-9 col-7"><span>{{ student.DOB }}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-3 col-5">
+                                                            <h5 class="f-w-500">Gender <span class="pull-end">:</span></h5>
+                                                        </div>
+                                                        <div class="col-sm-9 col-7"><span>{{ student.gender }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-3 col-5">
+                                                            <h5 class="f-w-500">State Of Origin <span class="pull-end">:</span></h5>
+                                                        </div>
+                                                        <div class="col-sm-9 col-7"><span>{{ student.user.profile.state_of_origin }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-3 col-5">
+                                                            <h5 class="f-w-500">Admission Date <span class="pull-end">:</span></h5>
+                                                        </div>
+                                                        <div class="col-sm-9 col-7"><span>{{ student.date_admitted}}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-3 col-5">
+                                                            <h5 class="f-w-500">Admitted Class <span class="pull-end">:</span></h5>
+                                                        </div>
+                                                        <div class="col-sm-9 col-7"><span>{{ student.class_on_admission}}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    
+                                                    <h4 class="text-primary mb-4">Medical Information</h4>
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-3 col-5">
+                                                            <h5 class="f-w-500">Genotype <span class="pull-end">:</span></h5>
+                                                        </div>
+                                                        <div class="col-sm-9 col-7"><span>{{ student.genotype}}</span>                                                      
+                                                        </div>
+                                                    </div>                                                    
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-3 col-5">
+                                                            <h5 class="f-w-500">Blood Group <span class="pull-end">:</span></h5>
+                                                        </div>
+                                                        <div class="col-sm-9 col-7"><span>{{ student.blood_group}}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-3 col-5">
+                                                            <h5 class="f-w-500">Medical Remark <span class="pull-end"></span></h5>
+                                                        </div>
+                                                        <div class="col-sm-9 col-7"><span>{{ student.health_remark }}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <h4 class="text-primary mb-4">Parent Information</h4>
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-3 col-5">
+                                                            <h5 class="f-w-500">Guardian's Name <span class="pull-end">:</span></h5>
+                                                        </div>
+                                                        <div class="col-sm-9 col-7"><span>{{ student.guardian_name}}</span>                                                      
+                                                        </div>
+                                                    </div>                                                    
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-3 col-5">
+                                                            <h5 class="f-w-500">G's. Phone <span class="pull-end">:</span></h5>
+                                                        </div>
+                                                        <div class="col-sm-9 col-7"><span>{{ student.guardian_phone}}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-3 col-5">
+                                                            <h5 class="f-w-500">G's. Email <span class="pull-end">:</span></h5>
+                                                        </div>
+                                                        <div class="col-sm-9 col-7"><span>{{ student.guardian_email}}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-3 col-5">
+                                                            <h5 class="f-w-500">Address <span class="pull-end">:</span></h5>
+                                                        </div>
+                                                        <div class="col-sm-9 col-7"><span>{{ student.guardian_address}}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-3 col-5">
+                                                            <h5 class="f-w-500">Relationship <span class="pull-end">:</span></h5>
+                                                        </div>
+                                                        <div class="col-sm-9 col-7"><span>{{ student.relationship}}</span>
+                                                        </div>
+                                                    </div>
+                                                    
+
+                                                    <div class="profile-skills mb-5">
+                                                        <h4 class="text-primary mb-2">Quick Links</h4>
+                                                        <a href="javascript:void(0);" class="btn btn-primary light btn-xs mb-1">Dashboard Home</a>
+                                                        <a href="javascript:void(0);" class="btn btn-primary light btn-xs mb-1">All Payments</a>
+                                                        <a href="javascript:void(0);" class="btn btn-primary light btn-xs mb-1">1st Term Results</a>
+                                                        <a href="javascript:void(0);" class="btn btn-primary light btn-xs mb-1">2nd Term Results</a>
+                                                        <a href="javascript:void(0);" class="btn btn-primary light btn-xs mb-1">3rd Term Results</a>
+                                                    </div>
+                                               
+
+                                                </div>
+                                            </div>
+                                          
+									<!-- Modal -->
+									<div class="modal fade" id="replyModal">
+										<div class="modal-dialog modal-dialog-centered" role="document">
+											<div class="modal-content">
+												<div class="modal-header">
+													<h5 class="modal-title">Post Reply</h5>
+													<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+												</div>
+												<div class="modal-body">
+													<form>
+														<textarea class="form-control" rows="4">Message</textarea>
+													</form>
+												</div>
+												<div class="modal-footer">
+													<button type="button" class="btn btn-danger light" data-bs-dismiss="modal">btn-close</button>
+													<button type="button" class="btn btn-primary">Reply</button>
+												</div>
+											</div>
+										</div>
+									</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endblock content_body %}
+        <!--**********************************
+            Content body end
+        ***********************************-->
+
+
+        <!--**********************************
+            Footer start
+        ***********************************-->
+     
+        <!--**********************************
+            Footer end
+        ***********************************-->
+
+        <!--**********************************
+           Support ticket button start
+        ***********************************-->
+
+        <!--**********************************
+           Support ticket button end
+        ***********************************-->
+
+        
+    </div>
+    <!--**********************************
+        Main wrapper end
+    ***********************************-->
+	
+	<!--removeIf(production)-->
+        
+    <!--**********************************
+        Scripts
+    ***********************************-->
+    <!-- Required vendors -->
+    {% block script %}
+    <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+	<script src="{% static 'pages/vendor/bootstrap-select/dist/js/bootstrap-select.min.js' %}"></script>
+	<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
+    <script src="{% static 'pages/vendor/chart.js/Chart.bundle.min.js' %}"></script>
+	<script src="{% static 'pages/vendor/lightgallery/js/lightgallery-all.min.js' %}"></script>
+    <script src="{% static 'pages/js/custom.min.js' %}"></script>
+	<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+	<script src="{% static 'pages/js/demo.js' %}"></script>
+    <script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
+	{% endblock script %}	
+</body>
+</html>

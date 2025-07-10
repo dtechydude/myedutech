@@ -1,0 +1,108 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <title>Student ID CARD</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        @media print {
+          html, body {
+            width: 210mm;
+            height: 297mm;
+        }
+        /* ... the rest of the rules ... */
+        }
+    </style>
+  </head>
+  <body>
+
+    <div class="container">
+      <div class="col-sm-12" style="padding:10px; text-align:center; width:100%; white-space:nowrap;">
+        <img src="https://edtech.schoolly.com.ng/portal/static/pages/school_id_header.png " width="100%" height="auto">
+       </div>
+    <div class=" col-sm-8" style="margin: 0 auto; text-align:center;">
+        <div class="profile-picture profile-picture-lg bg-gradient bg-secondary mb-2">
+          <p class="bg-transparent text-white " scope="row"  style="text-align:center;"><img src="{{user.profile.image.url}}" width="100px" height="100px" style="border-radius:10% " ></p>
+          </div>
+
+          <table class="table table-bordered">
+      <thead>
+        <tr>
+          <td colspan="2"><h5>STUDENT IDENTIFICATION </h5>
+          </td>
+
+        </tr>
+
+      </thead>
+      <tbody>
+        <tr col-span="2">
+
+          <td colspan="2" scope="row" style="text-align:center;">
+            <span style="text-transform: uppercase"><h5> {{ user.studentdetail.last_name }} - {{ user.studentdetail.first_name }} - {{ user.studentdetail.middle_name }}</h5></span>
+            <span style=" text-align:center;"><h6>Student ID: ({{ user.studentdetail.student_username}})</h6></span>
+            <span><h5>STANDARD: <span style="color:blue;">{{ user.studentdetail.current_class }} - {{ user.studentdetail.class_group }}</h5></span>
+            <span>Student Type : <span style="color:blue;"> {{ user.studentdetail.student_type }}</span></span> <br>
+            <span>Prefect : <span style="color:blue;"> - {{ user.studentdetail.badge }}</span></span></td>
+
+
+        </tr>
+        <tr>
+          <td class=" p-3 mb-2 text-rgb(0, 183, 255)" scope="row" style="font-size:11px;">Student Since: <br>{{ user.studentdetail.date_admitted }}</td>
+          <td class=" p-3 mb-2 text-rgb(0, 183, 255)"  scope="row" style="font-size:11px;">Emergency Contact: <br><span style="text-align:center;">{{ user.studentdetail.guardian_phone}}</td>
+
+          </tr>
+
+      </tbody>
+    </table>
+    <div style="padding-top:10px; text-align:center; color:#cccccc"><h4>-----BACK-------</h4></div>
+
+    <div  style="margin: 0 auto; text-align:center;">
+    <table class="table table-noborder">
+      <thead>
+        <tr>
+          <th>Authorized by the School</th>
+
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+
+          <td>
+        <span><p>This Document is a property of <strong>Schoolly EduTech</strong>. If found,
+          please return to the school authority<br> Contact details as stated below;</p>
+            <p>1 Aker Road, opposite First Sawaco Filling Station [now IMW fuel station],<br>
+             before Naval Base Pathfinder, RUMUOLUMENI. , Port Harcourt.<br>
+              Phone:+234 7067083278</p></span>
+                <img src="https://edtech.schoolly.com.ng/portal/static/pages/qr_code.png" width="100px" height="100px"></td>
+
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+  <div class="col-sm-10 " style="padding-top:20px; margin: 0 auto; text-align:center">
+
+    <img src="https://edtech.schoolly.com.ng/portal/static/pages/barcode2.jpg" width="50%" height="60">
+
+    </div>
+
+  </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  </body>
+</html>

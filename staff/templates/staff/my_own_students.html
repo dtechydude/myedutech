@@ -1,0 +1,11 @@
+
+
+hello
+{{ class_in_charge.class_id}}
+{% for st in class_in_charges %}
+{{st.class_id}}
+{% endfor %}
+
+{% if st.student %}
+{{ st.full_name}}
+{% endif %}

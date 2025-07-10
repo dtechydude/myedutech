@@ -1,0 +1,301 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	
+	<!-- PAGE TITLE HERE -->
+	<title>TMy Teacher Detail</title>
+	
+	<!-- FAVICONS ICON -->
+	
+	<!-- Style css -->
+	
+	
+</head>
+<body>
+
+	<!--*******************
+		Preloader start
+	********************-->
+	<div id="preloader">
+		<div class="lds-ripple">
+			<div></div>
+			<div></div>
+		</div>
+	</div>
+	<!--*******************
+		Preloader end
+	********************-->
+
+	<!--**********************************
+		Main wrapper start
+	***********************************-->
+	<div id="main-wrapper">
+
+		<!--**********************************
+			Nav header start
+		***********************************-->
+	
+		<!--**********************************
+			Nav header end
+		***********************************-->
+		
+		<!--**********************************
+			Chat box start
+		***********************************-->
+
+		<!--**********************************
+			Chat box End
+		***********************************-->
+		
+		<!--**********************************
+			Header start
+		***********************************-->
+	
+		<!--**********************************
+			Header end ti-comment-alt
+		***********************************-->
+
+		<!--**********************************
+			Sidebar start
+		***********************************-->
+	
+		<!--**********************************
+			Sidebar end
+		***********************************-->
+		
+		<!--**********************************
+			Content body start
+		***********************************-->
+        {% block content_body %}
+		<div class="content-body">
+			<!-- row -->
+			<div class="container-fluid">
+				<div class="row mt-4">
+					<div class="col-xl-12">
+						<div class="row">
+							<div class="col-xl-12">
+								{% if has_teacher %}
+
+								<p>Hello, {{ student.first_name }}! Here is Your Form Teacher's Detail</p>
+								<div class="card overflow-hidden">
+									<div class="row m-0">
+										<div class="col-xl-6 p-0">
+											<div class="card-body">
+												<div class="guest-profile">
+													<div class="d-flex">
+														<img src="{{ teacher.user.profile.image.url }}" alt="">
+														<div>															
+															<h2 class="font-w600">{{ teacher.first_name }} {{ teacher.last_name }}</h2>
+															<span class="text-secondary">{{ teacher.user.username }}</span>
+															<div class="call d-flex align-items-center"> 
+															<a href="javascript:void(0);"><i class="fas fa-phone-alt text-secondary"></i></a>
+																<button class="btn btn-secondary ms-3">
+																	<svg class="me-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24.18" viewBox="0 0 24 24.18">
+																	  <g id="_032-speech-bubble" data-name="032-speech-bubble" transform="translate(-1.63 0)">
+																		<g id="Group_9" data-name="Group 9" transform="translate(1.63 0)">
+																		  <path id="Path_118" data-name="Path 118" d="M22.193,3.6A12,12,0,0,0,1.636,12.361a11.434,11.434,0,0,0,.82,4.015,11.885,11.885,0,0,0,1.7,2.969l-.99,2.347a1.778,1.778,0,0,0,1.951,2.46l4.581-.792A12.013,12.013,0,0,0,22.193,3.6ZM12.749,16.8H9.61a.9.9,0,1,1,0-1.81h3.139a.911.911,0,0,1,.9.9A.893.893,0,0,1,12.749,16.8Zm4.892-3.676H9.61a.911.911,0,0,1-.9-.9.893.893,0,0,1,.9-.9h8.031a.9.9,0,1,1,0,1.81Zm0-3.7H9.61a.9.9,0,1,1,0-1.81h8.031a.911.911,0,0,1,.9.9A.93.93,0,0,1,17.641,9.421Z" transform="translate(-1.63 0)" fill="#fff"/>
+																		</g>
+																	  </g>
+																	</svg>
+																	{{ teacher.user.profile.phone }}
+																</button>	
+															</div>
+														</div>
+														<div class="dropdown dropend ms-auto">
+															<a href="javascript:void(0);" class="btn-link" data-bs-toggle="dropdown" aria-expanded="false">
+																<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+																	<path d="M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z" stroke="#575757" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+																	<path d="M12 6C12.5523 6 13 5.55228 13 5C13 4.44772 12.5523 4 12 4C11.4477 4 11 4.44772 11 5C11 5.55228 11.4477 6 12 6Z" stroke="#575757" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+																	<path d="M12 20C12.5523 20 13 19.5523 13 19C13 18.4477 12.5523 18 12 18C11.4477 18 11 18.4477 11 19C11 19.5523 11.4477 20 12 20Z" stroke="#575757" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+																</svg>
+
+															</a>
+															
+														</div>
+													</div>
+													<div class="d-flex">
+														<div class="mt-4 check-status">
+															<span class="d-block mb-2">Date Employed</span>	
+															<span class="font-w500 fs-16">{{ teacher.date_employed }}</span>
+														</div>
+														<div class="mt-4">
+															<span class="d-block mb-2">Marital Status</span>	
+															<span class="font-w500 fs-16">{{ teacher.marital_status }}</span>
+														</div>
+													</div>
+												</div>
+												<div class="d-flex flex-wrap">
+													<div class="mt-4 check-status">
+														<span class="d-block mb-2">About My Teacher</span>	
+														<h4 class="font-w500 fs-24">Teacher's Bio</h4>
+													</div>
+													</div>
+												{% if teacher.user.profile.bio %}
+												<p class="mt-2">{{ teacher.user.profile.bio }}</p>
+												{% else %}
+												<p class="mt-2">Your Teacher Has Not Updated His Bio</p>
+												{% endif %}
+												<div class="facilities">
+													<div class="mb-3 ">
+														<span class="d-block mb-3">Other Info</span>
+														<a href="javascript:void(0);" class="btn btn-secondary light btn-lg">
+														<svg class="me-2" xmlns="http://www.w3.org/2000/svg" width="28" height="20" viewBox="0 0 28 20">
+															<g>
+															<path  d="M27,14V7a1,1,0,0,0-1-1H6A1,1,0,0,0,5,7v7a3,3,0,0,0-3,3v8a1,1,0,0,0,2,0V24H28v1a1,1,0,0,0,2,0V17A3,3,0,0,0,27,14ZM7,8H25v6H24V12a2,2,0,0,0-2-2H19a2,2,0,0,0-2,2v2H15V12a2,2,0,0,0-2-2H10a2,2,0,0,0-2,2v2H7Zm12,6V12h3v2Zm-9,0V12h3v2ZM4,17a1,1,0,0,1,1-1H27a1,1,0,0,1,1,1v5H4Z" transform="translate(-2 -6)" fill="#135846"/>
+															</g>
+														</svg>
+														My Hostel</a>
+														<a href="javascript:void(0);" class="btn btn-secondary light btn-lg">
+														<svg class="me-2" xmlns="http://www.w3.org/2000/svg" width="20" height="23.512" viewBox="0 0 20 23.512">
+														  <g id="_010-security" data-name="010-security" transform="translate(-310.326 -159.324)">
+															<path id="Path_1958" data-name="Path 1958" d="M330.326,165.226a2.952,2.952,0,0,0-1.71-2.8l-7.5-2.951a2.139,2.139,0,0,0-1.581,0l-7.5,2.951a2.951,2.951,0,0,0-1.709,2.8v5.318a10.445,10.445,0,0,0,4.372,8.772l5.142,3.372a.871.871,0,0,0,.971,0l5.143-3.372a10.448,10.448,0,0,0,4.372-8.772Zm-2,0a.591.591,0,0,0-.342-.561l-7.5-2.951a.432.432,0,0,0-.317,0l-7.5,2.951a.59.59,0,0,0-.341.561v5.318a7.985,7.985,0,0,0,3.343,6.707l4.657,3.054,4.656-3.054a7.986,7.986,0,0,0,3.344-6.707Zm-8.657,7.273,4.949-5.843a.9.9,0,0,1,1.415,0,1.338,1.338,0,0,1,0,1.67L320.376,175a.9.9,0,0,1-1.414,0l-2.829-3.338a1.337,1.337,0,0,1,0-1.669.9.9,0,0,1,1.414,0Z" transform="translate(0 0)" fill="#135846" fill-rule="evenodd"/>
+														  </g>
+														</svg>
+														My Class Mates</a>
+														
+													</div>	
+													
+												</div>
+											</div>
+										</div>
+										<div class="col-xl-6 p-0">
+											<div class="guest-carousel owl-carousel owl-carousel owl-loaded owl-drag owl-dot">
+												<div class="item">
+													<img src="{% static 'pages/images/schoolly_logo.png' %}" alt="">
+													<!-- <div class="rooms">
+														<div class="booked">
+															<p class="fs-20 font-w500">Smart School</p>
+														</div>
+														
+													</div> -->
+												</div>											
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							
+														{% endif %}
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+        {% endblock content_body %}
+		<!--**********************************
+			Content body end
+		***********************************-->
+		
+		
+		
+		<!--**********************************
+			Footer start
+		***********************************-->
+	
+		<!--**********************************
+			Footer end
+		***********************************-->
+
+		<!--**********************************
+		   Support ticket button start
+		***********************************-->
+		
+		<!--**********************************
+		   Support ticket button end
+		***********************************-->
+
+
+	</div>
+	<!--**********************************
+		Main wrapper end
+	***********************************-->
+
+	<!--**********************************
+		Scripts
+	***********************************-->
+	<!-- Required vendors -->
+     {% block script %}
+	<script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+
+	<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
+	
+	<!-- Apex Chart -->
+	
+	<script src="{% static 'pages/vendor/apexchart/apexchart.js' %}"></script>
+	
+	
+	<!-- Chart piety plugin files -->
+	
+	
+	<!-- Dashboard 1 -->
+	<script src="{% static 'pages/js/dashboard/dashboard-1.js' %}"></script>
+	
+	<script src="{% static 'pages/vendor/owl-carousel/owl.carousel.js' %}"></script>
+	<script src="{% static 'pages/vendor/bootstrap-datetimepicker/js/moment.js' %}"></script>
+	<script src="{% static 'pages/vendor/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js' %}"></script>
+	
+	<script src="{% static 'pages/js/custom.min.js' %}"></script>
+	<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+	<script src="{% static 'pages/js/demo.js' %}"></script>
+	<script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
+	<script>
+		function TravlCarousel()
+			{
+
+				/*  testimonial one function by = owl.carousel.js */
+				jQuery('.guest-carousel').owlCarousel({
+					loop:false,
+					margin:15,
+					nav:true,
+					autoplaySpeed: 3000,
+					navSpeed: 3000,
+					paginationSpeed: 3000,
+					slideSpeed: 3000,
+					smartSpeed: 3000,
+					autoplay: false,
+					animateOut: 'fadeOut',
+					dots:true,
+					navText: ['<i class="fas fa-arrow-left"></i>', '<i class="fas fa-arrow-right"></i>'],
+					responsive:{
+						0:{
+							items:1
+						},
+						
+						480:{
+							items:1
+						},			
+						
+						767:{
+							items:1
+						},
+						1750:{
+							items:1
+						},
+						1920:{
+							items:1
+						},
+					}
+				})
+			}
+
+			jQuery(window).on('load',function(){
+				setTimeout(function(){
+					TravlCarousel();
+				}, 1000); 
+			});
+           
+	</script>
+     {% endblock script %}
+
+</body>
+</html>

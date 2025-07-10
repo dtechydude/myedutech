@@ -1,0 +1,132 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% block title %}
+	<title>Student Search</title>
+    {% endblock title %}
+	
+	<!-- FAVICONS ICON -->
+    {% block favicon %}
+	<link rel="shortcut icon" type="image/png" href="images/favicon.png" />
+	<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+	<link href="{% static 'pages/vendor/lightgallery/css/lightgallery.min.css' %}" rel="stylesheet">
+    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+    {% endblock %}
+
+</head>
+<body></body>
+
+    <!--*******************
+        Preloader start
+    ********************-->
+   <div id="preloader">
+		<div class="lds-ripple">
+			<div></div>
+			<div></div>
+		</div>
+    </div>
+    <!--*******************
+        Preloader end
+    ********************-->
+
+
+    <!--**********************************
+        Main wrapper start
+    ***********************************-->
+    <div id="main-wrapper">
+
+        <!--**********************************
+            Nav header start
+        ***********************************-->
+       
+        <!--**********************************
+            Nav header end
+        ***********************************-->
+		
+		<!--**********************************
+            Chat box start
+        ***********************************-->
+		
+		<!--**********************************
+            Chat box End
+        ***********************************-->
+				
+        <!--**********************************
+            Header start
+        ***********************************-->
+                            
+        <!--**********************************
+            Header end ti-comment-alt
+        ***********************************-->
+
+        <!--**********************************
+            Sidebar start
+        ***********************************-->
+       
+        <!--**********************************
+            Sidebar end
+        ***********************************-->
+
+        <!--**********************************
+            Content body start
+        ***********************************-->
+
+    {% block content_body %}
+    
+    <div class="content-body">
+        <div class="container-fluid">
+            
+            
+            <div class="row page-titles">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item active"><a href="javascript:void(0)">Students Search Result</a></li>
+                </ol>
+            </div>
+            <!-- row -->
+            <div class="row">
+                <div class="col-lg-12">
+    {% if user.is_authenticated and user.is_superuser %}
+<br/></br/>
+<div class="container">
+   <div class="col-md-8 offset-md-2">
+{% if query %}
+           <h5>
+           {% with results.count as total_results %}
+           Found {{ total_results }} result{{ total_results|pluralize }}
+           {% endwith %}
+           </h5>
+   {% for c in results %}
+  <a href="{{c.get_absolute_url}}"><h6>{{c.first_name}} {{c.last_name}}  - {{c.standard}} </h6></a>
+ 
+  <p> <span style="color:rgba(43, 43, 207, 0.753)">Current Class : </span> <strong>{{ c.standard }} </strong><span style="color:rgba(43, 43, 207, 0.753)"> -  Class Teacher :</span> <strong>{{ c.form_teacher.first_name }} {{ c.form_teacher.last_name }} </strong></span></p>
+  
+
+   {% empty %}
+   <h3>No results found.</h3>
+   {% endfor %}
+  {% endif %}
+    
+        <form action="{% url 'students:student_search_list' %}" class="form-inline" method="get">
+        <button type="submit" class="btn btn-primary btn-sm mb-2">Go Back</button>
+        </form>       
+   
+{% endif %}
+
+											</div>
+										</div>
+									</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock content_body %}
+
+</body>
+
+<html>

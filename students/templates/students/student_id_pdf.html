@@ -1,0 +1,139 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+   
+    <title>Student ID Card</title>
+    <style>
+    body {
+      background-image: url('#'); 
+      background-size: contain;
+      background-position: center;  
+      background-repeat: repeat-x;
+           
+    } 
+ 
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        
+      }
+      
+      th, td {
+        text-align: left;
+        padding: 3px;
+        vertical-align: middle;
+
+      }
+      
+      tr:nth-child(even) {background-color: #f2f2f2;}
+      
+   
+    html {
+        -webkit-print-color-adjust: exact;
+    
+    } 
+    table, th, td {
+      border: grey;    
+      border-collapse: collapse;
+    }
+
+    
+ 
+  </style>
+  </head>
+
+  <body style="background-color:grey;">
+
+    <div  style="text-align: center; background-color: white; padding: auto;">
+          <span><img src="{{ school_identity.logo.path}}" style="width:80px;height:80px;"> <br>
+          <span style="font-size: 20px; margin-top:3px;">{{ school_identity.name }}</span>
+         
+      </div>       
+     <p style="text-align: center; color:#f2f2f2; font-size:12px; padding-top:5px; margin-top: 2px;"><strong>Student Identification</strong> </p>
+       
+<div class="invoice-items">
+    <div class="table-responsive" style="overflow: hidden; outline: none;" tabindex="0">
+   
+<table class="table table-bordered">
+<thead>
+<tr>
+<th class=" text-center" style="font-size: 17px; color: #043c58; text-align: center; padding-top: 2px;"> 
+  <img src="{{ student_detail.user.profile.image.path}}" style="width:180px;height:180px;"></th>
+<div>
+<td colspan="2" class=" per5 text-left" style="font-size: 17px; color: #043c58; text-align: left; padding-top: 2px;">
+  <br><span style="color: gray;"> STUDENT'S ID </span> | <span style="color: black;">{{ student_detail.USN }}</span>
+  <br> <span style="color: gray;">STUDENT NAME </span>| <span style="color: black;">{{ student_detail.last_name  |upper }} {{ student_detail.first_name }} {% if student_detail.middle_name %} {{ student_detail.middle_name }} {% endif %}</span>
+ <br> <span style="color: gray;">CURRENT CLASS </span>| <span style="color: black;">{{ student_detail.standard  |upper }}</span>
+ <br> <span style="color: gray;">STUDENT TYPE </span>| <span style="color: black;">{{ student_detail.student_type  |upper }}</span>
+ <br><span style="color: gray;"> BADGE </span>| <span style="color: black;">{{ student_detail.badge  |upper }}</span>
+ <br> <span style="color: gray;">DATE ADMITTED  </span>| <span style="color: black;">{{ student_detail.date_admitted  |upper}}</span>
+
+</td>
+<!-- <th class="per25 text-center" style="font-size: 17px; color: #043c58; padding-top: 8px;">Amount Paid</th> -->
+</div>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class=" text-center" style="font-size: 17px; color:green; text-align: center; padding-top: 5px;"><strong><u>AUTHORIZED</u><strong></td>
+<td class=" text-center" style="font-size: 12px; color: #043c58; text-align: center; padding-top: 5px;"><strong>STUDENT UNIQUE RCY CODE:- {{student_detail.user.profile.code }}<strong></td>
+</tr>
+</tbody>
+</table>
+<p style="text-align: center; color:#f2f2f2; font-size:12px; padding-top: 7px;">SXCRTYU678MNJJKUILOOOWSQ12CXXDDFF </p>
+
+</div>
+</div>
+<hr>
+<p style="background-color: white">>>>Back Cover>>></p>
+
+<div class="invoice-footer mt25"> 
+<p class="text-center" style="font-size: 17px; color: white; text-align: center; padding-top: 10px;"><strong> Note! </strong>This ID Card Is Not Transferable</p>
+<table class="table table-bordered">  
+  <tfoot>   
+  <tr>
+  <th colspan="2" class="text-right" style="text-align: center; font-size: 16px; padding-top: 8px;"> 
+  <span>This Document is a property of <strong>{{ school_identity.name }}</strong> <br>
+    If found, please return to the school authority<br>
+    Contact details as stated below;<br>
+      {{ school_identity.address_line_1 }},<br>
+      {% if school_identity.address_line_2 %}
+      {{ school_identity.address_line_2 }},<br>
+      {% endif %}
+        Phone:+234 {{ school_identity.phone1 }} </th>      
+  </tr>  
+  
+  </tfoot> 
+  </table>
+  <div class="invoice-footer mt25"> 
+    <p class="text-center" style="font-size: 17px; color: white; text-align: center; padding-top: 10px;"><strong>SXCRTYU678MNJJKUILOOOWSQ12CXXDDFF </strong></p>
+    <table class="table table-bordered">  
+      <tfoot>  
+
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p style="background-color: white; font-size: 15px;"><a href="#">Read School Guideline </a></p>
+ 
+</div>
+
+      
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  </body>
+</html>
+
+

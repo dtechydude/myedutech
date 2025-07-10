@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students in {{ classroom.name }}</title>
+</head>
+<body>
+    <h1>Students in {{ classroom.name }}</h1>
+
+    {% if students %}
+        <ul>
+            {% for student in students %}
+                <li>{{ student.full_name }} {{ student.last_name }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No students found in this classroom.</p>
+    {% endif %}
+
+    <p><a href="">Back to Home</a></p> {# Assuming you have a 'home' URL #}
+</body>
+</html>
