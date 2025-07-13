@@ -7,7 +7,8 @@ from datetime import timedelta
 # from portal.models import Dept
 # from curriculum.utils import Subject, Standard, Dept
 from django.template.defaultfilters import slugify
-# from portal.models import Standard, Dept
+from users.models import Dept
+from curriculum.models import Subject, Standard
 
 
 
@@ -36,9 +37,10 @@ class Teacher(models.Model):
     first_name = models.CharField(max_length=20)
     middle_name = models.CharField(max_length=20, blank=True, null=True)
     last_name = models.CharField(max_length=20)   
-    # dept = models.ForeignKey(Dept, on_delete=models.CASCADE, default=1, related_name='my_dept')
+    dept = models.ForeignKey(Dept, on_delete=models.CASCADE, default=1, related_name='my_dept')
     # class_in_charge = models.ForeignKey(Standard, on_delete=models.CASCADE, blank=True, null=True, related_name='myclasses')
-    
+    subjects_taught = models.ManyToManyField(Subject, related_name='teachers')
+    standards_assigned = models.ManyToManyField(Standard, related_name='teachers')
     female = 'female'
     male = 'male'
     select_gender = 'select_gender'

@@ -142,4 +142,13 @@ class Profile(models.Model):
             code = generate_ref_code()
             self.code = code
         super().save(*args, **kwargs)
+
+
+
+class Dept(models.Model):
+    id = models.CharField(primary_key='True', max_length=100)
+    name = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.name
     

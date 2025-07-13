@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ student.name }}'s Detailed Results for {{ term.name }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align items to the start, not center vertically */
+            min-height: 100vh;
+        }
+        .report-card {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            box-sizing: border-box;
+        }
+        h1, h2, h3, h4 { color: #333; margin-bottom: 10px; }
+        .summary-info { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #e0e0e0; }
+        .summary-info h2, .summary-info h3 { text-align: center; }
+
+        .exam-section {
+            margin-top: 25px;
+            margin-bottom: 15px;
+            border: 1px solid #cfe2ff; /* Light blue border */
+            border-left: 5px solid #007bff; /* Primary blue left border */
+            padding: 15px;
+            background-color: #e9f5ff; /* Lighter blue background */
+            border-radius: 8px;
+        }
+        .exam-section h4 { color: #0056b3; margin-top: 0; } /* Darker blue for exam name */
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 12px 15px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f8f9fa;
+            color: #495057;
+            font-weight: bold;
+        }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        tr:hover { background-color: #e9ecef; }
+        .total-row {
+            font-weight: bold;
+            background-color: #d0efff; /* A light, noticeable blue */
+            color: #004085; /* Darker blue for text */
+        }
+        .total-row td:first-child { text-align: right; }
+
+        .term-aggregate {
+            font-size: 1.15em;
+            font-weight: bold;
+            text-align: right;
+            padding-top: 25px;
+            border-top: 2px solid #333;
+            margin-top: 30px;
+            color: #333;
+        }
+        .term-aggregate p { margin: 8px 0; }
+        .term-aggregate strong { color: #0056b3; }
+
+        .navigation-links { margin-top: 30px; text-align: center; }
+        .navigation-links a {
+            display: inline-block;
+            margin: 0 10px;
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .navigation-links a:hover { background-color: #5a6268; }
+
+        /* Specific styles for the top navigation links */
+        .top-navigation-links {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px; /* Space between links on smaller screens */
+        }
+        .top-navigation-links a {
+            padding: 8px 15px; /* Slightly smaller buttons */
+            background-color: #17a2b8; /* Info blue */
+        }
+        .top-navigation-links a.logout-link {
+            background-color: #dc3545; /* Danger red */
+        }
+        .top-navigation-links a:hover {
+            background-color: #138496;
+        }
+        .top-navigation-links a.logout-link:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="report-card">
+        <div class="top-navigation-links">
+            <a href="{% url 'results:my_terms_list' %}">&leftarrow; Back to All Terms</a>
+           {%comment%} <a href="{% url 'results:student_term_report_card' term.id %}">View Full Report Card for This Term</a>{%endcomment%}
+            <a href="{% url 'users:user_logout' %}" class="logout-link">Logout</a>
+        </div>
+       
+        <div class="summary-info">
+            <h1>Detailed Term Results</h1>
+            <h2>Student: {{ student.name }} (ID: {{ student.student_id_number|default:"N/A" }})</h2>
+            <h3>Term: {{ term.name }} ({{ term.session.name }})</h3>
+        </div>
+
+        {% if message %}
+            <p style="text-align: center; color: #dc3545; font-size: 1.1em;">{{ message }}</p>
+        {% elif results_by_exam %}
+            {% for exam_name, exam_info in results_by_exam.items %}
+                <div class="exam-section">
+                    <h4>Exam: {{ exam_name }} ({{ exam_info.exam_obj.date|date:"F j, Y" }})</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subject_data in exam_info.subjects %}
+                                <tr>
+                                    <td>{{ subject_data.subject_name }}</td>
+                                    <td>{{ subject_data.score|floatformat:2 }}</td>
+                                </tr>
+                            {% endfor %}
+                            <tr class="total-row">
+                                <td>Total for this Exam:</td>
+                                <td>{{ exam_info.exam_total_score|floatformat:2 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+
+            <div class="term-aggregate">
+                <p><strong>Overall Term Total Score (All Exams):</strong> {{ term_total_score|floatformat:2 }}</p>
+                <p><strong>Overall Term Average Score (All Exams):</strong> {{ term_average_score|floatformat:2 }}</p>
+            </div>
+        {% else %}
+            <p style="text-align: center; color: #666;">No detailed results found for this term.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

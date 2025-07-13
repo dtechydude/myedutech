@@ -20,10 +20,10 @@ class StudentIdInline(admin.TabularInline):
 
 class StudentAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     inlines = [StudentIdInline] 
-    list_display=('user', 'first_name', 'last_name', 'standard','date_admitted', 'guardian_phone')
-    list_filter = ['standard']
+    list_display=('user', 'first_name', 'last_name', 'current_class','date_admitted', 'guardian_phone')
+    list_filter = ['current_class']
     search_fields = ('first_name', 'last_name', 'user__username')
-    raw_id_fields = ['user', 'form_teacher', 'badge', 'standard', 'class_on_admission', 'hostel_name']
+    raw_id_fields = ['user', 'form_teacher', 'badge', 'current_class', 'class_on_admission', 'hostel_name']
 
 
 class BadgeAdmin(ImportExportModelAdmin, admin.ModelAdmin):

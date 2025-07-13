@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'students.apps.StudentsConfig',
     'staff.apps.StaffConfig',
     'curriculum.apps.CurriculumConfig',
+    'results.apps.ResultsConfig',
 
     # Installed Apps
     'django_ckeditor_5',
@@ -154,11 +155,15 @@ MEDIA_URL = '/media/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# LOGIN_REDIRECT_URL = 'pages:portal-home'
-LOGIN_REDIRECT_URL = '/dashboard/'
+# # LOGIN_REDIRECT_URL = 'pages:portal-home'
+# LOGIN_REDIRECT_URL = '/dashboard/'
 
-# LOGIN_URL = 'users:login'
-LOGIN_URL = '/users/login/'
+# # LOGIN_URL = 'users:login'
+# LOGIN_URL = '/users/login/'
+
+LOGIN_REDIRECT_URL = '/student-dashboard/' # Redirect students to their dashboard after login
+LOGOUT_REDIRECT_URL = '/' # Redirect to home page after logout (or login page)
+LOGIN_URL = '/users/login/' # URL name of your login page
 
 
 # # Email Settings

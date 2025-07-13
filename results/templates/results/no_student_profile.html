@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>No Student Profile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        h1 {
+            color: #dc3545; /* Bootstrap's danger color */
+            margin-bottom: 20px;
+            font-size: 2.2em;
+        }
+        p {
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        .contact-info {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px dashed #e9ecef;
+            font-size: 0.95em;
+            color: #6c757d;
+        }
+        .contact-info strong {
+            color: #343a40;
+        }
+        .links a {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: #007bff; /* Bootstrap's primary color */
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .links a:hover {
+            background-color: #0056b3;
+        }
+        .links .logout-link {
+            background-color: #6c757d; /* Bootstrap's secondary color */
+        }
+        .links .logout-link:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Access Denied!</h1>
+       
+        {% if message %}
+            <p>{{ message }}</p>
+        {% else %}
+            <p>It looks like your user account is not associated with a student profile. This means you cannot access student-specific results.</p>
+        {% endif %}
+       
+        <div class="contact-info">
+            <p>If you believe this is an error, please contact the school administration or support:</p>
+            <p><strong>Email:</strong> support@your-school.edu</p>
+            <p><strong>Phone:</strong> +234 801 234 5678</p>
+        </div>
+
+        <div class="links">
+            <a href="{% url 'users:user-login' %}" class="logout-link">Go to Login Page</a>
+            <a href="{% url 'users:user_logout' %}" class="logout-link">Logout</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ student.name }}'s Terms</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        h1, h2 { color: #333; text-align: center; }
+        ul { list-style: none; padding: 0; }
+        li { margin-bottom: 15px; background-color: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        li a { text-decoration: none; color: #007bff; font-weight: bold; margin-right: 10px; }
+        li a:hover { text-decoration: underline; }
+        .term-name { flex-grow: 1; }
+        .term-actions { display: flex; gap: 10px; margin-top: 5px; } /* For small screens */
+        @media (min-width: 600px) {
+            .term-actions { margin-top: 0; }
+        }
+        .logout-link { text-align: right; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logout-link">
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+        <h1>Welcome, {{ student.name }}!</h1>
+        <h2>Your Available Terms:</h2>
+
+        {% if message %}
+            <p style="text-align: center; color: red;">{{ message }}</p>
+        {% elif terms %}
+            <ul>
+                {% for term in terms %}
+                    <li>
+                        <span class="term-name">{{ term.name }} ({{ term.session.name }})</span>
+                        <div class="term-actions">
+                            <a href="{% url 'my_term_results' term.id %}">Detailed Results</a>
+                            <a href="{% url 'student_term_report_card' term.id %}">Report Card</a>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p style="text-align: center; color: #666;">No results found for any term yet.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
+
+3. your_app_name/templates/results/my_term_results.html
+This template displays the individual exam results for each subject within a chosen term.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ student.name }}'s Detailed Results for {{ term.name }}</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; background-color: #f4f4f4; }
+        .report-card { border: 1px solid #ccc; padding: 20px; border-radius: 8px; max-width: 800px; margin: 0 auto; background-color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        h1, h2, h3, h4 { color: #333; margin-bottom: 10px; }
+        .summary-info { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #eee; }
+        .exam-section { margin-top: 25px; margin-bottom: 15px; border-left: 4px solid #007bff; padding-left: 15px; background-color: #eaf6ff; border-radius: 5px; padding-top: 10px; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #e9ecef; }
+        .total-row { font-weight: bold; background-color: #d0efff; }
+        .term-aggregate { font-size: 1.1em; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #333; margin-top: 20px; }
+        .navigation-links { margin-top: 30px; text-align: center; }
+        .navigation-links a { display: inline-block; margin: 0 10px; padding: 10px 15px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px; transition: background-color 0.3s ease; }
+        .navigation-links a:hover { background-color: #5a6268; }
+    </style>
+</head>
+<body>
+    <div class="report-card">
+        <div class="navigation-links" style="text-align: right; margin-bottom: 20px;">
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+        <div class="navigation-links" style="text-align: left; margin-bottom: 10px;">
+            <a href="{% url 'my_terms_list' %}">&leftarrow; Back to All Terms</a>
+            <a href="{% url 'student_term_report_card' term.id %}">View Report Card for This Term</a>
+        </div>
+       
+        <h1>Detailed Term Results</h1>
+        <div class="summary-info">
+            <h2>Student: {{ student.name }} (ID: {{ student.student_id_number|default:"N/A" }})</h2>
+            <h3>Term: {{ term.name }} ({{ term.session.name }})</h3>
+        </div>
+
+        {% if message %}
+            <p style="text-align: center; color: #dc3545; font-size: 1.1em;">{{ message }}</p>
+        {% elif results_by_exam %}
+            {% for exam_name, exam_info in results_by_exam.items %}
+                <div class="exam-section">
+                    <h4>Exam: {{ exam_name }} ({{ exam_info.exam_obj.date|date:"F j, Y" }})</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subject_data in exam_info.subjects %}
+                                <tr>
+                                    <td>{{ subject_data.subject_name }}</td>
+                                    <td>{{ subject_data.score|floatformat:2 }}</td>
+                                </tr>
+                            {% endfor %}
+                            <tr class="total-row">
+                                <td>Total for this Exam</td>
+                                <td>{{ exam_info.exam_total_score|floatformat:2 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+
+            <div class="term-aggregate">
+                <p>Term Total Score (All Exams): {{ term_total_score|floatformat:2 }}</p>
+                <p>Term Average Score (All Exams): {{ term_average_score|floatformat:2 }}</p>
+            </div>
+        {% else %}
+            <p style="text-align: center; color: #666;">No results found for this term.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

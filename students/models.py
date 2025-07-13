@@ -88,11 +88,11 @@ class Hostel(models.Model):
 
 class Student(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, help_text='select user or add a new user')    
-    USN = models.CharField(primary_key='True', max_length=100, help_text='Unique Student Number, Must be same as username')
+    USN = models.CharField(max_length=100, help_text='Unique Student Number, Must be same as username')
     first_name = models.CharField(max_length=20)
     middle_name = models.CharField(max_length=20, blank=True, null=True)
     last_name = models.CharField(max_length=20)    
-    standard = models.ForeignKey(Standard, on_delete=models.SET_NULL, null=True, blank=True, related_name='students', verbose_name='current class')
+    current_class = models.ForeignKey(Standard, on_delete=models.SET_NULL, null=True, blank=True, related_name='students')
     class_group = models.ForeignKey(ClassGroup, on_delete=models.SET_NULL, null=True, blank=True, related_name='classes')
     form_teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, blank=True, null=True, related_name='teacher')
     badge =  models.ForeignKey(Badge, on_delete=models.CASCADE, blank=True, null=True, verbose_name='Prefect')

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enter Student Scores</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); max-width: 1000px; margin: 20px auto; }
+        h1, h2 { color: #333; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        select, input[type="number"], input[type="text"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .errorlist { color: red; list-style-type: none; padding: 0; margin: 0; }
+        /* Using message tags for styling */
+        .alert { padding: 10px; border-radius: 4px; margin-bottom: 15px; }
+        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .alert-info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .btn-submit { background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 20px; }
+        .btn-submit:hover { background-color: #0056b3; }
+        .filter-section { display: flex; gap: 20px; margin-bottom: 20px; }
+        .filter-section div { flex: 1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Enter Student Scores</h1>
+
+        {% if user.is_authenticated %}
+            <p>Welcome, {{ user.get_full_name|default:user.username }}!</p>
+        {% endif %}
+
+        {# Display messages from Django's messages framework #}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if current_term %}
+            <h2>Current Term: {{ current_term.name }}</h2>
+        {% else %}
+            {# Message handled by messages framework now #}
+        {% endif %}
+
+        <form method="get" id="filter-form">
+            <div class="filter-section">
+                <div class="form-group">
+                    <label for="subject-select">Select Subject:</label>
+                    <select id="subject-select" name="subject" onchange="document.getElementById('filter-form').submit()">
+                        <option value="">--Select Subject--</option>
+                        {% for subject in assigned_subjects %}
+                            <option value="{{ subject.id }}" {% if selected_subject_id == subject.id %}selected{% endif %}>
+                                {{ subject.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="standard-select">Select Standard:</label> {# Changed 'class-select' to 'standard-select' #}
+                    <select id="standard-select" name="standard" onchange="document.getElementById('filter-form').submit()"> {# Changed name="class" to name="standard" #}
+                        <option value="">--Select Standard--</option>
+                        {% for standard_obj in assigned_standards %} {# Changed class_obj to standard_obj #}
+                            <option value="{{ standard_obj.id }}" {% if selected_standard_id == standard_obj.id %}selected{% endif %}> {# Changed selected_class_id to selected_standard_id #}
+                                {{ standard_obj.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </form>
+
+        {% if selected_subject and selected_standard %} {# Using objects directly #}
+            <h3>Entering Scores for {{ selected_subject.name }} - {{ selected_standard.name }}</h3> {# Using objects directly #}
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="selected_subject_id" value="{{ selected_subject_id }}">
+                <input type="hidden" name="selected_standard_id" value="{{ selected_standard_id }}"> {# Changed selected_class_id to selected_standard_id #}
+
+                {{ formset.management_form }}
+
+                {% if formset.non_form_errors %}
+                    <ul class="errorlist">
+                        {% for error in formset.non_form_errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+
+                {% if students_in_standard %} {# Changed students_in_class to students_in_standard #}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>S/N</th>
+                                <th>Student Name</th>
+                                <th>CA1</th>
+                                <th>CA2</th>
+                                <th>CA3</th>
+                                <th>Exam Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for form in formset %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    {{ form.student_id }}
+                                    {{ form.score_id }}
+                                    {{ form.student_name }}
+                                    {% if form.errors %} {# General errors for the form row #}
+                                        <ul class="errorlist">
+                                            {% for field_name, errors in form.errors.items %}
+                                                {% for error in errors %}
+                                                    <li>{{ field_name }}: {{ error }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% endfor %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ form.ca1 }}
+                                    {% if form.ca1.errors %}
+                                        <ul class="errorlist">
+                                            {% for error in form.ca1.errors %}<li>{{ error }}</li>{% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ form.ca2 }}
+                                    {% if form.ca2.errors %}
+                                        <ul class="errorlist">
+                                            {% for error in form.ca2.errors %}<li>{{ error }}</li>{% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ form.ca3 }}
+                                    {% if form.ca3.errors %}
+                                        <ul class="errorlist">
+                                            {% for error in form.ca3.errors %}<li>{{ error }}</li>{% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ form.exam_score }}
+                                    {% if form.exam_score.errors %}
+                                        <ul class="errorlist">
+                                            {% for error in form.exam_score.errors %}<li>{{ error }}</li>{% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <button type="submit" class="btn-submit">Save Scores</button>
+                {% else %}
+                    <p>No students found in the selected standard, or please select a subject and standard to view students.</p> {# Changed "class" to "standard" #}
+                {% endif %}
+            </form>
+        {% else %}
+            <p>Please select a subject and a standard to start entering scores.</p> {# Changed "class" to "standard" #}
+        {% endif %}
+    </div>
+
+    <script>
+        // Remove the HTMLCollection.prototype.get_item helper as it's no longer needed
+        
+        const subjectSelect = document.getElementById('subject-select');
+        const standardSelect = document.getElementById('standard-select'); // Changed classSelect to standardSelect
+        const hiddenSubjectId = document.querySelector('input[name="selected_subject_id"]');
+        const hiddenStandardId = document.querySelector('input[name="selected_standard_id"]'); // Changed hiddenClassId to hiddenStandardId
+
+        // Update hidden inputs when dropdowns change (important for POST requests)
+        subjectSelect.addEventListener('change', () => {
+            hiddenSubjectId.value = subjectSelect.value;
+        });
+
+        standardSelect.addEventListener('change', () => { // Changed classSelect to standardSelect
+            hiddenStandardId.value = standardSelect.value;
+        });
+    </script>
+</body>
+</html>

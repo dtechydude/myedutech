@@ -14,7 +14,7 @@ from djrichtextfield.models import RichTextField
 
 from tinymce.models import HTMLField
 # from portal.models import Dept
-from staff.models import Teacher
+# from staff.models import Teacher
 
 
 # Register School
@@ -48,34 +48,40 @@ class SchoolIdentity(models.Model):
 
 class Session(models.Model):
     name = models.CharField(max_length=50)
-    first_term = 'First Term'
-    second_term = 'Second Term'
-    third_term = 'Third Term'
-    others = 'Others'
-
-    term_status = [
-        (first_term, 'First Term'),
-        (second_term, 'Second Term'),
-        (third_term, 'Third Term'),
-        (others, 'Others'),
-
-    ]
-
-    term = models.CharField(max_length=15, choices=term_status, blank=True, null=True, default='First Term')
     start_date = models.DateField(blank=True, null=True, verbose_name='Start Date')
     end_date = models.DateField(blank=True, null=True, verbose_name='End Date')
     desc = models.TextField(max_length=100, blank=True)
+    is_current = models.BooleanField(default=False) # To easily identify the current session
     slug = models.SlugField(null=True, blank=True)
 
     class Meta:
-        unique_together = ['name', 'term']
+        verbose_name_plural = "Sessions"
+        ordering = ['-start_date'] # Order by newest session first
 
     def __str__(self):
-        return f"{self.name} - {self.term}"
+        return f"{self.name}"
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
         super().save(*args, **kwargs)
+
+
+
+class Term(models.Model):
+    name = models.CharField(max_length=50) # e.g., "First Term", "Second Term", "Third Term"
+    session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='terms')
+    start_date = models.DateField()
+    end_date = models.DateField()
+    is_current = models.BooleanField(default=False)
+
+    class Meta:
+        # Ensures that "First Term" doesn't appear twice within the same session
+        unique_together = ('name', 'session')
+        ordering = ['session', 'start_date']
+
+    def __str__(self):
+        return f"{self.name} ({self.session.name})"    
+
 
 
 class ClassGroup(models.Model):
@@ -105,14 +111,14 @@ def save_subject_image(instance, filename):
     return os.path.join(upload_to, filename)
 
 class Standard(models.Model):   
-    name = models.CharField(max_length=100)    
+    name = models.CharField(max_length=100, unique=True)    
     # dept = models.ForeignKey(Dept, on_delete=models.CASCADE, blank=True, null=True)
-    teachers = models.ManyToManyField(Teacher, related_name='classrooms')
+    # teachers = models.ManyToManyField(Teacher, related_name='classrooms')
     slug = models.SlugField(null=True, blank=True)
 
 
     class Meta:
-        verbose_name = 'Standards'
+        verbose_name = 'Standard'
         verbose_name_plural = 'Standards'
 
     def __str__(self):

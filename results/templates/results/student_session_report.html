@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ student.name }}'s Session Report for {{ session.name }}</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; line-height: 1.6; }
+        .report-card { border: 1px solid #ccc; padding: 20px; border-radius: 8px; max-width: 800px; margin: 0 auto; background-color: #f9f9f9; }
+        h1, h2, h3, h4 { color: #333; margin-bottom: 10px; }
+        .summary-info { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #eee; }
+        .term-section { margin-bottom: 30px; border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #fff; }
+        .term-header { background-color: #e9e9e9; padding: 10px; border-bottom: 1px solid #ddd; margin: -15px -15px 15px -15px; border-top-left-radius: 5px; border-top-right-radius: 5px; }
+        .exam-section { margin-top: 15px; margin-bottom: 15px; border-left: 3px solid #007bff; padding-left: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .total-row { font-weight: bold; background-color: #e0f7fa; }
+        .overall-aggregate { font-size: 1.2em; font-weight: bold; text-align: right; padding-top: 15px; border-top: 2px solid #333; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="report-card">
+        <h1>Academic Session Report</h1>
+        <div class="summary-info">
+            <h2>Student: {{ student.name }} (ID: {{ student.student_id_number }})</h2>
+            <h3>Session: {{ session.name }} ({{ session.start_date|date:"Y" }} - {{ session.end_date|date:"Y" }})</h3>
+        </div>
+
+        {% if term_data %}
+            {% for term_name, term_info in term_data.items %}
+                <div class="term-section">
+                    <div class="term-header">
+                        <h3>{{ term_name }}</h3>
+                        <p>Term Total Score: {{ term_info.term_total_score|floatformat:2 }}</p>
+                        <p>Number of Subject Results: {{ term_info.term_subjects_count }}</p>
+                    </div>
+
+                    {% for exam_name, exam_info in term_info.exams.items %}
+                        <div class="exam-section">
+                            <h4>Exam: {{ exam_name }} ({{ exam_info.exam_date|date:"F j, Y" }})</h4>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Subject</th>
+                                        <th>Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for subject_data in exam_info.subjects %}
+                                        <tr>
+                                            <td>{{ subject_data.subject_name }}</td>
+                                            <td>{{ subject_data.score|floatformat:2 }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    <tr class="total-row">
+                                        <td>Total for this Exam</td>
+                                        <td>{{ exam_info.exam_total_score|floatformat:2 }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+
+            <div class="overall-aggregate">
+                <p>Overall Session Total Score: {{ session_total_score|floatformat:2 }}</p>
+                <p>Overall Session Average Score: {{ session_average_score|floatformat:2 }}</p>
+            </div>
+        {% else %}
+            <p>No results found for {{ student.name }} in the {{ session.name }} session.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

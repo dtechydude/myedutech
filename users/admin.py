@@ -1,5 +1,5 @@
 from django.contrib import admin
-from users.models import Profile
+from users.models import Profile, Dept
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 import csv, datetime
@@ -50,6 +50,15 @@ class UserProfileAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     search_fields = ('user__username', 'code', 'user_type')
 
 
+class DeptAdmin(admin.ModelAdmin):
+       
+    list_display=('name',)
+    list_filter  = ['name',]
+    search_fields = ('name',)
+    # raw_id_fields = ['name',]
+
+
+
 # # User = get_user_model()
 
 # def export_to_csv(modeladmin, request, queryset):
@@ -85,3 +94,4 @@ class UserProfileAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 
 # Register your models here.
 admin.site.register(Profile, UserProfileAdmin)
+admin.site.register(Dept, DeptAdmin)

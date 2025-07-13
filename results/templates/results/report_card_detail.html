@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ student.full_name }}'s Report Card - {{ term.name }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); max-width: 900px; margin: 20px auto; }
+        h1, h2, h3 { color: #333; text-align: center; }
+        .student-info { margin-bottom: 20px; background-color: #e9ecef; padding: 15px; border-radius: 5px; }
+        .student-info p { margin: 5px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .summary-section { margin-top: 30px; padding-top: 20px; border-top: 1px dashed #ddd; }
+        .summary-section p { margin-bottom: 10px; font-size: 1.1em; }
+        .back-link { display: block; margin-top: 30px; text-align: center; }
+        .back-link a { text-decoration: none; color: #007bff; font-weight: bold; }
+        .back-link a:hover { text-decoration: underline; }
+        /* Print Styles */
+        @media print {
+            body { background-color: #fff; }
+            .container { box-shadow: none; border: 1px solid #ccc; margin: 0; padding: 10px; }
+            .back-link { display: none; }
+        }
+    </style>
+</head>
+<body> {% comment %}
+    <!-- <div class="download-link">
+    <a href="{% url 'results:student_session_report_card_detail' student.id session.id %}?download=pdf" target="_blank" class="btn-download">Download as PDF</a>
+</div> -->{% endcomment %}
+    <div class="container">
+        <h1>Report Card</h1>
+        <h2>{{ student.full_name }}</h2>
+        <h3>{{ term.name }}</h3>
+
+        <div class="student-info">
+            <p><strong>Student Name:</strong> {{ student.first_name }}</p>
+            <p><strong>Admission Number:</strong> {{ student.USN }}</p>
+            <p><strong>Standard:</strong> {{ student.current_class.name|default:"N/A" }}</p>
+        </div>
+
+        {% if report_data %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>CA1</th>
+                        <th>CA2</th>
+                        <th>CA3</th>
+                        <th>Exam</th>
+                        <th>Total Score</th>
+                        <th>Grade</th>
+                        <th>Remark</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in report_data %}
+                        <tr>
+                            <td>{{ data.subject }}</td>
+                            <td>{{ data.ca1 }}</td>
+                            <td>{{ data.ca2 }}</td>
+                            <td>{{ data.ca3 }}</td>
+                            <td>{{ data.exam_score }}</td>
+                            <td><strong>{{ data.total_score }}</strong></td>
+                            <td><strong>{{ data.grade }}</strong></td>
+                            <td>{{ data.remark }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="summary-section">
+                <p><strong>Overall Average Score:</strong> {{ overall_average }}%</p>
+                <p><strong>Overall Remark:</strong> {{ overall_remark }}</p>
+            </div>
+        {% else %}
+            <p>No scores available for {{ student.first_name }} in {{ term.name }}.</p>
+        {% endif %}
+
+        <div class="back-link">
+            {% if user.teacher %}
+                {# Go back to report card list, preserving selected term/standard if possible #}
+                <a href="{% url 'results:report_card_list' %}?term={{ term.id }}{% if student.current_standard %}&standard={{ student.current_standard.id }}{% endif %}">Back to Student List</a>
+            {% elif user.student %}
+                {# Student goes back to their dashboard #}
+                <a href="{% url 'results:student_dashboard' %}">Back to Dashboard</a>
+            {% else %}
+                {# Fallback for other users or unlinked accounts #}
+                <a href="{% url 'home' %}">Back to Home</a> {# IMPORTANT: Replace 'home' with the actual URL name of your project's home page #}
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,104 @@
+{% load results_extras %} {# Add this line at the very top for custom filter #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ student.full_name }}'s Annual Report Card - {{ session.name }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); max-width: 900px; margin: 20px auto; }
+        h1, h2, h3 { color: #333; text-align: center; }
+        .student-info { margin-bottom: 20px; background-color: #e9ecef; padding: 15px; border-radius: 5px; }
+        .student-info p { margin: 5px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .summary-section { margin-top: 30px; padding-top: 20px; border-top: 1px dashed #ddd; }
+        .summary-section p { margin-bottom: 10px; font-size: 1.1em; }
+        .back-link { display: block; margin-top: 30px; text-align: center; }
+        .back-link a { text-decoration: none; color: #007bff; font-weight: bold; }
+        .back-link a:hover { text-decoration: underline; }
+        /* Print Styles */
+        @media print {
+            body { background-color: #fff; }
+            .container { box-shadow: none; border: 1px solid #ccc; margin: 0; padding: 10px; }
+            .back-link { display: none; }
+        }
+    </style>
+</head>
+<body> 
+     <div class="download-link">
+    <a href="{% url 'results:student_session_report_card_detail' student.id session.id %}?download=pdf" 
+       target="_blank" 
+       class="btn-download">Download Annual Report as PDF</a>
+</div>
+
+
+    <div class="container">
+        <h1>Annual Report Card</h1>
+        <h2>{{ student.first_name }}</h2>
+        <h3>Academic Session: {{ session.name }}</h3>
+
+        <div class="student-info">
+            <p><strong>Student Name:</strong> {{ student.first_name }}</p>
+            <p><strong>Admission Number:</strong> {{ student.USN }}</p>
+            <p><strong>Standard:</strong> {{ student.current_class.name|default:"N/A" }}</p>
+        </div>
+
+        {% if report_data %}
+            <table>
+                <thead>
+                    <tr>
+                        <th rowspan="2">Subject</th>
+                        <th colspan="{{ terms_in_session|length }}">Termly Scores</th>
+                        <th rowspan="2">Cumulative Total</th>
+                        <th rowspan="2">Effective Average</th>
+                        <th rowspan="2">Grade</th>
+                        <th rowspan="2">Remark</th>
+                    </tr>
+                    <tr>
+                        {% for term in terms_in_session %}
+                            <th>{{ term.name }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in report_data %}
+                        <tr>
+                            <td>{{ data.subject }}</td>
+                            {# Use the custom filter to access term scores dynamically #}
+                            {% for term_obj in terms_in_session %}
+                                <td>{{ data.term_scores|get_item:term_obj.name }}</td>
+                            {% endfor %}
+                            <td><strong>{{ data.cumulative_total_score }}</strong></td>
+                            <td><strong>{{ data.effective_subject_average }}%</strong></td>
+                            <td><strong>{{ data.grade }}</strong></td>
+                            <td>{{ data.remark }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="summary-section">
+                <p><strong>Overall Session Average Score:</strong> {{ overall_session_average }}%</p>
+                <p><strong>Overall Remark:</strong> {{ overall_remark }}</p>
+            </div>
+        {% else %}
+            <p>No scores available for {{ student.full_name }} in {{ session.name }}.</p>
+        {% endif %}
+
+        <div class="back-link">
+           {% comment %} {% if request.user.is_authenticated and hasattr(request.user, 'teacher') %} {% endcomment %}
+           {% if user.teacher %}
+                <a href="{% url 'results:session_report_card_list' %}?session={{ session.id }}{% if student.current_standard %}&standard={{ student.current_standard.id }}{% endif %}">Back to Student List</a>
+           {% comment %} {% elif request.user.is_authenticated and hasattr(request.user, 'student') and request.user.student == student %} {% endcomment %}
+                {% elif user.student %}
+           <a href="{% url 'results:student_dashboard' %}">Back to Dashboard</a>
+            {% else %}
+                <a href="{% url 'home' %}">Back to Home</a> {# IMPORTANT: Replace 'home' with the actual URL name of your project's home page #}
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
