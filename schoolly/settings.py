@@ -161,7 +161,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # # LOGIN_URL = 'users:login'
 # LOGIN_URL = '/users/login/'
 
-LOGIN_REDIRECT_URL = '/student-dashboard/' # Redirect students to their dashboard after login
+LOGIN_REDIRECT_URL = 'results/student-dashboard/' # Redirect students to their dashboard after login
 LOGOUT_REDIRECT_URL = '/' # Redirect to home page after logout (or login page)
 LOGIN_URL = '/users/login/' # URL name of your login page
 

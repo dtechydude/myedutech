@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.http import HttpResponse # Import HttpResponse
 from django.db.models import Sum, Avg, F # F object for database expressions
 from .models import Student, Result, Examination # Adjust import path as needed
@@ -14,10 +15,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views import View
 from django.db import transaction
 from django.forms import formset_factory
-from .models import Score
-from .forms import ScoreEntryForm # We'll create this form next
-
-from .forms import ScoreEntryForm, ReportCardFilterForm, SessionReportCardFilterForm # Import new form
+from .models import Score, MotorAbilityScore
+from .forms import ScoreEntryForm, ReportCardFilterForm, SessionReportCardFilterForm, MotorAbilityScoreForm # Import new form
 from .utils import get_grade, get_subject_remark, get_overall_remark # Import helper functions
 from django.template.loader import render_to_string # Import render_to_string
 
@@ -496,7 +495,8 @@ class StudentReportCardView(LoginRequiredMixin, View):
     Generates and displays a single student's report card for a specific term.
     Accessible by teachers/admins (for any student) and by the student themselves.
     """
-    template_name = 'results/report_card_detail.html'
+    template_name = 'results/student_report_card_detail.html'
+    pdf_template_name = 'results/student_report_card_pdf.html' # Dedicated template for PDF layout
 
     def get(self, request, student_id, term_id, *args, **kwargs):
         student = get_object_or_404(Student, id=student_id)
@@ -546,6 +546,14 @@ class StudentReportCardView(LoginRequiredMixin, View):
             overall_average = total_scores_sum / subjects_with_scores_count
             overall_remark = get_overall_remark(overall_average)
 
+        # --- Fetch Motor Ability Score for this specific term ---
+        # .first() is used because unique_together ensures only one record,
+        # but .get() would raise an error if no record exists.
+        motor_ability_score = MotorAbilityScore.objects.filter(student=student, term=term).first()
+        
+        # You might also fetch comments or other term-specific data here
+        # comment = Comment.objects.filter(student=student, term=term).first()
+
 
         context = {
             'student': student,
@@ -553,52 +561,77 @@ class StudentReportCardView(LoginRequiredMixin, View):
             'report_data': report_data,
             'overall_average': f"{overall_average:.2f}" if overall_average is not None else 'N/A', # Format to 2 decimal places
             'overall_remark': overall_remark,
+            'motor_ability_score': motor_ability_score
         }
 
-        # PDF Download Logic using django-wkhtmltopdf
+        # Handle PDF download request
         if 'download' in request.GET and request.GET['download'] == 'pdf':
-            filename = f"{student.first_name.replace(' ', '_')}_{term.name.replace(' ', '_')}_ReportCard.pdf"
-            # Return PDFTemplateResponse directly
-            return PDFTemplateResponse(
-                request=request,
-                template=self.template_name,
-                context=context,
-                filename=filename,
-                show_content_in_browser=False, # True to display in browser, False to force download
-                cmd_options={'enable-local-file-access': None, 'enable-javascript': True, 'no-stop-slow-scripts': True}
-                # 'enable-local-file-access' for static files (CSS/Images) if they are referenced by file path
-                # 'enable-javascript': If you have JS for rendering (unlikely for reports)
-            )
-        
+            filename = f"{student.first_name.replace(' ', '_')}_{term.name.replace(' ', '_')}_TermlyReportCard.pdf"
+            
+            # Use the dedicated PDF template and the render helper
+            pdf_response = render_to_pdf_xhtml2pdf(self.pdf_template_name, context)
+            
+            if pdf_response:
+                pdf_response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                return pdf_response
+            else:
+                return HttpResponse("Error generating PDF.", status=500)
+
+        # Default: Render the regular HTML page
         return render(request, self.template_name, context)
+        
+
+
+# # --- VIEW FOR INDIVIDUAL TERMLY REPORT CARDS ---
+# class StudentReportCardView(LoginRequiredMixin, View):
+#     """
+#     Displays a student's termly report card (HTML or PDF).
+#     Includes academic scores and individual termly motor ability scores.
+#     """
+#     template_name = 'results/student_report_card_detail.html'
+#     pdf_template_name = 'results/student_report_card_pdf.html' # Dedicated template for PDF layout
+
+#     def get(self, request, student_id, term_id):
+#         student = get_object_or_404(Student, id=student_id)
+#         term = get_object_or_404(Term, id=term_id)
+
+#         # Fetch Academic Scores for the specific term
+#         academic_scores = Score.objects.filter(student=student, term=term).select_related('subject')
+        
+#         # --- Fetch Motor Ability Score for this specific term ---
+#         # .first() is used because unique_together ensures only one record,
+#         # but .get() would raise an error if no record exists.
+#         motor_ability_score = MotorAbilityScore.objects.filter(student=student, term=term).first()
+        
+#         # You might also fetch comments or other term-specific data here
+#         # comment = Comment.objects.filter(student=student, term=term).first()
+
+#         context = {
+#             'student': student,
+#             'term': term,
+#             'academic_scores': academic_scores,
+#             'motor_ability_score': motor_ability_score, # Pass the motor ability score object
+#             # 'comment': comment, # Example
+#             # Add any other data needed for the termly report card
+#         }
+
+#         # Handle PDF download request
+#         if 'download' in request.GET and request.GET['download'] == 'pdf':
+#             filename = f"{student.first_name.replace(' ', '_')}_{term.name.replace(' ', '_')}_TermlyReportCard.pdf"
+            
+#             # Use the dedicated PDF template and the render helper
+#             pdf_response = render_to_pdf_xhtml2pdf(self.pdf_template_name, context)
+            
+#             if pdf_response:
+#                 pdf_response['Content-Disposition'] = f'attachment; filename="{filename}"'
+#                 return pdf_response
+#             else:
+#                 return HttpResponse("Error generating PDF.", status=500)
+
+#         # Default: Render the regular HTML page
+#         return render(request, self.template_name, context)
        
 
-
-# class StudentDashboardView(LoginRequiredMixin, View):
-#     """
-#     A simple dashboard for students to view their own report cards.
-#     """
-#     template_name = 'results/student_dashboard.html'
-
-#     def get(self, request, *args, **kwargs):
-#         # Ensure the logged-in user has a linked Student profile
-#         if hasattr(request.user, 'student'):
-#             student = request.user.student
-            
-#             # Get terms for which the student actually has score entries
-#             # This prevents showing empty report cards for terms with no data
-#             terms_with_scores = Term.objects.filter(score__student=student).distinct().order_by('-start_date')
-
-#             context = {
-#                 'student': student,
-#                 'terms': terms_with_scores,
-#             }
-#             return render(request, self.template_name, context)
-#         else:
-#             messages.error(request, "Your user account is not linked to a student profile. Please contact administration.")
-#             # Redirect unlinked users to a different page or show a generic message
-#             return redirect('some_general_dashboard_or_home_page') # Define 'some_general_dashboard_or_home_page' in your project's urls.py
-        
 
 # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 # schools/views.py
@@ -685,6 +718,7 @@ class StudentSessionReportCardView(LoginRequiredMixin, View):
     Accessible by teachers/admins (for any student) and by the student themselves.
     """
     template_name = 'results/session_report_card_detail.html'
+    # template_name = 'results/test_result_template.html'
     pdf_template_name = 'results/session_report_card_pdf.html' # Dedicated PDF template (recommended)
 
 
@@ -761,6 +795,37 @@ class StudentSessionReportCardView(LoginRequiredMixin, View):
             overall_session_average = overall_effective_average_sum / subjects_counted_for_overall_average
             overall_remark = get_overall_remark(overall_session_average)
 
+        # --- Aggregating Motor Ability Scores across all terms in the session ---
+        # Get all MotorAbilityScore instances for this student within this session
+        motor_ability_scores_for_session = MotorAbilityScore.objects.filter(
+            student=student,
+            term__session=session # Filter by terms belonging to this specific session
+        )
+
+        # Calculate the average score for each motor ability category across all relevant terms
+        aggregated_motor_abilities = motor_ability_scores_for_session.aggregate(
+            avg_honesty=Avg('honesty'),
+            avg_politeness=Avg('politeness'),
+            avg_neatness=Avg('neatness'),
+            avg_cooperation=Avg('cooperation'),
+            avg_obedience=Avg('obedience'),
+            avg_punctuality=Avg('punctuality'),
+            avg_physical_education=Avg('physical_education'),
+            avg_games=Avg('games'),
+            # Add any other 'avg_' aggregations for new fields in MotorAbilityScore
+        )
+
+        # Process aggregated values: round to nearest integer and cap at 5
+        # Also ensure values are 0 if no scores were present (Avg returns None for no data)
+        processed_aggregated_motor_abilities = {}
+        for key, value in aggregated_motor_abilities.items():
+            if value is not None:
+                # Round the average and cap it at the max score (5)
+                processed_aggregated_motor_abilities[key] = round(min(value, 5)) 
+            else:
+                processed_aggregated_motor_abilities[key] = 0 # Default to 0 if no scores for that trait
+
+
         context = {
             'student': student,
             'session': session,
@@ -768,6 +833,9 @@ class StudentSessionReportCardView(LoginRequiredMixin, View):
             'report_data': report_data,
             'overall_session_average': f"{overall_session_average:.2f}" if overall_session_average is not None else 'N/A',
             'overall_remark': overall_remark,
+            # 'academic_session_summary': academic_session_summary, # Example
+            'aggregated_motor_abilities': processed_aggregated_motor_abilities, # Pass the processed aggregated data
+            # Add any other overall session report card data here (e.g., overall comments)
         }
 
         # PDF Download Logic using xhtml2pdf
@@ -859,3 +927,63 @@ class StudentDashboardView(LoginRequiredMixin, View):
         else:
             messages.error(request, "Your user account is not linked to a student profile. Please contact administration.")
             return redirect('home')
+        
+
+
+class MotorAbilityScoreCreateUpdateView(LoginRequiredMixin, TeacherRequiredMixin, View):
+    template_name = 'results/motor_ability_score_form.html'
+
+    def get(self, request, student_id, term_id):
+        student = get_object_or_404(Student, id=student_id)
+        term = get_object_or_404(Term, id=term_id)
+
+        # Try to get an existing score for this student and term
+        motor_ability_score = MotorAbilityScore.objects.filter(
+            student=student,
+            term=term
+        ).first()
+
+        if motor_ability_score:
+            form = MotorAbilityScoreForm(instance=motor_ability_score)
+        else:
+            form = MotorAbilityScoreForm()
+        
+        context = {
+            'student': student,
+            'term': term,
+            'form': form,
+            'is_update': motor_ability_score is not None
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, student_id, term_id):
+        student = get_object_or_404(Student, id=student_id)
+        term = get_object_or_404(Term, id=term_id)
+
+        motor_ability_score = MotorAbilityScore.objects.filter(
+            student=student,
+            term=term
+        ).first()
+
+        if motor_ability_score:
+            form = MotorAbilityScoreForm(request.POST, instance=motor_ability_score)
+        else:
+            form = MotorAbilityScoreForm(request.POST)
+        
+        if form.is_valid():
+            new_score = form.save(commit=False)
+            new_score.student = student
+            new_score.term = term
+            new_score.save()
+            messages.success(request, f"Motor Ability scores for {student.first_name} ({term.name}) saved successfully!")
+            # Redirect back to the student's termly report card
+            return redirect(reverse('results:student_report_card_detail', args=[student.id, term.id]))
+        else:
+            messages.error(request, "Please correct the errors in the form.")
+            context = {
+                'student': student,
+                'term': term,
+                'form': form,
+                'is_update': motor_ability_score is not None
+            }
+            return render(request, self.template_name, context)

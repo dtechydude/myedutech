@@ -1,3 +1,4 @@
+
 {% load results_extras %} {# Add this line at the very top for custom filter #}
 <!DOCTYPE html>
 <html lang="en">
@@ -100,5 +101,89 @@
             {% endif %}
         </div>
     </div>
+
+<!-- motorability section -->
+ <div class="section">
+        <h2>Motor Ability and Behavioral Assessment (Overall Session)</h2>
+        {% if aggregated_motor_abilities %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trait/Ability</th>
+                        <th>Overall Score (out of 5)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Honesty</td>
+                        <td>{{ aggregated_motor_abilities.avg_honesty }}</td>
+                    </tr>
+                    <tr>
+                        <td>Politeness</td>
+                        <td>{{ aggregated_motor_abilities.avg_politeness }}</td>
+                    </tr>
+                    <tr>
+                        <td>Neatness</td>
+                        <td>{{ aggregated_motor_abilities.avg_neatness }}</td>
+                    </tr>
+                    <tr>
+                        <td>Cooperation</td>
+                        <td>{{ aggregated_motor_abilities.avg_cooperation }}</td>
+                    </tr>
+                    <tr>
+                        <td>Obedience</td>
+                        <td>{{ aggregated_motor_abilities.avg_obedience }}</td>
+                    </tr>
+                    <tr>
+                        <td>Punctuality</td>
+                        <td>{{ aggregated_motor_abilities.avg_punctuality }}</td>
+                    </tr>
+                    <tr>
+                        <td>Physical Education</td>
+                        <td>{{ aggregated_motor_abilities.avg_physical_education }}</td>
+                    </tr>
+                    <tr>
+                        <td>Games</td>
+                        <td>{{ aggregated_motor_abilities.avg_games }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        {% else %}
+            <p>No motor ability scores recorded for this student in this session.</p>
+        {% endif %}
+    </div>
+
+    {# ... (Other sections like remarks, etc.) ... #}
+
+    <div class="section">
+            <h2>Overall Teacher's Comment</h2>
+            {# Assuming you have an overall comment for the session #}
+            {% comment %}
+            {% if session_comment %}
+                <p>{{ session_comment.text }}</p>
+            {% else %}
+                <p>No overall comment available for this session.</p>
+            {% endif %}
+            {% endcomment %}
+            <p>Place the teacher's overall comment for the session here.</p>
+        </div>
+
+        <div class="section">
+            <h2>Overall Attendance Record</h2>
+            {# Add aggregated attendance details here #}
+            <p>Total Days Present: XX</p>
+            <p>Total Days Absent: XX</p>
+        </div>
+
+        <div class="section signature-block">
+            <p>_________________________</p>
+            <p>Head Teacher's Signature</p>
+            <p>Date: {{ request.build_absolute_uri|date:"M d, Y" }}</p>
+        </div>
+        
+    </div>
+
+</div>
+
 </body>
 </html>

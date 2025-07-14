@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ student.full_name }}'s Report Card - {{ term.name }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); max-width: 900px; margin: 20px auto; }
+        h1, h2, h3 { color: #333; text-align: center; }
+        .student-info { margin-bottom: 20px; background-color: #e9ecef; padding: 15px; border-radius: 5px; }
+        .student-info p { margin: 5px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .summary-section { margin-top: 30px; padding-top: 20px; border-top: 1px dashed #ddd; }
+        .summary-section p { margin-bottom: 10px; font-size: 1.1em; }
+        .back-link { display: block; margin-top: 30px; text-align: center; }
+        .back-link a { text-decoration: none; color: #007bff; font-weight: bold; }
+        .back-link a:hover { text-decoration: underline; }
+        /* Print Styles */
+        @media print {
+            body { background-color: #fff; }
+            .container { box-shadow: none; border: 1px solid #ccc; margin: 0; padding: 10px; }
+            .back-link { display: none; }
+        }
+    </style>
+</head>
+<body> {% comment %}
+    <!-- <div class="download-link">
+    <a href="{% url 'results:student_session_report_card_detail' student.id session.id %}?download=pdf" target="_blank" class="btn-download">Download as PDF</a>
+</div> -->{% endcomment %}
+   <div class="download-link" style="text-align: right; margin-bottom: 20px;">
+    {# This link uses the same URL as the current page, but adds a 'download=pdf' GET parameter #}
+    <a href="{% url 'results:student_report_card_detail' student.id term.id %}?download=pdf"
+       target="_blank"          {# Opens the PDF in a new tab/window #}
+       class="btn btn-primary">  {# Basic Bootstrap styling, adjust as per your CSS framework #}
+       Download Termly Report as PDF
+    </a>
+</div>
+
+<div class="container">
+        <h1>Report Card</h1>
+        <h2>{{ student.full_name }}</h2>
+        <h3>{{ term.name }}</h3>
+
+        <div class="student-info">
+            <p><strong>Student Name:</strong> {{ student.first_name }}</p>
+            <p><strong>Admission Number:</strong> {{ student.USN }}</p>
+            <p><strong>Standard:</strong> {{ student.current_class.name|default:"N/A" }}</p>
+        </div>
+
+        {% if report_data %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>CA1</th>
+                        <th>CA2</th>
+                        <th>CA3</th>
+                        <th>Exam</th>
+                        <th>Total Score</th>
+                        <th>Grade</th>
+                        <th>Remark</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in report_data %}
+                        <tr>
+                            <td>{{ data.subject }}</td>
+                            <td>{{ data.ca1 }}</td>
+                            <td>{{ data.ca2 }}</td>
+                            <td>{{ data.ca3 }}</td>
+                            <td>{{ data.exam_score }}</td>
+                            <td><strong>{{ data.total_score }}</strong></td>
+                            <td><strong>{{ data.grade }}</strong></td>
+                            <td>{{ data.remark }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="summary-section">
+                <p><strong>Overall Average Score:</strong> {{ overall_average }}%</p>
+                <p><strong>Overall Remark:</strong> {{ overall_remark }}</p>
+            </div>
+        {% else %}
+            <p>No scores available for {{ student.first_name }} in {{ term.name }}.</p>
+        {% endif %}
+
+        <div class="back-link">
+            {% if user.teacher %}
+                {# Go back to report card list, preserving selected term/standard if possible #}
+                <a href="{% url 'results:report_card_list' %}?term={{ term.id }}{% if student.current_standard %}&standard={{ student.current_standard.id }}{% endif %}">Back to Student List</a>
+            {% elif user.student %}
+                {# Student goes back to their dashboard #}
+                <a href="{% url 'results:student_dashboard' %}">Back to Dashboard</a>
+            {% else %}
+                {# Fallback for other users or unlinked accounts #}
+                <a href="{% url 'home' %}">Back to Home</a> {# IMPORTANT: Replace 'home' with the actual URL name of your project's home page #}
+            {% endif %}
+        </div>
+    </div>
+
+{# --- NEW SECTION: Motor Ability and Behavioral Traits --- #}
+        <div class="section">
+            <h2>Motor Ability & Behavioral Traits (Score out of 5)</h2>
+            {% if motor_ability_score %}
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Trait/Ability</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Honesty</td>
+                            <td>{{ motor_ability_score.honesty }}</td>
+                        </tr>
+                        <tr>
+                            <td>Politeness</td>
+                            <td>{{ motor_ability_score.politeness }}</td>
+                        </tr>
+                        <tr>
+                            <td>Neatness</td>
+                            <td>{{ motor_ability_score.neatness }}</td>
+                        </tr>
+                        <tr>
+                            <td>Cooperation</td>
+                            <td>{{ motor_ability_score.cooperation }}</td>
+                        </tr>
+                        <tr>
+                            <td>Obedience</td>
+                            <td>{{ motor_ability_score.obedience }}</td>
+                        </tr>
+                        <tr>
+                            <td>Punctuality</td>
+                            <td>{{ motor_ability_score.punctuality }}</td>
+                        </tr>
+                        <tr>
+                            <td>Physical Education</td>
+                            <td>{{ motor_ability_score.physical_education }}</td>
+                        </tr>
+                        <tr>
+                            <td>Games</td>
+                            <td>{{ motor_ability_score.games }}</td>
+                        </tr>
+                        <tr class="table-info">
+                            <td><strong>Total Motor Ability Score</strong></td>
+                            <td><strong>{{ motor_ability_score.total_score }} / {{ motor_ability_score.max_possible_score }}</strong></td>
+                        </tr>
+                        <tr class="table-info">
+                            <td><strong>Average Motor Ability Score</strong></td>
+                            <td><strong>{{ motor_ability_score.average_score|floatformat:2 }}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No motor ability or behavioral scores recorded for this term.</p>
+            {% endif %}
+        </div>
+        {# Link to enter/edit motor ability scores #}
+            {% if user.teacher %}
+            <div class="text-right mt-3">
+                <a href="{% url 'results:enter_motor_ability_score' student.id term.id %}" class="btn btn-info btn-sm">
+                    {% if motor_ability_score %}Edit Scores{% else %}Enter Scores{% endif %}
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        {# --- END NEW SECTION --- #}
+
+        <div class="section">
+            <h2>Teacher's Comment</h2>
+            {# Assuming you have a 'comment' object in context #}
+            {% comment %}
+            {% if comment %}
+                <p>{{ comment.text }}</p>
+            {% else %}
+                <p>No comment available for this term.</p>
+            {% endif %}
+            {% endcomment %}
+        </div>
+
+        <div class="section">
+            <h2>Attendance Record</h2>
+            {# Add attendance details here #}
+            <p>Days Present: XX</p>
+            <p>Days Absent: XX</p>
+        </div>
+
+        <div class="section">
+            <h2>Next Term Begins</h2>
+            <p>Date: [Insert Next Term Start Date Here]</p>
+        </div>
+
+        <div class="section signature-block">
+            <p>_________________________</p>
+            <p>Class Teacher's Signature</p>
+            <p>Date: {{ request.build_absolute_uri|date:"M d, Y" }}</p>
+        </div>
+        
+    </div>
+
+    {# Optional: Include Bootstrap JS if you use features requiring it #}
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
+
+
+</body>
+</html>

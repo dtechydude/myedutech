@@ -106,153 +106,223 @@ class Score(models.Model):
 
 
 
-# Model For Motorability
+# # Model For Motorability
+# class MotorAbilityScore(models.Model):
+#     """
+#     Stores motor ability and behavioral scores for a student in a specific term.
+#     Each trait is scored out of 5.
+#     """
+#     student = models.ForeignKey(
+#         Student,
+#         on_delete=models.CASCADE,
+#         related_name='motor_ability_scores',
+#         help_text="The student for whom these scores are recorded."
+#     )
+#     term = models.ForeignKey(
+#         Term,
+#         on_delete=models.CASCADE,
+#         related_name='motor_ability_scores',
+#         help_text="The academic term for which these scores apply."
+#     )
+
+#     # Behavioral traits with a maximum score of 5
+#     honesty = models.PositiveIntegerField(
+#         default=0,
+#         validators=[MinValueValidator(0), MaxValueValidator(5)],
+#         help_text="Score for honesty (0-5)."
+#     )
+#     politeness = models.PositiveIntegerField(
+#         default=0,
+#         validators=[MinValueValidator(0), MaxValueValidator(5)],
+#         help_text="Score for politeness (0-5)."
+#     )
+#     neatness = models.PositiveIntegerField(
+#         default=0,
+#         validators=[MinValueValidator(0), MaxValueValidator(5)],
+#         help_text="Score for neatness (0-5)."
+#     )
+#     cooperation = models.PositiveIntegerField(
+#         default=0,
+#         validators=[MinValueValidator(0), MaxValueValidator(5)],
+#         help_text="Score for cooperation (0-5)."
+#     )
+#     obedience = models.PositiveIntegerField(
+#         default=0,
+#         validators=[MinValueValidator(0), MaxValueValidator(5)],
+#         help_text="Score for obedience (0-5)."
+#     )
+#     punctuality = models.PositiveIntegerField(
+#         default=0,
+#         validators=[MinValueValidator(0), MaxValueValidator(5)],
+#         help_text="Score for punctuality (0-5)."
+#     )
+#     attentiveness = models.PositiveIntegerField(
+#         default=0,
+#         validators=[MinValueValidator(0), MaxValueValidator(5)],
+#         help_text="Score for attentiveness (0-5)."
+#     )
+#     attitude = models.PositiveIntegerField(
+#         default=0,
+#         validators=[MinValueValidator(0), MaxValueValidator(5)],
+#         help_text="Score for participation/performance in games (0-5)."
+#     )
+#     emotional_stability = models.PositiveIntegerField(
+#         default=0,
+#         validators=[MinValueValidator(0), MaxValueValidator(5)],
+#         help_text="Score for emotional_stability (0-5)."
+#     )
+#     perseverance = models.PositiveIntegerField(
+#         default=0,
+#         validators=[MinValueValidator(0), MaxValueValidator(5)],
+#         help_text="Score for perseverance (0-5)."
+#     )
+#     leadership = models.PositiveIntegerField(
+#         default=0,
+#         validators=[MinValueValidator(0), MaxValueValidator(5)],
+#         help_text="Score for leadership (0-5)."
+#     )
+    
+#     # Other abilities with a maximum score of 5
+#     physical_education = models.PositiveIntegerField(
+#         default=0,
+#         validators=[MinValueValidator(0), MaxValueValidator(5)],
+#         help_text="Score for physical education (0-5)."
+#     )
+#     games = models.PositiveIntegerField(
+#         default=0,
+#         validators=[MinValueValidator(0), MaxValueValidator(5)],
+#         help_text="Score for participation/performance in games (0-5)."
+#     )
+#     handwriting = models.PositiveIntegerField(
+#         default=0,
+#         validators=[MinValueValidator(0), MaxValueValidator(5)],
+#         help_text="Score for handwriting (0-5)."
+#     )
+#     verbal_fluency = models.PositiveIntegerField(
+#         default=0,
+#         validators=[MinValueValidator(0), MaxValueValidator(5)],
+#         help_text="Score for verbal fluency (0-5)."
+#     )
+#     reading = models.PositiveIntegerField(
+#         default=0,
+#         validators=[MinValueValidator(0), MaxValueValidator(5)],
+#         help_text="Score for reading (0-5)."
+#     )
+#     musical = models.PositiveIntegerField(
+#         default=0,
+#         validators=[MinValueValidator(0), MaxValueValidator(5)],
+#         help_text="Score for musical (0-5)."
+#     )
+#     handling_tools = models.PositiveIntegerField(
+#         default=0,
+#         validators=[MinValueValidator(0), MaxValueValidator(5)],
+#         help_text="Score for handling tools (0-5)."
+#     )
+#     # Add any more traits or abilities here following the same pattern
+#     # e.g., creativity = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(5)])
+
+#     class Meta:
+#         # Ensures that a student can only have one MotorAbilityScore record per term
+#         unique_together = ('student', 'term') 
+#         verbose_name = "Motor Ability/Behavioral Score"
+#         verbose_name_plural = "Motor Ability/Behavioral Scores"
+#         ordering = ['term', 'student'] # Optional: define a default ordering
+
+#     def __str__(self):
+#         return f"{self.student.first_name} {self.student.last_name} - {self.term.name} Motor Ability"
+
+#     @property
+#     def get_gradable_fields(self):
+#         """Returns a list of field names that are part of the grading."""
+#         return [
+#             'honesty', 'politeness', 'neatness', 'cooperation', 'obedience',
+#             'punctuality', 'physical_education', 'games'
+#         ]
+
+#     @property
+#     def total_score(self):
+#         """Calculates the sum of all scores for this specific MotorAbilityScore instance."""
+#         return sum(getattr(self, field) for field in self.get_gradable_fields)
+
+#     @property
+#     def max_possible_score(self):
+#         """Calculates the maximum possible total score for this instance."""
+#         return len(self.get_gradable_fields) * 5
+
+#     @property
+#     def average_score(self):
+#         """Calculates the average score across all traits for this instance."""
+#         num_fields = len(self.get_gradable_fields)
+#         if num_fields == 0:
+#             return 0
+#         return self.total_score / num_fields
+    
+
 class MotorAbilityScore(models.Model):
-    """
-    Stores motor ability and behavioral scores for a student in a specific term.
-    Each trait is scored out of 5.
-    """
-    student = models.ForeignKey(
-        Student,
-        on_delete=models.CASCADE,
-        related_name='motor_ability_scores',
-        help_text="The student for whom these scores are recorded."
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='motor_ability_scores')
+    term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name='motor_ability_scores')
+    
+    # Behavioral Traits (typically 1-5 scale)
+    honesty = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score for Honesty (1=Poor, 5=Excellent)"
     )
-    term = models.ForeignKey(
-        Term,
-        on_delete=models.CASCADE,
-        related_name='motor_ability_scores',
-        help_text="The academic term for which these scores apply."
+    politeness = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score for Politeness (1=Poor, 5=Excellent)"
+    )
+    neatness = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score for Neatness (1=Poor, 5=Excellent)"
+    )
+    cooperation = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score for Cooperation (1=Poor, 5=Excellent)"
+    )
+    obedience = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score for Obedience (1=Poor, 5=Excellent)"
+    )
+    punctuality = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score for Punctuality (1=Poor, 5=Excellent)"
     )
 
-    # Behavioral traits with a maximum score of 5
-    honesty = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Score for honesty (0-5)."
+    # Motor Abilities (typically 1-5 scale)
+    physical_education = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score for Physical Education (1=Poor, 5=Excellent)"
     )
-    politeness = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Score for politeness (0-5)."
+    games = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score for Games (1=Poor, 5=Excellent)"
     )
-    neatness = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Score for neatness (0-5)."
-    )
-    cooperation = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Score for cooperation (0-5)."
-    )
-    obedience = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Score for obedience (0-5)."
-    )
-    punctuality = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Score for punctuality (0-5)."
-    )
-    attentiveness = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Score for attentiveness (0-5)."
-    )
-    attitude = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Score for participation/performance in games (0-5)."
-    )
-    emotional_stability = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Score for emotional_stability (0-5)."
-    )
-    perseverance = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Score for perseverance (0-5)."
-    )
-    leadership = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Score for leadership (0-5)."
-    )
-    
-    # Other abilities with a maximum score of 5
-    physical_education = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Score for physical education (0-5)."
-    )
-    games = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Score for participation/performance in games (0-5)."
-    )
-    handwriting = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Score for handwriting (0-5)."
-    )
-    verbal_fluency = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Score for verbal fluency (0-5)."
-    )
-    reading = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Score for reading (0-5)."
-    )
-    musical = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Score for musical (0-5)."
-    )
-    handling_tools = models.PositiveIntegerField(
-        default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
-        help_text="Score for handling tools (0-5)."
-    )
-    # Add any more traits or abilities here following the same pattern
-    # e.g., creativity = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(5)])
+
+    date_recorded = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now=True)
 
     class Meta:
-        # Ensures that a student can only have one MotorAbilityScore record per term
-        unique_together = ('student', 'term') 
-        verbose_name = "Motor Ability/Behavioral Score"
-        verbose_name_plural = "Motor Ability/Behavioral Scores"
-        ordering = ['term', 'student'] # Optional: define a default ordering
+        unique_together = ('student', 'term') # A student can only have one motor ability score per term
+        verbose_name = "Motor Ability Score"
+        verbose_name_plural = "Motor Ability Scores"
 
     def __str__(self):
-        return f"{self.student.first_name} {self.student.last_name} - {self.term.name} Motor Ability"
+        return f"{self.student.full_name}'s Motor Ability for {self.term.name}"
 
     @property
-    def get_gradable_fields(self):
-        """Returns a list of field names that are part of the grading."""
-        return [
-            'honesty', 'politeness', 'neatness', 'cooperation', 'obedience',
-            'punctuality', 'physical_education', 'games'
+    def get_average_behavioral_score(self):
+        scores = [self.honesty, self.politeness, self.neatness, self.cooperation, self.obedience, self.punctuality]
+        return sum(scores) / len(scores) if scores else 0
+
+    @property
+    def get_average_motor_score(self):
+        scores = [self.physical_education, self.games]
+        return sum(scores) / len(scores) if scores else 0
+
+    @property
+    def get_overall_average_score(self):
+        all_scores = [
+            self.honesty, self.politeness, self.neatness, self.cooperation,
+            self.obedience, self.punctuality, self.physical_education, self.games
         ]
-
-    @property
-    def total_score(self):
-        """Calculates the sum of all scores for this specific MotorAbilityScore instance."""
-        return sum(getattr(self, field) for field in self.get_gradable_fields)
-
-    @property
-    def max_possible_score(self):
-        """Calculates the maximum possible total score for this instance."""
-        return len(self.get_gradable_fields) * 5
-
-    @property
-    def average_score(self):
-        """Calculates the average score across all traits for this instance."""
-        num_fields = len(self.get_gradable_fields)
-        if num_fields == 0:
-            return 0
-        return self.total_score / num_fields
+        return sum(all_scores) / len(all_scores) if all_scores else 0

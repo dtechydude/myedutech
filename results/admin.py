@@ -55,7 +55,7 @@ class ScoreAdmin(admin.ModelAdmin):
 class MotorAbilityScoreAdmin(admin.ModelAdmin):
     list_display = (
         'student', 'term', 'honesty', 'politeness', 'neatness', 'cooperation',
-        'obedience', 'punctuality', 'physical_education', 'games', 'total_score'
+        'obedience', 'punctuality', 'physical_education', 'games'
     )
     list_filter = ('term', 'student__current_class', 'student')
     search_fields = ('student__first_name', 'student__last_name', 'term__name')

@@ -44,6 +44,8 @@ urlpatterns = [
     path('annual-report-cards/', SessionReportCardListView.as_view(), name='session_report_card_list'),
     path('annual-report-cards/<int:student_id>/<int:session_id>/', StudentSessionReportCardView.as_view(), name='student_session_report_card_detail'),
 
+    # URL for entering/editing motor ability scores
+    path('enter-motor-ability/<int:student_id>/<int:term_id>/', views.MotorAbilityScoreCreateUpdateView.as_view(), name='enter_motor_ability_score'),
 
 
 ]

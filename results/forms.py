@@ -1,5 +1,6 @@
 from django import forms
 from curriculum.models import Term, Standard, Session# Import Standard
+from.models import MotorAbilityScore
 
 
 
@@ -87,3 +88,31 @@ class SessionReportCardFilterForm(forms.Form):
         required=False,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+
+
+class MotorAbilityScoreForm(forms.ModelForm):
+    class Meta:
+        model = MotorAbilityScore
+        fields = [
+            'honesty', 'politeness', 'neatness', 'cooperation',
+            'obedience', 'punctuality', 'physical_education', 'games'
+        ]
+        widgets = {
+            'honesty': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+            'politeness': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+            'neatness': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+            'cooperation': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+            'obedience': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+            'punctuality': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+            'physical_education': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+            'games': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name in self.fields:
+            self.fields[field_name].required = True # Make all fields required
+            self.fields[field_name].widget.attrs.update({
+                'class': 'form-control', # For Bootstrap styling
+                'placeholder': '1-5'
+            })

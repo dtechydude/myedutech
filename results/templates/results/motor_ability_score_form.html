@@ -1,0 +1,57 @@
+{% load crispy_forms_tags %} {# If you use django-crispy-forms #}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="text-center">
+                {% if is_update %}Edit{% else %}Enter{% endif %} Motor Ability & Behavioral Traits
+            </h2>
+            <h4 class="text-center">Student: {{ student.first_name }} ({{ student.student_id_number }})</h4>
+            <h5 class="text-center">Term: {{ term.name }} ({{ term.session.name }})</h5>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                
+                {# Render form fields using crispy-forms or manually #}
+                {{ form|crispy }} 
+                
+                {# Manual rendering example (uncomment if not using crispy-forms) #}
+                {#
+                <div class="form-group">
+                    <label for="{{ form.honesty.id_for_label }}">Honesty:</label>
+                    {{ form.honesty }}
+                    {% if form.honesty.errors %}<div class="text-danger">{{ form.honesty.errors }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.politeness.id_for_label }}">Politeness:</label>
+                    {{ form.politeness }}
+                    {% if form.politeness.errors %}<div class="text-danger">{{ form.politeness.errors }}</div>{% endif %}
+                </div>
+                {# ... repeat for all other fields ... #}
+                #}
+
+                <button type="submit" class="btn btn-primary btn-block mt-4">
+                    {% if is_update %}Update Scores{% else %}Save Scores{% endif %}
+                </button>
+            </form>
+            
+            <hr>
+            <div class="text-center mt-3">
+                <a href="{% url 'results:student_report_card_detail' student.id term.id %}" class="btn btn-secondary">
+                    Back to Termly Report
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

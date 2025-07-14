@@ -120,6 +120,7 @@ class Standard(models.Model):
     class Meta:
         verbose_name = 'Standard'
         verbose_name_plural = 'Standards'
+        ordering =['name']
 
     def __str__(self):
         return self.name
@@ -150,7 +151,7 @@ class Subject(models.Model):
     name = models.CharField(max_length=100)
     standard = models.ForeignKey(Standard, on_delete=models.CASCADE, related_name='subjects')
     # image = models.ImageField(upload_to=save_subject_image, blank=True, verbose_name='Subject Image')
-    description = models.TextField(max_length=500, blank=True)
+    description = models.CharField(max_length=200, blank=True)
     slug = models.SlugField(null=True, blank=True)
 
     def __str__(self):
@@ -161,8 +162,9 @@ class Subject(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
-      verbose_name = 'E-Learning Subjects'
-      verbose_name_plural = 'E-Learning Subjects'
+      verbose_name = 'Subjects'
+      verbose_name_plural = 'Subjects'
+      ordering = ['name']
 
 
 def save_lesson_files(instance, filename):

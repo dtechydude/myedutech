@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ student.first_name }} {{ student.last_name }} - {{ session.name }} Annual Report</title>
+    
+    {# Link to your CSS files here. Example for Bootstrap: #}
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    {# Or link to your custom static CSS file #}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/report_card.css' %}"> 
+
+    <style>
+        /* Basic inline styles for clarity, move to report_card.css if preferred */
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 900px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1, h2, h3 { text-align: center; margin-bottom: 20px; }
+        .school-header { text-align: center; margin-bottom: 30px; }
+        .school-header h1 { font-size: 2em; color: #333; }
+        .school-header p { font-size: 1.1em; color: #666; }
+        .student-info, .section { margin-bottom: 30px; padding: 15px; border: 1px solid #eee; border-radius: 5px; }
+        .student-info p { margin-bottom: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .table-info td { font-weight: bold; background-color: #e2f3ff; } /* Light blue for totals */
+        .download-link { text-align: right; margin-bottom: 20px; }
+        .btn-download {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+        .btn-download:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="school-header">
+            {# Replace with your school's logo and details #}
+            {% comment %}
+            <img src="{% static 'img/school_logo.png' %}" alt="School Logo" style="max-width: 100px;">
+            {% endcomment %}
+            <h1>My Awesome School</h1>
+            <p>123 Education Lane, Learning City, ABC Country</p>
+            <p>Phone: (123) 456-7890 | Email: info@myschool.com</p>
+        </div>
+
+        <div class="download-link">
+            {# PDF download link for the annual report #}
+            <a href="{% url 'results:student_session_report_card_detail' student.id session.id %}?download=pdf"
+               target="_blank"
+               class="btn btn-primary">
+               Download Annual Report as PDF
+            </a>
+        </div>
+
+        <h1>Student Annual Report Card</h1>
+        <h2>Academic Session: {{ session.name }}</h2>
+
+        <div class="student-info">
+            <h3>Student Information</h3>
+            <p><strong>Name:</strong> {{ student.first_name }} {{ student.last_name }}</p>
+            <p><strong>Student ID:</strong> {{ student.student_id_number }}</p>
+            <p><strong>Current Class:</strong> {{ student.current_class }}</p>
+            <p><strong>Date of Birth:</strong> {{ student.date_of_birth|date:"M d, Y" }}</p>
+            {# Add more student details as per your Student model #}
+        </div>
+
+        <div class="section">
+            <h2>Overall Academic Performance</h2>
+            {# This section will likely contain aggregated academic results for the whole session #}
+            {# Example: #}
+            {% comment %}
+            {% if academic_session_summary %}
+                <p><strong>Overall Average Score:</strong> {{ academic_session_summary.total_score|floatformat:2 }}</p>
+                <p><strong>Overall Grade:</strong> {{ academic_session_summary.overall_grade }}</p>
+                {# You might have a table summarizing subject performance across terms #}
+            {% else %}
+                <p>No overall academic performance data available for this session.</p>
+            {% endif %}
+            {% endcomment %}
+            <p>Place your aggregated academic results for the session here (e.g., average scores per subject across terms, overall average, etc.).</p>
+        </div>
+
+        {# --- NEW SECTION: Aggregated Motor Ability and Behavioral Traits --- #}
+        <div class="section">
+            <h2>Motor Ability and Behavioral Assessment (Overall Session)</h2>
+            {% if aggregated_motor_abilities %}
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Trait/Ability</th>
+                            <th>Overall Score (out of 5)</th> {# This column shows the rounded average #}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Honesty</td>
+                            <td>{{ aggregated_motor_abilities.avg_honesty }}</td>
+                        </tr>
+                        <tr>
+                            <td>Politeness</td>
+                            <td>{{ aggregated_motor_abilities.avg_politeness }}</td>
+                        </tr>
+                        <tr>
+                            <td>Neatness</td>
+                            <td>{{ aggregated_motor_abilities.avg_neatness }}</td>
+                        </tr>
+                        <tr>
+                            <td>Cooperation</td>
+                            <td>{{ aggregated_motor_abilities.avg_cooperation }}</td>
+                        </tr>
+                        <tr>
+                            <td>Obedience</td>
+                            <td>{{ aggregated_motor_abilities.avg_obedience }}</td>
+                        </tr>
+                        <tr>
+                            <td>Punctuality</td>
+                            <td>{{ aggregated_motor_abilities.avg_punctuality }}</td>
+                        </tr>
+                        <tr>
+                            <td>Physical Education</td>
+                            <td>{{ aggregated_motor_abilities.avg_physical_education }}</td>
+                        </tr>
+                        <tr>
+                            <td>Games</td>
+                            <td>{{ aggregated_motor_abilities.avg_games }}</td>
+                        </tr>
+                        {# You could calculate and display an overall average for this section if desired,
+                           by summing all avg_ fields and dividing by the count of fields.
+                           This calculation would be best done in your view and passed in context.
+                        #}
+                    </tbody>
+                </table>
+                <p class="text-muted mt-2">Scores are the rounded average of all termly scores within this session (out of 5).</p>
+            {% else %}
+                <p>No motor ability or behavioral scores recorded for this student in this session.</p>
+            {% endif %}
+        </div>
+        {# --- END NEW SECTION --- #}
+
+        <div class="section">
+            <h2>Overall Teacher's Comment</h2>
+            {# Assuming you have an overall comment for the session #}
+            {% comment %}
+            {% if session_comment %}
+                <p>{{ session_comment.text }}</p>
+            {% else %}
+                <p>No overall comment available for this session.</p>
+            {% endif %}
+            {% endcomment %}
+            <p>Place the teacher's overall comment for the session here.</p>
+        </div>
+
+        <div class="section">
+            <h2>Overall Attendance Record</h2>
+            {# Add aggregated attendance details here #}
+            <p>Total Days Present: XX</p>
+            <p>Total Days Absent: XX</p>
+        </div>
+
+        <div class="section signature-block">
+            <p>_________________________</p>
+            <p>Head Teacher's Signature</p>
+            <p>Date: {{ request.build_absolute_uri|date:"M d, Y" }}</p>
+        </div>
+        
+    </div>
+
+    {# Optional: Include Bootstrap JS if you use features requiring it #}
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
