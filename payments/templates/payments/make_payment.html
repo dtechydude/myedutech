@@ -125,16 +125,22 @@
 
         // --- AJAX to fetch CategoryFee details for students ---
         const categoryFeeSelect = document.getElementById('id_category_fee');
-        const originalAmountDisplay = document.createElement('p'); // Create a new element for display
+        const originalAmountDisplay = document.createElement('p'); // Create a new element for Expected Amount
         originalAmountDisplay.id = 'original_amount_display';
         originalAmountDisplay.className = 'mt-1 text-sm text-gray-600 font-semibold';
-        // Find the div of category_fee and append the display element
+
+        const remainingBalanceDisplay = document.createElement('p'); // New element for Remaining Balance
+        remainingBalanceDisplay.id = 'remaining_balance_display';
+        remainingBalanceDisplay.className = 'mt-1 text-sm text-blue-700 font-bold';
+
+        // Find the div of category_fee and append the display elements
         const categoryFeeDiv = document.getElementById('div-id_category_fee');
         if (categoryFeeDiv) {
             categoryFeeDiv.appendChild(originalAmountDisplay);
+            categoryFeeDiv.appendChild(remainingBalanceDisplay); // Append new element
         }
 
-        // Get the URL for the AJAX endpoint using Django's {% comment %} {% url %} {% endcomment %} tag
+        // Get the URL for the AJAX endpoint using Django's {% comment %}{% url %} {% endcomment %} tag
         const getCategoryFeeDetailsUrl = "{% url 'payments:get_category_fee_details' %}";
 
         function fetchOriginalAmount() {
@@ -152,19 +158,35 @@
                         if (data.amount_due) {
                             originalAmountDisplay.innerText = `Expected Amount: $${data.amount_due}`;
                             originalAmountDisplay.style.display = 'block'; // Show it
+
+                            // Display remaining balance
+                            if (data.balance_remaining !== undefined) {
+                                remainingBalanceDisplay.innerText = `Remaining Balance: $${data.balance_remaining}`;
+                                remainingBalanceDisplay.style.display = 'block';
+                            } else {
+                                remainingBalanceDisplay.innerText = '';
+                                remainingBalanceDisplay.style.display = 'none';
+                            }
+
                         } else {
                             originalAmountDisplay.innerText = '';
-                            originalAmountDisplay.style.display = 'none'; // Hide if no amount
+                            originalAmountDisplay.style.display = 'none';
+                            remainingBalanceDisplay.innerText = '';
+                            remainingBalanceDisplay.style.display = 'none';
                         }
                     })
                     .catch(error => {
                         console.error('Error fetching fee details:', error);
                         originalAmountDisplay.innerText = 'Error fetching fee details.';
                         originalAmountDisplay.style.display = 'block';
+                        remainingBalanceDisplay.innerText = '';
+                        remainingBalanceDisplay.style.display = 'none';
                     });
             } else {
                 originalAmountDisplay.innerText = '';
                 originalAmountDisplay.style.display = 'none';
+                remainingBalanceDisplay.innerText = '';
+                remainingBalanceDisplay.style.display = 'none';
             }
         }
 

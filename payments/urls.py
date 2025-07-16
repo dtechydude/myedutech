@@ -6,7 +6,7 @@ from payments import views as payment_views # Assuming your views are here
 # If you created a new 'payments' app, it would be:
 # from payments import views as payment_views
 
-app_name = 'results'
+app_name = 'payments'
 
 
 urlpatterns = [

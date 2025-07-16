@@ -81,8 +81,7 @@ def make_payment(request):
     }
     return render(request, 'payments/make_payment.html', context)
 
-@login_required # Keep login_required for all users
-# @user_passes_test(is_staff) # REMOVED this decorator to allow students to access
+@login_required
 def payment_history(request):
     """
     View to display a list of all payments with filtering and aggregation options.
@@ -92,12 +91,9 @@ def payment_history(request):
         'student', 'recorded_by', 'term', 'session', 'payment_category'
     ).order_by('-payment_date')
 
-    # Filter payments based on user type
-    if hasattr(request.user, 'student'): # If the logged-in user is a student
+    if hasattr(request.user, 'student'):
         payments = payments.filter(student=request.user.student)
-        # For students, we don't need the filter dropdowns for student, term, session, category
-        # as they can only see their own payments.
-        students = [] # Empty queryset as student filter is not applicable
+        students = []
         terms = []
         sessions = []
         categories = []
@@ -105,8 +101,7 @@ def payment_history(request):
         selected_term_id = None
         selected_session_id = None
         selected_category_id = None
-    else: # If the logged-in user is staff
-        # Filtering options for staff
+    else:
         student_id = request.GET.get('student')
         term_id = request.GET.get('term')
         session_id = request.GET.get('session')
@@ -121,7 +116,6 @@ def payment_history(request):
         if category_id:
             payments = payments.filter(payment_category__id=category_id)
 
-        # For filter dropdowns (staff only)
         students = Student.objects.all().order_by('first_name', 'last_name')
         terms = Term.objects.all().order_by('-start_date')
         sessions = Session.objects.all().order_by('-start_date')
@@ -135,8 +129,6 @@ def payment_history(request):
     if is_installment_filter:
         payments = payments.filter(is_installment=(is_installment_filter == 'true'))
 
-
-    # Aggregation logic: Combine payments by student, term, session, and category
     combined_payments = {}
     for payment in payments:
         key = (
@@ -173,7 +165,7 @@ def payment_history(request):
     context = {
         'payments': payments,
         'combined_payments': combined_payments_list,
-        'students': students, # Will be empty for student users, populated for staff
+        'students': students,
         'terms': terms,
         'sessions': sessions,
         'categories': categories,
@@ -183,7 +175,7 @@ def payment_history(request):
         'selected_category_id': selected_category_id,
         'selected_is_installment': is_installment_filter,
         'title': 'Payment History',
-        'is_staff_user': request.user.is_staff # Pass this to the template for conditional rendering
+        'is_staff_user': request.user.is_staff
     }
     return render(request, 'payments/payment_history.html', context)
 
@@ -218,11 +210,9 @@ def debtors_report(request):
     Generates a report of students who currently owe money (have a positive balance in the ledger).
     Allows filtering by term and session.
     """
-    # Get filter parameters
     term_id = request.GET.get('term')
     session_id = request.GET.get('session')
 
-    # Start with all ledger entries where balance is greater than 0
     debtors_query = StudentAccountLedger.objects.filter(balance__gt=0).select_related('student', 'term', 'session')
 
     if term_id:
@@ -253,7 +243,6 @@ def total_payments_report(request):
     Generates a report showing total payments made by students,
     with options to filter by period, term, or session.
     """
-    # Get filter parameters
     start_date_str = request.GET.get('start_date')
     end_date_str = request.GET.get('end_date')
     term_id = request.GET.get('term')
@@ -282,7 +271,6 @@ def total_payments_report(request):
         payments_query = payments_query.filter(student__id=student_id)
 
 
-    # Aggregate total payments
     total_amount_received = payments_query.aggregate(total=Sum('amount_received'))['total'] or Decimal('0.00')
     total_original_amount = payments_query.aggregate(total=Sum('original_amount'))['total'] or Decimal('0.00')
     total_discount_given = payments_query.aggregate(
@@ -293,7 +281,6 @@ def total_payments_report(request):
                            (total_discount_given['total_percentage_discount'] or Decimal('0.00'))
 
 
-    # Also provide a breakdown by student, category, term, session
     payment_breakdown = payments_query.values(
         'student__first_name', 'student__last_name', 'student__student_id',
         'payment_category__name', 'term__name', 'session__name'
@@ -333,12 +320,39 @@ def get_category_fee_details(request):
     if category_fee_id:
         try:
             category_fee = CategoryFee.objects.get(id=category_fee_id)
+            
+            # Get the logged-in student
+            student = None
+            if hasattr(request.user, 'student'):
+                student = request.user.student
+            
+            total_paid_for_this_fee = Decimal('0.00')
+            if student:
+                # Sum all payments made by this student for this specific category, term, and session
+                payments_for_fee = Payment.objects.filter(
+                    student=student,
+                    payment_category=category_fee.payment_category,
+                    term=category_fee.term,
+                    session=category_fee.session,
+                    status='completed' # Only count completed payments
+                ).aggregate(Sum('amount_received'))['amount_received__sum']
+                
+                if payments_for_fee:
+                    total_paid_for_this_fee = payments_for_fee
+
+            # Calculate remaining balance
+            balance_remaining = category_fee.amount_due - total_paid_for_this_fee
+            # Ensure balance_remaining doesn't go below zero if overpaid
+            balance_remaining = max(Decimal('0.00'), balance_remaining)
+
             data = {
                 'amount_due': str(category_fee.amount_due),
                 'fee_name': category_fee.fee_name,
                 'term_name': category_fee.term.name,
                 'session_name': category_fee.session.name,
                 'payment_category_name': category_fee.payment_category.name,
+                'balance_remaining': str(balance_remaining), # New field
+                'total_paid_for_this_fee': str(total_paid_for_this_fee), # New field
             }
             return JsonResponse(data)
         except CategoryFee.DoesNotExist:
