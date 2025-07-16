@@ -17,6 +17,7 @@ urlpatterns = [
     path('staff/', include('staff.urls', namespace='staff')),
     path('results/', include('results.urls', namespace='results')),
     path('payments/', include('payments.urls', namespace='payments')),
+    path('attendance/', include('attendance.urls', namespace='attendance')),
        
 
 

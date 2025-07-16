@@ -1,0 +1,333 @@
+{% comment %}
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    
+	<!-- PAGE TITLE HERE -->
+    {% block title %}
+	<title>My Student List</title>
+	{% endblock title %}
+	
+	<!-- FAVICONS ICON -->
+    {% block favicon %}
+	<link rel="shortcut icon" type="image/png" href="images/favicon.png" />
+    <!-- Datatable -->
+    <link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
+    <!-- Custom Stylesheet -->
+	<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+    {% endblock favicon %}
+
+</head>
+
+<body>
+
+    <!--*******************
+        Preloader start
+    ********************-->
+   <div id="preloader">
+		<div class="lds-ripple">
+			<div></div>
+			<div></div>
+		</div>
+    </div>
+    <!--*******************
+        Preloader end
+    ********************-->
+
+
+    <!--**********************************
+        Main wrapper start
+    ***********************************-->
+    <div id="main-wrapper">
+
+        <!--**********************************
+            Nav header start
+        ***********************************-->
+		
+        <!--**********************************
+            Nav header end
+        ***********************************-->
+		
+		<!--**********************************
+            Chat box start
+        ***********************************-->
+		
+		<!--**********************************
+            Chat box End
+        ***********************************-->
+
+		
+        <!--**********************************
+            Header start
+        ***********************************-->
+       
+        <!--**********************************
+            Header end ti-comment-alt
+        ***********************************-->
+
+        <!--**********************************
+            Sidebar start
+        ***********************************-->
+      
+        <!--**********************************
+            Sidebar end
+        ***********************************-->
+
+        <!--**********************************
+            Content body start
+        ***********************************-->
+        {% block content_body %}
+        <div class="content-body">
+            <div class="container-fluid">				
+				               
+                <!-- row -->
+
+                <div class="row">
+                
+					<div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="card-title" style="color:green;">Students Attendance Report </h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table id="example3" class="display" style="min-width: 845px">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Name</th>
+                                                <th>Student ID</th>
+                                                <th>Class</th>
+                                                <th>Status</th>
+                                                <th>Marked By</th>
+                                               
+                                                
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for s in attendance_report %}
+                                            <tr>
+                                                <td>{{ s.date }}</td>
+                                                <td><strong>{{ s.student.last_name }} </strong> {{ s.student.first_name }}</td>
+                                                <td>{{ s.student.USN }}</td>
+                                                <td>{{ s.student.standard }}</td>
+                                                
+                                                <td>
+                                                    {% if s.status == 'P' %}
+                                                    <span style="color:green ">Present</span>
+                                                    {% elif s.status == 'A' %}
+                                                    <span style="color:red ">Present</span>                                              
+                                                    {% elif s.status == 'L' %}
+                                                    <span style="color:orange ">Present</span>                                            
+                                                    {% elif s.status == 'E' %}
+                                                    <span style="color:grey ">Present</span>                                            
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ s.marked_by.first_name }} {{ s.marked_by.last_name }}</td>
+                                                {% endfor %}
+                                            </tr>
+                                           
+                                           
+                                         
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+				</div>
+            </div>
+        </div>
+        {% endblock content_body %}
+        <!--**********************************
+            Content body end
+        ***********************************-->
+
+
+        <!--**********************************
+            Footer start
+        ***********************************-->
+       
+        <!--**********************************
+            Footer end
+        ***********************************-->
+
+        <!--**********************************
+           Support ticket button start
+        ***********************************-->
+
+        <!--**********************************
+           Support ticket button end
+        ***********************************-->
+
+        
+    </div>
+    <!--**********************************
+        Main wrapper end
+    ***********************************-->
+
+    <!--**********************************
+        Scripts
+    ***********************************-->
+    <!-- Required vendors -->
+    {% block scripts %}
+    <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+    <script src="{% static 'pages/vendor/chart.js/Chart.bundle.min.js' %}"></script>
+	<!-- Apex Chart -->
+	<script src="{% static 'pages/vendor/apexchart/apexchart.js' %}"></script>
+	
+    <!-- Datatable -->
+    <script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
+
+	<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
+
+    <script src="{% static 'pages/js/custom.min.js' %}"></script>
+	<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+	<script src="{% static 'pages/js/demo.js' %}"></script>
+    <script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
+    {% endblock scripts %}
+</body>
+</html>
+
+{% endcomment %}
+
+
+{% load attendance_filters %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Report</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .present { color: green; font-weight: bold; }
+        .absent { color: red; font-weight: bold; }
+        .no-data { color: grey; font-style: italic; }
+        th, td { text-align: center; vertical-align: middle!important; }
+        th:first-child, td:first-child { text-align: left; }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div><img src="{% static 'pages/images/schoolly_logo.png' %}" alt=""></div>
+        <h5 class="mb-4">Attendance Report for Teacher: <span style="color:brown; font-size: 16px;">{{ teacher.first_name }} {{ teacher.last_name }}</span></h5>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="card mb-4">
+            <div class="card-header">Report Filters</div>
+            <div class="card-body">
+                <form method="get" class="form-row">
+                    <div class="form-group col-md-4">
+                        {{ report_form.student.label_tag }}
+                        {{ report_form.student }}
+                        {% if report_form.student.errors %}
+                            <div class="invalid-feedback d-block">{{ report_form.student.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group col-md-3">
+                        {{ report_form.start_date.label_tag }}
+                        {{ report_form.start_date }}
+                        {% if report_form.start_date.errors %}
+                            <div class="invalid-feedback d-block">{{ report_form.start_date.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group col-md-3">
+                        {{ report_form.end_date.label_tag }}
+                        {{ report_form.end_date }}
+                        {% if report_form.end_date.errors %}
+                            <div class="invalid-feedback d-block">{{ report_form.end_date.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary btn-block">Generate Report</button>
+                    </div>
+                </form>
+            </div>
+            {% if report_form.non_field_errors %}
+                <div class="alert alert-danger mt-3">
+                    {% for error in report_form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        {% if report_form.is_valid and attendance_data %}
+            {% with start_date=report_form.cleaned_data.start_date end_date=report_form.cleaned_data.end_date %}
+            <h4 class="mb-3">
+                Report for
+                {% if report_form.cleaned_data.student %}
+                    {{ report_form.cleaned_data.student.get_full_name }}
+                {% else %}
+                    All Students
+                {% endif %}
+                from {{ start_date|date:"M d, Y" }} to {{ end_date|date:"M d, Y" }}
+            </h4>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Student Name</th>
+                            {% for n in start_date|timesince_range:end_date %}
+                                <th>{{ n|date:"M d" }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student, daily_records in attendance_data.items %}
+                            <tr>
+                                <td>{{ student.get_full_name }}</td>
+                                {% for n in start_date|timesince_range:end_date %}
+                                    {% if n in daily_records %}
+
+                                    <td>marked</td>                                    
+                                     {% comment %}<td class="{% if daily_records[n].present %}present{% else %}absent{% endif %}"> 
+                                            {% if daily_records[n].present %}P{% else %}A{% endif %}
+                                        </td> {% endcomment %}
+                                    {% else %}
+                                        <td class="no-data">-</td> {# No record for this date #}
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endwith %}
+        {% elif report_form.is_valid %}
+             <div class="alert alert-info">No attendance records found for the selected criteria.</div>
+        {% else %}
+            <div class="alert alert-info">Please select report criteria and click "Generate Report".</div>
+        {% endif %}
+
+        <hr>
+        <div><p><a href="/dashboard/">Back to DASHBOARD</a></p></div>
+    </div>
+     
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

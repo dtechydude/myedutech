@@ -5,6 +5,7 @@ from django.contrib.auth.models import User # Assuming User model for staff/admi
 from students.models import Student # Assuming you have a Student model in a 'students' app
 from decimal import Decimal # Import Decimal for precise calculations
 from django.utils import timezone # Import timezone
+from django.db.models import Sum # Import Sum for aggregation
 from curriculum.models import Term, Session
 
 # Assuming you have Term and Session models already defined.
@@ -207,38 +208,68 @@ class Payment(models.Model):
     def save(self, *args, **kwargs):
         """
         Overrides the save method to:
-        1. Update the student's balance in the StudentAccountLedger based on amount_received.
-        NOTE: The 'amount_received' is now directly taken from the form/input,
-        it is NOT calculated here based on original_amount and discounts.
+        1. Calculate balance_before_payment and balance_after_payment before saving.
+        2. Update the student's balance in the StudentAccountLedger based on total charges and total payments.
         """
-        # Store the original balance before saving the payment, for ledger update logic
-        old_amount_received = None
+        # Calculate balance_before_payment before the initial save
         if self.pk: # If updating an existing payment
-            try:
-                old_payment = Payment.objects.get(pk=self.pk)
-                old_amount_received = old_payment.amount_received
-            except Payment.DoesNotExist:
-                pass # New object, no old amount
+            # Fetch the current state of the payment from the DB to get its original values
+            # This is important if original_amount or amount_received are being changed
+            old_payment = Payment.objects.get(pk=self.pk)
+            old_amount_received = old_payment.amount_received
+            old_original_amount = old_payment.original_amount
+        else: # If creating a new payment
+            old_amount_received = Decimal('0.00')
+            old_original_amount = Decimal('0.00')
 
-        super().save(*args, **kwargs) # Save the payment instance first
-
-        # Update StudentAccountLedger
-        ledger_entry, created = StudentAccountLedger.objects.get_or_create(
+        # Calculate balance_before_payment for the specific category/term/session
+        # This needs to be done before the current payment is saved to exclude its effect
+        total_paid_for_this_fee_before = Payment.objects.filter(
             student=self.student,
+            payment_category=self.payment_category,
             term=self.term,
             session=self.session,
-            defaults={'balance': Decimal('0.00')} # Initialize balance if new
-        )
+            status='completed'
+        ).exclude(pk=self.pk).aggregate(Sum('amount_received'))['amount_received__sum'] or Decimal('0.00')
 
-        # Adjust the ledger balance based on amount_received
-        # If this is an update, reverse old amount and apply new. Else, just apply new.
-        if old_amount_received is not None:
-            ledger_entry.balance += old_amount_received # Add back the old amount
-            ledger_entry.balance -= self.amount_received # Subtract the new amount
-        else:
-            ledger_entry.balance -= self.amount_received # Reduce the amount owed
+        self.balance_before_payment = (self.original_amount or Decimal('0.00')) - total_paid_for_this_fee_before
+        self.balance_before_payment = max(Decimal('0.00'), self.balance_before_payment) # Ensure not negative
 
-        ledger_entry.save()
+        # Calculate balance_after_payment before the initial save
+        self.balance_after_payment = self.balance_before_payment - self.amount_received
+        self.balance_after_payment = max(Decimal('0.00'), self.balance_after_payment) # Ensure not negative
+
+        super().save(*args, **kwargs) # Save the payment instance with all calculated values
+
+        # Only update ledger if payment is completed and has associated term/session/student
+        if self.status == 'completed' and self.student and self.term and self.session:
+            ledger_entry, created = StudentAccountLedger.objects.get_or_create(
+                student=self.student,
+                term=self.term,
+                session=self.session,
+                defaults={'balance': Decimal('0.00')}
+            )
+
+            # Recalculate total charges and total payments for this student, term, and session
+            # Sum all original_amounts from payments for this student/term/session
+            total_charges_for_period = Payment.objects.filter(
+                student=self.student,
+                term=self.term,
+                session=self.session,
+                status='completed'
+            ).aggregate(Sum('original_amount'))['original_amount__sum'] or Decimal('0.00')
+
+            # Sum all amount_received from payments for this student/term/session
+            total_payments_for_period = Payment.objects.filter(
+                student=self.student,
+                term=self.term,
+                session=self.session,
+                status='completed'
+            ).aggregate(Sum('amount_received'))['amount_received__sum'] or Decimal('0.00')
+
+            # The balance is total charges minus total payments
+            ledger_entry.balance = total_charges_for_period - total_payments_for_period
+            ledger_entry.save()
 
 
 class Receipt(models.Model):

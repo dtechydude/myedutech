@@ -1,0 +1,80 @@
+
+{% load static %}
+{% load crispy_forms_tags %}
+
+<!DOCTYPE html>
+<html lang="en" class="h-100">
+
+
+<head>
+    <meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="keywords" content="" />
+	<meta name="author" content="" />
+	<meta name="robots" content="" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="SchoollyEdtech : Schoolly-School Mgt System" />
+	<meta property="og:title" content="SchoollyEdtech : Schoolly-School Mgt System" />
+	<meta property="og:description" content="SchoollyEdtech : Schoolly-School Mgt System" />
+	<!-- <meta property="og:image" content="https://travl.dexignlab.com/xhtml/social-image.png" /> -->
+	<meta name="format-detection" content="telephone=no">
+	
+	<!-- PAGE TITLE HERE -->
+	<title>Schoolly Login</title>
+	
+	<!-- FAVICONS ICON -->
+	<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png'%} " />
+    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+</head>
+
+{% block content %}
+<body class="vh-100">
+    <div class="authincation h-100">
+        <div class="container h-100">
+            <div class="row justify-content-center h-100 align-items-center">
+                <div class="col-md-6">
+                    <div class="authincation-content">
+                        <div class="row no-gutters">
+                            <div class="col-xl-12">
+                                <div class="auth-form">
+									<div class="text-center mb-3">
+                                        <a href="#"><img src="{% static 'pages/images/schoolly_logo.png' %}" alt="" width=80px height="80px"></a>
+									</div>
+                                   
+                                    <h5>Attendance Summary for {{ student.last_name }} {{ student.first_name }} - ({{ student.standard }})</h5>
+
+                                    <div class="summary-box">
+                                        <h3>Report Period</h3>
+                                        <p>From: <span class="highlight">{{ start_date|date:"F j, Y" }}</span></p>
+                                        <p>To: <span class="highlight">{{ end_date|date:"F j, Y" }}</span></p>
+                                
+                                        <h4>Total Present Days: <span class="highlight">{{ total_present_days }}</span></h4>
+                                    </div>
+                                
+                                    <p style="margin-top: 20px;">
+                                        Back To: <a href="{% url 'attendance:student_list' %}"> <strong><u> Student List</u></strong></a>
+                                    </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock content %}
+
+    <!--**********************************
+        Scripts
+    ***********************************-->
+    <!-- Required vendors -->
+    {% block script %}
+    <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+    <script src="{% static 'pages/js/custom.min.js' %}"></script>
+    <script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+	<script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
+    {% endblock script %}
+</body>
+</html>
+

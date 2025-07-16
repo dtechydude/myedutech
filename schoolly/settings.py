@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'results.apps.ResultsConfig',
     'pages.apps.PagesConfig',
     'payments.apps.PaymentsConfig',
+    'attendance.apps.AttendanceConfig',
 
 
     # Installed Apps

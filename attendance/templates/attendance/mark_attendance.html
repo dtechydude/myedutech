@@ -1,0 +1,152 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+    <title>Mark Attendance for {{ classroom.name }} - {{ today }}</title>
+    <style>
+        .student-row {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .student-row label {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mark Attendance for {{ classroom.name }}</h1>
+    <h2>Date: {{ today }}</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ formset.management_form }}
+        {% for form in formset %}
+            <div class="student-row">
+                <p><strong>{{ form.instance.student.first_name }} {{ form.instance.student.last_name }}</strong></p>
+                {% for radio in form.status %}
+                    <label>
+                        {{ radio.tag }} {{ radio.choice_label }}
+                    </label>
+                {% endfor %}
+                {% if form.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <button type="submit">Save Attendance</button>
+    </form>
+
+    <p><a href="{% url 'attendance:teacher_dashboard' %}">Back to Dashboard</a></p>
+</body>
+</html> -->
+
+
+{% load static %}
+{% load crispy_forms_tags %}
+
+<!DOCTYPE html>
+<html lang="en" class="h-100">
+
+<head>
+    <meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="keywords" content="" />
+	<meta name="author" content="" />
+	<meta name="robots" content="" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="Ermine : Ermine Application Dashboard" />
+	<meta property="og:title" content="Ermine : Ermine Application Dashboard" />
+	<meta property="og:description" content="Ermine : Ermine Application Dashboard" />
+	<!-- <meta property="og:image" content="https://travl.dexignlab.com/xhtml/social-image.png" /> -->
+	<meta name="format-detection" content="telephone=no">
+	
+	<!-- PAGE TITLE HERE -->
+	<title>Schoolly Registration Page</title>
+	
+	<!-- FAVICONS ICON -->
+	<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png'%} " />
+    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+
+</head>
+{% block content %}
+<body class="vh-100">
+    <div class="authincation h-100">
+        <div class="container h-100">
+            <div class="row justify-content-center h-100 align-items-center">
+                <div class="col-md-6">
+                    <div class="authincation-content">
+                        <div class="row no-gutters">
+                            <div class="col-xl-12">
+                                <div class="auth-form">
+									<div class="text-center mb-3">
+										<!-- <a href="https://ermine.ng"><img src="{% static 'pages/images/logo-full.png' %}" alt=""></a> -->
+									
+                                    <h4>Mark Attendance for {{ classroom.name }}</h1>
+                                    <span style="color: red;">Date: {{ today }} </span>
+                                   
+                                    </div>
+                                    <!-- <h4 class="text-center mb-4">Welcome To Ermine App!</h4> -->
+                                    <form  action ="" method="POST">
+                                        {% csrf_token %}
+                                        <div class="mb-3">
+                                            <form method="post">
+                                                {% csrf_token %}
+                                                {{ formset.management_form }}
+                                                {% for form in formset %}
+                                                    <div class="student-row">
+                                                     
+                                                        <span><strong> <i class="fa fa-user" aria-hidden="true"></i> > {{ form.instance.student.first_name }} {{ form.instance.student.last_name }} -  </strong></span>
+                                                        {% for radio in form.status %}
+                                                            <label>
+                                                                {{ radio.tag }} {{ radio.choice_label }}
+                                                            </label>
+                                                         
+                                                        {% endfor %}
+                                                        {% if form.errors %}
+                                                            <ul class="errorlist">
+                                                                {% for error in form.errors %}
+                                                                    <li>{{ error }}</li>
+                                                                {% endfor %}
+                                                            </ul>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endfor %}
+                                                <!-- <button type="submit">Save Attendance</button>
+                                            </form> -->
+                                            <!-- <label class="mb-1"><strong>Email</strong></label>
+                                            <input type="email" class="form-control" value="hello@example.com"> -->
+                                        </div>
+                                                                              
+                                        <div class="text-center">
+                                            <button type="submit" class="btn btn-primary btn-block">Mark Attendance</button>
+                                        </div>
+                                    </form>
+                                    <div class="new-account mt-3">
+                                        <p><a href="{% url 'attendance:teacher_dashboard' %}">Back To Class List</a></p>                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock content %}
+
+    <!--**********************************
+        Scripts
+    ***********************************-->
+    <!-- Required vendors -->
+    {% block script %}
+    <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+    <script src="{% static 'pages/js/custom.min.js' %}"></script>
+    <script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+	<script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
+    {% endblock script %}
+</body>
+</html>

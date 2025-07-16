@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db import transaction
-from django.db.models import Sum, F, Q
+from django.db.models import Sum, F, Q, Max, Min # Import Max for aggregation
 from .models import Payment, Receipt, PaymentCategory, StudentAccountLedger, CategoryFee
 from curriculum.models import Term, Session
 from .forms import PaymentForm
@@ -311,23 +311,43 @@ def total_payments_report(request):
     if student_id:
         payments_query = payments_query.filter(student__id=student_id)
 
+    # --- Corrected calculation for total_original_amount ---
+    # To get the correct total original amount, we need to sum the original_amount
+    # for each unique (student, term, session, payment_category) combination.
+    # We achieve this by grouping and then aggregating the max original_amount for each group.
+    unique_fees_original_amounts = payments_query.values(
+        'student', 'term', 'session', 'payment_category'
+    ).annotate(
+        # Use Max to get one original_amount per unique fee, assuming it's consistent
+        # across payments for the same fee.
+        unique_original_amount=Max('original_amount')
+    ).aggregate(
+        total_unique_original_amount=Sum('unique_original_amount')
+    )['total_unique_original_amount'] or Decimal('0.00')
+
+    total_original_amount = unique_fees_original_amounts
+    # --- End of corrected calculation ---
+
 
     total_amount_received = payments_query.aggregate(total=Sum('amount_received'))['total'] or Decimal('0.00')
-    total_original_amount = payments_query.aggregate(total=Sum('original_amount'))['total'] or Decimal('0.00')
+    
     total_discount_given = payments_query.aggregate(
         total_fixed_discount=Sum('discount_amount'),
         total_percentage_discount=Sum(F('original_amount') * (F('discount_percentage') / Decimal('100.00')))
     )
     total_discount_given = (total_discount_given['total_fixed_discount'] or Decimal('0.00')) + \
-                           (total_discount_given['total_percentage_discount'] or Decimal('100.00'))
+                           (total_discount_given['total_percentage_discount'] or Decimal('0.00'))
 
 
     payment_breakdown = payments_query.values(
-        'student__first_name', 'student__last_name', 'student__user',
+        'student__first_name', 'student__last_name', 'student__USN',
         'payment_category__name', 'term__name', 'session__name'
     ).annotate(
         sum_amount_received=Sum('amount_received'),
-        sum_original=Sum('original_amount'),
+        # --- Corrected sum_original for breakdown table ---
+        # Get the original amount for each unique fee type within the breakdown
+        sum_original=Max('original_amount'),
+        # --- End of correction ---
         sum_fixed_discount=Sum('discount_amount'),
         sum_percentage_discount=Sum(F('original_amount') * (F('discount_percentage') / Decimal('100.00')))
     ).order_by(
@@ -340,7 +360,7 @@ def total_payments_report(request):
 
     context = {
         'total_amount_received': total_amount_received,
-        'total_original_amount': total_original_amount,
+        'total_original_amount': total_original_amount, # Now correctly calculated
         'total_discount_given': total_discount_given,
         'payment_breakdown': payment_breakdown,
         'terms': terms,
@@ -354,6 +374,63 @@ def total_payments_report(request):
         'title': 'Total Payments Report'
     }
     return render(request, 'payments/total_payments_report.html', context)
+
+@login_required
+def view_receipt(request, receipt_id):
+    """
+    View to display a specific receipt.
+    """
+    receipt = get_object_or_404(
+        Receipt.objects.select_related(
+            'payment__student', 'payment__term', 'payment__session',
+            'payment__payment_category', 'generated_by'
+        ),
+        id=receipt_id
+    )
+
+    if not request.user.is_staff and (not hasattr(receipt.payment.student, 'user') or request.user != receipt.payment.student.user):
+        messages.warning(request, "You are not authorized to view this receipt.")
+        return redirect('payment_history')
+
+    context = {
+        'receipt': receipt,
+        'title': f'Receipt #{receipt.receipt_number}'
+    }
+    return render(request, 'payments/receipt_detail.html', context)
+
+
+@login_required
+@user_passes_test(is_staff)
+def debtors_report(request):
+    """
+    Generates a report of students who currently owe money (have a positive balance in the ledger).
+    Allows filtering by term and session.
+    """
+    term_id = request.GET.get('term')
+    session_id = request.GET.get('session')
+
+    debtors_query = StudentAccountLedger.objects.filter(balance__gt=0).select_related('student', 'term', 'session')
+
+    if term_id:
+        debtors_query = debtors_query.filter(term__id=term_id)
+    if session_id:
+        debtors_query = debtors_query.filter(session__id=session_id)
+
+    debtors = debtors_query.order_by('student__last_name', 'session__name', 'term__name')
+
+    terms = Term.objects.all().order_by('-start_date')
+    sessions = Session.objects.all().order_by('-start_date')
+
+    context = {
+        'debtors': debtors,
+        'terms': terms,
+        'sessions': sessions,
+        'selected_term_id': term_id,
+        'selected_session_id': session_id,
+        'title': 'Debtors Report'
+    }
+    return render(request, 'payments/debtors_report.html', context)
+
 
 @login_required
 def get_category_fee_details(request):
@@ -399,4 +476,3 @@ def get_category_fee_details(request):
         except CategoryFee.DoesNotExist:
             return JsonResponse({'error': 'Category Fee not found'}, status=404)
     return JsonResponse({'error': 'Invalid request'}, status=400)
-

@@ -1,0 +1,340 @@
+{% comment %}
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Take Daily Attendance</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .student-row {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .student-name-col {
+            flex: 1;
+            padding-right: 15px;
+        }
+        .attendance-checkbox-col {
+            width: 80px; /* Adjust as needed */
+            text-align: center;
+        }
+        .form-errors ul {
+            list-style-type: none;
+            padding: 0;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">Take Daily Attendance for {{ teacher.first_name }}</h2>
+        <p class="lead">Date: {{ today|date:"F d, Y" }}</p>
+
+        {% if formset.non_form_errors %}
+            <div class="alert alert-danger form-errors">
+                <h4>Formset Errors:</h4>
+                <ul>
+                    {% for error in formset.non_form_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            {{ formset.management_form }} {# IMPORTANT for formsets #}
+
+            <div class="card">
+                <div class="card-header">
+                    <strong>Student Name</strong>
+                    <strong class="float-right mr-4">Present</strong>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for form in formset %}
+                        <li class="list-group-item student-row">
+                            <div class="student-name-col">
+                                {# Display the read-only student name field #}
+                                {{ form.student_name.errors }}
+                                {{ form.student_name }}
+                                {# Render the hidden student ID field #}
+                                {{ form.student }}
+                                {# Render the hidden attendance ID field #}
+                                {{ form.id }}
+                            </div>
+                            <div class="attendance-checkbox-col">
+                                {{ form.present.errors }}
+                                {{ form.present }}
+                            </div>
+                            {% if form.errors %}
+                                <div class="form-errors">
+                                    <ul>
+                                        {% for field_name, errors in form.errors.items %}
+                                            {% for error in errors %}
+                                                <li>{{ field_name }}: {{ error }}</li>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3">Save Attendance</button>
+        </form>
+    </div>
+</body>
+</html> -->
+{% endcomment %}
+
+{% comment %}
+<!-- THIS ONE ALSO WORKS WELL -->
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Take Daily Attendance</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .student-row {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .student-name-col {
+            flex: 1;
+            padding-right: 15px;
+        }
+        .attendance-checkbox-col {
+            width: 80px;
+            text-align: center;
+        }
+        .form-errors ul {
+            list-style-type: none;
+            padding: 0;
+            color: red;
+        }
+        /* Style for the read-only input */
+        .form-control-plaintext {
+            display: block;
+            width: 100%;
+            padding: .375rem 0; /* Adjust padding if needed */
+            margin-bottom: 0;
+            line-height: 1.5;
+            color: #212529;
+            background-color: transparent;
+            border: solid transparent;
+            border-width: 1px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">Take Daily Attendance for {{ teacher.name }}</h2>
+        <p class="lead">Date: {{ today|date:"F d, Y" }}</p>
+
+        {% if formset.non_form_errors %}
+            <div class="alert alert-danger form-errors">
+                <h4>Formset Errors:</h4>
+                <ul>
+                    {% for error in formset.non_form_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            {{ formset.management_form }}
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-8"><strong>Student Name</strong></div>
+                        <div class="col-4 text-center"><strong>Present</strong></div>
+                    </div>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for form in formset %}
+                        <li class="list-group-item student-row">
+                            <div class="row w-100 no-gutters"> {# Use row for layout #}
+                                <div class="col-8">
+                                    {# Display the read-only student_full_name field #}
+                                    {{ form.student_full_name.errors }}
+                                    {{ form.student_full_name }}
+                                    {# Render the hidden student ID field #}
+                                    {{ form.student }}
+                                    {# Render the hidden attendance ID field #}
+                                    {{ form.id }}
+                                </div>
+                                <div class="col-4 text-center">
+                                    {{ form.present.errors }}
+                                    {{ form.present }}
+                                </div>
+                                {% if form.errors %}
+                                    <div class="col-12 form-errors">
+                                        <ul>
+                                            {% for field_name, errors in form.errors.items %}
+                                                {% for error in errors %}
+                                                    <li>{{ field_name }}: {{ error }}</li>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3">Save Attendance</button>
+        </form>
+    </div>
+</body>
+</html> -->
+{% endcomment %}
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Take Daily Attendance</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .student-row {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .student-name-col {
+            flex: 1;
+            padding-right: 15px;
+        }
+        .attendance-checkbox-col {
+            width: 80px;
+            text-align: center;
+        }
+        .form-errors ul {
+            list-style-type: none;
+            padding: 0;
+            color: red;
+        }
+        .form-control-plaintext {
+            display: block;
+            width: 100%;
+            padding: .375rem 0;
+            margin-bottom: 0;
+            line-height: 1.5;
+            color: #212529;
+            background-color: transparent;
+            border: solid transparent;
+            border-width: 1px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+         <div><img src="{% static 'pages/images/schoolly_logo.png' %}" alt=""></div>
+        <h5 class="mb-4">Make Attendance For Teacher: <span style="color:brown; font-size: 16px;">{{ teacher.first_name }} {{ teacher.last_name }}</span></h5>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {# Date selection form - uses GET method to refresh the page #}
+        <form method="get" class="form-inline mb-3" action="{% url 'attendance:take_daily_attendance' %}">
+            <div class="form-group mr-2">
+                {{ date_form.date.label_tag }}
+                {{ date_form.date }}
+                {% if date_form.date.errors %}
+                    <div class="invalid-feedback d-block">{{ date_form.date.errors }}</div>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn btn-secondary">Select Date</button>
+        </form>
+
+        <p class="lead">Attendance for: <strong>{{ selected_date|date:"F d, Y" }}</strong></p>
+
+        {% if formset.non_form_errors %}
+            <div class="alert alert-danger form-errors">
+                <h4>Formset Errors:</h4>
+                <ul>
+                    {% for error in formset.non_form_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        {# Attendance submission form - uses POST method #}
+        <form method="post">
+            {% csrf_token %}
+            {{ formset.management_form }}
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-8"><strong>Student Name</strong></div>
+                        <div class="col-4 text-center"><strong>Present</strong></div>
+                    </div>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for form in formset %}
+                        <li class="list-group-item student-row">
+                            <div class="row w-100 no-gutters">
+                                <div class="col-8">
+                                    {{ form.student_full_name.errors }}
+                                    {{ form.student_full_name }} {{ form.standard__name }} 
+                                    {{ form.student }}
+                                    {{ form.id }}
+                                </div>
+                                <div class="col-4 text-center">
+                                    {{ form.present.errors }}
+                                    {{ form.present }}
+                                </div>
+                                {% if form.errors %}
+                                    <div class="col-12 form-errors">
+                                        <ul>
+                                            {% for field_name, errors in form.errors.items %}
+                                                {% for error in errors %}
+                                                    <li>{{ field_name }}: {{ error }}</li>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3">Save Attendance</button>
+        </form>
+        <hr>
+        <div><p><a href="/dashboard/">Back to DASHBOARD</a></p></div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
