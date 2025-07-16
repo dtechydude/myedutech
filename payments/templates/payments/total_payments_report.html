@@ -1,0 +1,157 @@
+<!-- your_project/templates/payments/total_payments_report.html -->
+
+{% extends 'base.html' %} {# Assuming you have a base.html template #}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4 sm:p-6 lg:p-8">
+    <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Total Payments Report</h2>
+
+    {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+                <div class="p-3 rounded-md {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="bg-white shadow-lg rounded-lg p-6 md:p-8 mb-8">
+        <h3 class="text-xl font-semibold text-gray-700 mb-4">Filter Payments</h3>
+        <form method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            <div>
+                <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <input type="date" name="start_date" id="start_date" value="{{ selected_start_date }}" class="form-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <input type="date" name="end_date" id="end_date" value="{{ selected_end_date }}" class="form-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="term-filter" class="block text-sm font-medium text-gray-700 mb-1">Term</label>
+                <select name="term" id="term-filter" class="form-select block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">-- All Terms --</option>
+                    {% for term in terms %}
+                        <option value="{{ term.id }}" {% if selected_term_id|stringformat:"s" == term.id|stringformat:"s" %}selected{% endif %}>
+                            {{ term.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="session-filter" class="block text-sm font-medium text-gray-700 mb-1">Session</label>
+                <select name="session" id="session-filter" class="form-select block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">-- All Sessions --</option>
+                    {% for session in sessions %}
+                        <option value="{{ session.id }}" {% if selected_session_id|stringformat:"s" == session.id|stringformat:"s" %}selected{% endif %}>
+                            {{ session.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="lg:col-span-2">
+                <label for="student-filter" class="block text-sm font-medium text-gray-700 mb-1">Student</label>
+                <select name="student" id="student-filter" class="form-select block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">-- All Students --</option>
+                    {% for student in students %}
+                        <option value="{{ student.id }}" {% if selected_student_id|stringformat:"s" == student.id|stringformat:"s" %}selected{% endif %}>
+                            {{ student.first_name }} {{ student.last_name }} ({{ student.student_id }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-span-full flex justify-center space-x-4 mt-4">
+                <button type="submit" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300 ease-in-out">
+                    Apply Filter
+                </button>
+                <a href="{% url 'total_payments_report' %}" class="px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-md shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-300 ease-in-out text-center">
+                    Clear Filters
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="bg-white shadow-lg rounded-lg p-6 md:p-8 mb-8">
+        <h3 class="text-xl font-semibold text-gray-700 mb-4">Summary Totals</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+            <div class="bg-blue-50 p-4 rounded-md shadow-sm">
+                <p class="text-sm text-gray-600">Total Original Amount</p>
+                <p class="text-2xl font-bold text-blue-800">${{ total_original_amount|floatformat:2 }}</p>
+            </div>
+            <div class="bg-green-50 p-4 rounded-md shadow-sm">
+                <p class="text-sm text-gray-600">Total Amount Received</p>
+                <p class="text-2xl font-bold text-green-800">${{ total_amount_received|floatformat:2 }}</p>
+            </div>
+            <div class="bg-yellow-50 p-4 rounded-md shadow-sm">
+                <p class="text-sm text-gray-600">Total Discount Given</p>
+                <p class="text-2xl font-bold text-yellow-800">${{ total_discount_given|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="text-2xl font-bold text-gray-800 mb-4 mt-8">Detailed Payment Breakdown</h3>
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Student Name (ID)
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Category
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Term / Session
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Original Amount
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Discount
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Amount Received
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% if payment_breakdown %}
+                        {% for item in payment_breakdown %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ item.student__first_name }} {{ item.student__last_name }} ({{ item.student__student_id }})
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ item.payment_category__name|default:"N/A" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ item.term__name|default:"N/A" }} / {{ item.session__name|default:"N/A" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                ${{ item.sum_original|floatformat:2 }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                ${{ item.sum_fixed_discount|add:item.sum_percentage_discount|floatformat:2 }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-700">
+                                ${{ item.sum_amount_received|floatformat:2 }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                                No payment breakdown found for the selected filters.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

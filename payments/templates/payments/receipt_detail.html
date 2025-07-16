@@ -1,0 +1,100 @@
+<!-- your_project/templates/payments/receipt_detail.html -->
+
+{% comment %}{% extends 'base.html' %} {# Assuming you have a base.html template #} {% endcomment %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4 sm:p-6 lg:p-8">
+    <div class="bg-white shadow-lg rounded-lg p-6 md:p-8 max-w-3xl mx-auto">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Payment Receipt</h2>
+
+        <div class="border border-gray-300 rounded-md p-6 mb-6">
+            <div class="flex justify-between items-center mb-4 border-b pb-4">
+                <h3 class="text-2xl font-semibold text-gray-700">Receipt #{{ receipt.receipt_number }}</h3>
+                <p class="text-gray-600">Date: {{ receipt.issue_date|date:"M d, Y" }}</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-700 mb-2">Student Information:</h4>
+                    <p><strong>Name:</strong> {{ receipt.payment.student.first_name }} {{ receipt.payment.student.last_name }}</p>
+                    <p><strong>Student ID:</strong> {{ receipt.payment.student.student_id }}</p>
+                    <p><strong>Email:</strong> {{ receipt.payment.student.email|default:"N/A" }}</p>
+                    <p><strong>Phone:</strong> {{ receipt.payment.student.phone_number|default:"N/A" }}</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-700 mb-2">Payment Details:</h4>
+                    <p><strong>Original Amount Due:</strong> <span class="text-gray-600">${{ receipt.payment.original_amount|floatformat:2|default:"N/A" }}</span></p>
+                    {% if receipt.payment.discount_amount > 0 or receipt.payment.discount_percentage > 0 %}
+                        <p><strong>Discount:</strong>
+                            {% if receipt.payment.discount_amount > 0 %}${{ receipt.payment.discount_amount|floatformat:2 }}{% endif %}
+                            {% if receipt.payment.discount_amount > 0 and receipt.payment.discount_percentage > 0 %} + {% endif %}
+                            {% if receipt.payment.discount_percentage > 0 %}{{ receipt.payment.discount_percentage|floatformat:2 }}%{% endif %}
+                        </p>
+                        <p><strong>Net Amount Due:</strong> <span class="text-blue-600 font-bold">${{ receipt.payment.net_amount_due|floatformat:2 }}</span></p>
+                    {% endif %}
+                    <p><strong>Amount Paid:</strong> <span class="text-green-600 font-bold text-xl">${{ receipt.payment.amount_received|floatformat:2 }}</span></p>
+                    <p><strong>Payment Date:</strong> {{ receipt.payment.payment_date|date:"M d, Y H:i" }}</p>
+                    <p><strong>Payment Method:</strong> {{ receipt.payment.get_payment_method_display }}</p>
+                    {% if receipt.payment.transaction_id %}
+                        <p><strong>Transaction ID:</strong> {{ receipt.payment.transaction_id }}</p>
+                    {% endif %}
+                    <p><strong>Status:</strong> <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                    {% if receipt.payment.status == 'completed' %}bg-green-100 text-green-800
+                                    {% elif receipt.payment.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                    {% elif receipt.payment.status == 'failed' %}bg-red-100 text-red-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ receipt.payment.get_status_display }}
+                                </span></p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-700 mb-2">Academic Details:</h4>
+                    <p><strong>Term:</strong> {{ receipt.payment.term.name|default:"N/A" }}</p>
+                    <p><strong>Session:</strong> {{ receipt.payment.session.name|default:"N/A" }}</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-700 mb-2">Payment Category:</h4>
+                    <p><strong>Category:</strong> {{ receipt.payment.payment_category.name|default:"N/A" }}</p>
+                    {% if receipt.payment.is_installment %}
+                        <p><strong>Installment:</strong> {{ receipt.payment.installment_number|default:"-" }} of {{ receipt.payment.total_installments|default:"-" }}</p>
+                    {% else %}
+                        <p><strong>Payment Type:</strong> Full Payment</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if receipt.payment.notes %}
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-700 mb-2">Notes:</h4>
+                <p class="text-gray-700 italic">{{ receipt.payment.notes }}</p>
+            </div>
+            {% endif %}
+
+            <div class="text-right text-gray-600 border-t pt-4">
+                <p>Generated By:
+                    {% if receipt.generated_by %} {# Check if generated_by is not None #}
+                        {{ receipt.generated_by.get_full_name|default:receipt.generated_by.username }}
+                    {% else %}
+                        System (Student Self-Service)
+                    {% endif %}
+                </p>
+                <p class="text-sm mt-2">Thank you for your payment!</p>
+            </div>
+        </div>
+
+        <div class="flex justify-center space-x-4">
+            <a href="{% url 'payments:payment_history' %}" class="px-6 py-3 bg-gray-200 text-gray-800 font-semibold rounded-md shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-300 ease-in-out">
+                Back to Payment History
+            </a>
+            <button onclick="window.print()" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300 ease-in-out">
+                Print Receipt
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

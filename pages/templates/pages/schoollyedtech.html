@@ -1,0 +1,77 @@
+{% load static %}
+{% load crispy_forms_tags %}
+
+<!DOCTYPE html>
+<html lang="en" class="h-100">
+
+<head>
+    <meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="keywords" content="" />
+	<meta name="author" content="" />
+	<meta name="robots" content="" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="Schoolly : School Management System" />
+	<meta property="og:title" content="Schoolly : School Management System" />
+	<meta property="og:description" content="Schoolly :School Management System" />
+	<meta property="og:image" content="#" />
+	<meta name="format-detection" content="telephone=no">
+	<!-- PAGE TITLE HERE -->
+	<title>Schoolly Login</title>
+	
+	<!-- FAVICONS ICON -->
+	<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+
+</head>
+<body class="vh-100">
+    <div class="authincation h-100">
+        <div class="container h-100">
+            <div class="row justify-content-center h-100 align-items-center">
+                <div class="col-md-6">
+                    <div class="authincation-content">
+                        <div class="row no-gutters">
+                            <div class="col-xl-12">
+                                <div class="auth-form">
+									<div class="text-center mb-3">
+										<a href="{% url 'pages:schoolly-home' %}"><img src="{% static 'pages/images/logo-full.png' %}" alt=""></a>
+									</div>
+                                    <h4 class="text-center mb-4">Welcome To SchoollyEdTech</h4>
+                                    <main class="px-3">
+                                        
+                                        <p class="lead">Login To Your Account Or Contact The Admin Office If You Do Not Have An Account.</p>
+                                        <p class="lead">
+                                          <a href="{% url 'users:login' %}"><button type="" value="" class="btn btn-primary btn-block" >Login here</button></a>
+                                          
+                                          <div class="new-account mt-3">
+                                        <!-- <p><a href=""> <b> School's Website Home Page</b></a></p> -->
+                                        </div>
+                                        </p>
+                                      </main>
+                                   
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!--**********************************
+        Scripts
+    ***********************************-->
+
+    
+    <!--**********************************
+        Scripts
+    ***********************************-->
+    <!-- Required vendors -->
+    <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+    <script src="{% static 'pages/js/custom.min.js' %}"></script>
+    <script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+	<script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
+</body>
+</html>
+  

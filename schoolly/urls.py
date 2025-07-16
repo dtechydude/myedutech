@@ -11,10 +11,13 @@ from django.views.generic import TemplateView # For a simple placeholder home pa
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', include('pages.urls', namespace='pages')),
     path('users/', include('users.urls', namespace='users')),
     path('students/', include('students.urls', namespace='students')), 
     path('staff/', include('staff.urls', namespace='staff')),
-    path('results/', include('results.urls', namespace='results')),   
+    path('results/', include('results.urls', namespace='results')),
+    path('payments/', include('payments.urls', namespace='payments')),
+       
 
 
     # Placeholder for a home page (create templates/home.html)
