@@ -36,6 +36,10 @@ def make_payment(request):
                 with transaction.atomic():
                     payment = form.save(commit=False)
 
+                    # Determine original_amount, term, session, payment_category
+                    # and calculate balance_before_payment
+                    current_student = payment.student # Get the student instance from the form
+                    
                     if is_student_user:
                         selected_category_fee = form.cleaned_data['category_fee']
                         payment.original_amount = selected_category_fee.amount_due
@@ -44,12 +48,47 @@ def make_payment(request):
                         payment.payment_category = selected_category_fee.payment_category
                         payment.discount_amount = Decimal('0.00')
                         payment.discount_percentage = Decimal('0.00')
-                    else:
-                        pass # Staff fields handled by form.save(commit=False)
+                    else: # Staff user
+                        # For staff, original_amount, discount_amount, discount_percentage,
+                        # term, session, payment_category come directly from the form's cleaned_data
+                        # and are handled by form.save(commit=False)
+                        # We need to get the original_amount and other related objects from the form
+                        # to correctly calculate balance_before_payment for staff-recorded payments
+                        selected_category_fee = CategoryFee.objects.filter(
+                            payment_category=payment.payment_category,
+                            term=payment.term,
+                            session=payment.session
+                        ).first() # Assuming one CategoryFee per category/term/session for staff context
+                        # If staff entered a different original_amount than CategoryFee, use what they entered
+                        if payment.original_amount is None:
+                            payment.original_amount = selected_category_fee.amount_due if selected_category_fee else Decimal('0.00')
 
+
+                    # Calculate balance_before_payment for the specific category/term/session
+                    total_paid_for_this_fee_before = Payment.objects.filter(
+                        student=current_student,
+                        payment_category=payment.payment_category,
+                        term=payment.term,
+                        session=payment.session,
+                        status='completed'
+                    ).exclude(pk=payment.pk).aggregate(Sum('amount_received'))['amount_received__sum'] or Decimal('0.00')
+
+                    # The 'original_amount' on the Payment object represents the full fee for that type
+                    # at the time of payment, not the remaining balance.
+                    # So, balance_before_payment is the original fee minus previous payments for this fee type.
+                    payment.balance_before_payment = payment.original_amount - total_paid_for_this_fee_before
+                    payment.balance_before_payment = max(Decimal('0.00'), payment.balance_before_payment) # Ensure not negative
+
+                    # Set recorded_by and status
                     payment.recorded_by = request.user if request.user.is_staff else None
-                    payment.status = 'completed'
-                    payment.save()
+                    payment.status = 'completed' # Assuming manual entry means completed
+                    
+                    payment.save() # Save the payment instance with balance_before_payment
+
+                    # Calculate balance_after_payment
+                    payment.balance_after_payment = payment.balance_before_payment - payment.amount_received
+                    payment.balance_after_payment = max(Decimal('0.00'), payment.balance_after_payment) # Ensure not negative
+                    payment.save(update_fields=['balance_after_payment']) # Save again to update this field
 
                     receipt = Receipt.objects.create(
                         payment=payment,
@@ -91,6 +130,12 @@ def payment_history(request):
         'student', 'recorded_by', 'term', 'session', 'payment_category'
     ).order_by('-payment_date')
 
+    # Initialize filter variables to None at the start of the function
+    student_id = None
+    term_id = None
+    session_id = None
+    category_id = None
+
     if hasattr(request.user, 'student'):
         payments = payments.filter(student=request.user.student)
         students = []
@@ -131,14 +176,13 @@ def payment_history(request):
 
     combined_payments = {}
     for payment in payments:
+        # The key should group by the unique fee type (CategoryFee)
+        # to ensure original_amount is counted once per fee type.
         key = (
             payment.student.id,
             payment.term.id if payment.term else None,
             payment.session.id if payment.session else None,
             payment.payment_category.id if payment.payment_category else None,
-            payment.is_installment,
-            payment.installment_number,
-            payment.total_installments
         )
         if key not in combined_payments:
             combined_payments[key] = {
@@ -146,15 +190,12 @@ def payment_history(request):
                 'term': payment.term,
                 'session': payment.session,
                 'payment_category': payment.payment_category,
-                'is_installment': payment.is_installment,
-                'installment_number': payment.installment_number,
-                'total_installments': payment.total_installments,
-                'total_original_amount': Decimal('0.00'),
+                'total_original_amount': payment.original_amount if payment.original_amount is not None else Decimal('0.00'), # Set once
                 'total_amount_received': Decimal('0.00'),
                 'total_discount_amount': Decimal('0.00'),
-                'payments_list': []
+                'payments_list': [] # To hold individual payment objects for this combined entry
             }
-        combined_payments[key]['total_original_amount'] += payment.original_amount if payment.original_amount is not None else Decimal('0.00')
+        # Accumulate amount_received and discount_amount
         combined_payments[key]['total_amount_received'] += payment.amount_received
         combined_payments[key]['total_discount_amount'] += payment.discount_amount + \
                                                             ((payment.original_amount or Decimal('0.00')) * (payment.discount_percentage / Decimal('100.00')))
@@ -278,11 +319,11 @@ def total_payments_report(request):
         total_percentage_discount=Sum(F('original_amount') * (F('discount_percentage') / Decimal('100.00')))
     )
     total_discount_given = (total_discount_given['total_fixed_discount'] or Decimal('0.00')) + \
-                           (total_discount_given['total_percentage_discount'] or Decimal('0.00'))
+                           (total_discount_given['total_percentage_discount'] or Decimal('100.00'))
 
 
     payment_breakdown = payments_query.values(
-        'student__first_name', 'student__last_name', 'student__student_id',
+        'student__first_name', 'student__last_name', 'student__user',
         'payment_category__name', 'term__name', 'session__name'
     ).annotate(
         sum_amount_received=Sum('amount_received'),

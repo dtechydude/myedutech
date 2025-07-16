@@ -175,6 +175,13 @@ class Payment(models.Model):
     discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'),
                                               help_text="Percentage discount applied to the payment (e.g., 10.00 for 10%).")
 
+    # New fields to capture balance related to the specific CategoryFee at the time of payment
+    balance_before_payment = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
+                                                 help_text="Balance remaining for this specific CategoryFee before this payment.")
+    balance_after_payment = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
+                                                help_text="Balance remaining for this specific CategoryFee after this payment.")
+
+
     class Meta:
         ordering = ['-payment_date']
         verbose_name = "Payment"
