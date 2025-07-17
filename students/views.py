@@ -111,7 +111,7 @@ def search(request):
 #count students in each class
 def student_in_class(request):
     students = Student.objects.all()
-    student_no = Student.objects.filter().order_by('standard').values('standard__name').annotate(count=Count('standard__name'))
+    student_no = Student.objects.filter().order_by('current_class').values('current_class__name').annotate(count=Count('current_class__name'))
 
     try:
         num_inclass = Student.objects.filter(standard__name = request.user.student.standard).count()
@@ -126,7 +126,7 @@ class StudentDetailView(DetailView):
     queryset = Student.objects.all()
 
     def get_object(self):
-        id_ = self.kwargs.get("USN")
+        id_ = self.kwargs.get("id")
         return get_object_or_404(Student, USN=id_)
     
 # Specific to the login detail
@@ -147,7 +147,7 @@ class StudentUpdateView(LoginRequiredMixin, UpdateView):
 
 
     def get_object(self):
-        id_ = self.kwargs.get("USN")
+        id_ = self.kwargs.get("id")
         return get_object_or_404(Student, USN=id_)
 
     def form_valid(self, form):

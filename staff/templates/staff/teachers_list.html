@@ -120,7 +120,7 @@
                                             <tr>
                                                 <td>{{ forloop.counter }}</td>
 												<td><a href="{% url 'staff:teacher-detail' ts.id %}"><img class="rounded-circle" width="35" src="{{ts.user.profile.image.url}}" alt=""></a></td>
-                                                <td>{{ ts.full_name }}</td>
+                                                <td><strong>{{ ts.last_name }}</strong> {% if ts.middle_name %} {{ ts.middle_name }} {% endif %} {{ ts.first_name }}</td>
                                                 <td>{{ ts.user.username }}</td>
                                                 <td>{{ ts.dept }}</td>
                                                 <td>{{ ts.user.profile.phone }}</td>

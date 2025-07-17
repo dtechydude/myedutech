@@ -1,0 +1,824 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    
+	<!-- PAGE TITLE HERE -->
+    {% block title %}
+	<title>Student List</title>
+	{% endblock title %}
+	
+	<!-- FAVICONS ICON -->
+    {% block favicon %}
+	<link rel="shortcut icon" type="image/png" href="images/favicon.png" />
+    <!-- Datatable -->
+    <link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
+    <!-- Custom Stylesheet -->
+	<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+    {% endblock favicon %}
+
+</head>
+
+<body>
+
+    <!--*******************
+        Preloader start
+    ********************-->
+   <div id="preloader">
+		<div class="lds-ripple">
+			<div></div>
+			<div></div>
+		</div>
+    </div>
+    <!--*******************
+        Preloader end
+    ********************-->
+
+
+    <!--**********************************
+        Main wrapper start
+    ***********************************-->
+    <div id="main-wrapper">
+
+        <!--**********************************
+            Nav header start
+        ***********************************-->
+		
+        <!--**********************************
+            Nav header end
+        ***********************************-->
+		
+		<!--**********************************
+            Chat box start
+        ***********************************-->
+		
+		<!--**********************************
+            Chat box End
+        ***********************************-->
+
+		
+        <!--**********************************
+            Header start
+        ***********************************-->
+       
+        <!--**********************************
+            Header end ti-comment-alt
+        ***********************************-->
+
+        <!--**********************************
+            Sidebar start
+        ***********************************-->
+      
+        <!--**********************************
+            Sidebar end
+        ***********************************-->
+
+        <!--**********************************
+            Content body start
+        ***********************************-->
+        {% block content_body %}
+        <div class="content-body">
+            <div class="container-fluid">
+				
+				<div class="row page-titles">
+					<!-- <ol class="breadcrumb">
+						<li class="breadcrumb-item active"><a href="javascript:void(0)">Students</a></li>
+						<li class="breadcrumb-item"><a href="javascript:void(0)">All-Time List</a></li>
+					</ol> -->
+                </div>
+                
+                <!-- row -->
+
+                <div class="row">
+                
+					<div class="col-12">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title">Patient</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table id="example5" class="display" style="min-width: 845px">
+                                            <thead>
+                                                <tr>
+                                                    <th>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="checkAll" required="">
+                                                            <label class="form-check-label" for="checkAll"></label>
+                                                        </div>
+                                                    </th>
+                                                    <th>Patient ID</th>
+                                                    <th>Date Check in</th>
+                                                    <th>Patient Name</th>
+                                                    <th>Doctor Assgined</th>
+                                                    <th>Disease</th>
+                                                    <th>Status</th>
+                                                    <th>Room no</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox2" required="">
+                                                            <label class="form-check-label" for="customCheckBox2"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00001</td>
+                                                    <td>26/02/2020, 12:42 AM</td>
+                                                    <td>Tiger Nixon</td>
+                                                    <td>Dr. Cedric</td>
+                                                    <td>Cold & Flu</td>
+                                                    <td>
+                                                        <span class="badge light badge-danger">
+                                                            <i class="fa fa-circle text-danger me-1"></i>
+                                                            New Patient
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-001</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>												
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox3" required="">
+                                                            <label class="form-check-label" for="customCheckBox3"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00002</td>
+                                                    <td>28/02/2020, 12:42 AM</td>
+                                                    <td>Garrett Winters</td>
+                                                    <td>Dr. Cedric</td>
+                                                    <td>Sleep Problem</td>
+                                                    <td>
+                                                        <span class="badge light badge-warning">
+                                                            <i class="fa fa-circle text-warning me-1"></i>
+                                                            In Treatment
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-002</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox4" required="">
+                                                            <label class="form-check-label" for="customCheckBox4"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00003</td>
+                                                    <td>26/02/2020, 12:42 AM</td>
+                                                    <td>Ashton Cox</td>
+                                                    <td>Dr. Rhona</td>
+                                                    <td>Cold & Flu</td>
+                                                    <td>
+                                                        <span class="badge light badge-success">
+                                                            <i class="fa fa-circle text-success me-1"></i>
+                                                            Recovered
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-003</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox5" required="">
+                                                            <label class="form-check-label" for="customCheckBox5"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00004</td>
+                                                    <td>29/02/2020, 12:42 AM</td>
+                                                    <td>Ashton Cox</td>
+                                                    <td>Dr. Cedric</td>
+                                                    <td>Cold & Flu</td>
+                                                    <td>
+                                                        <span class="badge light badge-warning">
+                                                            <i class="fa fa-circle text-warning me-1"></i>
+                                                            In Treatment
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-004</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox6" required="">
+                                                            <label class="form-check-label" for="customCheckBox6"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00005</td>
+                                                    <td>28/02/2020, 12:42 AM</td>
+                                                    <td>Ashton Cox</td>
+                                                    <td>Dr. Cedric</td>
+                                                    <td>Cold & Flu</td>
+                                                    <td>
+                                                        <span class="badge light badge-warning">
+                                                            <i class="fa fa-circle text-warning me-1"></i>
+                                                            In Treatment
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-005</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox7" required="">
+                                                            <label class="form-check-label" for="customCheckBox7"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00006</td>
+                                                    <td>28/02/2020, 12:42 AM</td>
+                                                    <td>Ashton Cox</td>
+                                                    <td>Dr. Rhona</td>
+                                                    <td>Sleep Problem</td>
+                                                    <td>
+                                                        <span class="badge light badge-warning">
+                                                            <i class="fa fa-circle text-warning me-1"></i>
+                                                            In Treatment
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-006</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox8" required="">
+                                                            <label class="form-check-label" for="customCheckBox8"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00007</td>
+                                                    <td>26/02/2020, 12:42 AM</td>
+                                                    <td>Airi Satou</td>
+                                                    <td>Dr. Rhona</td>
+                                                    <td>Cold & Flu</td>
+                                                    <td>
+                                                        <span class="badge light badge-danger">
+                                                            <i class="fa fa-circle text-danger me-1"></i>
+                                                            New Patient
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-007</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox9" required="">
+                                                            <label class="form-check-label" for="customCheckBox9"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00008</td>
+                                                    <td>29/02/2020, 12:42 AM</td>
+                                                    <td>Airi Satou</td>
+                                                    <td>Dr. Garrett </td>
+                                                    <td>Sleep Problem</td>
+                                                    <td>
+                                                        <span class="badge light badge-warning">
+                                                            <i class="fa fa-circle text-warning me-1"></i>
+                                                            In Treatment
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-008</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox10" required="">
+                                                            <label class="form-check-label" for="customCheckBox10"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00009</td>
+                                                    <td>25/02/2020, 12:42 AM</td>
+                                                    <td>Airi Satou</td>
+                                                    <td>Dr. Rhona</td>
+                                                    <td>Cold & Flu</td>
+                                                    <td>
+                                                        <span class="badge light badge-danger">
+                                                            <i class="fa fa-circle text-danger me-1"></i>
+                                                            New Patient
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-009</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox11" required="">
+                                                            <label class="form-check-label" for="customCheckBox11"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00010</td>
+                                                    <td>26/02/2020, 12:42 AM</td>
+                                                    <td>Airi Satou</td>
+                                                    <td>Dr. Rhona</td>
+                                                    <td>Sleep Problem</td>
+                                                    <td>
+                                                        <span class="badge light badge-danger">
+                                                            <i class="fa fa-circle text-danger me-1"></i>
+                                                            New Patient
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-010</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox12" required="">
+                                                            <label class="form-check-label" for="customCheckBox12"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00011</td>
+                                                    <td>28/02/2020, 12:42 AM</td>
+                                                    <td>Airi Satou</td>
+                                                    <td>Dr. Rhona</td>
+                                                    <td>Cold & Flu</td>
+                                                    <td>
+                                                        <span class="badge light badge-warning">
+                                                            <i class="fa fa-circle text-warning me-1"></i>
+                                                            In Treatment
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-011</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox13" required="">
+                                                            <label class="form-check-label" for="customCheckBox13"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00012</td>
+                                                    <td>29/02/2020, 12:42 AM</td>
+                                                    <td>Sonya Frost</td>
+                                                    <td>Dr. Garrett</td>
+                                                    <td>Sleep Problem</td>
+                                                    <td>
+                                                        <span class="badge light badge-danger">
+                                                            <i class="fa fa-circle text-danger me-1"></i>
+                                                            New Patient
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-012</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox14" required="">
+                                                            <label class="form-check-label" for="customCheckBox14"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00013</td>
+                                                    <td>25/02/2020, 12:42 AM</td>
+                                                    <td>Sonya Frost</td>
+                                                    <td>Dr. Rhona</td>
+                                                    <td>Cold & Flu</td>
+                                                    <td>
+                                                        <span class="badge light badge-danger">
+                                                            <i class="fa fa-circle text-danger me-1"></i>
+                                                            New Patient
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-013</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox15" required="">
+                                                            <label class="form-check-label" for="customCheckBox15"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00014</td>
+                                                    <td>26/02/2020, 12:42 AM</td>
+                                                    <td>Sonya Frost</td>
+                                                    <td>Dr. Garrett</td>
+                                                    <td>Sleep Problem</td>
+                                                    <td>
+                                                        <span class="badge light badge-warning">
+                                                            <i class="fa fa-circle text-warning me-1"></i>
+                                                            In Treatment
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-014</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox16" required="">
+                                                            <label class="form-check-label" for="customCheckBox16"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00015</td>
+                                                    <td>28/02/2020, 12:42 AM</td>
+                                                    <td>Sonya Frost</td>
+                                                    <td>Dr. Rhona</td>
+                                                    <td>Cold & Flu</td>
+                                                    <td>
+                                                        <span class="badge light badge-danger">
+                                                            <i class="fa fa-circle text-danger me-1"></i>
+                                                            New Patient
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-015</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox17" required="">
+                                                            <label class="form-check-label" for="customCheckBox17"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00016</td>
+                                                    <td>29/02/2020, 12:42 AM</td>
+                                                    <td>Sonya Frost</td>
+                                                    <td>Dr. Garrett</td>
+                                                    <td>Sleep Problem</td>
+                                                    <td>
+                                                        <span class="badge light badge-danger">
+                                                            <i class="fa fa-circle text-danger me-1"></i>
+                                                            New Patient
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-016</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox18" required="">
+                                                            <label class="form-check-label" for="customCheckBox18"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00017</td>
+                                                    <td>25/02/2020, 12:42 AM</td>
+                                                    <td>Sonya Frost</td>
+                                                    <td>Dr. Rhona</td>
+                                                    <td>Cold & Flu</td>
+                                                    <td>
+                                                        <span class="badge light badge-warning">
+                                                            <i class="fa fa-circle text-warning me-1"></i>
+                                                            In Treatment
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-017</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox19" required="">
+                                                            <label class="form-check-label" for="customCheckBox19"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00018</td>
+                                                    <td>26/02/2020, 12:42 AM</td>
+                                                    <td>Sonya Frost</td>
+                                                    <td>Dr. Rhona</td>
+                                                    <td>Sleep Problem</td>
+                                                    <td>
+                                                        <span class="badge light badge-danger">
+                                                            <i class="fa fa-circle text-danger me-1"></i>
+                                                            New Patient
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-018</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox20" required="">
+                                                            <label class="form-check-label" for="customCheckBox20"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00019</td>
+                                                    <td>28/02/2020, 12:42 AM</td>
+                                                    <td>Sonya Frost</td>
+                                                    <td>Dr. Rhona</td>
+                                                    <td>Cold & Flu</td>
+                                                    <td>
+                                                        <span class="badge light badge-danger">
+                                                            <i class="fa fa-circle text-danger me-1"></i>
+                                                            New Patient
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-019</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="form-check custom-checkbox ms-2">
+                                                            <input type="checkbox" class="form-check-input" id="customCheckBox21" required="">
+                                                            <label class="form-check-label" for="customCheckBox21"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>#P-00020</td>
+                                                    <td>25/02/2020, 12:42 AM</td>
+                                                    <td>Sonya Frost</td>
+                                                    <td>Dr. Garrett</td>
+                                                    <td>Sleep Problem</td>
+                                                    <td>
+                                                        <span class="badge light badge-warning">
+                                                            <i class="fa fa-circle text-warning me-1"></i>
+                                                            In Treatment
+                                                        </span>
+                                                    </td>
+                                                    <td>AB-020</td>
+                                                    <td>
+                                                        <div class="dropdown ms-auto text-end">
+                                                            <div class="btn-link" data-bs-toggle="dropdown">
+                                                                <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"></rect><circle fill="#000000" cx="5" cy="12" r="2"></circle><circle fill="#000000" cx="12" cy="12" r="2"></circle><circle fill="#000000" cx="19" cy="12" r="2"></circle></g></svg>
+                                                            </div>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                <a class="dropdown-item" href="#">Accept Patient</a>
+                                                                <a class="dropdown-item" href="#">Reject Order</a>
+                                                                <a class="dropdown-item" href="#">View Details</a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endblock content_body %}
+        <!--**********************************
+            Content body end
+        ***********************************-->
+
+
+        <!--**********************************
+            Footer start
+        ***********************************-->
+       
+        <!--**********************************
+            Footer end
+        ***********************************-->
+
+        <!--**********************************
+           Support ticket button start
+        ***********************************-->
+
+        <!--**********************************
+           Support ticket button end
+        ***********************************-->
+
+        
+    </div>
+    <!--**********************************
+        Main wrapper end
+    ***********************************-->
+
+    <!--**********************************
+        Scripts
+    ***********************************-->
+    <!-- Required vendors -->
+    {% block scripts %}
+    <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+    <script src="{% static 'pages/vendor/chart.js/Chart.bundle.min.js' %}"></script>
+	<!-- Apex Chart -->
+	<script src="{% static 'pages/vendor/apexchart/apexchart.js' %}"></script>
+	
+    <!-- Datatable -->
+    <script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
+
+	<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
+
+    <script src="{% static 'pages/js/custom.min.js' %}"></script>
+	<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+	<script src="{% static 'pages/js/demo.js' %}"></script>
+    <script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
+    {% endblock scripts %}
+</body>
+</html>

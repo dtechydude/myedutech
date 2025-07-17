@@ -16,6 +16,8 @@ urlpatterns = [
      path('birthday-list/', page_views.birthday_list, name='birthday_list'),
      path('phone-list/', page_views.phone_list, name='phone_list'),
      path('email-list/', page_views.email_list, name='email_list'),
+     path('payment-instruction/', page_views.payment_instruction, name='payment_instruction'),
+     path('payment-chart/', page_views.payment_chart, name='payment_chart'),
 
 
      # path('<str:pk>/', views.StudentCardDetailView.as_view(), name='my_idcard'),

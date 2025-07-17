@@ -1,13 +1,13 @@
 from doctest import Example
 from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
-from results.models import Examination, Result, ExamSubject, Score, MotorAbilityScore
+from results.models import Examination, Result, Score, MotorAbilityScore
 from curriculum.models import Term
 
-class ExamSubjectAdmin(admin.ModelAdmin):
+# class ExamSubjectAdmin(admin.ModelAdmin):
        
-    list_display=('subject_id', 'name',)
-    exclude =['slug']
+#     list_display=('subject_id', 'name',)
+#     exclude =['slug']
 
 # class MotorAbility1Inline(admin.TabularInline):
 #     model = MotorAbility1
@@ -119,7 +119,7 @@ class TermAdmin(admin.ModelAdmin):
 # admin.site.register(MarkedSheet, MarkedSheetAdmin)
 admin.site.register(Examination, ExaminationAdmin)
 # admin.site.register(UploadCertificate, UploadCertificateAdmin)
-admin.site.register(ExamSubject, ExamSubjectAdmin)
+# admin.site.register(ExamSubject, ExamSubjectAdmin)
 admin.site.register(Result, ResultAdmin)
 admin.site.register(Score, ScoreAdmin)
 # admin.site.register(ResultSheet3, ResultSheet3Admin)

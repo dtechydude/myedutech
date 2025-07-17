@@ -20,6 +20,7 @@ urlpatterns = [
     path('attendance/', include('attendance.urls', namespace='attendance')),
     path('transport/', include('transport.urls', namespace='transport')),
     path('cbt/', include('cbt.urls', namespace='cbt')),
+    path('curriculum/', include('curriculum.urls', namespace='curriculum')),
        
 
 

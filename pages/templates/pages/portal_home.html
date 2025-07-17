@@ -819,8 +819,7 @@
 						<ul aria-expanded="false">
 							<li><a href="{% url 'users:register' %}">SignUp Teacher/staff</a></li>
 							<li><a href="/admin/staff/teacher/">Onboard Teacher</a></li>
-							<li><a href="/admin/staff/staff/">Onboard Staff</a></li>						
-							<li><a href="{% url 'staff:staff-list' %}">Staff List</a></li>
+							{% comment %} <li><a href="{% url 'staff:staff-list' %}">Staff List</a></li> {% endcomment %}
 							<li><a href="{% url 'staff:teacher-list' %}">Teachers List</a></li>
 							<li><a href="{% url 'staff:cbv_all_teachers_student_counts' %}">Student's Count</a></li>
 					
@@ -834,26 +833,26 @@
 						</a>
 						<ul aria-expanded="false">
 							{% if user.is_superuser or user.is_staff %}
-							<li><a href="{% url 'payments:payment_report' %}">Payment List</a></li>
-							<li><a href="{% url 'payments:confirmed_payment' %}">Confirmed Payment</a></li>
-							<li><a href="{% url 'payments:payment_summary' %}">Payment Summary</a></li>
-							<li><a href="{% url 'payments:debtor_list' %}">Debtors List</a></li>
-							<li><a href="{% url 'payments:bank-create' %}">Add Bank Info</a></li>
+							<li><a href="{% url 'payments:total_payments_report' %}">Payment List</a></li>
+							<li><a href="#">Confirmed Payment</a></li>
+							<li><a href="{% url 'payments:total_payments_report' %}">Payment Summary</a></li>
+							<li><a href="{% url 'payments:debtors_report' %}">Debtors List</a></li>
+							<li><a href="#">Add Bank Info</a></li>
 							<li><a href="/admin/payments/bankdetail/">Edit Bank Info</a></li>
 							<li><a href="/admin/payments/paymentchart/	">Create Payment Chart</a></li>												
 							<li><a href="/admin/payments/paymentdetail1/">Make Payment</a></li>								
 							
 							{% endif %}							
 							{% if user.student or user.is_superuser or user.is_staff %}
-							<li><a href="{% url 'payments:bank-list' %}">Bank Details</a></li>
-							<li><a href="{% url 'payments:payment_instruction' %}">Payment Instruction</a></li>
-							<li><a href="{% url 'payments:payment_chart' %}">Payment Chart</a></li>
+							<li><a href="#">Bank Details</a></li>
+							<li><a href="{% url 'pages:payment_instruction' %}">Payment Instruction</a></li>
+							<li><a href="{% url 'pages:payment_chart' %}">Payment Chart</a></li>
 											
-							<li><a href="{% url 'payments:online_payment' %}">Online Payment</a></li>
+							<li><a href="#">Online Payment</a></li>
 							{% endif %}
 							{% if user.student %}					
-							<li><a href="{% url 'payments:my_payments' %}">My Payments</a></li>
-							<li><a href="{% url 'payments:create_payment'%}">Make Payment</a></li>							
+							<li><a href="#">My Payments</a></li>
+							<li><a href="#">Make Payment</a></li>							
 							</li>		
 							{% endif %}						
 							
@@ -885,23 +884,23 @@
 						</a>
 						<ul aria-expanded="false">
 							{% if user.is_superuser or user.is_staff %}
-							<li><a href="{% url 'results:print-result' %}">1st. Term Results</a></li>
-							<li><a href="{% url 'results:print-second-result' %}">2nd. Term Results</a></li>
-							<li><a href="{% url 'results:print-third-result' %}">3rd. Term Results</a></li>
+							<li><a href="#">1st. Term Results</a></li>
+							<li><a href="#">2nd. Term Results</a></li>
+							<li><a href="#">3rd. Term Results</a></li>
 							<li><a href="/admin/results/resultsheet1/">Admin Edit Results</a></li>
 							
 							{% elif user.student %}
-							<li><a href="{% url 'results:my-result' %}">My 1st-Term Results</a></li>
-							<li><a href="{% url 'results:mysecond-term-result' %}">My 2nd-Term Results</a></li>
-							<li><a href="{% url 'results:mythird-term-result' %}">My 3rd-Term Results</a></li>
+							<li><a href="#">My 1st-Term Results</a></li>
+							<li><a href="#">My 2nd-Term Results</a></li>
+							<li><a href="#">My 3rd-Term Results</a></li>
 
 							{% elif user.teacher %}
 							{% for r in my_students %}
-							<li><a href="{% url 'results:print-result' %}">1st. Term Results</a></li>
-							<li><a href="{% url 'results:print-second-result' %}">2nd. Term Results</a></li>
-							<li><a href="{% url 'results:print-third-result' %}">3rd. Term Results</a></li>
+							<li><a href="#">1st. Term Results</a></li>
+							<li><a href="#">2nd. Term Results</a></li>
+							<li><a href="#">3rd. Term Results</a></li>
 							{% endfor %}
-							<li><a href="{% url 'pages:record-result' %}">Record Results</a></li>							
+							<li><a href="{% url 'pages:score_entry' %}">Record Results</a></li>							
 							{% endif %}
 						
 

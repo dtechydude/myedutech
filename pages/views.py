@@ -72,3 +72,9 @@ def birthday_list(request):
         'student_birthday': student_birthday,
     }
     return render(request, 'pages/birthday_list.html', context)
+
+def payment_instruction(request):
+    return render(request, 'pages/payment_instruction.html')
+
+def payment_chart(request):
+    return render(request, 'pages/payment_chart.html')
