@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'payments.apps.PaymentsConfig',
     'attendance.apps.AttendanceConfig',
     'transport.apps.TransportConfig',
+    'cbt.apps.CbtConfig',
 
 
     # Installed Apps

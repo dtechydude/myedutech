@@ -1,0 +1,190 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% block title %}
+	<title>CBT Home Page</title>
+    {% endblock title %}
+	
+	<!-- FAVICONS ICON -->
+     {% block favicon %}
+	<link rel="shortcut icon" type="image/png" href="images/favicon.png" />
+	<link href="./vendor/jquery-nice-select/css/nice-select.css" rel="stylesheet">
+    <link href="./css/style.css" rel="stylesheet">
+    {% endblock favicon %}
+
+</head>
+
+<body>
+
+    <!--*******************
+        Preloader start
+    ********************-->
+   <div id="preloader">
+		<div class="lds-ripple">
+			<div></div>
+			<div></div>
+		</div>
+    </div>
+    <!--*******************
+        Preloader end
+    ********************-->
+
+
+    <!--**********************************
+        Main wrapper start
+    ***********************************-->
+    <div id="main-wrapper">
+
+        <!--**********************************
+            Nav header start
+        ***********************************-->
+    
+        <!--**********************************
+            Nav header end
+        ***********************************-->
+		
+		<!--**********************************
+            Chat box start
+        ***********************************-->
+	
+		<!--**********************************
+            Chat box End
+        ***********************************-->
+
+		
+        <!--**********************************
+            Header start
+        ***********************************-->
+                    
+        <!--**********************************
+            Header end ti-comment-alt
+        ***********************************-->
+
+        <!--**********************************
+            Sidebar start
+        ***********************************-->
+  
+        <!--**********************************
+            Sidebar end
+        ***********************************-->
+
+        <!--**********************************
+            Content body start
+        ***********************************-->
+        {% block content_body %}
+<div class="content-body">
+            <div class="container-fluid">
+				<div class="row page-titles">
+					<ol class="breadcrumb">
+						<li class="breadcrumb-item active"><a href="javascript:void(0)">For Customized CBT/Exam Contact SchoollyEdTech</a></li>
+					</ol>
+                </div>
+                <div class="row">                   
+                 
+                    <div class="col-xl-6">
+                        <div class="card">
+                            <img class="card-img-top img-fluid" src="{% static 'pages/images/card/google_education.jpg' %}" alt="Card image cap">
+                            <div class="card-header">
+                                <h5 class="card-title">Google For Education</h5>
+                                <p>Free To Use</p>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">Google for Education provides a platform for real-time collaboration, assessment and test-based tool. </p>
+                                <p class="card-text text-dark">Contact SchoollyEdTech For Implementation</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-6">
+                        <div class="card">
+                            <img class="card-img-top img-fluid" src="{% static 'pages/images/card/microsoft_education.jpg' %}" alt="Card image cap">
+                            <div class="card-header">
+                                <h5 class="card-title">Microsoft 365 For Education</h5>
+                                <p>Free To use</p>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">Microsoft for Education provides a platform for real-time collaboration, assessment and test-based tool.
+                                </p>
+                            </div>
+                            <div class="card-footer">
+                                <p class="card-text d-inline">Contact SchoollyEdTech For Implementation</p>
+                                <a href="javascript:void(0);" class="card-link float-end">link</a>
+                            </div>
+                        </div>
+                    </div>  
+                    
+                    <!-- <div class="col-xl-6">
+                        <div class="card bg-light">
+                            <div class="card-header">
+                                <h5 class="card-title">Light card title</h5>
+                            </div>
+                            <div class="card-body mb-0">
+                                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p><a href="javascript:void(0);" class="btn btn-dark btn-card">Go
+                                    somewhere</a>
+                            </div>
+                            <div class="card-footer bg-transparent border-0">Last updateed 3 min ago
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-6">
+                        <div class="card text-white bg-dark">
+                            <div class="card-header">
+                                <h5 class="card-title text-white">Dark card title</h5>
+                            </div>
+                            <div class="card-body mb-0">
+                                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                                <a href="javascript:void(0);" class="btn btn-light btn-card text-dark">Go
+                                    somewhere</a>
+                            </div>
+                            <div class="card-footer bg-transparent border-0 text-white">Last updateed 3 min ago
+                            </div>
+                        </div>
+                    </div> -->
+
+                </div>
+            </div>
+        </div>
+        {% endblock content_body %}
+        <!--**********************************
+            Content body end
+        ***********************************-->
+
+
+        <!--**********************************
+            Footer start
+        ***********************************-->
+    
+        <!--**********************************
+            Footer end
+        ***********************************-->
+
+        <!--**********************************
+           Support ticket button start
+        ***********************************-->
+
+        <!--**********************************
+           Support ticket button end
+        ***********************************-->
+
+        
+    </div>
+    <!--**********************************
+        Main wrapper end
+    ***********************************-->
+
+    <!--**********************************
+        Scripts
+    ***********************************-->
+    <!-- Required vendors -->
+     {% block scripts %}
+    <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+	<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
+    <script src="{% static 'pages/js/custom.min.js' %}"></script>
+	<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+	<script src="{% static 'pages/js/demo.js' %}"></script>
+    <script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
+    {% endblock scripts %}
+</body>
+</html>

@@ -872,10 +872,10 @@
 						{% if user.is_superuser or user.is_staff %}
 						<li><a href="/admin/transport/route/">Add/Edit Route</a></li>
 						<li><a href="/admin/transport/studentbuspayment/">Add Student To Route</a></li>
-						<li><a href="{% url 'transport:student_on_bus' %}">Students In Route</a></li>						
+						<li><a href="{% url 'transport:student_on_bus' %}">Students In Route</a></li>					
 						{% endif %}
-						<li><a href="{% url 'transport:bus_route_list' %}">Bus Route</a></li>
-						<li><a href="{% url 'transport:bus_fare_list' %}">Bus Fare List</a></li>
+						{% comment %}<li><a href="{% url 'transport:bus_route_list' %}">Bus Route</a></li>{% endcomment %}
+						{% comment %}<li><a href="{% url 'transport:bus_fare_list' %}">Bus Fare List</a></li>{% endcomment %}
 						
 					</ul>
 					</li>
