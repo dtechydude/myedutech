@@ -99,9 +99,9 @@
            {% endwith %}
            </h5>
    {% for c in results %}
-  <a href="{{c.get_absolute_url}}"><h6>{{c.first_name}} {{c.last_name}}  - {{c.standard}} </h6></a>
+  <a href="{{c.get_absolute_url}}"><h6>{{c.first_name}} {{c.last_name}}  - {{c.current_class}} </h6></a>
  
-  <p> <span style="color:rgba(43, 43, 207, 0.753)">Current Class : </span> <strong>{{ c.standard }} </strong><span style="color:rgba(43, 43, 207, 0.753)"> -  Class Teacher :</span> <strong>{{ c.form_teacher.first_name }} {{ c.form_teacher.last_name }} </strong></span></p>
+  <p> <span style="color:rgba(43, 43, 207, 0.753)">Current Class : </span> <strong>{{ c.current_class }} </strong><span style="color:rgba(43, 43, 207, 0.753)"> -  Class Teacher :</span> <strong>{{ c.form_teacher.first_name }} {{ c.form_teacher.last_name }} </strong></span></p>
   
 
    {% empty %}

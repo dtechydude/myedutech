@@ -188,7 +188,7 @@ class Student(models.Model):
         return f"{self.first_name} {self.last_name}"
     
     def get_absolute_url(self):
-        return reverse('students:student-detail', kwargs={'USN':self.USN})
+        return reverse('students:student-detail', kwargs={'id':self.USN})
     
 # Student ID Card Generation
 class StudentId(models.Model):

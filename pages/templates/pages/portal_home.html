@@ -865,7 +865,6 @@
 					<ul aria-expanded="false">						
 						{% if user.student %}						
 						<li><a href="{% url 'transport:signup_for_bus' %}">SignUp For Bus</a></li>
-						<li><a href="{% url 'transport:my_bus_payment' %}">My Bus Payments</a></li>
 						<li><a href="">My Route Details</a></li>
 						{% endif %}
 						{% if user.is_superuser or user.is_staff %}
@@ -890,7 +889,7 @@
 							<li><a href="/admin/results/resultsheet1/">Admin Edit Results</a></li>
 							
 							{% elif user.student %}
-							<li><a href="#">My 1st-Term Results</a></li>
+							<li><a href="{% url 'results:student_dashboard' %}">My Results</a></li>
 							<li><a href="#">My 2nd-Term Results</a></li>
 							<li><a href="#">My 3rd-Term Results</a></li>
 
@@ -1032,8 +1031,8 @@
 														<h3 class="mb-0 font-w600">{{ total_students }}</h3>
 														<p class="mb-0 text-nowrap ">My Students</p>
 														{% elif user.is_authenticated and user.student %}
-														<h3 class="mb-0 font-w600">{{ num_inclass }}</h3>
-														<p class="mb-0 text-nowrap ">No.In Class</p>
+														<h5 class="mb-0 font-w600">{{ user.profile.code }}</h5>
+														<p class="mb-0 text-nowrap ">My Code</p>
 														{% else %}
 														<h3 class="mb-0 font-w600">xxxxx</h3>
 														<p class="mb-0 text-nowrap ">No Info</p>
@@ -1061,7 +1060,7 @@
 														<h5 class="mb-0 font-w600">{{ user.teacher.dept }}</h5>
 														<p class="mb-0 text-nowrap ">Department</p>
 														{% elif user.is_authenticated and user.student %}
-														<h5 class="mb-0 font-w600">{{ user.student.standard }}</h5>
+														<h5 class="mb-0 font-w600">{{ user.student.current_class }}</h5>
 														<p class="mb-0 text-nowrap ">Current Class</p>
 														{% else %}
 														<h3 class="mb-0 font-w600">xxxxx</h3>

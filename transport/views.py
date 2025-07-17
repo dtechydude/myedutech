@@ -45,4 +45,19 @@ def student_on_bus(request):
     }
     
     return render (request, 'transport/student_onbus.html', context )
+
+@login_required # Ensure only logged-in users can access this view
+def sign_up_bus(request):
+    if request.method == 'POST':
+        form = BusPaymentForm(request.POST)
+        if form.is_valid():
+            # Don't save yet! We need to set the user first.
+            submission = form.save(commit=False)
+            submission.payee_id = request.user # Set the logged-in user
+            submission.save()
+            messages.success(request, f'The Bus Payment has been entered successfully')
+            return redirect('transport:bus_payment_success') # Redirect to a success page
+    else:
+        form = BusPaymentForm()
+    return render(request, 'transport/signup_for_bus.html', {'form': form})
    

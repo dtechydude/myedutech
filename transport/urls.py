@@ -13,7 +13,7 @@ urlpatterns = [
     # path('bus_fare_list/', payment_views.bus_fare_list, name="bus_fare_list"),
     path('student_on_bus/', payment_views.student_on_bus, name="student_on_bus"),
 
-    # path('signup_for_bus/', payment_views.create_bus_payment, name="signup_for_bus"),
+    path('signup_for_bus/', payment_views.sign_up_bus, name="signup_for_bus"),
     # path('bus_payment/success/', views.bus_payment_success, name='bus_payment_success'),
 
     

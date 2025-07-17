@@ -307,7 +307,7 @@ class MotorAbilityScore(models.Model):
         verbose_name_plural = "Motor Ability Scores"
 
     def __str__(self):
-        return f"{self.student.full_name}'s Motor Ability for {self.term.name}"
+        return f"{self.student.last_name}'s Motor Ability for {self.term.name}"
 
     @property
     def get_average_behavioral_score(self):
