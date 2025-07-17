@@ -4,6 +4,7 @@
 <!DOCTYPE html>
 <html lang="en" class="h-100">
 
+
 <head>
     <meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -11,20 +12,20 @@
 	<meta name="author" content="" />
 	<meta name="robots" content="" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="Ermine : Ermine Application Dashboard" />
-	<meta property="og:title" content="Ermine : Ermine Application Dashboard" />
-	<meta property="og:description" content="Ermine : Ermine Application Dashboard" />
+	<meta name="description" content="SchoollyEdtech : Schoolly-School Mgt System" />
+	<meta property="og:title" content="SchoollyEdtech : Schoolly-School Mgt System" />
+	<meta property="og:description" content="SchoollyEdtech : Schoolly-School Mgt System" />
 	<!-- <meta property="og:image" content="https://travl.dexignlab.com/xhtml/social-image.png" /> -->
 	<meta name="format-detection" content="telephone=no">
 	
 	<!-- PAGE TITLE HERE -->
-	<title>Schoolly Registration Page</title>
+	<title>Create Bus Payment</title>
 	
 	<!-- FAVICONS ICON -->
 	<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png'%} " />
     <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
-
 </head>
+
 {% block content %}
 <body class="vh-100">
     <div class="authincation h-100">
@@ -36,26 +37,23 @@
                             <div class="col-xl-12">
                                 <div class="auth-form">
 									<div class="text-center mb-3">
-                                        <h3 style="color:blue">Class Daily Attendance</h3>
-										<!-- <a href="https://ermine.ng"><img src="{% static 'pages/images/logo-full.png' %}" alt=""></a> -->
-                                    <h4>Teacher: {{ teacher.last_name }}!  <small>({{teacher.user}})</small></h4>
-                                    <span>Click on the class to mark attendance:</span>
-                                    </div>
-                                    
+                                        <a href=""><img src="{% static 'pages/images/schoolly_logo.png' %}" width='80px' height="80px"></a>
+									</div>
+                                    <h4 class="text-center mb-4">SignUp For School Bus</h4>
+                                    <form  action ="" method="POST">
+                                        {% csrf_token %}
                                         <div class="mb-3">
-                                            {% if assigned_classrooms %}
-                                            <ul>
-                                                {% for classroom in assigned_classrooms %}
-                                                <li style="font-size: 16px;"> <a href="{% url 'attendance:mark_attendance' classroom.id %}"> + {{ classroom.name }}</a></li>
-                                            {% endfor %}
-                                            </ul>
-                                        {% else %}
-                                            <p>You are not assigned to any classrooms.</p>
-                                        {% endif %}
-                                        </div>                                                                              
-                                        
+                                            {{ form|crispy }}
+                                           
+                                        </div>
+                                                                              
+                                        <div class="text-center">
+                                            <button type="submit" class="btn btn-primary btn-block">SignUp For Bus</button>
+                                        </div>
+                                    </form>
                                     <div class="new-account mt-3">
-                                        <p>Back To: <a class="text-primary" href="{% url 'pages:portal-home' %}">DASHBOARD</a></p>
+                                        <p>Back To: <a class="text-primary" href="{% url 'pages:portal-home' %}">DASHBOARD - </a>
+                                        </p>
                                     </div>
                                 </div>
                             </div>

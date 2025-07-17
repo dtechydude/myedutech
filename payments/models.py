@@ -9,29 +9,17 @@ from django.db.models import Sum # Import Sum for aggregation
 from curriculum.models import Term, Session
 
 # Assuming you have Term and Session models already defined.
-# If they are in a different app, adjust the import path accordingly.
-# Example: from academic.models import Term, Session
-# class Term(models.Model):
-#     name = models.CharField(max_length=100, unique=True)
-#     start_date = models.DateField()
-#     end_date = models.DateField()
+class BankDetail(models.Model):
+    acc_name = models.CharField(max_length=50, blank=False)
+    acc_number = models.CharField(max_length=10, blank=False)
+    bank_name = models.CharField(max_length=50, blank=False, verbose_name='Bank Name')
 
-#     class Meta:
-#         ordering = ['-start_date']
+    def __str__(self):
+        return f'{self.acc_number} - {self.bank_name}'
 
-#     def __str__(self):
-#         return self.name
-
-# class Session(models.Model):
-#     name = models.CharField(max_length=100, unique=True) # e.g., "2023/2024"
-#     start_date = models.DateField()
-#     end_date = models.DateField()
-
-#     class Meta:
-#         ordering = ['-start_date']
-
-#     def __str__(self):
-#         return self.name
+    class Meta:
+        ordering:['bank_name']
+        # unique_together = ['acc_number', 'bank_name']
 
 
 class PaymentCategory(models.Model):

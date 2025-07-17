@@ -1,0 +1,215 @@
+
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    
+	<!-- PAGE TITLE HERE -->
+    {% block title %}
+	<title>Payment Report Table</title>
+	{% endblock title %}
+	
+	<!-- FAVICONS ICON -->
+    {% block favicon %}
+	<link rel="shortcut icon" type="image/png" href="images/favicon.png" />
+    <!-- Datatable -->
+    <link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
+    <!-- Custom Stylesheet -->
+	<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+    {% endblock favicon %}
+
+</head>
+
+<body>
+
+    <!--*******************
+        Preloader start
+    ********************-->
+   <div id="preloader">
+		<div class="lds-ripple">
+			<div></div>
+			<div></div>
+		</div>
+    </div>
+    <!--*******************
+        Preloader end
+    ********************-->
+
+
+    <!--**********************************
+        Main wrapper start
+    ***********************************-->
+    <div id="main-wrapper">
+
+        <!--**********************************
+            Nav header start
+        ***********************************-->
+		
+        <!--**********************************
+            Nav header end
+        ***********************************-->
+		
+		<!--**********************************
+            Chat box start
+        ***********************************-->
+		
+		<!--**********************************
+            Chat box End
+        ***********************************-->
+
+		
+        <!--**********************************
+            Header start
+        ***********************************-->
+       
+        <!--**********************************
+            Header end ti-comment-alt
+        ***********************************-->
+
+        <!--**********************************
+            Sidebar start
+        ***********************************-->
+      
+        <!--**********************************
+            Sidebar end
+        ***********************************-->
+
+        <!--**********************************
+            Content body start
+        ***********************************-->
+        {% block content_body %}
+        <div class="content-body">
+            <div class="container-fluid">
+				<!-- <div class="row page-titles">
+					<ol class="breadcrumb">
+						<li class="breadcrumb-item active"><a href="javascript:void(0)">Table</a></li>
+						<li class="breadcrumb-item"><a href="javascript:void(0)">Bootstrap</a></li>
+					</ol>
+                </div> -->
+                <!-- row -->
+
+                <div class="row">                 
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="card-title">All My Payments <span style="font-size: 12px;">(Confirmed= <span style="color:green">GREEN </span>, Unconfirmed = <span style="color:red"> RED</span>)</span></h4>
+                            </div>
+                            <div class="card-body">
+                                <small>NOTE: For 2nd & 3rd installment if applicable, make transfer to the school and send details to admin contact, your payment will be updated automatically once confirmed</small>
+
+                                <div class="table-responsive">
+                                    <table class="table primary-table-bordered">
+                                        <thead class="" style="background-color: #043c58; color:white;">
+                                            <tr>
+                                                <th scope="col" style="font-size: 13px;">#</th>
+                                                <th scope="col" style="font-size: 13px;">Session</th>
+                                                <th scope="col" style="font-size: 13px;">Term</th>
+                                                <th scope="col" style="font-size: 13px;">Bus Fare</th>
+                                                <!-- <th scope="col" style="font-size: 13px;">Discount Fee</th> -->
+                                                <th scope="col" style="font-size: 13px;">Paid(1)</th>
+                                                <th scope="col" style="font-size: 13px;">Paid(2)</th>
+                                                <th scope="col" style="font-size: 13px;">Paid(3)</th>
+                                                <th scope="col" style="font-size: 13px;">Total Paid</th> 
+                                                <th scope="col" style="font-size: 13px;">Updated</th> 
+                                                <th scope="col" style="font-size: 13px;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for p in mypayment %}
+                                            <tr>
+                                                <th>{{ forloop.counter }}</th>
+                                                <td>{{ p.payment.session.name }}</td>
+                                                <td>{{ p.payment.session.term }}</td>
+                                                <td><strong>{{ p.payment.amount_due |floatformat:2 }}</strong></td>
+                                                                                              
+                                                <td>{% if p.amount_paid_a and p.confirmed_a %}
+                                                    <span style="color:green;">N{{ p.amount_paid_a |floatformat:2 }} </span>
+                                                    {% elif p.amount_paid_a and p.confirmed_a == False %}
+                                                    <span style="color:red;">N{{ p.amount_paid_a |floatformat:2 }}</span>                                                    
+                                                {% endif %} 
+                                               </td>
+                                               
+                                                <td>{% if p.amount_paid_b and p.confirmed_b %}
+                                                    <span style="color:green;">N{{ p.amount_paid_b |floatformat:2 }}</span>
+                                                    {% elif p.amount_paid_b and p.confirmed_b == False %}
+                                                    <span style="color:red;">N{{ p.amount_paid_b |floatformat:2 }}</span>
+                                                    {% elif not p.amount_paid_b %}
+                                                    <span style="color:red;"><a href=""><small>N/A if payment<br> is complete</small></a></span>                                                  
+                                                {% endif %}
+                                              </td>
+                                                <td>{% if p.amount_paid_c and p.confirmed_c %}
+                                                    <span style="color:green;">N{{ p.amount_paid_c |floatformat:2 }}</span>
+                                                    {% elif p.amount_paid_c and p.confirmed_c == False %}
+                                                    <span style="color:red;">N{{ p.amount_paid_c |floatformat:2 }}</span>
+                                                    {% elif not p.amount_paid_c %}
+                                                    <span style="color:red;"> <a href=""><small>N/A if payment <br> is complete</small></a></span>
+                                                {% endif %}</td> 
+                                                <td> {{ p.total_amount_paid }}</td>                                              
+                                                <td> {% if p.payment_date_a and not p.payment_date_b and not p.payment_date_c %}
+                                                    {{p.payment_date_a |date:"d/m/Y"}}
+                                                    {% elif p.payment_date_a and p.payment_date_b and not p.payment_date_c %}
+                                                    {{p.payment_date_b |date:"d/m/Y"}}
+                                                    {% elif p.payment_date_a and p.payment_date_b and p.payment_date_c %}
+                                                    {{p.payment_date_b |date:"d/m/Y"}}
+                                                    {% else %}
+                                                    {% endif %}
+                                                </td>
+                                                <td><span><a class =" btn btn-secondary" href="{% url 'pages:support_info' %}">Admin Contact</a></span>
+                                                </td>
+                                            
+                                            </tr>
+                                            {% endfor %}
+                                        
+                                            
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                   
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endblock content_body %}
+        <!--**********************************
+            Content body end
+        ***********************************-->
+
+
+        <!--**********************************
+            Footer start
+        ***********************************-->
+       
+        <!--**********************************
+            Footer end
+        ***********************************-->
+
+        <!--**********************************
+           Support ticket button start
+        ***********************************-->
+
+        <!--**********************************
+           Support ticket button end
+        ***********************************-->
+
+        
+    </div>
+    <!--**********************************
+        Main wrapper end
+    ***********************************-->
+
+    <!--**********************************
+        Scripts
+    ***********************************-->
+    <!-- Required vendors -->
+
+</body>
+</html>
