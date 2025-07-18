@@ -138,7 +138,7 @@ class Payment(models.Model):
                                       help_text="The method used for the payment.")
     transaction_id = models.CharField(max_length=100, blank=True, null=True, unique=True,
                                       help_text="Unique ID from payment gateway or internal transaction ID.")
-    notes = models.TextField(blank=True, null=True,
+    notes = models.CharField(max_length=100, blank=True, null=True,
                              help_text="Any additional notes or remarks about the payment.")
     recorded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                     help_text="The staff member who recorded this payment.")

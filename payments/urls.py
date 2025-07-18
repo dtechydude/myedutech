@@ -16,6 +16,7 @@ urlpatterns = [
     path('payments/make/', payment_views.make_payment, name='make_payment'),
     path('payments/history/', payment_views.payment_history, name='payment_history'),
     path('payments/receipt/<int:receipt_id>/', payment_views.view_receipt, name='view_receipt'),
+    path('category_free/', payment_views.payment_chart_list, name='payment_chart_list'),
 
     # New Report URLs
     path('payments/report/debtors/', payment_views.debtors_report, name='debtors_report'),

@@ -21,6 +21,10 @@ class Route(models.Model):
     driver_phone = models.CharField(max_length=11, blank=True)
     slug = models.SlugField(null=True, blank=True)
 
+    class Meta:
+        ordering = ['route_id']
+        verbose_name = 'Route/Fare'
+
     def __str__ (self):
         return f'{self.name} - {self.route_id}'
 
@@ -42,6 +46,7 @@ class StudentOnRoute(models.Model):
     ]  
     payment_method = models.CharField(max_length=50, choices=PAYMENT_METHOD_CHOICES, blank=True, null=True,
                                       help_text="The method used for the payment.")
+    payment_date = models.DateField(verbose_name='Payment Date', blank=True, null=True)
          
     signup_date = models.DateTimeField(auto_now_add=True)
     is_approved = models.BooleanField(default=False)

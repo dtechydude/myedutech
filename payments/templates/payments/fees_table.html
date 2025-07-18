@@ -7,7 +7,7 @@
     
 	<!-- PAGE TITLE HERE -->
     {% block title %}
-	<title>Bus Route List</title>
+	<title>Payment Chart</title>
 	{% endblock title %}
 	
 	<!-- FAVICONS ICON -->
@@ -81,14 +81,14 @@
         ***********************************-->
         {% block content_body %}
         <div class="content-body">
-            <div class="container-fluid">				
+            <div class="container-fluid">
+				
+		                <div class="row">
                 
-                <!-- row -->
-                <div class="row">                
 					<div class="col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h4 class="card-title" style="color:orangered;"><i class="fa fa-bus" aria-hidden="true"></i> - Bus Route List </h4>
+                                <h4 class="card-title" style="color:green;">All Fees Schedule </h4>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
@@ -96,28 +96,24 @@
                                         <thead>
                                             <tr>
                                                 <th>S/N</th>
-                                                <th>Route Name</th>
-                                                <th>Route ID</th>
-                                                <th>Bus Fare</th>
-                                                <th>Direction</th>
-                                                <th>Staff In Charge</th>                                                
-                                                <th>Driver</th>                                                
-                                                <th>Phone</th>
-                                                
+                                                <th>Payment Name</th>
+                                                <th>Category</th>
+                                                <th>Session</th>
+                                                <th>Term</th>
+                                                <th>Amount Due</th>
+                                                                                            
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {% for rt in routelist %}
+                                            {% for p in payment_chart_list %}
                                             <tr>
                                                 <td>{{ forloop.counter }}</td>
-												<td>{{rt.name}}</td>
-                                                <td>{{rt.route_id}}</td>
-                                                <td>{{rt.bus_fee}}</td>
-                                                <td>{{ rt.direction }}</td>
-                                                <td>{{ rt.staff_in_charge }}</td>
-                                                <td>{{ rt.driver }}</td>
-                                                <td>{{ rt.driver_phone }}</td>
-                                                
+												<td><strong>{{ p.fee_name}}</strong></td>
+                                                <td>{{ p.payment_category.name}}</td>
+                                                <td style="color:brown;">{{ p.session}}</td>
+                                                <td>{{ p.term }}</td>
+                                                <td><strong>N{{ p.amount_due }}</strong></td>                                               
+                                              
                                                 {% endfor %}
                                             </tr>
                                            

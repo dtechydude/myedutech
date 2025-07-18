@@ -5,7 +5,7 @@ from import_export.admin import ImportExportModelAdmin
 
 
 class RouteAdmin(admin.ModelAdmin):
-    list_display = ('name', 'route_id', 'direction', 'staff_in_charge', 'driver')
+    list_display = ('name', 'route_id', 'bus_fee', 'direction', 'staff_in_charge', 'driver', 'driver_phone')
     search_fields = ('name', 'staff_in_charge__full_name',)
     ordering = ['name',]
     exclude = ('slug',)
@@ -16,6 +16,8 @@ class StudentOnRouteAdmin(admin.ModelAdmin):
         'student_full_name',  # This will be a custom method
         'route',
         'signup_date',
+        'amount_paid',
+        'payment_date',
     )
     list_filter = ('route', 'signup_date')
     search_fields = (

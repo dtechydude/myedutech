@@ -476,3 +476,17 @@ def get_category_fee_details(request):
         except CategoryFee.DoesNotExist:
             return JsonResponse({'error': 'Category Fee not found'}, status=404)
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+
+
+@login_required
+def payment_chart_list(request):
+    payment_chart_list = CategoryFee.objects.all()   
+
+    context = {
+        'payment_chart_list': payment_chart_list,
+        
+    }
+    return render (request, 'payments/fees_table.html', context )
+

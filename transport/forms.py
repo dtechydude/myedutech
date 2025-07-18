@@ -18,8 +18,15 @@ class StudentBusCreateForm(forms.ModelForm):
 class BusSignupForm(forms.ModelForm):
     class Meta:
         model = StudentOnRoute
-        fields = ['route'] # Assuming student is automatically linked to the logged-in user
-
+        fields = ['route', 'amount_paid', 'payment_method', 'payment_date'] # Assuming student is automatically linked to the logged-in user
+        widgets = {
+            'payment_date': forms.DateInput(
+                format=('%d/%m/%Y'),
+                attrs={'class': 'form-control', 
+                       'placeholder': 'Select a date',
+                       'type': 'date'  # <--- IF I REMOVE THIS LINE, THE INITIAL VALUE IS DISPLAYED
+                      }),
+        }
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None) # Pass request to form if needed for student
         super().__init__(*args, **kwargs)
