@@ -214,11 +214,11 @@ def my_classmates_view(request):
         student = request.user.student
         
         # Get the classroom the student belongs to
-        standard = student.standard
+        standard = student.current_class
 
         if standard:
             # Get all other students in the same classroom, excluding the current student
-            classmates = Student.objects.filter(standard=standard).exclude(user=request.user)
+            classmates = Student.objects.filter(current_class=standard).exclude(user=request.user)
         else:
             classmates = [] # No classroom assigned
             

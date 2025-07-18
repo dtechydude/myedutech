@@ -22,7 +22,7 @@ class StandardSelfListView(LoginRequiredMixin, ListView):
  
     # Student can only view their class elearning
     def get_queryset(self):
-        return Standard.objects.filter(name = self.request.user.student.standard)
+        return Standard.objects.filter(name = self.request.user.student.current_class)
 
 # Standard list view for the admin and teachers
 class ClassListView(LoginRequiredMixin, ListView):

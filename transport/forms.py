@@ -1,50 +1,36 @@
+# transport/forms.py
 from django import forms
-# from transport.models import StudentBusPayment
+from .models import StudentOnRoute 
+
+class StudentOnRouteForm(forms.ModelForm):
+    class Meta:
+        model = StudentOnRoute
+        fields = ['student', 'route'] # Or specify the fields you want to display/edit
+        # Example: fields = ['student', 'bus_route', 'pickup_time']
 
 
-# class BusPaymentForm(forms.ModelForm):
-#      class Meta:
-#         model = StudentBusPayment
-#         fields = '__all__'
-#         exclude = ('payee_id',)
+class StudentBusCreateForm(forms.ModelForm):
+    class Meta:
+        model = StudentOnRoute
+        fields = ['route'] # Or specify the fields you want to display/edit
+        # Example: fields = ['student', 'bus_route', 'pickup_time']
 
-#         widgets = {
-#             'payment_date_a': forms.DateInput(
-#                 format=('%d/%m/%Y'),
-#                 attrs={'class': 'form-control', 
-#                        'placeholder': 'Select a date',
-#                        'type': 'date'  # <--- IF I REMOVE THIS LINE, THE INITIAL VALUE IS DISPLAYED
-#                       }),
-#             'payment_date_b': forms.DateInput(
-#                 format=('%d/%m/%Y'),
-#                 attrs={'class': 'form-control', 
-#                        'placeholder': 'Select a date',
-#                        'type': 'date'  # <--- IF I REMOVE THIS LINE, THE INITIAL VALUE IS DISPLAYED
-#                       }),
+class BusSignupForm(forms.ModelForm):
+    class Meta:
+        model = StudentOnRoute
+        fields = ['route'] # Assuming student is automatically linked to the logged-in user
 
-#             'payment_date_c': forms.DateInput(
-#                 format=('%d/%m/%Y'),
-#                 attrs={'class': 'form-control', 
-#                        'placeholder': 'Select a date',
-#                        'type': 'date'  # <--- IF I REMOVE THIS LINE, THE INITIAL VALUE IS DISPLAYED
-#                       }),
-#         }
-#                         #Note that i removed user because it is an instance in the view already
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None) # Pass request to form if needed for student
+        super().__init__(*args, **kwargs)
 
-class BusPaymentForm(forms.ModelForm):
-     pass
-    #  class Meta:
-    #     model = StudentBusPayment
-    #     fields = ['route', 'payment', 'amount_paid_a', 'bank_name_a', 'payment_date_a', 'remark_a']
-    #     # exclude = ('payee_id',)
+    def clean(self):
+        cleaned_data = super().clean()
+        route = cleaned_data.get('route')
+        # Assuming student is retrieved from the request's user
+        student = self.request.user if self.request and hasattr(self.request.user, 'student') else None
 
-    #     widgets = {
-    #         'payment_date_a': forms.DateInput(
-    #             format=('%d/%m/%Y'),
-    #             attrs={'class': 'form-control', 
-    #                    'placeholder': 'Select a date',
-    #                    'type': 'date'  # <--- IF I REMOVE THIS LINE, THE INITIAL VALUE IS DISPLAYED
-    #                   }),          
-
-    #     }
-    #                     #Note that i removed user because it is an instance in the view already
+        if student and route:
+            if StudentOnRoute.objects.filter(student=student, route=route).exists():
+                raise forms.ValidationError("You are already signed up for this bus route.")
+        return cleaned_data

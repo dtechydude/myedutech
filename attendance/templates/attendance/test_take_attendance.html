@@ -1,13 +1,28 @@
+
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-100">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Take Daily Attendance</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    
-    <style>
+    <meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="keywords" content="" />
+	<meta name="author" content="" />
+	<meta name="robots" content="" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="Travl : Hotel Admin Dashboard Bootstrap 5 Template" />
+	<meta property="og:title" content="Travl : Hotel Admin Dashboard Bootstrap 5 Template" />
+	<meta property="og:description" content="Travl : Hotel Admin Dashboard Bootstrap 5 Template" />
+	<meta property="og:image" content="https://travl.dexignlab.com/xhtml/social-image.png" />
+	<meta name="format-detection" content="telephone=no">
+	
+	<!-- PAGE TITLE HERE -->
+	<title>Travl Hotel Admin Dashboard</title>
+	
+	<!-- FAVICONS ICON -->
+	<link rel="shortcut icon" type="image/png" href="images/favicon.png" />
+    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+     <style>
         .student-row {
             display: flex;
             align-items: center;
@@ -39,10 +54,15 @@
             border-width: 1px 0;
         }
     </style>
+    
 </head>
 <body>
-    <div class="container mt-5">
-         <div style="text-align: center;"><img src="{% static 'pages/images/schoolly_logo.png' %}" alt="" style="width: 10%; height: 10%;"></div>
+    <div class="class=vh-100">
+        <div class="container h-100">
+            <div class="row justify-content-center h-100 align-items-center">
+                <div class="col-md-7">
+                
+         <div style="text-align: center;"><img src="{% static 'pages/images/schoolly_logo.png' %}" alt="" style="width: 15%; height: 15%;"></div>
         <h5 class="mb-4">Make Attendance For Teacher: <span style="color:brown; font-size: 16px;">{{ teacher.first_name }} {{ teacher.last_name }}</span></h5>
 
         {% if messages %}
@@ -89,13 +109,14 @@
             <div class="card">
                 <div class="card-header">
                     <div class="row">
-                        <div class="col-8"><strong>Student Name</strong></div>
-                        <div class="col-4 text-center"><strong>Present</strong></div>
+                        <p>Mark attendance for each student</p>
+                        <div class="col-8"><strong>Student Full Name</strong></div>
+                        <div class="col-4 text-center"><strong>Present</strong> <small>(Tick The Box)</small></div>
                     </div>
                 </div>
                 <ul class="list-group list-group-flush">
                     {% for form in formset %}
-                        <li class="list-group-item student-row">
+                        <li class="list-group-item student-row" style="padding-left: 15px;">
                             <div class="row w-100 no-gutters">
                                 <div class="col-8">
                                     {{ form.student_full_name.errors }}
@@ -129,8 +150,23 @@
         <hr>
         <div><p><a href="/dashboard/">Back to DASHBOARD</a></p></div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    </div>
+    </div>
+    </div>
+    
+    
+
+
+<!--**********************************
+	Scripts
+***********************************-->
+<!-- <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script> -->
+<!-- Required vendors -->
+<script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+<script src="{% static 'pages/js/custom.min.js' %}"></script>
+<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+<script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
 </body>
 </html>

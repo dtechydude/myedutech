@@ -19,7 +19,7 @@
 	<meta name="format-detection" content="telephone=no">
 	
 	<!-- PAGE TITLE HERE -->
-	<title>Bank Register</title>
+	<title>Create Bus Payment</title>
 	
 	<!-- FAVICONS ICON -->
 	<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png'%} " />
@@ -36,11 +36,21 @@
                         <div class="row no-gutters">
                             <div class="col-xl-12">
                                 <div class="auth-form">
-									
-                                    <!-- <h4 class="text-center mb-4">Welcome To Ermine App!</h4> -->
-                                    <h1>Submission Successful!</h1>
-                                    <p>Your Payment submission has been saved.</p>
-                                   
+									<div class="text-center mb-3">
+                                        <a href=""><img src="{% static 'pages/images/schoolly_logo.png' %}" width='80px' height="80px"></a>
+									</div>
+                                    <h4 class="text-center mb-4">SignUp For School Bus</h4>
+                                    <form  action ="" method="POST">
+                                        {% csrf_token %}
+                                        <div class="mb-3">
+                                            {{ form|crispy }}
+                                           
+                                        </div>
+                                                                              
+                                        <div class="text-center">
+                                            <button type="submit" class="btn btn-primary btn-block">SignUp For Bus</button>
+                                        </div>
+                                    </form>
                                     <div class="new-account mt-3">
                                         <p>Back To: <a class="text-primary" href="{% url 'pages:portal-home' %}">DASHBOARD - </a>
                                         </p>

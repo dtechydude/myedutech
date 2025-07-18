@@ -1,0 +1,54 @@
+
+{% block title %}Bus Sign-ups{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">🚌 All Bus Sign-ups</h3>
+        </div>
+        <div class="card-body">
+            {% if student_signups %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Student Name</th>
+                            <th>Bus Route</th>
+                            <th>Sign-up Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for signup in student_signups %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                {% if signup.student %}
+                                    {{ signup.student.first_name }} {{ signup.student.last_name }}
+                                {% else %}
+                                    N/A (Student Deleted)
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if signup.route %}
+                                    {{ signup.route.name }}
+                                {% else %}
+                                    N/A (Route Deleted)
+                                {% endif %}
+                            </td>
+                            <td>{{ signup.signup_date|date:"F j, Y, P" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info" role="alert">
+                No students currently signed up for bus routes.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

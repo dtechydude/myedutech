@@ -1,20 +1,23 @@
 from django.urls import path
-from transport import views as payment_views
-from . import views
+from transport import views as transport_views
 
 
 app_name = 'transport'
 
 urlpatterns = [
-    # path('bus-payment-list/', payment_views.bus_paymentlist, name="bus_payment_list"),
-    # path('my-bus-payment/', payment_views.view_self_bus_payments, name="my_bus_payment"),      
-    # path('bus_payment_chart/', payment_views.bus_payment_chart, name="bus_payment_chart"),
-    path('bus_route_list/', payment_views.bus_route_list, name="bus_route_list"),
-    # path('bus_fare_list/', payment_views.bus_fare_list, name="bus_fare_list"),
-    path('student_on_bus/', payment_views.student_on_bus, name="student_on_bus"),
+    
+    path('bus_route_list/', transport_views.bus_route_list, name="bus_route_list"),
+    path('student_on_bus/', transport_views.student_on_bus, name="student_on_bus"),
+    path('signup_for_bus/', transport_views.sign_up_bus, name="signup_for_bus"),
+    path('create_bus_signup/', transport_views.create_bus_signup, name="create_bus_signup"),
+    # path('my_route/', transport_views.my_route, name="my_route"),
+    path('bus_signups/', transport_views.bus_signup_list, name='bus_signup_list'),
+    path('my_route/', transport_views.student_own_route_detail, name='student_own_route_detail'),
 
-    path('signup_for_bus/', payment_views.sign_up_bus, name="signup_for_bus"),
-    # path('bus_payment/success/', views.bus_payment_success, name='bus_payment_success'),
+
+    path('submission_success/', transport_views.submission_success, name="submission_success"),
+
+
 
     
 ]

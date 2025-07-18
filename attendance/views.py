@@ -83,7 +83,7 @@ def take_daily_attendance(request):
         'selected_date': selected_date, # Pass the selected date for display
         'teacher': teacher,
     }
-    return render(request, 'attendance/take_attendance.html', context)
+    return render(request, 'attendance/test_take_attendance.html', context)
 
 @login_required
 def attendance_report(request):
@@ -127,3 +127,4 @@ def attendance_report(request):
 # @login_required
 # def attendance_success(request):
 #     return render(request, 'myapp/attendance_success.html')
+

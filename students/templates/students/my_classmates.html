@@ -97,29 +97,28 @@
                                     <table id="example3" class="display" style="min-width: 845px">
                                         <thead>
                                             <th>S/N</th>
-                                            <th>first name</th>
-                                            <th>second name </th>
-                                            <th>gender </th>
+                                            <th>First name</th>
+                                            <th>Last name </th>
+                                            <th>Gender </th>
+                                            <th>Phone </th>
                                             
                                         </thead>
                                 
                                         <tbody>
                                              <div class="container">
-        <h1>My Classmates</h1>
+        <h3>My Classmates in classroom: <span style="color: brown;"> <small>{{ student.current_class.name }}</small></span></h3>
 
         {% if student %}
-            <p>Hello, {{ student.user.username }}!
-            {% if standard %}
-               You are in classroom: <strong>{{ standard.name }}</strong></p>
-
+            {% if standard %}               
                 {% if classmates %}
-                    <h2>Classmates:</h2>
+                    <!-- <h4>Classmates:</h4> -->
                     <tr>
                         {% for classmate in classmates %}
                         <td> {{ forloop.counter }}  </td>
                             <td> {{ classmate.last_name }}  </td>
                             <td>{{ classmate.first_name }}</td>
                             <td>{{ classmate.gender }}</td>
+                            <td>{{ classmate.guardian_phone }}</td>
                             {% endfor %}
                     </tr>
                 {% else %}

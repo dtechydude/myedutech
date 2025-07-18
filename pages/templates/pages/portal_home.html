@@ -782,8 +782,6 @@
 							{% elif user.teacher %}							
 							<li><a href="{% url 'students:student-list' %}">My Students</a></li>
 							{% comment %}<li><a href="{% url 'attendance:teacher_dashboard' %}">My Assinged Classes</a></li>{% endcomment %}																
-							<li><a href="{% url 'attendance:take_daily_attendance' %}">Mark Attendance</a></li>
-							<li><a href="{% url 'attendance:attendance_report' %}">Attendance Report</a></li>
 							
 							{% elif user.student %}
 							{% for idcard in my_idcard %}							
@@ -803,12 +801,10 @@
 							<span class="nav-text">Attendance</span>
 						</a>
 						<ul aria-expanded="false">
-							{% comment %}<li><a href="{% url 'attendance:teacher_dashboard' %}">Take Attendance</a></li>{% endcomment %}
-						<li><a href="{% url 'attendance:take_daily_attendance' %}">Attendance Daily Report</a></li>
-							{% comment %}<li><a href="{% url 'attendance:student_list' %}">Attendance SUMMARY</a></li>{% endcomment %}
-
+							<li><a href="{% url 'attendance:take_daily_attendance' %}">Mark Attendance</a></li>
+							<li><a href="{% url 'attendance:attendance_report' %}">Attendance Report</a></li>
 							
-						</ul>
+							</ul>
 						{% endif %}
 					</li>
 					{% if user.is_superuser or user.is_staff %}
@@ -889,9 +885,7 @@
 							<li><a href="/admin/results/resultsheet1/">Admin Edit Results</a></li>
 							
 							{% elif user.student %}
-							<li><a href="{% url 'results:student_dashboard' %}">My Results</a></li>
-							<li><a href="#">My 2nd-Term Results</a></li>
-							<li><a href="#">My 3rd-Term Results</a></li>
+							<li><a href="{% url 'results:student_dashboard' %}">My Results</a></li>							
 
 							{% elif user.teacher %}
 							{% for r in my_students %}
@@ -899,7 +893,7 @@
 							<li><a href="#">2nd. Term Results</a></li>
 							<li><a href="#">3rd. Term Results</a></li>
 							{% endfor %}
-							<li><a href="{% url 'pages:score_entry' %}">Record Results</a></li>							
+							<li><a href="{% url 'results:score_entry' %}">Record Results</a></li>							
 							{% endif %}
 						
 
@@ -1028,8 +1022,8 @@
 														<h5 class="mb-0 font-w600">{{ student_num }}</h5>
 														<p class="mb-0 text-nowrap ">Total Students</p>
 														{% elif user.is_authenticated and user.teacher %}
-														<h3 class="mb-0 font-w600">{{ total_students }}</h3>
-														<p class="mb-0 text-nowrap ">My Students</p>
+														<h5 class="mb-0 font-w600">{{ user.profile.code }}</h5>
+														<p class="mb-0 text-nowrap ">My CODE</p>
 														{% elif user.is_authenticated and user.student %}
 														<h5 class="mb-0 font-w600">{{ user.profile.code }}</h5>
 														<p class="mb-0 text-nowrap ">My Code</p>

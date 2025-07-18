@@ -1,0 +1,40 @@
+{% load static %}
+
+{% block title %}My Bus Route Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">🚌 My Bus Route Details</h3>
+        </div>
+        <div class="card-body">
+            {% if student_signup %}
+                <p><strong>Student Name:</strong> {{ student_signup.student.first_name }} {{ student_signup.student.last_name }}</p>
+                <p><strong>Username:</strong> {{ student_signup.student.username }}</p>
+                <hr>
+                <p><strong>Assigned Route:</strong>
+                    {% if student_signup.route %}
+                        {{ student_signup.route.name }}
+                    {% else %}
+                        N/A (Route details unavailable)
+                    {% endif %}
+                </p>
+                <p><strong>Sign-up Date:</strong> {{ student_signup.signup_date|date:"F j, Y, P" }}</p>
+                {# Example: If your Route model has a 'description' or 'driver_name' field #}
+                {% comment %}
+                <p><strong>Route Description:</strong> {{ student_signup.route.description }}</p>
+                <p><strong>Driver Name:</strong> {{ student_signup.route.driver_name }}</p>
+                {% endcomment %}
+            {% else %}
+                <div class="alert alert-info" role="alert">
+                    You are not currently signed up for any bus route.
+                </div>
+            {% endif %}
+            <div class="mt-3">
+                <a href="{% url 'transport:bus_route_list' %}" class="btn btn-secondary">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
