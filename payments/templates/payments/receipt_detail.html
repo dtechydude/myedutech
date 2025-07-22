@@ -1,100 +1,185 @@
-<!-- your_project/templates/payments/receipt_detail.html -->
-
-{% comment %}{% extends 'base.html' %} {# Assuming you have a base.html template #} {% endcomment %}
 {% load static %}
 
-{% block title %}{{ title }}{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Payment Receipt</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Optional: Add some print-specific styles */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact; /* For better color printing */
+                print-color-adjust: exact;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .receipt-container {
+                box-shadow: none !important;
+                border: 1px solid #e2e8f0; /* Light border for print */
+                margin: 0 !important;
+                padding: 1rem !important;
+                width: 100%; /* Full width on print */
+                max-width: none;
+            }
+            h1, h2, h3, h4, p {
+                color: #000 !important; /* Ensure text is black on print */
+            }
+            .text-green-600, .text-blue-600 {
+                color: inherit !important; /* Keep colors for on-screen, but maybe black for print */
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
 
-{% block content %}
 <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-    <div class="bg-white shadow-lg rounded-lg p-6 md:p-8 max-w-3xl mx-auto">
-        <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Payment Receipt</h2>
+    <div class="bg-white shadow-lg rounded-lg p-6 md:p-8 max-w-3xl mx-auto receipt-container">
 
-        <div class="border border-gray-300 rounded-md p-6 mb-6">
-            <div class="flex justify-between items-center mb-4 border-b pb-4">
-                <h3 class="text-2xl font-semibold text-gray-700">Receipt #{{ receipt.receipt_number }}</h3>
-                <p class="text-gray-600">Date: {{ receipt.issue_date|date:"M d, Y" }}</p>
+        <div class="text-center mb-8 border-b pb-6">
+            <img src="{% static 'images/school_logo.png' %}" alt="School Logo" class="mx-auto h-20 mb-4 object-contain"> {# Adjust path and size #}
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-2">My Awesome School</h1>
+            <p class="text-gray-600">123 School Lane, City, State 12345</p>
+            <p class="text-gray-600">Phone: (123) 456-7890 | Email: info@myschool.edu</p>
+        </div>
+
+        <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Payment Receipt</h2>
+
+        <div class="flex justify-between items-start mb-6 border-b pb-4">
+            <div>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">Receipt Details:</h3>
+                <p class="text-gray-700"><strong>Receipt #:</strong> <span class="text-blue-700">{{ receipt.receipt_number }}</span></p>
+                <p class="text-gray-700"><strong>Date Issued:</strong> {{ receipt.issue_date|date:"M d, Y" }}</p>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div>
-                    <h4 class="text-lg font-semibold text-gray-700 mb-2">Student Information:</h4>
-                    <p><strong>Name:</strong> {{ receipt.payment.student.first_name }} {{ receipt.payment.student.last_name }}</p>
-                    <p><strong>Student ID:</strong> {{ receipt.payment.student.student_id }}</p>
-                    <p><strong>Email:</strong> {{ receipt.payment.student.email|default:"N/A" }}</p>
-                    <p><strong>Phone:</strong> {{ receipt.payment.student.phone_number|default:"N/A" }}</p>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold text-gray-700 mb-2">Payment Details:</h4>
-                    <p><strong>Original Amount Due:</strong> <span class="text-gray-600">${{ receipt.payment.original_amount|floatformat:2|default:"N/A" }}</span></p>
-                    {% if receipt.payment.discount_amount > 0 or receipt.payment.discount_percentage > 0 %}
-                        <p><strong>Discount:</strong>
-                            {% if receipt.payment.discount_amount > 0 %}${{ receipt.payment.discount_amount|floatformat:2 }}{% endif %}
-                            {% if receipt.payment.discount_amount > 0 and receipt.payment.discount_percentage > 0 %} + {% endif %}
-                            {% if receipt.payment.discount_percentage > 0 %}{{ receipt.payment.discount_percentage|floatformat:2 }}%{% endif %}
-                        </p>
-                        <p><strong>Net Amount Due:</strong> <span class="text-blue-600 font-bold">${{ receipt.payment.net_amount_due|floatformat:2 }}</span></p>
-                    {% endif %}
-                    <p><strong>Amount Paid:</strong> <span class="text-green-600 font-bold text-xl">${{ receipt.payment.amount_received|floatformat:2 }}</span></p>
-                    <p><strong>Payment Date:</strong> {{ receipt.payment.payment_date|date:"M d, Y H:i" }}</p>
-                    <p><strong>Payment Method:</strong> {{ receipt.payment.get_payment_method_display }}</p>
-                    {% if receipt.payment.transaction_id %}
-                        <p><strong>Transaction ID:</strong> {{ receipt.payment.transaction_id }}</p>
-                    {% endif %}
-                    <p><strong>Status:</strong> <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                    {% if receipt.payment.status == 'completed' %}bg-green-100 text-green-800
-                                    {% elif receipt.payment.status == 'pending' %}bg-yellow-100 text-yellow-800
-                                    {% elif receipt.payment.status == 'failed' %}bg-red-100 text-red-800
-                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
-                                    {{ receipt.payment.get_status_display }}
-                                </span></p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div>
-                    <h4 class="text-lg font-semibold text-gray-700 mb-2">Academic Details:</h4>
-                    <p><strong>Term:</strong> {{ receipt.payment.term.name|default:"N/A" }}</p>
-                    <p><strong>Session:</strong> {{ receipt.payment.session.name|default:"N/A" }}</p>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold text-gray-700 mb-2">Payment Category:</h4>
-                    <p><strong>Category:</strong> {{ receipt.payment.payment_category.name|default:"N/A" }}</p>
-                    {% if receipt.payment.is_installment %}
-                        <p><strong>Installment:</strong> {{ receipt.payment.installment_number|default:"-" }} of {{ receipt.payment.total_installments|default:"-" }}</p>
-                    {% else %}
-                        <p><strong>Payment Type:</strong> Full Payment</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            {% if receipt.payment.notes %}
-            <div class="mb-6">
-                <h4 class="text-lg font-semibold text-gray-700 mb-2">Notes:</h4>
-                <p class="text-gray-700 italic">{{ receipt.payment.notes }}</p>
-            </div>
-            {% endif %}
-
-            <div class="text-right text-gray-600 border-t pt-4">
-                <p>Generated By:
-                    {% if receipt.generated_by %} {# Check if generated_by is not None #}
-                        {{ receipt.generated_by.get_full_name|default:receipt.generated_by.username }}
-                    {% else %}
-                        System (Student Self-Service)
-                    {% endif %}
-                </p>
-                <p class="text-sm mt-2">Thank you for your payment!</p>
+            <div class="text-right">
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">Payment Date:</h3>
+                <p class="text-gray-700">{{ receipt.payment.payment_date|date:"M d, Y H:i" }}</p>
             </div>
         </div>
 
-        <div class="flex justify-center space-x-4">
-            <a href="{% url 'payments:payment_history' %}" class="px-6 py-3 bg-gray-200 text-gray-800 font-semibold rounded-md shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-300 ease-in-out">
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">Student Information:</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-gray-700"><strong>Name:</strong> {{ receipt.payment.student.first_name }} {{ receipt.payment.student.last_name }}</p>
+                    <p class="text-gray-700"><strong>Student ID:</strong> {{ receipt.payment.student.student_id }}</p>
+                    <p class="text-gray-700"><strong>Class:</strong> {{ receipt.payment.student.student_class.name|default:"N/A" }}</p> {# Assuming 'student_class' exists on Student model #}
+                </div>
+                <div>
+                    <p class="text-gray-700"><strong>Email:</strong> {{ receipt.payment.student.email|default:"N/A" }}</p>
+                    <p class="text-gray-700"><strong>Phone:</strong> {{ receipt.payment.student.phone_number|default:"N/A" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">Payment Breakdown:</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                    <thead>
+                        <tr class="bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <th class="py-3 px-4 border-b">Description</th>
+                            <th class="py-3 px-4 border-b text-right">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="py-3 px-4 text-gray-800">
+                                {{ receipt.payment.payment_category.name|default:"General Payment" }}
+                                <p class="text-sm text-gray-500">
+                                    {% if receipt.payment.term %}Term: {{ receipt.payment.term.name }} - {% endif %}
+                                    {% if receipt.payment.session %}Session: {{ receipt.payment.session.name }}{% endif %}
+                                </p>
+                                {% if receipt.payment.is_installment %}
+                                    <p class="text-sm text-gray-500">Installment {{ receipt.payment.installment_number|default:"-" }} of {{ receipt.payment.total_installments|default:"-" }}</p>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4 text-right text-gray-800">${{ receipt.payment.original_amount|floatformat:2|default:"0.00" }}</td>
+                        </tr>
+                        {% if receipt.payment.discount_amount > 0 or receipt.payment.discount_percentage > 0 %}
+                        <tr class="border-b">
+                            <td class="py-2 px-4 text-gray-600">Discount</td>
+                            <td class="py-2 px-4 text-right text-red-600">
+                                - ${{ receipt.payment.discount_amount|floatformat:2|default:"0.00" }}
+                                {% if receipt.payment.discount_percentage > 0 %} ({{ receipt.payment.discount_percentage|floatformat:2 }}%){% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        <tr class="font-bold">
+                            <td class="py-3 px-4 text-gray-800">Net Amount Due</td>
+                            <td class="py-3 px-4 text-right text-blue-600">${{ receipt.payment.net_amount_due|floatformat:2|default:"0.00" }}</td>
+                        </tr>
+                        <tr class="font-bold bg-green-50">
+                            <td class="py-4 px-4 text-xl text-gray-900">Amount Paid</td>
+                            <td class="py-4 px-4 text-right text-green-700 text-2xl">${{ receipt.payment.amount_received|floatformat:2|default:"0.00" }}</td>
+                        </tr>
+                        {% comment %}
+                        If you have a `StudentAccountLedger` and want to show current balance:
+                        {% if receipt.payment.student.studentaccountledger_set.first %}
+                        <tr class="font-bold">
+                            <td class="py-3 px-4 text-gray-800">Current Outstanding Balance</td>
+                            <td class="py-3 px-4 text-right text-red-600">${{ receipt.payment.student.studentaccountledger_set.first.balance|floatformat:2|default:"0.00" }}</td>
+                        </tr>
+                        {% endif %}
+                        {% endcomment %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            <div>
+                <p class="text-gray-700"><strong>Payment Method:</strong> {{ receipt.payment.get_payment_method_display }}</p>
+                {% if receipt.payment.transaction_id %}
+                    <p class="text-gray-700"><strong>Transaction ID:</strong> {{ receipt.payment.transaction_id }}</p>
+                {% endif %}
+            </div>
+            <div class="text-left sm:text-right">
+                <p class="text-gray-700"><strong>Payment Status:</strong>
+                    <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full
+                        {% if receipt.payment.status == 'completed' %}bg-green-100 text-green-800
+                        {% elif receipt.payment.status == 'pending' %}bg-yellow-100 text-yellow-800
+                        {% elif receipt.payment.status == 'failed' %}bg-red-100 text-red-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ receipt.payment.get_status_display }}
+                    </span>
+                </p>
+            </div>
+        </div>
+
+
+        {% if receipt.payment.notes %}
+        <div class="mb-8 p-4 bg-gray-50 rounded-md border border-gray-200">
+            <h4 class="text-lg font-semibold text-gray-700 mb-2">Notes:</h4>
+            <p class="text-gray-700 italic">{{ receipt.payment.notes }}</p>
+        </div>
+        {% endif %}
+
+        <div class="text-center text-gray-600 border-t pt-6 mt-6">
+            <p>Receipt Generated By:
+                {% if receipt.generated_by %}
+                    {{ receipt.generated_by.get_full_name|default:receipt.generated_by.username }}
+                {% else %}
+                    System (Student Self-Service)
+                {% endif %}
+            </p>
+            <p class="text-lg font-semibold text-gray-800 mt-4">THANK YOU FOR YOUR PAYMENT!</p>
+            <p class="text-sm mt-2">Please keep this receipt for your records.</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 mt-8 no-print">
+            <a href="{% url 'payments:payment_history' %}" class="w-full sm:w-auto px-6 py-3 bg-gray-200 text-gray-800 font-semibold rounded-md shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-300 ease-in-out text-center">
                 Back to Payment History
             </a>
-            <button onclick="window.print()" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300 ease-in-out">
+            <button onclick="window.print()" class="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300 ease-in-out">
                 Print Receipt
             </button>
         </div>
     </div>
 </div>
-{% endblock %}
+
+</body>
+</html>

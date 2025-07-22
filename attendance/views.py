@@ -161,4 +161,4 @@ def attendance_report(request):
         'teacher': teacher,
         'student_attendance_summary': student_attendance_summary,
     }
-    return render(request, 'attendance/test_attendance_report.html', context) # Make sure this points to the correct template name
+    return render(request, 'attendance/attendance_report.html', context) # Make sure this points to the correct template name
