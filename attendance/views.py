@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.contrib import messages # Import messages for error handling
 from .models import Attendance
 from students.models import Student
+from datetime import date, timedelta # Make sure to import these!
 from staff.models import Teacher
 from .forms import AttendanceDateForm, AttendanceForm, AttendanceReportForm # Import new forms
 
@@ -85,46 +86,79 @@ def take_daily_attendance(request):
     }
     return render(request, 'attendance/test_take_attendance.html', context)
 
+
+#Attendance Report
 @login_required
 def attendance_report(request):
-    teacher = get_teacher_profile(request.user)
-    if not teacher:
-        messages.error(request, "You are not authorized to view this page as a teacher.")
-        return redirect('/dashboard/')
+    current_user = request.user
+    teacher = None
+    try:
+        teacher = Teacher.objects.get(user=current_user)
+    except Teacher.DoesNotExist:
+        pass
 
-    report_form = AttendanceReportForm(teacher=teacher, data=request.GET or None) # Pass teacher to form for queryset
-    attendance_data = {} # Dictionary to hold structured report data
+    report_form = AttendanceReportForm(request.GET or None, teacher=teacher)
+    
+    # Initialize these variables with default empty values BEFORE the if statement
+    attendance_data = {}
+    student_attendance_summary = {} 
+    
+    today = date.today()
+    default_start_date = today - timedelta(days=6)
+    default_end_date = today
+
+    context_start_date = default_start_date
+    context_end_date = default_end_date
+    selected_student_id = None # Initialize as None
 
     if report_form.is_valid():
-        student_filter = report_form.cleaned_data.get('student')
-        start_date = report_form.cleaned_data.get('start_date')
-        end_date = report_form.cleaned_data.get('end_date')
+        form_start_date = report_form.cleaned_data.get('start_date')
+        form_end_date = report_form.cleaned_data.get('end_date')
+        selected_student = report_form.cleaned_data.get('student')
 
-        # Build query for attendance records
+        if form_start_date:
+            context_start_date = form_start_date
+        if form_end_date:
+            context_end_date = form_end_date
+
+        if selected_student:
+            selected_student_id = selected_student.id
+
         attendance_records_query = Attendance.objects.filter(
-            student__form_teacher=teacher, # Filter by teacher's students
-            date__range=[start_date, end_date]
-        ).select_related('student').order_by('student__first_name', 'student__last_name', 'date')
+            date__range=(context_start_date, context_end_date)
+        )
+        if selected_student:
+            attendance_records_query = attendance_records_query.filter(student=selected_student)
+        elif teacher:
+            teacher_students = Student.objects.filter(form_teacher=teacher)
+            attendance_records_query = attendance_records_query.filter(student__in=teacher_students)
 
-        if student_filter:
-            attendance_records_query = attendance_records_query.filter(student=student_filter)
+        # The loop that populates attendance_data and student_attendance_summary
+        for record in attendance_records_query.order_by('student__last_name', 'date'):
+            student = record.student
+            record_date = record.date
 
-        # Structure data for the template
-        # Key: Student object, Value: Dictionary of {date: Attendance object}
-        for record in attendance_records_query:
-            if record.student not in attendance_data:
-                attendance_data[record.student] = {}
-            attendance_data[record.student][record.date] = record
+            if student not in attendance_data:
+                attendance_data[student] = {}
+                student_attendance_summary[student] = {'present': 0, 'absent': 0, 'total_days': 0}
+
+            attendance_data[student][record_date] = record
+            
+            # Count present/absent
+            if record.present:
+                student_attendance_summary[student]['present'] += 1
+            else:
+                student_attendance_summary[student]['absent'] += 1
+            student_attendance_summary[student]['total_days'] += 1
+
 
     context = {
         'report_form': report_form,
         'attendance_data': attendance_data,
+        'selected_student_id': selected_student_id,
+        'start_date': context_start_date,
+        'end_date': context_end_date,
         'teacher': teacher,
+        'student_attendance_summary': student_attendance_summary,
     }
-    return render(request, 'attendance/attendance_report.html', context)
-
-# You can keep the attendance_success view or remove it and just use messages.success
-# @login_required
-# def attendance_success(request):
-#     return render(request, 'myapp/attendance_success.html')
-
+    return render(request, 'attendance/test_attendance_report.html', context) # Make sure this points to the correct template name

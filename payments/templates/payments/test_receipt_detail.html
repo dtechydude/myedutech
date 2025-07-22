@@ -1,0 +1,389 @@
+{# Removed {% extends 'base.html' %} as requested #}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        /* General Body Styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6; /* Light background for the page */
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Main Container for the Receipt */
+        .receipt-container {
+            max-width: 800px;
+            margin: 40px auto; /* Center the receipt with more vertical spacing */
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Softer shadow */
+            padding: 30px 40px; /* Generous padding */
+            box-sizing: border-box; /* Include padding in width */
+        }
+
+        /* School Logo Area */
+        .school-logo {
+            text-align: center;
+            margin-bottom: 20px; /* Space below the logo */
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee; /* Light separator below logo */
+        }
+
+        .school-logo img {
+            max-width: 150px; /* Max width for the logo */
+            height: auto;
+            display: block; /* Ensures margin auto works */
+            margin: 0 auto; /* Center the image */
+        }
+
+        /* Receipt Header */
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 25px; /* Reduced margin */
+            padding-bottom: 10px; /* Reduced padding */
+            border-bottom: 2px solid #eee; /* Light bottom border */
+        }
+
+        .receipt-header h2 {
+            font-size: 2.2em; /* Slightly smaller heading for space */
+            color: #2c3e50; /* Darker blue-grey */
+            margin-bottom: 8px; /* Reduced margin */
+            font-weight: 700;
+        }
+
+        /* Section Styling (e.g., student info, payment details) */
+        .receipt-section {
+            border: 1px solid #e0e0e0; /* Lighter border */
+            border-radius: 6px;
+            padding: 20px; /* Reduced padding */
+            margin-bottom: 20px; /* Reduced margin */
+            background-color: #fdfdfd; /* Slightly off-white for sections */
+        }
+
+        .receipt-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px; /* Reduced margin */
+            padding-bottom: 10px; /* Reduced padding */
+            border-bottom: 1px solid #ddd;
+        }
+
+        .receipt-section-header h3 {
+            font-size: 1.6em; /* Slightly smaller heading */
+            color: #34495e; /* Slightly lighter heading color */
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .receipt-section-header p {
+            color: #7f8c8d; /* Muted text for date */
+            font-size: 0.9em; /* Slightly smaller font */
+            margin: 0;
+        }
+
+        /* Grid Layout for Details */
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* Single column by default */
+            gap: 15px; /* Reduced space between grid items */
+            margin-bottom: 20px; /* Reduced margin */
+        }
+
+        .details-grid h4 {
+            font-size: 1.2em; /* Slightly smaller heading */
+            color: #34495e;
+            margin-bottom: 8px; /* Reduced margin */
+            font-weight: 600;
+        }
+
+        .details-grid p {
+            margin-bottom: 6px; /* Reduced margin for list-like items */
+            font-size: 0.95em; /* Slightly smaller text */
+        }
+
+        .details-grid p strong {
+            color: #555;
+            min-width: 130px; /* Align labels - reduced width */
+            display: inline-block;
+        }
+
+        /* Specific text colors for amounts/status */
+        .amount-original {
+            color: #6c7a89; /* A medium grey */
+            font-weight: normal;
+        }
+
+        .amount-net {
+            color: #3498db; /* Blue for net amount */
+            font-weight: bold;
+        }
+
+        .amount-paid {
+            color: #27ae60; /* Green for amount paid */
+            font-weight: bold;
+            font-size: 1.1em; /* Slightly smaller */
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px; /* Reduced padding */
+            border-radius: 16px; /* Slightly less rounded */
+            font-size: 0.8em; /* Smaller font */
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap; /* Prevent breaking */
+        }
+
+        .status-completed { background-color: #d4edda; color: #155724; }
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-failed { background-color: #f8d7da; color: #721c24; }
+        .status-default { background-color: #e2e3e5; color: #383d41; }
+
+        /* Notes Section */
+        .notes-section {
+            margin-bottom: 20px; /* Reduced margin */
+            padding: 12px 20px; /* Reduced padding */
+            background-color: #f7f9fc;
+            border-left: 5px solid #bdc3c7;
+            border-radius: 4px;
+        }
+        .notes-section h4 {
+            margin-top: 0;
+            margin-bottom: 6px; /* Reduced margin */
+            color: #34495e;
+        }
+        .notes-section p {
+            font-style: italic;
+            color: #555;
+            font-size: 0.9em; /* Slightly smaller */
+        }
+
+        /* Footer / Generated By */
+        .receipt-footer {
+            text-align: right;
+            border-top: 1px solid #eee;
+            padding-top: 15px; /* Reduced padding */
+            color: #7f8c8d;
+            font-size: 0.85em; /* Smaller font */
+        }
+
+        .receipt-footer p {
+            margin-bottom: 4px; /* Reduced margin */
+        }
+
+        /* Action Buttons */
+        .button-group {
+            text-align: center;
+            margin-top: 25px; /* Reduced margin */
+            display: flex;
+            justify-content: center;
+            gap: 10px; /* Reduced space between buttons */
+        }
+
+        .button {
+            padding: 10px 20px; /* Reduced padding */
+            border-radius: 6px;
+            font-size: 0.95em; /* Slightly smaller font */
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            display: inline-block;
+        }
+
+        .button.secondary {
+            background-color: #ecf0f1;
+            color: #34495e;
+            border: 1px solid #bdc3c7;
+        }
+
+        .button.secondary:hover {
+            background-color: #dce0e1;
+            border-color: #b0b4b8;
+        }
+
+        .button.primary {
+            background-color: #3498db;
+            color: #fff;
+            border: 1px solid #3498db;
+        }
+
+        .button.primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+
+        /* Responsive Design */
+        @media (min-width: 768px) {
+            .details-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background-color: #fff;
+                padding: 0;
+                margin: 0;
+                /* Adjust font size for print specifically */
+                font-size: 10pt; /* Smaller base font for print */
+            }
+            .receipt-container {
+                box-shadow: none;
+                border: none;
+                margin: 0;
+                padding: 10mm; /* Use mm for print dimensions */
+                width: 210mm; /* A4 width - approx, or auto */
+                height: 297mm; /* A4 height - approx, or auto */
+                overflow: hidden; /* Prevent content spilling */
+            }
+            .button-group {
+                display: none; /* Hide buttons when printing */
+            }
+            /* Reduce all margins/paddings even further for print */
+            .receipt-header, .receipt-section, .receipt-footer,
+            .receipt-section-header, .details-grid, .notes-section {
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important; /* Remove borders to save space */
+            }
+            .receipt-header h2, .receipt-section-header h3, .details-grid h4 {
+                font-size: 1.2em !important; /* Smaller headings */
+                margin-bottom: 5px !important;
+            }
+            .details-grid p {
+                margin-bottom: 3px !important; /* Tighter line spacing */
+            }
+            .school-logo {
+                margin-bottom: 10px !important;
+                padding-bottom: 5px !important;
+                border-bottom: 1px solid #ddd !important;
+            }
+            .school-logo img {
+                 max-width: 120px !important; /* Smaller logo for print */
+            }
+            .status-badge {
+                padding: 2px 6px !important;
+                font-size: 0.7em !important;
+            }
+             p, strong, span {
+                line-height: 1.2 !important; /* Tighten line height */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="receipt-container">
+    <div class="school-logo">
+        <img src="{% static 'path/to/your/school_logo.png' %}" alt="School Logo">
+        {# IMPORTANT: Replace 'path/to/your/school_logo.png' with the actual path to your logo file #}
+        {# Ensure you have collected static files: python manage.py collectstatic #}
+    </div>
+
+    <div class="receipt-header">
+        <h2>Payment Receipt</h2>
+    </div>
+
+    <div class="receipt-section">
+        <div class="receipt-section-header">
+            <h3>Receipt #{{ receipt.receipt_number }}</h3>
+            <p>Date: {{ receipt.issue_date|date:"M d, Y" }}</p>
+        </div>
+
+        <div class="details-grid">
+            <div>
+                <h4>Student Information:</h4>
+                <p><strong>Name:</strong> {{ receipt.payment.student.first_name }} {{ receipt.payment.student.last_name }}</p>
+                <p><strong>Student ID:</strong> {{ receipt.payment.student.student_id }}</p>
+                <p><strong>Email:</strong> {{ receipt.payment.student.email|default:"N/A" }}</p>
+                <p><strong>Phone:</strong> {{ receipt.payment.student.phone_number|default:"N/A" }}</p>
+            </div>
+            <div>
+                <h4>Payment Details:</h4>
+                <p><strong>Original Amount Due:</strong> <span class="amount-original">${{ receipt.payment.original_amount|floatformat:2|default:"N/A" }}</span></p>
+                {% if receipt.payment.discount_amount > 0 or receipt.payment.discount_percentage > 0 %}
+                    <p><strong>Discount:</strong>
+                        {% if receipt.payment.discount_amount > 0 %}${{ receipt.payment.discount_amount|floatformat:2 }}{% endif %}
+                        {% if receipt.payment.discount_amount > 0 and receipt.payment.discount_percentage > 0 %} + {% endif %}
+                        {% if receipt.payment.discount_percentage > 0 %}{{ receipt.payment.discount_percentage|floatformat:2 }}%{% endif %}
+                    </p>
+                    <p><strong>Net Amount Due:</strong> <span class="amount-net">${{ receipt.payment.net_amount_due|floatformat:2 }}</span></p>
+                {% endif %}
+                <p><strong>Amount Paid:</strong> <span class="amount-paid">${{ receipt.payment.amount_received|floatformat:2 }}</span></p>
+                <p><strong>Payment Date:</strong> {{ receipt.payment.payment_date|date:"M d, Y H:i" }}</p>
+                <p><strong>Payment Method:</strong> {{ receipt.payment.get_payment_method_display }}</p>
+                {% if receipt.payment.transaction_id %}
+                    <p><strong>Transaction ID:</strong> {{ receipt.payment.transaction_id }}</p>
+                {% endif %}
+                <p><strong>Status:</strong>
+                    <span class="status-badge
+                        {% if receipt.payment.status == 'completed' %}status-completed
+                        {% elif receipt.payment.status == 'pending' %}status-pending
+                        {% elif receipt.payment.status == 'failed' %}status-failed
+                        {% else %}status-default{% endif %}">
+                        {{ receipt.payment.get_status_display }}
+                    </span>
+                </p>
+            </div>
+        </div>
+
+        <div class="details-grid">
+            <div>
+                <h4>Academic Details:</h4>
+                <p><strong>Term:</strong> {{ receipt.payment.term.name|default:"N/A" }}</p>
+                <p><strong>Session:</strong> {{ receipt.payment.session.name|default:"N/A" }}</p>
+            </div>
+            <div>
+                <h4>Payment Category:</h4>
+                <p><strong>Category:</strong> {{ receipt.payment.payment_category.name|default:"N/A" }}</p>
+                {% if receipt.payment.is_installment %}
+                    <p><strong>Installment:</strong> {{ receipt.payment.installment_number|default:"-" }} of {{ receipt.payment.total_installments|default:"-" }}</p>
+                {% else %}
+                    <p><strong>Payment Type:</strong> Full Payment</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if receipt.payment.notes %}
+        <div class="notes-section">
+            <h4>Notes:</h4>
+            <p>{{ receipt.payment.notes }}</p>
+        </div>
+        {% endif %}
+
+        <div class="receipt-footer">
+            <p>Generated By:
+                {% if receipt.generated_by %}
+                    {{ receipt.generated_by.get_full_name|default:receipt.generated_by.username }}
+                {% else %}
+                    System (Student Self-Service)
+                {% endif %}
+            </p>
+            <p class="small">Thank you for your payment!</p>
+        </div>
+    </div>
+
+    <div class="button-group">
+        <a href="{% url 'payments:payment_history' %}" class="button secondary">
+            Back to Payment History
+        </a>
+        <button onclick="window.print()" class="button primary">
+            Print Receipt
+        </button>
+    </div>
+</div>
+</body>
+</html>

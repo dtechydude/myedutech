@@ -218,7 +218,7 @@ def payment_history(request):
         'title': 'Payment History',
         'is_staff_user': request.user.is_staff
     }
-    return render(request, 'payments/payment_history.html', context)
+    return render(request, 'payments/test_payment_history.html', context)
 
 @login_required
 def view_receipt(request, receipt_id):
@@ -235,7 +235,7 @@ def view_receipt(request, receipt_id):
 
     if not request.user.is_staff and (not hasattr(receipt.payment.student, 'user') or request.user != receipt.payment.student.user):
         messages.warning(request, "You are not authorized to view this receipt.")
-        return redirect('payment_history')
+        return redirect('payments:payment_history')
 
     context = {
         'receipt': receipt,
