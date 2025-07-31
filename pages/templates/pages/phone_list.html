@@ -82,7 +82,7 @@
         {% block content_body %}
         <div class="content-body">
             <div class="container-fluid">
-				
+				                
                 <!-- row -->
 
                 <div class="row">
@@ -90,7 +90,7 @@
 					<div class="col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h4 class="card-title" style="color:green;">Phone List </h4>
+                                <h4 class="card-title" style="color:green;">Email List </h4>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
@@ -98,9 +98,11 @@
                                         <thead>
                                             <tr>
                                                 <th>S/N</th>
-                                                <th>Username</th>
-                                                <th>Phone</th>
-                                                <th>Full Name</th>
+                                                <th>User Details</th>   
+                                                <th>Status</th>                                               
+                                                <th>Phone Num.</th>
+                                                <th>Parent/Guarantor Phone</th>
+                                                
                                                                                             
                                             </tr>
                                         </thead>
@@ -108,9 +110,11 @@
                                             {% for s in users %}
                                             <tr>
                                                 <td>{{ forloop.counter }}</td>
-                                                <td>{{ s.user.username }}</td>
-                                                <td><strong>{{ s.user.profile.phone}}</strong></td>
-                                                <td>{{ s.user.last_name }} - {{ s.user.first_name }}</td>
+                                                <td>{{ s.username }} -  <strong>{{ s.last_name }}</strong> {{ s.first_name }}</td>
+                                                <td style="color:brown">{{ s.profile.user_type}}</td>
+                                                <td>{{ s.profile.phone}}</td>
+                                                <td>{{ s.teacher.guarantor_phone}} {{s.student.guardian_phone }}</td>
+                                                
                                                                                           
 												</td>
                                                 {% endfor %}

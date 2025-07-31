@@ -122,7 +122,7 @@
 															  <input class="form-check-input" type="checkbox" value="" id="checkAll3">
 															</div>
 														</th>
-														<th>Termly Report Cards</th>
+														<th>Termly / Session Report Cards</th>
 														
 													</tr>
 												</thead>
@@ -150,8 +150,8 @@
                                                                     <ul>
                                                                         {% for term in terms %}
                                                                             <li>
-                                                                                <span>{{ term.name }} ({{ term.start_date|date:"M d, Y" }} - {{ term.end_date|date:"M d, Y" }})</span>
-                                                                                <a href="{% url 'results:student_report_card_detail' student.id term.id %}">View Report Card</a>
+                                                                                <span> <i class="fa fa-desktop" aria-hidden="true"></i> <strong>{{ term.name }} </strong>({{ term.start_date|date:"M d, Y" }} - {{ term.end_date|date:"M d, Y" }})</span>
+                                                                                <a href="{% url 'results:student_report_card_detail' student.id term.id %}"><u>View Report Card</u></a>
                                                                             </li>
                                                                         {% endfor %}
                                                                     </ul>
@@ -159,7 +159,7 @@
                                                                     <p>No termly report cards available yet. </p>
                                                                 {% endif %}
                                                             </div>
-
+                                                            <hr>
                                                             <div class="report-section">
                                                                 <h4 style="color: #721c24;">Annual Report Cards</h4>
                                                                 {% if sessions %}
@@ -167,8 +167,8 @@
                                                                     <ul>
                                                                         {% for session in sessions %}
                                                                             <li>
-                                                                                <span>{{ session.name }} ({{ session.start_date|date:"M d, Y" }} - {{ session.end_date|date:"M d, Y" }})</span>
-                                                                                <a href="{% url 'results:student_session_report_card_detail' student.id session.id %}">View Annual Report Card</a>
+                                                                                <span><i class="fa fa-desktop" aria-hidden="true"></i> <strong>{{ session.name }} </strong>({{ session.start_date|date:"M d, Y" }} - {{ session.end_date|date:"M d, Y" }})</span>
+                                                                                <a href="{% url 'results:student_session_report_card_detail' student.id session.id %}"><u>View Annual Report Card</u></a>
                                                                             </li>
                                                                         {% endfor %}
                                                                     </ul>
@@ -177,7 +177,7 @@
                                                                 {% endif %}
                                                             </div>
 
-                                                            <p><a href="{% url 'users:user_logout' %}">Logout</a></p>
+                                                            {% comment %}<!-- <p><a href="{% url 'users:user_logout' %}">Logout</a></p> -->   {% endcomment %}
                                                         </div>
                                                         </td>
 														

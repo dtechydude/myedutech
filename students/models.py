@@ -56,7 +56,7 @@ genotype = [
 
 class Badge(models.Model):
     name = models.CharField(max_length=50, blank=True, null=True)
-    desc = models.CharField(max_length=50, blank=True)
+    desc = models.CharField(max_length=50, blank=True, verbose_name='description')
     slug = models.SlugField(null=True, blank=True)
     
     def __str__ (self):

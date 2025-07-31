@@ -25,13 +25,12 @@ from curriculum.models import Term
 #         return False
 
 class ResultAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    pass
     # inlines = [MotorAbility1Inline, ResultImage1Inline] 
     # exclude =['remark', 'student_id']
-    # list_display=('student_detail', 'exam',)
+    list_display=('student', 'subject', 'exam', 'score')
     # list_filter  = ['student_detail__standard']
-    # search_fields = ('student_detail__student_username', 'student_detail__full_name')
-    # raw_id_fields = ['student_id', 'student_detail',]
+    search_fields = ('student', 'exam')
+    raw_id_fields = ['student', 'exam',]
 
 
 
@@ -39,9 +38,9 @@ class ExaminationAdmin(admin.ModelAdmin):
        
     list_display=('name', 'standard', 'term')
 
-class ResultAdmin(admin.ModelAdmin):
+# class ResultAdmin(admin.ModelAdmin):
        
-    list_display=('student', 'subject', 'exam', 'score')
+#     list_display=('student', 'subject', 'exam', 'score')
 
 #works well 001
 class ScoreAdmin(admin.ModelAdmin):

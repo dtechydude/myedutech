@@ -8,6 +8,7 @@ from .models import Attendance
 from students.models import Student
 from datetime import date, timedelta # Make sure to import these!
 from staff.models import Teacher
+from curriculum.models import SchoolIdentity
 from .forms import AttendanceDateForm, AttendanceForm, AttendanceReportForm # Import new forms
 
 # Helper to get teacher profile, handles not found case
@@ -161,4 +162,4 @@ def attendance_report(request):
         'teacher': teacher,
         'student_attendance_summary': student_attendance_summary,
     }
-    return render(request, 'attendance/attendance_report.html', context) # Make sure this points to the correct template name
+    return render(request, 'attendance/test_attendance_report.html', context) # Make sure this points to the correct template name

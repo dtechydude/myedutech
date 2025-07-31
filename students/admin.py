@@ -28,7 +28,7 @@ class StudentAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 
 class BadgeAdmin(ImportExportModelAdmin, admin.ModelAdmin):
        
-    list_display=('name',)
+    list_display=('name', 'desc')
     exclude=('slug',)
 
 # admin.site.register(StaffCategory)

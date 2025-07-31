@@ -108,28 +108,20 @@ def success_submission(request):
 
 # phone list
 def phone_list(request):
-    user_phone = User.objects.all()
-    guardian_phone = Profile.objects.all()
-    guarantor_phone = User.objects.all()
+    users = User.objects.all()  
     
     context = {        
-        'user_phone': user_phone,
-        'guardian_phone':guardian_phone,
-        'guarantor_phone': guarantor_phone,
-    }
-    
+        'users': users,
+      
+    }    
     return render(request, 'pages/phone_list.html', context)
 
 # email list
 def email_list(request):
-    user_email = User.objects.all()
-    guardian_email = Student.objects.all()
-    guarantor_email = Teacher.objects.all()
+    users = User.objects.all()
     
     context = {        
-        'user_email': user_email,
-        'guardian_email':guardian_email,
-        'guarantor_email': guarantor_email,
+        'users': users,   
     }
     return render(request, 'pages/email_list.html', context )
 

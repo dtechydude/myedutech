@@ -1,215 +1,319 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ student.full_name }}'s Report Card - {{ term.name }}</title>
+    <title>{{ student.first_name }}'s Report Card - {{ term.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
-        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); max-width: 900px; margin: 20px auto; }
-        h1, h2, h3 { color: #333; text-align: center; }
-        .student-info { margin-bottom: 20px; background-color: #e9ecef; padding: 15px; border-radius: 5px; }
-        .student-info p { margin: 5px 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .summary-section { margin-top: 30px; padding-top: 20px; border-top: 1px dashed #ddd; }
-        .summary-section p { margin-bottom: 10px; font-size: 1.1em; }
-        .back-link { display: block; margin-top: 30px; text-align: center; }
-        .back-link a { text-decoration: none; color: #007bff; font-weight: bold; }
-        .back-link a:hover { text-decoration: underline; }
+        body {
+            background-color: #f8f9fa; /* Light background for the whole page */
+        }
+        .report-card-container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        .header-section {
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header-section img {
+            max-height: 100px; /* Adjust logo size as needed */
+            width: auto;
+            margin-bottom: 15px;
+        }
+        .student-info {
+            background-color: #e9ecef;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        .section-title {
+            color: #0056b3; /* A nice blue for section titles */
+            margin-top: 35px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-align: center;
+            position: relative;
+        }
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 3px;
+            background: #007bff;
+            margin: 10px auto 0;
+            border-radius: 2px;
+        }
+        .table th, .table td {
+            vertical-align: middle;
+        }
+        .table-responsive {
+            margin-bottom: 30px;
+        }
+        .summary-section p {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        .signature-block {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px dashed #ced4da;
+            text-align: center;
+        }
+        .signature-block p {
+            margin-bottom: 5px;
+            font-size: 0.95rem;
+        }
+        .download-link {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
         /* Print Styles */
         @media print {
-            body { background-color: #fff; }
-            .container { box-shadow: none; border: 1px solid #ccc; margin: 0; padding: 10px; }
-            .back-link { display: none; }
+            body {
+                background-color: #fff !important;
+                margin: 0;
+                padding: 0;
+            }
+            .report-card-container {
+                box-shadow: none !important;
+                border: none !important;
+                margin: 0 !important;
+                padding: 15px !important;
+            }
+            .download-link, .back-link, .btn-info {
+                display: none !important;
+            }
+            /* Adjust table styles for print if needed, Bootstrap's print styles are usually good */
+            .table-responsive {
+                overflow-x: visible !important;
+            }
+            .header-section {
+                border-bottom: 1px solid #dee2e6; /* Lighter border for print */
+                padding-bottom: 15px;
+                margin-bottom: 20px;
+            }
+            .header-section img {
+                max-height: 80px; /* Slightly smaller logo for print */
+            }
         }
     </style>
 </head>
-<body> {% comment %}
-    <!-- <div class="download-link">
-    <a href="{% url 'results:student_session_report_card_detail' student.id session.id %}?download=pdf" target="_blank" class="btn-download">Download as PDF</a>
-</div> -->{% endcomment %}
-   <div class="download-link" style="text-align: right; margin-bottom: 20px;">
-    {# This link uses the same URL as the current page, but adds a 'download=pdf' GET parameter #}
-    <a href="{% url 'results:student_report_card_detail' student.id term.id %}?download=pdf"
-       target="_blank"          {# Opens the PDF in a new tab/window #}
-       class="btn btn-primary">  {# Basic Bootstrap styling, adjust as per your CSS framework #}
-       Download Termly Report as PDF
-    </a>
-</div>
+<body>
 
 <div class="container">
-        <h1>Report Card</h1>
-        <h2>{{ student.full_name }}</h2>
-        <h3>{{ term.name }}</h3>
-
-        <div class="student-info">
-            <p><strong>Student Name:</strong> {{ student.first_name }}</p>
-            <p><strong>Admission Number:</strong> {{ student.USN }}</p>
-            <p><strong>Standard:</strong> {{ student.current_class.name|default:"N/A" }}</p>
-        </div>
-
-        {% if report_data %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Subject</th>
-                        <th>CA1</th>
-                        <th>CA2</th>
-                        <th>CA3</th>
-                        <th>Exam</th>
-                        <th>Total Score</th>
-                        <th>Grade</th>
-                        <th>Remark</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for data in report_data %}
-                        <tr>
-                            <td>{{ data.subject }}</td>
-                            <td>{{ data.ca1 }}</td>
-                            <td>{{ data.ca2 }}</td>
-                            <td>{{ data.ca3 }}</td>
-                            <td>{{ data.exam_score }}</td>
-                            <td><strong>{{ data.total_score }}</strong></td>
-                            <td><strong>{{ data.grade }}</strong></td>
-                            <td>{{ data.remark }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <div class="summary-section">
-                <p><strong>Overall Average Score:</strong> {{ overall_average }}%</p>
-                <p><strong>Overall Remark:</strong> {{ overall_remark }}</p>
-            </div>
-        {% else %}
-            <p>No scores available for {{ student.first_name }} in {{ term.name }}.</p>
-        {% endif %}
-
-        <div class="back-link">
-            {% if user.teacher %}
-                {# Go back to report card list, preserving selected term/standard if possible #}
-                <a href="{% url 'results:report_card_list' %}?term={{ term.id }}{% if student.current_standard %}&standard={{ student.current_standard.id }}{% endif %}">Back to Student List</a>
-            {% elif user.student %}
-                {# Student goes back to their dashboard #}
-                <a href="{% url 'results:student_dashboard' %}">Back to Dashboard</a>
-            {% else %}
-                {# Fallback for other users or unlinked accounts #}
-                <a href="{% url 'home' %}">Back to Home</a> {# IMPORTANT: Replace 'home' with the actual URL name of your project's home page #}
-            {% endif %}
-        </div>
+    <div class="download-link">
+        <a href="{% url 'results:student_report_card_detail' student.id term.id %}?download=pdf"
+           target="_blank"
+           class="btn btn-primary btn-lg mt-3">
+            <i class="bi bi-file-earmark-pdf-fill me-2"></i> Download Termly Report as PDF
+        </a>
     </div>
 
-{# --- NEW SECTION: Motor Ability and Behavioral Traits --- #}
-        <div class="section">
-            <h2>Motor Ability & Behavioral Traits (Score out of 5)</h2>
-            {% if motor_ability_score %}
-                <table class="table table-bordered">
-                    <thead>
+    <div class="report-card-container">
+        <header class="text-center header-section">
+            {% comment %}
+            Replace 'path/to/your/school_logo.png' with the actual path to your school's logo in your static files.
+            Make sure you have {% load static %} at the top of your template.
+            {% endcomment %}
+            {% if school_logo_url %}
+                <img src="{{ school_logo_url }}" alt="School Logo" class="img-fluid mb-3">
+            {% else %}
+                <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo" class="img-fluid mb-3">
+            {% endif %}
+            <h1 class="display-5 fw-bold text-primary mb-2">Report Card</h1>
+            <h2 class="h3 text-secondary mb-1">{{ student.full_name }}</h2>
+            <h3 class="h4 text-muted">{{ term.name }} - {{ term.session.name }} Academic Session</h3>
+        </header>
+
+        <div class="student-info">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Student Name:</strong> {{ student.first_name }} {{ student.last_name }}</p>
+                    <p><strong>Admission Number:</strong> {{ student.USN }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Class:</strong> {{ student.current_class.name|default:"N/A" }}</p>
+                    <p><strong>Date of Report:</strong> {{ "now"|date:"M d, Y" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="section-title">Academic Performance</h2>
+        {% if report_data %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-primary">
                         <tr>
-                            <th>Trait/Ability</th>
-                            <th>Score</th>
+                            <th>Subject</th>
+                            <th>CA1</th>
+                            <th>CA2</th>
+                            <th>CA3</th>
+                            <th>Exam</th>
+                            <th>Total Score</th>
+                            <th>Grade</th>
+                            <th>Remark</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in report_data %}
+                            <tr>
+                                <td>{{ data.subject }}</td>
+                                <td>{{ data.ca1|default:"-" }}</td>
+                                <td>{{ data.ca2|default:"-" }}</td>
+                                <td>{{ data.ca3|default:"-" }}</td>
+                                <td>{{ data.exam_score|default:"-" }}</td>
+                                <td><strong>{{ data.total_score }}</strong></td>
+                                <td><span class="badge bg-{% if data.grade == 'A' %}success{% elif data.grade == 'B' %}primary{% elif data.grade == 'C' %}info{% elif data.grade == 'D' %}warning{% else %}danger{% endif %}">{{ data.grade }}</span></td>
+                                <td>{{ data.remark }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="summary-section text-center mb-4">
+                <p class="lead"><strong>Overall Average Score:</strong> <span class="text-success">{{ overall_average }}%</span></p>
+                <p class="lead"><strong>Overall Remark:</strong> <span class="text-info">{{ overall_remark }}</span></p>
+            </div>
+        {% else %}
+            <div class="alert alert-info text-center" role="alert">
+                No scores available for {{ student.first_name }} in {{ term.name }}.
+            </div>
+        {% endif %}
+
+
+        <!-- <h2 class="section-title">Motor Ability & Behavioral Traits <small>(Score out of 5)</small></h2> -->
+        {% if motor_ability_score %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th colspan="12">Motor Ability & Behavioral Traits</th>
+                            <!-- <th>Score</th> -->
+                           
+                           
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Honesty</td>
-                            <td>{{ motor_ability_score.honesty }}</td>
-                        </tr>
-                        <tr>
-                            <td>Politeness</td>
-                            <td>{{ motor_ability_score.politeness }}</td>
-                        </tr>
-                        <tr>
-                            <td>Neatness</td>
-                            <td>{{ motor_ability_score.neatness }}</td>
-                        </tr>
-                        <tr>
-                            <td>Cooperation</td>
-                            <td>{{ motor_ability_score.cooperation }}</td>
-                        </tr>
-                        <tr>
-                            <td>Obedience</td>
-                            <td>{{ motor_ability_score.obedience }}</td>
-                        </tr>
-                        <tr>
-                            <td>Punctuality</td>
-                            <td>{{ motor_ability_score.punctuality }}</td>
-                        </tr>
-                        <tr>
-                            <td>Physical Education</td>
-                            <td>{{ motor_ability_score.physical_education }}</td>
-                        </tr>
-                        <tr>
-                            <td>Games</td>
-                            <td>{{ motor_ability_score.games }}</td>
-                        </tr>
-                        <tr class="table-info">
+                        <td>Honesty = {{ motor_ability_score.honesty }}</td>
+                       <td>Politeness = {{ motor_ability_score.politeness }}</td>
+                       <td>Neatness = {{ motor_ability_score.neatness }}</td>
+                      <td>Cooperation = {{ motor_ability_score.cooperation }}</td>
+                       <td>Obedience = {{ motor_ability_score.obedience }}</td>
+                        <td>Punctuality = {{ motor_ability_score.punctuality }}</td>
+                     <td>Physical Education = {{ motor_ability_score.physical_education }}</td>
+                    <td>Games = {{ motor_ability_score.games }}</td></tr>
+                        <tr class="table-success">
                             <td><strong>Total Motor Ability Score</strong></td>
                             <td><strong>{{ motor_ability_score.total_score }} / {{ motor_ability_score.max_possible_score }}</strong></td>
                         </tr>
-                        <tr class="table-info">
+                        <tr class="table-success">
                             <td><strong>Average Motor Ability Score</strong></td>
                             <td><strong>{{ motor_ability_score.average_score|floatformat:2 }}</strong></td>
                         </tr>
                     </tbody>
                 </table>
-            {% else %}
-                <p>No motor ability or behavioral scores recorded for this term.</p>
-            {% endif %}
-        </div>
-        {# Link to enter/edit motor ability scores #}
-            {% if user.teacher %}
-            <div class="text-right mt-3">
-                <a href="{% url 'results:enter_motor_ability_score' student.id term.id %}" class="btn btn-info btn-sm">
-                    {% if motor_ability_score %}Edit Scores{% else %}Enter Scores{% endif %}
-                </a>
             </div>
+            {% if user.teacher %}
+                <div class="text-end mt-3 mb-4">
+                    <a href="{% url 'results:enter_motor_ability_score' student.id term.id %}" class="btn btn-info btn-sm">
+                        <i class="bi bi-pencil-square me-1"></i> {% if motor_ability_score %}Edit Scores{% else %}Enter Scores{% endif %}
+                    </a>
+                </div>
             {% endif %}
-        </div>
-        {# --- END NEW SECTION --- #}
+        {% else %}
+            <div class="alert alert-info text-center mb-4" role="alert">
+                No motor ability or behavioral scores recorded for this term.
+                {% if user.teacher %}
+                    <br><a href="{% url 'results:enter_motor_ability_score' student.id term.id %}" class="btn btn-info btn-sm mt-2">Enter Scores</a>
+                {% endif %}
+            </div>
+        {% endif %}
 
-        <div class="section">
-            <h2>Teacher's Comment</h2>
-            {# Assuming you have a 'comment' object in context #}
-            {% comment %}
-            {% if comment %}
-                <p>{{ comment.text }}</p>
+        ---
+
+        <h2 class="section-title">Teacher's Comment</h2>
+        <div class="card card-body mb-4">
+            {% if teacher_comment %}
+                <p class="lead">{{ teacher_comment.comment_text }}</p>
+                <small class="text-muted">Commented by: {{ teacher_comment.teacher.get_full_name|default:teacher_comment.teacher.username }}</small>
             {% else %}
-                <p>No comment available for this term.</p>
+                <p class="text-muted">No comment available for this term.</p>
+                {% if user.teacher %}
+                    <a href="{% url 'results:enter_teacher_comment' student.id term.id %}" class="btn btn-sm btn-outline-primary mt-2">Add Comment</a>
+                {% endif %}
             {% endif %}
-            {% endcomment %}
-        </div>
-
-        <div class="section">
-            <h2>Attendance Record</h2>
-            {# Add attendance details here #}
-            <p>Days Present: XX</p>
-            <p>Days Absent: XX</p>
-        </div>
-
-        <div class="section">
-            <h2>Next Term Begins</h2>
-            <p>Date: [Insert Next Term Start Date Here]</p>
-        </div>
-
-        <div class="section signature-block">
-            <p>_________________________</p>
-            <p>Class Teacher's Signature</p>
-            <p>Date: {{ request.build_absolute_uri|date:"M d, Y" }}</p>
         </div>
         
+        ---
+
+        <h5 class="section-title">Attendance Record</h5>
+        <div class="card card-body mb-4">
+            <div class="row">
+                <div class="col-md-8">
+                    <p><span><strong>Days Present:</strong> {{ days_present|default:"XX" }} | </span>
+                    <span><strong>Days Absent:</strong> {{ days_absent|default:"XX" }} | </span>
+                <span><strong>Next Term Begins:</strong> {{ next_term_start_date|date:"M d, Y"|default:"[Insert Next Term Start Date Here]" }}</span>
+            </p>
+                </div>
+                <!-- <div class="col-md-6">
+                    <p></p>
+                </div> -->
+            </div>
+        </div>
+
+
+        <!-- <h2 class="section-title">Next Term Details</h2>
+        <div class="card card-body mb-4">
+            <p><strong>Next Term Begins:</strong> {{ next_term_start_date|date:"M d, Y"|default:"[Insert Next Term Start Date Here]" }}</p>
+        </div> -->
+
+        ---
+
+        <div class="signature-block">
+            <p>_________________________</p>
+            <p><strong>Class Teacher's Signature</strong></p>
+            <p class="text-muted">Date: {{ "now"|date:"M d, Y" }}</p>
+        </div>
     </div>
 
-    {# Optional: Include Bootstrap JS if you use features requiring it #}
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-</html>
+    <div class="text-center mt-5 back-link">
+        {% if user.is_authenticated %}
+            {% if user.teacher %}
+                <a href="{% url 'results:report_card_list' %}{% if term %}/?term={{ term.id }}{% endif %}{% if student.current_class %}&standard={{ student.current_class.id }}{% endif %}" class="btn btn-secondary btn-lg">
+                    <i class="bi bi-arrow-left-circle-fill me-2"></i> Back to Student List
+                </a>
+            {% elif user.student %}
+                <a href="{% url 'results:student_dashboard' %}" class="btn btn-secondary btn-lg"> {# Assuming 'student_dashboard' is your student's dashboard URL #}
+                    <i class="bi bi-house-door-fill me-2"></i> Back to Dashboard
+                </a>
+            {% else %}
+                <a href="{% url 'home' %}" class="btn btn-secondary btn-lg"> {# Fallback for other users or unlinked accounts #}
+                    <i class="bi bi-house-fill me-2"></i> Back to Home
+                </a>
+            {% endif %}
+        {% else %}
+            <a href="{% url 'users:login' %}" class="btn btn-secondary btn-lg">
+                <i class="bi bi-box-arrow-in-right me-2"></i> Login
+            </a>
+        {% endif %}
+    </div>
 
+</div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </body>
 </html>

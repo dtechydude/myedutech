@@ -847,7 +847,7 @@
 							{% endif %}
 							{% if user.student %}		
 							<li><a href="{% url 'payments:make_payment' %}">Make Payment</a></li>
-							<li><a href="#">My Payments</a></li>						
+							<li><a href="{% url 'payments:payment_history' %}">My Payments</a></li>						
 							</li>		
 							{% endif %}						
 							

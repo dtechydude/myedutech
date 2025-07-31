@@ -98,9 +98,11 @@
                                         <thead>
                                             <tr>
                                                 <th>S/N</th>
-                                                <th>Username</th>
-                                                <th>Email</th>
-                                                <th>Full Name</th>
+                                                <th>User Details</th>   
+                                                <th>Status</th>                                               
+                                                <th>Email Add.</th>
+                                                <th>Parent/Guarantor Mail</th>
+                                                
                                                                                             
                                             </tr>
                                         </thead>
@@ -108,9 +110,11 @@
                                             {% for s in users %}
                                             <tr>
                                                 <td>{{ forloop.counter }}</td>
-                                                <td>{{ s.username }}</td>
-                                                <td><strong>{{ s.email}}</strong></td>
-                                                <td>{{ s.last_name }}{{ s.first_name }}</td>
+                                                <td>{{ s.username }} -  <strong>{{ s.last_name }}</strong> {{ s.first_name }}</td>
+                                                <td style="color:brown">{{ s.profile.user_type}}</td>
+                                                <td>{{ s.email}}</td>
+                                                <td>{{ s.teacher.guarantor_email}} {{s.student.guardian_email }}</td>
+                                                
                                                                                           
 												</td>
                                                 {% endfor %}
