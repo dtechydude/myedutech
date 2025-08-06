@@ -111,9 +111,8 @@ def save_subject_image(instance, filename):
     return os.path.join(upload_to, filename)
 
 class Standard(models.Model):   
-    name = models.CharField(max_length=100, unique=True)    
-    # dept = models.ForeignKey(Dept, on_delete=models.CASCADE, blank=True, null=True)
-    # teachers = models.ManyToManyField(Teacher, related_name='classrooms')
+    name = models.CharField(max_length=100, unique=True)
+    desc = models.CharField(max_length=200, blank=True, null=True, verbose_name='description')  
     slug = models.SlugField(null=True, blank=True)
 
 

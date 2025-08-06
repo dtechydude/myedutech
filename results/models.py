@@ -52,7 +52,7 @@ class ExamSubject(models.Model):
 
 class Result(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='results') # Added related_name
-    subject = models.ForeignKey(ExamSubject, on_delete=models.CASCADE)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     exam = models.ForeignKey(Examination, on_delete=models.CASCADE) # Link to the Exam
     score = models.DecimalField(max_digits=5, decimal_places=2)
 

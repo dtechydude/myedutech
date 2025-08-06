@@ -28,7 +28,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>Enter Student Scores</h1>
+        
+        <h3>Enter Student Scores <span style="color: #721c24;"><small>Back To Dashboard</small></span></h3>
 
         {% if user.is_authenticated %}
             <p>Welcome, {{ user.get_full_name|default:user.username }}!</p>
@@ -44,7 +45,7 @@
         {% endif %}
 
         {% if current_term %}
-            <h2>Current Term: {{ current_term.name }}</h2>
+            <h3>Current Term: {{ current_term.name }}</h3>
         {% else %}
             {# Message handled by messages framework now #}
         {% endif %}

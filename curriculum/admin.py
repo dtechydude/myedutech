@@ -19,7 +19,7 @@ class SessionAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 
 class StandardAdmin(ImportExportModelAdmin, admin.ModelAdmin):
    
-    list_display=('name',)
+    list_display=('name', 'desc')
     exclude = ['slug']
 
 
@@ -31,6 +31,8 @@ class ClassGroupAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 class SubjectAdmin(ImportExportModelAdmin, admin.ModelAdmin):
        
     list_display=('subject_id', 'name', 'standard')
+    list_filter = ['standard']
+    search_fields = ('standard',)
     exclude = ['slug']
 
 class LessonAdmin(ImportExportModelAdmin, admin.ModelAdmin):

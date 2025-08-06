@@ -4,25 +4,7 @@ from import_export.admin import ImportExportModelAdmin
 from results.models import Examination, Result, Score, MotorAbilityScore
 from curriculum.models import Term
 
-# class ExamSubjectAdmin(admin.ModelAdmin):
-       
-#     list_display=('subject_id', 'name',)
-#     exclude =['slug']
 
-# class MotorAbility1Inline(admin.TabularInline):
-#     model = MotorAbility1
-#     max_num = 1
-    
-#     def has_delete_permission(self, request, obj=None):
-#         return False
-
-# class ResultImage1Inline(admin.TabularInline):
-#     model = ResultImage1
-#     exclude =['f_1', 'f_2', 'f_3']
-#     max_num = 1
-    
-#     def has_delete_permission(self, request, obj=None):
-#         return False
 
 class ResultAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     # inlines = [MotorAbility1Inline, ResultImage1Inline] 

@@ -495,8 +495,9 @@ class StudentReportCardView(LoginRequiredMixin, View):
     Generates and displays a single student's report card for a specific term.
     Accessible by teachers/admins (for any student) and by the student themselves.
     """
-    template_name = 'results/student_report_card_detail.html'
-    pdf_template_name = 'results/student_report_card_pdf.html' # Dedicated template for PDF layout
+    # template_name = 'results/student_report_card_detail.html'
+    template_name = 'results/test_student_report_card_detail.html'
+    pdf_template_name = 'results/test_student_report_card_pdf.html' # Dedicated template for PDF layout
 
     def get(self, request, student_id, term_id, *args, **kwargs):
         student = get_object_or_404(Student, id=student_id)

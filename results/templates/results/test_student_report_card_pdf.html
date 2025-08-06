@@ -1,0 +1,337 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    
+    <title>{{ student.first_name }}'s Report Card - {{ term.name }}</title>
+    <style>
+    /* Base styles for web view */
+    body {
+      background-color: #006699;
+      font-family: Arial, sans-serif;
+    } 
+    .report-card-wrapper {
+      max-width: 800px;
+      margin: 20px auto;
+      background-color: white;
+      border: 1px solid #ddd;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .header-section {
+      text-align: center;
+      padding: 10px;
+    }
+    .header-section img {
+      width: 80px;
+      height: 80px;
+    }
+    .header-section h1 {
+      font-size: 26px;
+      margin-top: 5px;
+      font-weight: bold;
+      color: #333366;
+    }
+    .header-section p {
+      color: #333366;
+      font-size: 14px;
+    }
+    .info-table th, .info-table td {
+      border: 1px solid grey;
+      text-align: left;
+      padding: 5px;
+      vertical-align: middle;
+      font-size: 12px;
+    }
+    .subject-table th, .subject-table td {
+      border: 1px solid grey;
+      text-align: center;
+      padding: 5px;
+      vertical-align: middle;
+      font-size: 10px;
+    }
+    .summary-section p, .comment-section p, .remark-table p, .remark-table strong, .remark-table span {
+      font-size: 12px;
+      margin: 0;
+    }
+    .signature-section {
+        padding: 15px;
+        text-align: center;
+    }
+    .no-print {
+      text-align: center;
+      margin: 20px 0;
+    }
+    /* Styles for the new "beautiful" heading */
+    .report-heading {
+        background-color: #333366 !important;
+        color: white !important;
+        padding: 10px !important;
+        font-size: 20px !important;
+        font-weight: bold;
+        letter-spacing: 1.5px;
+    }
+    /* Styles for compact grading keys */
+    .grading-keys-table {
+        margin-top: 5px;
+    }
+    .grading-keys-table th, .grading-keys-table td {
+        border: 1px solid grey;
+        padding: 5px;
+        vertical-align: top;
+        font-size: 10px;
+        text-align: left;
+    }
+    .grading-keys-table th {
+        background-color: #f2f2f2;
+        text-align: center;
+        font-size: 11px;
+    }
+    /* New styles for the 10-column behavioral table */
+    .behavioral-table td {
+        border: 1px solid grey;
+        text-align: left;
+        padding: 5px;
+        vertical-align: middle;
+        font-size: 10px;
+        width: 10%; /* Makes all columns equal width for a neat look */
+    }
+    .behavioral-summary {
+      font-size: 12px;
+      text-align: center;
+      margin-top: 10px;
+    }
+    /* Print/PDF-specific styles */
+    @media print {
+      body {
+        background-color: #fff !important;
+        -webkit-print-color-adjust: exact;
+        margin: 0;
+        padding: 0;
+      }
+      .report-card-wrapper {
+          box-shadow: none;
+          margin: 0 auto; /* Center the report card on the print page */
+      }
+      .no-print, .btn, .back-link {
+        display: none !important;
+      }
+      table, th, td {
+        border-color: #ccc !important;
+      }
+      .remark-table td, .grading-keys-table td {
+        border-style: hidden !important;
+      }
+      .grading-keys-table th, .grading-keys-table td {
+          font-size: 8px; /* Smaller font for print */
+      }
+      .behavioral-table td {
+        font-size: 8px; /* Smaller font for print */
+      }
+    }
+    </style>
+  </head>
+  <body>
+
+    <div class="no-print">
+        <a href="{% url 'results:student_report_card_detail' student.id term.id %}?download=pdf"
+           target="_blank"
+           class="btn btn-primary btn-lg">
+            Download Termly Report as PDF
+        </a>
+        <a href="javascript:window.print()" class="btn btn-secondary btn-lg">
+            Print
+        </a>
+    </div>
+
+    <div class="report-card-wrapper">
+      <div class="header-section">
+        {% if school_logo_url %}
+            <img src="{{ school_logo_url }}" alt="School Logo"> 
+        {% else %}
+            <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo">
+        {% endif %}
+        <br>
+        <h1>{% if school_identity.name %}{{ school_identity.name }}{% else %}St. George's Schools{% endif %}</h1>
+        <p>
+            {% if school_identity.address_line_1 %}{{ school_identity.address_line_1 }}{% else %}123 School Lane{% endif %}
+            {% if school_identity.address_line_2 %}{{ school_identity.address_line_2 }}{% endif %} - 
+            {% if school_identity.phone1 %}{{ school_identity.phone1 }}{% endif %}
+        </p>
+      </div> 
+
+      <div class="p-3">
+        <h4 class="text-center report-heading">
+            STUDENT REPORT SHEET | {{ term.session.name|default:"N/A" }}
+        </h4>
+
+        <table class="info-table w-100 mb-3">
+          <tr>
+            <td colspan="2"><strong>Student Name:</strong> {{ student.last_name|upper }} {{ student.first_name|upper }} {% if student.middle_name %}{{ student.middle_name|upper }}{% endif %}</td>
+            <td><strong>Admission No:</strong> {{ student.USN|default:"N/A" }}</td>
+            <td><strong>Class:</strong> {{ student.current_class.name|default:"N/A" }}</td>
+            <td><strong>No in Class:</strong> {{ total_students_in_class|default:"N/A" }}</td>
+            <td rowspan="2" style="width: 80px; text-align:center;">
+              {% if student.profile_picture %}
+                  <img src="{{ student.profile_picture.url }}" width="60" height="60" class="img-fluid">
+              {% else %}
+                  <img src="{% static 'images/default_profile_pic.png' %}" width="60" height="60" class="img-fluid">
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Days Sch. Opened:</strong> {{ total_school_days|default:"N/A" }}</td>
+            <td><strong>Days Present:</strong> {{ days_present|default:"N/A" }}</td>
+            <td><strong>Days Absent:</strong> {{ days_absent|default:"N/A" }}</td>
+            <td colspan="2"><strong>Next Term Begins:</strong> {{ next_term_start_date|date:"M d, Y"|default:"N/A" }}</td>
+          </tr>
+        </table>
+        
+        <h5 class="text-center mt-4">Academic Performance</h5>
+        <div class="table-responsive">
+          <table class="subject-table table-bordered w-100">
+            <thead class="bg-light">
+              <tr>
+                <th colspan="2" class="text-center">SUBJECT</th>
+                <th class="text-center">CA1</th>
+                <th class="text-center">CA2</th>
+                <th class="text-center">CA3</th>
+                <th class="text-center">TOTAL CA</th>
+                <th class="text-center">EXAM (60)</th>
+                <th class="text-center">TOTAL</th>
+                <th class="text-center">GRADE</th>
+                <th class="text-center">REMARK</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for data in report_data %}
+              <tr>
+                <td colspan="2" class="text-left">{{ data.subject }}</td>
+                <td>{{ data.ca1|default:"-" }}</td>
+                <td>{{ data.ca2|default:"-" }}</td>
+                <td>{{ data.ca3|default:"-" }}</td>
+                <td>{{ data.total_ca|default:"-" }}</td>
+                <td>{{ data.exam_score|default:"-" }}</td>
+                <td><strong>{{ data.total_score }}</strong></td>
+                <td>{{ data.grade }}</td>
+                <td>{{ data.remark }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="summary-section text-center my-3">
+          <p><strong>Overall Average Score:</strong> <span style="color: #0056b3;">{{ overall_average|floatformat:2 }}%</span></p>
+        </div>
+
+        <h5 class="text-center mt-4">Motor Ability & Behavioral Traits (Score out of 5)</h5>
+        <div class="table-responsive">
+          <table class="behavioral-table w-100">
+            <tr>
+              <td>Honesty: {{ motor_ability_score.honesty|default:"-" }}</td>
+              <td>Politeness: {{ motor_ability_score.politeness|default:"-" }}</td>
+              <td>Neatness: {{ motor_ability_score.neatness|default:"-" }}</td>
+              <td>Cooperation: {{ motor_ability_score.cooperation|default:"-" }}</td>
+              <td>Obedience: {{ motor_ability_score.obedience|default:"-" }}</td>
+              <td>Punctuality: {{ motor_ability_score.punctuality|default:"-" }}</td>
+              <td>Physical Education: {{ motor_ability_score.physical_education|default:"-" }}</td>
+              <td>Games: {{ motor_ability_score.games|default:"-" }}</td>
+            </tr>
+          </table>
+        </div>
+        <div class="behavioral-summary">
+            <strong>Total Score:</strong> {{ motor_ability_score.total_score|default:"-" }} / {{ motor_ability_score.max_possible_score|default:"-" }} |
+            <strong>Average Score:</strong> {{ motor_ability_score.average_score|floatformat:2|default:"-" }}
+        </div>
+
+        <h5 class="text-center mt-4">General Remarks</h5>
+        <div class="comment-section my-4">
+          <table class="w-100 remark-table" style="border-style: hidden;">
+            <tbody>
+              <tr style="border-style: hidden;">
+                <td style="border-style: hidden; padding-right: 15px;">
+                  <strong style="font-size:13px; color:#990000; text-decoration:underline;">Class Teacher's Remark:</strong> <br>
+                  <span style="font-size:12px;">
+                    {% if overall_average > 79 %}Your dedication and commitment to learning are evident in your results. Keep it up and do better.
+                    {% elif overall_average > 70 %}You're doing well, but there's room for improvement in some areas. Work harder on the weak subjects.
+                    {% elif overall_average > 60 %}Good performance. You can do better next term, improve on the weak subjects.
+                    {% elif overall_average > 50 %}A significant effort is needed to bring your grades up to an acceptable level. You need to do more.
+                    {% elif overall_average > 39 %}Your performance falls significantly below expectations. Immediate action is required.
+                    {% else %}You have performed poorly and this result is not acceptable. You need to wake up from your weaknesses.{% endif %}
+                  </span>
+                </td>
+                <td style="border-style: hidden;">
+                  <strong style="font-size:13px; color:#990000; text-decoration:underline;">Principal's/Head Teacher's Remark:</strong> <br>
+                  <span style="font-size:12px;">
+                    {% if overall_average > 79 %}Outstanding effort and achievement! Keep up the excellent work. Ensure to do more next term.
+                    {% elif overall_average > 70 %}Impressive work overall. Continue to strive for excellence. Your performance is quite encouraging.
+                    {% elif overall_average > 60 %}Meeting expectations in most areas. Keep working harder to improve. You can do better than this next term.
+                    {% elif overall_average > 50 %}Your performance has room for growth. Extra effort and attention are needed.
+                    {% elif overall_average > 39 %}Struggling in some areas. Focused effort is required for improvement.
+                    {% else %}Your performance is far below acceptable grade. You need to work hard to meet up.{% endif %}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h6 class="text-center mt-4">Grading Keys</h6>
+        <div class="grading-keys-section my-4">
+            <table class="w-100 grading-keys-table">
+                <thead>
+                    <tr>
+                        <th>GRADING KEYS FOR EXAM - 100%</th>
+                        <th>GRADING KEYS FOR MOTOR ABILITY - 5 Points:</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <span style="color: #990000;">80 - 100</span><strong> A </strong>, 
+                            <span style="color:#990000;">71 - 79</span><strong> B+ </strong>, 
+                            <span style="color:#990000;">60 - 70</span><strong> B </strong>, 
+                            <span style="color:#990000;">50 - 59</span><strong> C </strong>, 
+                            <span style="color:#990000;">45 - 49</span><strong> D </strong>, 
+                            <span style="color:#990000;">40 - 44</span><strong> E </strong>, 
+                            <span style="color:#990000;">0 - 39</span><strong> F </strong>
+                        </td>
+                        <td>
+                            <span style="color:#990000;"><strong>5 - </strong></span><strong> Excellent </strong>, 
+                            <span style="color:#990000;"><strong>4 - </strong></span><strong> Good </strong>, 
+                            <span style="color:#990000;"><strong>3 - </strong></span><strong> Fair </strong>, 
+                            <span style="color:#990000;"><strong>2 - </strong></span><strong> Poor </strong>, 
+                            <span style="color:#990000;"><strong>1 - </strong></span><strong> Very Poor </strong>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="signature-section">
+          {% if principal_signature_url %}
+            <img src="{{ principal_signature_url }}" alt="Principal's Signature" style="max-width: 150px; max-height: 70px;">
+          {% else %}
+            <p>_________________________</p>
+          {% endif %}
+          <p class="font-weight-bold">Principal's Signature</p>
+          <p class="text-muted">Date: {{ "now"|date:"M d, Y" }}</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="text-center mt-5 back-link no-print">
+        <a href="{% url 'results:report_card_list' %}{% if term %}/?term={{ term.id }}{% endif %}{% if student.current_class %}&standard={{ student.current_class.id }}{% endif %}" class="btn btn-secondary btn-lg">
+            Back to Student List
+        </a>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  </body>
+</html>
