@@ -24,6 +24,7 @@
     .header-section {
       text-align: center;
       padding: 10px;
+     
     }
     .header-section img {
       width: 80px;
@@ -73,6 +74,7 @@
         font-size: 20px !important;
         font-weight: bold;
         letter-spacing: 1.5px;
+       
     }
     /* Styles for compact grading keys */
     .grading-keys-table {
@@ -149,23 +151,23 @@
 
     <div class="report-card-wrapper">
       <div class="header-section">
-        {% if school_logo_url %}
-            <img src="{{ school_logo_url }}" alt="School Logo"> 
-        {% else %}
-            <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo">
-        {% endif %}
-        <br>
-        <h1>{% if school_identity.name %}{{ school_identity.name }}{% else %}St. George's Schools{% endif %}</h1>
-        <p>
-            {% if school_identity.address_line_1 %}{{ school_identity.address_line_1 }}{% else %}123 School Lane{% endif %}
-            {% if school_identity.address_line_2 %}{{ school_identity.address_line_2 }}{% endif %} - 
-            {% if school_identity.phone1 %}{{ school_identity.phone1 }}{% endif %}
-        </p>
+         {% if school_identity.logo %}
+        <img src="{{ school_identity.logo.url }}" alt="School Logo"> 
+      {% else %}
+        <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo">
+      {% endif %}
+        <br>       
+       <p>
+        <span>{% if school_identity.name %}{{ school_identity.name }}{% else %}St. George's School{% endif %}</span><br>
+      <span style="font-size: 11px;">
+          {% if school_identity.address_line_1 %}{{ school_identity.address_line_1 }}{% else %}123 School Lane{% endif %}
+          {% if school_identity.address_line_2 %}{{ school_identity.address_line_2 }}{% endif %} - 
+          {% if school_identity.phone1 %}{{ school_identity.phone1 }}{% endif %} </span>
+          </p>      
       </div> 
-
       <div class="p-3">
         <h4 class="text-center report-heading">
-            STUDENT REPORT SHEET | {{ term.session.name|default:"N/A" }}
+            STUDENT REPORT SHEET | {{ term.session.name|default:"N/A" }} - {{ term.name|default:"N/A" }}
         </h4>
 
         <table class="info-table w-100 mb-3">
@@ -178,7 +180,7 @@
               {% if student.profile_picture %}
                   <img src="{{ student.profile_picture.url }}" width="60" height="60" class="img-fluid">
               {% else %}
-                  <img src="{% static 'images/default_profile_pic.png' %}" width="60" height="60" class="img-fluid">
+                  <img src="{% static 'pages/images/qr_code.jpg' %}" width="60" height="60" class="img-fluid">
               {% endif %}
             </td>
           </tr>
@@ -195,6 +197,7 @@
           <table class="subject-table table-bordered w-100">
             <thead class="bg-light">
               <tr>
+                <th class="text-center">S/N</th>
                 <th colspan="2" class="text-center">SUBJECT</th>
                 <th class="text-center">CA1</th>
                 <th class="text-center">CA2</th>
@@ -209,6 +212,7 @@
             <tbody>
               {% for data in report_data %}
               <tr>
+                <td>{{forloop.counter}}</td>
                 <td colspan="2" class="text-left">{{ data.subject }}</td>
                 <td>{{ data.ca1|default:"-" }}</td>
                 <td>{{ data.ca2|default:"-" }}</td>
@@ -228,18 +232,31 @@
           <p><strong>Overall Average Score:</strong> <span style="color: #0056b3;">{{ overall_average|floatformat:2 }}%</span></p>
         </div>
 
-        <h5 class="text-center mt-4">Motor Ability & Behavioral Traits (Score out of 5)</h5>
+        <h6 class="text-center mt-3">Motor Ability & Behavioral Traits (Score out of 5)</h6>
         <div class="table-responsive">
           <table class="behavioral-table w-100">
             <tr>
-              <td>Honesty: {{ motor_ability_score.honesty|default:"-" }}</td>
-              <td>Politeness: {{ motor_ability_score.politeness|default:"-" }}</td>
-              <td>Neatness: {{ motor_ability_score.neatness|default:"-" }}</td>
-              <td>Cooperation: {{ motor_ability_score.cooperation|default:"-" }}</td>
-              <td>Obedience: {{ motor_ability_score.obedience|default:"-" }}</td>
-              <td>Punctuality: {{ motor_ability_score.punctuality|default:"-" }}</td>
-              <td>Physical Education: {{ motor_ability_score.physical_education|default:"-" }}</td>
-              <td>Games: {{ motor_ability_score.games|default:"-" }}</td>
+              <td>
+              <span style="color: green;">Honesty:</span><strong><span style="font-size:10px; color:#990000;"> {{ motor_ability_score.honesty|default:"-" }}</span>,</strong>
+              <span style="color: green;">Politeness:</span> <strong><span style="font-size:10px; color:#990000;">{{ motor_ability_score.politeness|default:"-" }}</span>,</strong> 
+              <span style="color: green;">Neatness:</span> <strong><span style="font-size:10px; color:#990000;">{{ motor_ability_score.neatness|default:"-" }}</span>,</strong>
+              <span style="color: green;">Cooperation:</span> <strong><span style="font-size:10px; color:#990000;">{{ motor_ability_score.cooperation|default:"-" }}</span>,</strong>
+              <span style="color: green;">Obedience: </span><strong><span style="font-size:10px; color:#990000;">{{ motor_ability_score.obedience|default:"-" }}</span>,</strong>
+              <span style="color: green;">Punctuality: </span><strong><span style="font-size:10px; color:#990000;">{{ motor_ability_score.punctuality|default:"-" }} </span>,</strong>
+              <span style="color: green;">Physical Education: </span><strong><span style="font-size:10px; color:#990000;">{{ motor_ability_score.physical_education|default:"-" }} </span>,</strong>
+              <span style="color: green;">Games: </span><strong><span style="font-size:10px; color:#990000;">{{ motor_ability_score.games|default:"-" }} </span>,</strong>
+              
+              <span style="color: green;">Honesty:</span><strong><span style="font-size:10px; color:#990000;"> {{ motor_ability_score.honesty|default:"-" }}</span>,</strong>
+              <span style="color: green;">Politeness:</span> <strong><span style="font-size:10px; color:#990000;">{{ motor_ability_score.politeness|default:"-" }}</span>,</strong> 
+              <span style="color: green;">Neatness:</span> <strong><span style="font-size:10px; color:#990000;">{{ motor_ability_score.neatness|default:"-" }}</span>,</strong>
+              <span style="color: green;">Cooperation:</span> <strong><span style="font-size:10px; color:#990000;">{{ motor_ability_score.cooperation|default:"-" }}</span>,</strong>
+              <span style="color: green;">Obedience: </span><strong><span style="font-size:10px; color:#990000;">{{ motor_ability_score.obedience|default:"-" }}</span>,</strong>
+              <span style="color: green;">Punctuality: </span><strong><span style="font-size:10px; color:#990000;">{{ motor_ability_score.punctuality|default:"-" }} </span>,</strong>
+              <span style="color: green;">Physical Education: </span><strong><span style="font-size:10px; color:#990000;">{{ motor_ability_score.physical_education|default:"-" }} </span>,</strong>
+              <span style="color: green;">Games: </span><strong><span style="font-size:10px; color:#990000;">{{ motor_ability_score.games|default:"-" }} </span>,</strong>
+              
+            </td>
+              
             </tr>
             <tr>
               </tr>
@@ -283,7 +300,7 @@
         </div>
 
         <h6 class="text-center mt-4">Grading Keys</h6>
-        <div class="grading-keys-section my-4">
+        <div class="grading-keys-section my-2">
             <table class="w-100 grading-keys-table">
                 <thead>
                     <tr>
@@ -315,11 +332,11 @@
         </div>
 
         <div class="signature-section">
-          {% if principal_signature_url %}
-            <img src="{{ principal_signature_url }}" alt="Principal's Signature" style="max-width: 150px; max-height: 70px;">
-          {% else %}
-            <p>_________________________</p>
-          {% endif %}
+          {% if school_identity.logo %}
+        <img src="{{ school_identity.logo.url }}" alt="School Logo" style="width: 40px; height: auto;"> 
+        {% else %}
+        <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo">
+        {% endif %}
           <p class="font-weight-bold">Principal's Signature</p>
           <p class="text-muted">Date: {{ "now"|date:"M d, Y" }}</p>
         </div>

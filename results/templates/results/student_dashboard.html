@@ -150,7 +150,7 @@
                                                                     <ul>
                                                                         {% for term in terms %}
                                                                             <li>
-                                                                                <span> <i class="fa fa-desktop" aria-hidden="true"></i> <strong>{{ term.name }} </strong>({{ term.start_date|date:"M d, Y" }} - {{ term.end_date|date:"M d, Y" }})</span>
+                                                                                <span> <i class="fa fa-desktop" aria-hidden="true"></i> <strong>{{ term.name }} - {{ term.session }} </strong>({{ term.start_date|date:"M d, Y" }} - {{ term.end_date|date:"M d, Y" }})</span>
                                                                                 <a href="{% url 'results:student_report_card_detail' student.id term.id %}"><u>View Report Card</u></a>
                                                                             </li>
                                                                         {% endfor %}

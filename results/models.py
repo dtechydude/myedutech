@@ -9,6 +9,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.urls import reverse, reverse_lazy
 from django.db import models
 from django.db.models import UniqueConstraint, Sum, Avg # Import Avg for average calculations
+from django.core.exceptions import ValidationError
 
 
 
@@ -30,23 +31,23 @@ class Examination(models.Model):
     
 
 
-class ExamSubject(models.Model):
-    subject_id = models.CharField(max_length=100, unique=True)
-    name = models.CharField(max_length=100)
-    # image = models.ImageField(upload_to=save_subject_image, blank=True, verbose_name='Subject Image')
-    description = models.TextField(max_length=500, blank=True, default='description')
-    slug = models.SlugField(null=True, blank=True)
+# class ExamSubject(models.Model):
+#     subject_id = models.CharField(max_length=100, unique=True)
+#     name = models.CharField(max_length=100)
+#     # image = models.ImageField(upload_to=save_subject_image, blank=True, verbose_name='Subject Image')
+#     description = models.TextField(max_length=500, blank=True, default='description')
+#     slug = models.SlugField(null=True, blank=True)
     
-    class Meta:
-        ordering = ['name']
-        unique_together = ['subject_id', 'name']
+#     class Meta:
+#         ordering = ['name']
+#         unique_together = ['subject_id', 'name']
 
-    def __str__(self):
-        return f'{self.subject_id} - {self.name}'
+#     def __str__(self):
+#         return f'{self.subject_id} - {self.name}'
 
-    def save(self, *args, **kwargs):
-        self.slug = slugify(self.subject_id)
-        super().save(*args, **kwargs)
+#     def save(self, *args, **kwargs):
+#         self.slug = slugify(self.subject_id)
+#         super().save(*args, **kwargs)
 
 
 
@@ -73,11 +74,11 @@ class Score(models.Model):
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     term = models.ForeignKey(Term, on_delete=models.CASCADE)
     # Continuous Assessment (CA) scores - adjust fields as per school's grading system
-    ca1 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    ca2 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    ca3 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    exam_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    total_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    ca1 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(40)])
+    ca2 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(40)])
+    ca3 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(40)])
+    exam_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(60)])
+    total_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
 
     class Meta:
         # Each student can only have one score entry per subject per term
@@ -87,16 +88,38 @@ class Score(models.Model):
     def __str__(self):
         return f"{self.student.first_name} - {self.subject.name} ({self.term.name})"
 
-    def save(self, *args, **kwargs):
-        # Auto-calculate total_score if CA and exam scores are present
-        total_ca = 0
-        if self.ca1 is not None:
-            total_ca += self.ca1
-        if self.ca2 is not None:
-            total_ca += self.ca2
-        if self.ca3 is not None:
-            total_ca += self.ca3
+    # def save(self, *args, **kwargs):
+    #     # Auto-calculate total_score if CA and exam scores are present
+    #     total_ca = 0
+    #     if self.ca1 is not None:
+    #         total_ca += self.ca1
+    #     if self.ca2 is not None:
+    #         total_ca += self.ca2
+    #     if self.ca3 is not None:
+    #         total_ca += self.ca3
        
+    #     if self.exam_score is not None:
+    #         self.total_score = total_ca + self.exam_score
+    #     else:
+    #         self.total_score = total_ca # If only CA scores are available
+
+    #     super().save(*args, **kwargs)
+
+    def clean(self):
+        """
+        Custom validation to ensure total CA score does not exceed 40.
+        """
+        super().clean()
+        total_ca = (self.ca1 or 0) + (self.ca2 or 0) + (self.ca3 or 0)
+        if total_ca > 40:
+            raise ValidationError('The total sum of CA scores (CA1, CA2, CA3) cannot exceed 40.')
+
+    def save(self, *args, **kwargs):
+        self.full_clean() # Call full_clean to run the validation check
+
+        # Auto-calculate total_score
+        total_ca = (self.ca1 or 0) + (self.ca2 or 0) + (self.ca3 or 0)
+        
         if self.exam_score is not None:
             self.total_score = total_ca + self.exam_score
         else:
@@ -265,38 +288,79 @@ class MotorAbilityScore(models.Model):
     # Behavioral Traits (typically 1-5 scale)
     honesty = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="Score for Honesty (1=Poor, 5=Excellent)"
+        help_text="Score for Honesty (1=Poor, 5=Excellent)", blank=True, null=True
     )
     politeness = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="Score for Politeness (1=Poor, 5=Excellent)"
+        help_text="Score for Politeness (1=Poor, 5=Excellent)", blank=True, null=True
     )
     neatness = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="Score for Neatness (1=Poor, 5=Excellent)"
+        help_text="Score for Neatness (1=Poor, 5=Excellent)", blank=True, null=True
     )
     cooperation = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="Score for Cooperation (1=Poor, 5=Excellent)"
+        help_text="Score for Cooperation (1=Poor, 5=Excellent)", blank=True, null=True
     )
     obedience = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="Score for Obedience (1=Poor, 5=Excellent)"
+        help_text="Score for Obedience (1=Poor, 5=Excellent)", blank=True, null=True
+    )
+    attentiveness = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score for Attentiveness (1=Poor, 5=Excellent)", blank=True, null=True
     )
     punctuality = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="Score for Punctuality (1=Poor, 5=Excellent)"
+        help_text="Score for Punctuality (1=Poor, 5=Excellent)", blank=True, null=True
+    )
+    perseverance = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score for Perseverance (1=Poor, 5=Excellent)", blank=True, null=True
+    )
+    emotional_stability = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score for Emotional Stability (1=Poor, 5=Excellent)", blank=True, null=True
+    )
+    attitude = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score for Attitude (1=Poor, 5=Excellent)", blank=True, null=True
+    )
+    leadership = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score for Leadership (1=Poor, 5=Excellent)", blank=True, null=True
     )
 
     # Motor Abilities (typically 1-5 scale)
     physical_education = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="Score for Physical Education (1=Poor, 5=Excellent)"
+        help_text="Score for Physical Education (1=Poor, 5=Excellent)", blank=True, null=True
+    )
+    musical = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score for Musical (1=Poor, 5=Excellent)", blank=True, null=True
     )
     games = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="Score for Games (1=Poor, 5=Excellent)"
+        help_text="Score for Games (1=Poor, 5=Excellent)", blank=True, null=True
     )
+    handwriting = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score for Handwriting (1=Poor, 5=Excellent)", blank=True, null=True
+    )
+    reading = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score for Reading (1=Poor, 5=Excellent)", blank=True, null=True
+    )
+    verbal_fluency = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score for Berbal Fluency (1=Poor, 5=Excellent)", blank=True, null=True
+    )
+    handling_tools = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Score for Handling Tools (1=Poor, 5=Excellent)", blank=True, null=True
+    )
+    
 
     date_recorded = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)

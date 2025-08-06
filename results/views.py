@@ -19,6 +19,7 @@ from .models import Score, MotorAbilityScore
 from .forms import ScoreEntryForm, ReportCardFilterForm, SessionReportCardFilterForm, MotorAbilityScoreForm # Import new form
 from .utils import get_grade, get_subject_remark, get_overall_remark # Import helper functions
 from django.template.loader import render_to_string # Import render_to_string
+from curriculum.models import SchoolIdentity
 
 # For PDF generation
 # from weasyprint import HTML, CSS # Import HTML and CSS from WeasyPrint
@@ -402,7 +403,16 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
             messages.error(request, 'Please correct the errors below.')
             assigned_subjects = teacher.subjects_taught.all()
             assigned_standards = teacher.standards_assigned.all() # Changed assigned_classes to assigned_standards
-            
+             
+            # ADDITION START
+        try:
+            school_identity = SchoolIdentity.objects.first()
+        except SchoolIdentity.DoesNotExist:
+            school_identity = None
+        # ADDITION END
+
+           
+
             context = {
                 'current_term': current_term,
                 'assigned_subjects': assigned_subjects,
@@ -413,6 +423,7 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
                 'selected_standard': selected_standard, # Pass the object back on error
                 'formset': formset,
                 'students_in_standard': students_in_standard, # Pass for display
+                'school_identity': school_identity, # <-- ADD THIS LINE
             }
             return render(request, self.template_name, context)
 
@@ -524,12 +535,15 @@ class StudentReportCardView(LoginRequiredMixin, View):
             # The Score model's save method already calculates total_score.
             # We'll use that directly. If total_score is None, default to 0 for calculations.
             current_total_score = score.total_score if score.total_score is not None else 0
+            # Calculate the total CA score
+            total_ca = (score.ca1 or 0) + (score.ca2 or 0) + (score.ca3 or 0)
 
             report_data.append({
                 'subject': score.subject.name,
                 'ca1': score.ca1 if score.ca1 is not None else 'N/A',
                 'ca2': score.ca2 if score.ca2 is not None else 'N/A',
                 'ca3': score.ca3 if score.ca3 is not None else 'N/A',
+                'total_ca': total_ca,  # <-- Added the total CA score here
                 'exam_score': score.exam_score if score.exam_score is not None else 'N/A',
                 'total_score': current_total_score, # Use the calculated total
                 'grade': get_grade(current_total_score),
@@ -554,6 +568,11 @@ class StudentReportCardView(LoginRequiredMixin, View):
         
         # You might also fetch comments or other term-specific data here
         # comment = Comment.objects.filter(student=student, term=term).first()
+        # --- NEW CODE: Fetch SchoolIdentity Information ---
+        try:
+            school_identity = SchoolIdentity.objects.first()
+        except SchoolIdentity.DoesNotExist:
+            school_identity = None
 
 
         context = {
@@ -562,7 +581,8 @@ class StudentReportCardView(LoginRequiredMixin, View):
             'report_data': report_data,
             'overall_average': f"{overall_average:.2f}" if overall_average is not None else 'N/A', # Format to 2 decimal places
             'overall_remark': overall_remark,
-            'motor_ability_score': motor_ability_score
+            'motor_ability_score': motor_ability_score,
+            'school_identity': school_identity
         }
 
         # Handle PDF download request
@@ -825,6 +845,13 @@ class StudentSessionReportCardView(LoginRequiredMixin, View):
                 processed_aggregated_motor_abilities[key] = round(min(value, 5)) 
             else:
                 processed_aggregated_motor_abilities[key] = 0 # Default to 0 if no scores for that trait
+         
+            # ADDITION START
+            try:
+                school_identity = SchoolIdentity.objects.first()
+            except SchoolIdentity.DoesNotExist:
+                school_identity = None
+            # ADDITION END
 
 
         context = {
@@ -837,6 +864,7 @@ class StudentSessionReportCardView(LoginRequiredMixin, View):
             # 'academic_session_summary': academic_session_summary, # Example
             'aggregated_motor_abilities': processed_aggregated_motor_abilities, # Pass the processed aggregated data
             # Add any other overall session report card data here (e.g., overall comments)
+            'school_identity':school_identity
         }
 
         # PDF Download Logic using xhtml2pdf
