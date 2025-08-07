@@ -1,0 +1,179 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+
+{% block title %}
+<title>Debtors Report</title>
+{% endblock title %}
+
+{% block favicon %}
+<link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.png' %}" />
+<link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
+<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+<link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    .container-fluid {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+    .card {
+        border-radius: 0.75rem;
+    }
+    .card-header {
+        background-color: #f0f2f5;
+        border-bottom: 1px solid #e9ecef;
+        border-top-left-radius: 0.75rem;
+        border-top-right-radius: 0.75rem;
+    }
+    .table thead th {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: #6c757d;
+    }
+    .table tbody td {
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+    .text-red-600 { color: #dc3545 !important; }
+    .text-green-700 { color: #198754 !important; }
+    .text-yellow-700 { color: #ffc107 !important; }
+    .text-blue-700 { color: #0d6efd !important; }
+</style>
+{% endblock favicon %}
+
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+
+        {# School Logo Section #}
+        
+
+        <h2 class="text-center mb-4">Debtors Report</h2>
+
+        {# Messages Display #}
+        {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                    <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {# Filter Debtors Form #}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h3 class="card-title mb-0">Filter Debtors</h3>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label for="term-filter" class="form-label">Term</label>
+                        <select name="term" id="term-filter" class="form-select">
+                            <option value="">-- All Terms --</option>
+                            {% for term in terms %}
+                                <option value="{{ term.id }}" {% if selected_term_id|stringformat:"s" == term.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ term.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="session-filter" class="form-label">Session</label>
+                        <select name="session" id="session-filter" class="form-select">
+                            <option value="">-- All Sessions --</option>
+                            {% for session in sessions %}
+                                <option value="{{ session.id }}" {% if selected_session_id|stringformat:"s" == session.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ session.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-grid">
+                        <button type="submit" class="btn btn-primary mb-2">
+                            Apply Filter
+                        </button>
+                        <a href="{% url 'payments:debtors_report' %}" class="btn btn-outline-secondary">
+                            Clear Filters
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# Debtors Table #}
+        <div class="card shadow-lg">
+            <div class="card-header">
+                <h3 class="card-title mb-0">Current Debtors Overview</h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">Student Name</th>
+                                <th scope="col">Student Class</th>
+                                <th scope="col">Term</th>
+                                <th scope="col">Session</th>
+                                <th scope="col">Amount Owing</th>
+                                <th scope="col">Last Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if debtors %}
+                                {% for debtor in debtors %}
+                                    <tr>
+                                        <td>{{ debtor.student_name }} {{ debtor.student.last_name }}</td>
+                                        <td>{{ debtor.student_class }}</td>
+                                        <td>{{ debtor.term_name }}</td>
+                                        <td>{{ debtor.session_name }}</td>
+                                        <td class="text-danger fw-bold">
+                                            ${{ debtor.balance|floatformat:2 }}
+                                        </td>
+                                        <td class="text-muted">
+                                            {{ debtor.last_updated|date:"M d, Y H:i" }}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">
+                                        No students currently owing money for the selected criteria.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mb-3 d-flex justify-content-between align-items-center p-3">
+                    <h4>CSV Export</h4>
+                    <a href="{% url 'payments:debtors_report_csv' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn btn-success" target="_blank">
+                        <i class="fas fa-file-csv"></i> Export CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content_body %}
+
+{% block scripts %}
+<script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+<script src="{% static 'pages/vendor/chart.js/Chart.bundle.min.js' %}"></script>
+<script src="{% static 'pages/vendor/apexchart/apexchart.js' %}"></script>
+
+<script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
+
+<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
+
+<script src="{% static 'pages/js/custom.min.js' %}"></script>
+<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+<script src="{% static 'pages/js/demo.js' %}"></script>
+<script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
+{% endblock scripts %}

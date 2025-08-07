@@ -23,6 +23,7 @@ class PaymentAdmin(admin.ModelAdmin):
         'student__first_name', 'student__last_name', 'student__student_id',
         'transaction_id', 'notes'
     )
+    raw_id_fields = ['student', 'payment_category', 'session', 'term']
     # Fields to make read-only in the add/change form.
     # original_amount is made read-only because its value will be derived automatically.
     readonly_fields = ('balance_before_payment', 'balance_after_payment', 'original_amount', 'payment_date')

@@ -1,0 +1,137 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+{% load attendance_filters %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+<title>Attendance Report</title>
+{% endblock title %}
+
+{% block favicon %}
+<link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.png' %}" />
+<link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+{% endblock favicon %}
+
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+
+                <h2 class="text-center mb-2">Attendance Report</h2>
+
+                {% if messages %}
+                    <div class="mb-2">
+                        {% for message in messages %}
+                            <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {# Filter Form #}
+                <div class="card shadow-sm mb-0">
+                    <div class="card-header">
+                        <h3 class="card-title mb-0">Filter Report</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <form method="GET" class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                {{ report_form.student|as_crispy_field }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ report_form.start_date|as_crispy_field }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ report_form.end_date|as_crispy_field }}
+                            </div>
+                            <div class="col-md-2 d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    Generate Report
+                                </button>
+                            </div>
+                            <div class="col-12 text-center mt-2">
+                                <a href="{% url 'attendance:attendance_report' %}" class="btn btn-outline-secondary">
+                                    Clear Filters
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                {# Attendance Table #}
+                {% if attendance_data %}
+                    <div class="card shadow-lg mt-2">
+                        <div class="card-header">
+                            <h3 class="card-title mb-0">Daily Attendance Overview ({{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }})</h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Student Name</th>
+                                            {% for date_header in start_date|timesince_range:end_date %}
+                                                <th scope="col" class="text-center">{{ date_header|date:"M d" }}</th>
+                                            {% endfor %}
+                                            <th scope="col" class="text-center">Present</th>
+                                            <th scope="col" class="text-center">Absent</th>
+                                            <th scope="col" class="text-center">Total Days</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for student, daily_records in attendance_data.items %}
+                                            <tr>
+                                                <td>{{ student.get_full_name }}</td>
+                                                {% for date_cell in start_date|timesince_range:end_date %}
+                                                    <td class="text-center">
+                                                        {% with attendance_record=daily_records|get_item:date_cell %}
+                                                            {% if attendance_record %}
+                                                                {% if attendance_record.present %}
+                                                                    <span class="badge bg-success">P</span>
+                                                                {% else %}
+                                                                    <span class="badge bg-danger">A</span>
+                                                                {% endif %}
+                                                            {% else %}
+                                                                <span class="badge bg-secondary">N/A</span>
+                                                            {% endif %}
+                                                        {% endwith %}
+                                                    </td>
+                                                {% endfor %}
+                                                {% with student_summary=student_attendance_summary|get_item:student %}
+                                                    <td class="text-center text-success fw-bold">
+                                                        {{ student_summary.present }}
+                                                    </td>
+                                                    <td class="text-center text-danger fw-bold">
+                                                        {{ student_summary.absent }}
+                                                    </td>
+                                                    <td class="text-center text-dark fw-bold">
+                                                        {{ student_summary.total_days }}
+                                                    </td>
+                                                {% endwith %}
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info text-center mt-4" role="alert">
+                        No attendance data found for the selected criteria and date range.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content_body %}
+
+{% block scripts %}
+<script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+<script src="{% static 'pages/js/custom.min.js' %}"></script>
+<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+<script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
+{% endblock scripts %}

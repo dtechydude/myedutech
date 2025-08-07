@@ -1,0 +1,131 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+
+{% block title %}
+<title>Take Attendance</title>
+{% endblock title %}
+
+{% block favicon %}
+<link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.png' %}" />
+<link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+{% endblock favicon %}
+
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card">
+                    <div class="card-body">
+
+                        <h5 class="mb-4 text-center">
+                            Make Attendance For Teacher: <span style="color:brown; font-size: 16px;">{{ teacher.first_name }} {{ teacher.last_name }}</span>
+                        </h5>
+
+                        {% if messages %}
+                            <div class="mb-4">
+                                {% for message in messages %}
+                                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {# Date selection form - uses GET method to refresh the page #}
+                        <form method="get" class="row g-3 align-items-center mb-3" action="{% url 'attendance:take_daily_attendance' %}">
+                            <div class="col-auto">
+                                <label for="id_date" class="col-form-label">Date:</label>
+                            </div>
+                            <div class="col-auto">
+                                {{ date_form.date }}
+                                {% if date_form.date.errors %}
+                                    <div class="invalid-feedback d-block">{{ date_form.date.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-secondary">Select Date</button>
+                            </div>
+                        </form>
+
+                        <p class="lead text-center">Attendance for: <strong>{{ selected_date|date:"F d, Y" }}</strong></p>
+
+                        {% if formset.non_form_errors %}
+                            <div class="alert alert-danger">
+                                <h4>Formset Errors:</h4>
+                                <ul>
+                                    {% for error in formset.non_form_errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+
+                        {# Attendance submission form - uses POST method #}
+                        <form method="post">
+                            {% csrf_token %}
+                            {{ formset.management_form }}
+
+                            <div class="card shadow-sm">
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-hover mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col" style="width: 50px;">S/N</th>
+                                                    <th scope="col">Student Full Name</th>
+                                                    <th scope="col" class="text-center">Present <small>(Tick The Box)</small></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for form in formset %}
+                                                    <tr>
+                                                        <td>{{ forloop.counter }}</td>
+                                                        <td>
+                                                            {{ form.student_full_name.errors }}
+                                                            {{ form.student_full_name }}
+                                                            {{ form.student }}
+                                                            {{ form.id }}
+                                                        </td>
+                                                        <td class="text-center">
+                                                            {{ form.present.errors }}
+                                                            {{ form.present }}
+                                                        </td>
+                                                        {% if form.errors %}
+                                                            <td colspan="3" class="text-danger">
+                                                                <ul>
+                                                                    {% for field_name, errors in form.errors.items %}
+                                                                        {% for error in errors %}
+                                                                            <li>{{ field_name }}: {{ error }}</li>
+                                                                        {% endfor %}
+                                                                    {% endfor %}
+                                                                </ul>
+                                                            </td>
+                                                        {% endif %}
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-grid mt-3">
+                                <button type="submit" class="btn btn-primary">Save Attendance</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content_body %}
+
+{% block scripts %}
+<script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+<script src="{% static 'pages/js/custom.min.js' %}"></script>
+<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+<script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
+{% endblock scripts %}

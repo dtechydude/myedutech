@@ -439,7 +439,7 @@ class ReportCardListView(LoginRequiredMixin, TeacherRequiredMixin, View):
     Allows teachers/admins to select a term and standard,
     then view a list of students to generate their report cards.
     """
-    template_name = 'results/report_card_list.html'
+    template_name = 'results/test_report_card_list.html'
 
     def get(self, request, *args, **kwargs):
         form = ReportCardFilterForm(request.GET) # Bind GET data to form for initial selection

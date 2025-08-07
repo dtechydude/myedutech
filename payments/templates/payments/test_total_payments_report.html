@@ -1,0 +1,208 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+
+{% block title %}
+<title>Total Payments Report</title>
+{% endblock title %}
+
+{% block favicon %}
+<link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.png' %}" />
+<link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
+<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+<link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+
+<style>
+    .card-header {
+        background-color: #f0f2f5;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .table thead th {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: #6c757d;
+    }
+    .table tbody td {
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock favicon %}
+
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+
+        <div class="text-center mb-4">
+            <h2 class="h3 font-weight-bold text-dark mb-3">Total Payments Report</h2>
+        </div>
+
+        {# Messages Display #}
+        {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                    <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {# Filter Payments Form #}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h3 class="card-title mb-0">Filter Payments</h3>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" name="start_date" id="start_date" value="{{ selected_start_date }}" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="date" name="end_date" id="end_date" value="{{ selected_end_date }}" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="term-filter" class="form-label">Term</label>
+                        <select name="term" id="term-filter" class="form-select">
+                            <option value="">-- All Terms --</option>
+                            {% for term in terms %}
+                                <option value="{{ term.id }}" {% if selected_term_id|stringformat:"s" == term.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ term.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="session-filter" class="form-label">Session</label>
+                        <select name="session" id="session-filter" class="form-select">
+                            <option value="">-- All Sessions --</option>
+                            {% for session in sessions %}
+                                <option value="{{ session.id }}" {% if selected_session_id|stringformat:"s" == session.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ session.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="student-filter" class="form-label">Student</label>
+                        <select name="student" id="student-filter" class="form-select">
+                            <option value="">-- All Students --</option>
+                            {% for student in students %}
+                                <option value="{{ student.id }}" {% if selected_student_id|stringformat:"s" == student.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ student.first_name }} {{ student.last_name }} ({{ student.student_id }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-end align-items-end space-x-2">
+                        <button type="submit" class="btn btn-primary">
+                            Apply Filter
+                        </button>
+                        <a href="{% url 'payments:total_payments_report' %}" class="btn btn-outline-secondary">
+                            Clear Filters
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# Summary Totals #}
+        <div class="card shadow-lg mb-4">
+            <div class="card-header">
+                <h3 class="card-title mb-0">Summary Totals</h3>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <div class="bg-primary-subtle p-3 rounded shadow-sm">
+                            <p class="text-secondary mb-1">Total Original Amount</p>
+                            <p class="h4 font-weight-bold text-primary">N{{ total_original_amount|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <div class="bg-success-subtle p-3 rounded shadow-sm">
+                            <p class="text-secondary mb-1">Total Amount Received</p>
+                            <p class="h4 font-weight-bold text-success">N{{ total_amount_received|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bg-warning-subtle p-3 rounded shadow-sm">
+                            <p class="text-secondary mb-1">Total Discount Given</p>
+                            <p class="h4 font-weight-bold text-warning">N{{ total_discount_given|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="h4 font-weight-bold text-dark mb-4 mt-5">Detailed Payment Breakdown</h3>
+        <div class="card shadow-lg mb-4">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted text-uppercase">Student Name (ID)</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted text-uppercase">Category</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted text-uppercase">Term / Session</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted text-uppercase">Original Amount</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted text-uppercase">Discount</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted text-uppercase">Amount Received</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if payment_breakdown %}
+                                {% for item in payment_breakdown %}
+                                    <tr>
+                                        <td class="px-6 py-4 font-weight-medium text-dark">
+                                            {{ item.student__first_name }} {{ item.student__last_name }} ({{ item.student__student_id }})
+                                        </td>
+                                        <td class="px-6 py-4 text-muted">
+                                            {{ item.payment_category__name|default:"N/A" }}
+                                        </td>
+                                        <td class="px-6 py-4 text-muted">
+                                            {{ item.term__name|default:"N/A" }} / {{ item.session__name|default:"N/A" }}
+                                        </td>
+                                        <td class="px-6 py-4 text-muted">
+                                            N{{ item.sum_original|floatformat:2 }}
+                                        </td>
+                                        <td class="px-6 py-4 text-muted">
+                                            N{{ item.sum_fixed_discount|add:item.sum_percentage_discount|floatformat:2 }}
+                                        </td>
+                                        <td class="px-6 py-4 font-weight-bold text-success">
+                                            N{{ item.sum_amount_received|floatformat:2 }}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        No payment breakdown found for the selected filters.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content_body %}
+
+{% block scripts %}
+<script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+<script src="{% static 'pages/vendor/chart.js/Chart.bundle.min.js' %}"></script>
+<script src="{% static 'pages/vendor/apexchart/apexchart.js' %}"></script>
+
+<script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
+
+<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
+
+<script src="{% static 'pages/js/custom.min.js' %}"></script>
+<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+<script src="{% static 'pages/js/demo.js' %}"></script>
+<script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
+{% endblock scripts %}

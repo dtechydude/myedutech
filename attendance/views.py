@@ -85,7 +85,7 @@ def take_daily_attendance(request):
         'selected_date': selected_date, # Pass the selected date for display
         'teacher': teacher,
     }
-    return render(request, 'attendance/test_take_attendance.html', context)
+    return render(request, 'attendance/test2_take_attendance.html', context)
 
 
 #Attendance Report

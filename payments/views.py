@@ -505,6 +505,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from django.http import JsonResponse, HttpResponse
 from django.template.loader import get_template
+from curriculum.models import SchoolIdentity
 import csv # For CSV export
 from io import StringIO # For CSV export
 from .utils import get_debtors_data, get_total_payments_data, render_to_pdf # Import render_to_pdf
@@ -728,10 +729,16 @@ def view_receipt(request, receipt_id):
     if not request.user.is_staff and (not hasattr(receipt.payment.student, 'user') or request.user != receipt.payment.student.user):
         messages.warning(request, "You are not authorized to view this receipt.")
         return redirect('payments:payment_history') # Ensure correct redirect name
-
+      # ADDITION START
+    try:
+        school_identity = SchoolIdentity.objects.first()
+    except SchoolIdentity.DoesNotExist:
+        school_identity = None
+        # ADDITION END
     context = {
         'receipt': receipt,
-        'title': f'Receipt #{receipt.receipt_number}'
+        'title': f'Receipt #{receipt.receipt_number}',
+        'school_identity': school_identity
     }
     return render(request, 'payments/receipt_detail.html', context)
 
@@ -793,7 +800,7 @@ def debtors_report(request):
         'selected_session_id': session_id,
         'title': 'Debtors Report'
     }
-    return render(request, 'payments/debtors_report.html', context)
+    return render(request, 'payments/test_debtors_report.html', context)
 
 # --- New View: PDF for Debtors Report ---
 @login_required
@@ -1073,7 +1080,7 @@ def total_payments_report(request):
         'sessions': sessions,
         'students': students,
     }
-    return render(request, 'payments/total_payments_report.html', context)
+    return render(request, 'payments/test_total_payments_report.html', context)
 
 
 @login_required

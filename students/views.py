@@ -30,6 +30,7 @@ from xhtml2pdf import pisa
 
 from django.db import IntegrityError, transaction
 from datetime import date
+from django.views import View
 
 
 #Displays all students
@@ -165,35 +166,35 @@ class StudentDeleteView(LoginRequiredMixin, DeleteView):
         return get_object_or_404(Student, id=id_)
     
 
-#generate IDCARD PDF
-@login_required
-def id_render_pdf_view(request, *args, **kwargs):    
+# #generate IDCARD PDF
+# @login_required
+# def id_render_pdf_view(request, *args, **kwargs):    
 
-    pk = kwargs.get('pk')
+#     pk = kwargs.get('pk')
     
-    student_detail = get_object_or_404(Student, pk=pk)
-    school_identity = SchoolIdentity.objects.get()
-    template_path = 'students/student_id_pdf.html'
-    # template_path = 'results/result_sheet.html'
-    context = {'student_detail': student_detail, 'school_identity':school_identity }
-    # Create a Django response object, and specify content_type as pdf
-    response = HttpResponse(content_type='application/pdf')
-    # if you want to download
-    # response['Content-Disposition'] = 'attachment; filename="report.pdf"'
-    # if you just want to display
-    response['Content-Disposition'] = 'filename="id_card.pdf"'
+#     student_detail = get_object_or_404(Student, pk=pk)
+#     school_identity = SchoolIdentity.objects.get()
+#     template_path = 'students/student_id_pdf.html'
+#     # template_path = 'results/result_sheet.html'
+#     context = {'student_detail': student_detail, 'school_identity':school_identity }
+#     # Create a Django response object, and specify content_type as pdf
+#     response = HttpResponse(content_type='application/pdf')
+#     # if you want to download
+#     # response['Content-Disposition'] = 'attachment; filename="report.pdf"'
+#     # if you just want to display
+#     response['Content-Disposition'] = 'filename="id_card.pdf"'
 
-    # find the template and render it.
-    template = get_template(template_path)
-    html = template.render(context)
+#     # find the template and render it.
+#     template = get_template(template_path)
+#     html = template.render(context)
 
-    # create a pdf
-    pisa_status = pisa.CreatePDF(
-    html, dest=response)
-    # if error then show some funy view
-    if pisa_status.err:
-        return HttpResponse('We had some errors <pre>' + html + '</pre>')
-    return response
+#     # create a pdf
+#     pisa_status = pisa.CreatePDF(
+#     html, dest=response)
+#     # if error then show some funy view
+#     if pisa_status.err:
+#         return HttpResponse('We had some errors <pre>' + html + '</pre>')
+#     return response
 
 
 class MyTeacherDetailView(DetailView):
@@ -234,4 +235,26 @@ def my_classmates_view(request):
     except Exception as e:
         # Generic error handling
         return render(request, 'students/error.html', {'error_message': str(e)})
+    
+
+# Student ID Card
+class StudentIDCardView(LoginRequiredMixin, View):
+    """
+    Displays a printable ID card for a specific student.
+    """
+    def get(self, request, student_id):
+        student = get_object_or_404(Student, id=student_id)
+        
+        # Get the SchoolIdentity. Assuming there is only one instance.
+        # If there can be multiple, you may need a different retrieval method.
+        try:
+            school_identity = SchoolIdentity.objects.first()
+        except SchoolIdentity.DoesNotExist:
+            school_identity = None
+
+        context = {
+            'student': student,
+            'school_identity': school_identity,
+        }
+        return render(request, 'students/test_student_id_card.html', context)
 

@@ -753,8 +753,8 @@
 							{% if user.student or user.teacher or user.staff %}
 							<li><a href="{% url 'pages:portal-home' %}">Dashboard Home</a></li>
 							{% endif %}
-							{% if user.student %}
-							<li><a href="{% url 'students:student-self-detail' %}">My Profile</a></li>
+							{% if user.is_authenticated and user.student %}
+							<li><a href="{% url 'students:student-self-detail' %}">My Profile</a></li>							
 							{% endif %}
 							{% if user.teacher %}
 							<li><a href="{% url 'staff:teacher-self-detail' %}">My Profile</a></li>
@@ -783,13 +783,12 @@
 							<li><a href="{% url 'students:student-list' %}">My Students</a></li>
 							{% comment %}<li><a href="{% url 'attendance:teacher_dashboard' %}">My Assinged Classes</a></li>{% endcomment %}																
 							
-							{% elif user.student %}
-							{% for idcard in my_idcard %}							
-							<a href="{% url 'students:idcard-pdf-view' pk=idcard.pk  %}">My ID CARD</a>
-							{% endfor %}												
+							{% elif user.student %}							
+							<a href="{% url 'students:student_id_card' student.id %}"> My ID Card</a>												
 							<li><a href="{% url 'staff:my_teacher_view' %}">My Teacher</a></li>
 							<li><a href="{% url 'students:my_classmates' %}">My Class Mates</a></li>
-							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>												
+							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>	
+
 							{% else %}
 							<li>No Access</a></li>
 							{% endif %}					
