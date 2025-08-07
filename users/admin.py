@@ -48,11 +48,12 @@ class UserProfileAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_display=('user', 'code', 'user_type', 'phone', 'state_of_origin')
     list_filter  = ['user_type',]
     search_fields = ('user__username', 'code', 'user_type')
+    raw_id_fields = ['user',]
 
 
 class DeptAdmin(admin.ModelAdmin):
        
-    list_display=('name',)
+    list_display=('id', 'name')
     list_filter  = ['name',]
     search_fields = ('name',)
     # raw_id_fields = ['name',]

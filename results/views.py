@@ -2,7 +2,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.http import HttpResponse # Import HttpResponse
 from django.db.models import Sum, Avg, F # F object for database expressions
-from .models import Student, Result, Examination # Adjust import path as needed
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Avg, Q # Import Q for complex queries if needed
 from curriculum.models import Session, Term, Standard, Subject
@@ -31,8 +30,6 @@ from django.conf import settings # To access MEDIA_ROOT/STATIC_ROOT if needed fo
 from xhtml2pdf import pisa # ADD THIS IMPORT
 import io # Needed for file-like object
 from django.template.loader import get_template
-
-
 
 
 
@@ -434,19 +431,8 @@ class ScoreEntrySuccessView(LoginRequiredMixin, View):
 
 
 
-#in progress worked well 002
-# schools/views.py
 
-
-# # Existing TeacherRequiredMixin (no change)
-# class TeacherRequiredMixin(UserPassesTestMixin):
-#     """Mixin to ensure only users linked to a Teacher profile can access the view."""
-#     def test_func(self):
-#         return hasattr(self.request.user, 'teacher')
-
-# Existing ScoreEntryView and ScoreEntrySuccessView (no change)
-# ... (your existing ScoreEntryView and ScoreEntrySuccessView code here) ...
-
+# Currently working Logics
 
 class ReportCardListView(LoginRequiredMixin, TeacherRequiredMixin, View):
     """

@@ -1,5 +1,5 @@
 <!-- working perfect 002 -->
- {% comment %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,9 +30,9 @@
         .alert-warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
     </style>
 </head>
-<body>
+<body> 
     <div class="container">
-        <h1>Generate Student Report Cards</h1>
+        <h3>Generate Student Report Cards /  <span style="font-size: 9x; color:brown;"><small><a href="/dashboard"> Back To Dashboard</a></small></span></h3> 
 
         {% if messages %}
             {% for message in messages %}
@@ -59,7 +59,7 @@
         </form>
 
         {% if selected_term %}
-            <h2>Students for {{ selected_term.name }} {% if selected_standard %}- {{ selected_standard.name }}{% endif %}</h2>
+            <h2>Students for {{ selected_term.name }} - {{ selected_term.session }} {% if selected_standard %}- {{ selected_standard.name }}{% endif %}</h2>
             {% if students %}
                 <ul>
                     {% for student in students %}
@@ -79,9 +79,8 @@
 </body>
 </html>
 
-{% endcomment %}
 
-
+{% comment %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -160,3 +159,4 @@
     </div>
 </body>
 </html>
+{% endcomment %}

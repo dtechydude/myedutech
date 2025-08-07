@@ -26,6 +26,8 @@ class SchoolIdentity(models.Model):
     phone2 = models.CharField(max_length=11, blank=True, null=True)
     email = models.CharField(max_length=50)
     logo = models.ImageField(default='school_logo.jpg', upload_to='official_pics', help_text='must not exceed 180px by 180px in size')
+    signature = models.ImageField(blank=True, null=True, default='school_logo.jpg', upload_to='official_pics', help_text='must not exceed 180px by 180px in size')
+
     slug = models.SlugField(null=True, blank=True)
 
     def __str__(self):

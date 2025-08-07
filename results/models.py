@@ -31,41 +31,23 @@ class Examination(models.Model):
     
 
 
-# class ExamSubject(models.Model):
-#     subject_id = models.CharField(max_length=100, unique=True)
-#     name = models.CharField(max_length=100)
-#     # image = models.ImageField(upload_to=save_subject_image, blank=True, verbose_name='Subject Image')
-#     description = models.TextField(max_length=500, blank=True, default='description')
-#     slug = models.SlugField(null=True, blank=True)
-    
+# class Result(models.Model):
+#     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='results') # Added related_name
+#     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+#     exam = models.ForeignKey(Examination, on_delete=models.CASCADE) # Link to the Exam
+#     score = models.DecimalField(max_digits=5, decimal_places=2)
+
 #     class Meta:
-#         ordering = ['name']
-#         unique_together = ['subject_id', 'name']
+#         # Ensures that for a given student in a given exam, a subject can only appear once.
+#         constraints = [
+#             UniqueConstraint(fields=['student', 'subject', 'exam'], name='unique_student_subject_exam_result')
+#         ]
+#         ordering = ['student', 'exam', 'subject'] # Optional: default ordering
 
 #     def __str__(self):
-#         return f'{self.subject_id} - {self.name}'
+#         return f"{self.student.first_name}'s {self.subject.name} Score in {self.exam.name}: {self.score}"
+    
 
-#     def save(self, *args, **kwargs):
-#         self.slug = slugify(self.subject_id)
-#         super().save(*args, **kwargs)
-
-
-
-class Result(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='results') # Added related_name
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-    exam = models.ForeignKey(Examination, on_delete=models.CASCADE) # Link to the Exam
-    score = models.DecimalField(max_digits=5, decimal_places=2)
-
-    class Meta:
-        # Ensures that for a given student in a given exam, a subject can only appear once.
-        constraints = [
-            UniqueConstraint(fields=['student', 'subject', 'exam'], name='unique_student_subject_exam_result')
-        ]
-        ordering = ['student', 'exam', 'subject'] # Optional: default ordering
-
-    def __str__(self):
-        return f"{self.student.first_name}'s {self.subject.name} Score in {self.exam.name}: {self.score}"
     
 #works well 001
 class Score(models.Model):

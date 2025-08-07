@@ -267,7 +267,7 @@
             <strong>Average Score:</strong> {{ motor_ability_score.average_score|floatformat:2|default:"-" }}
         </div>
 
-        <h5 class="text-center mt-4">General Remarks</h5>
+        <h6 class="text-center mt-4">General Remarks</h6>
         <div class="comment-section my-4">
           <table class="w-100 remark-table" style="border-style: hidden;">
             <tbody>
@@ -333,7 +333,7 @@
 
         <div class="signature-section">
           {% if school_identity.logo %}
-        <img src="{{ school_identity.logo.url }}" alt="School Logo" style="width: 40px; height: auto;"> 
+        <img src="{{ school_identity.signature.url }}" alt="School Logo" style="width: 100px; height: 40px;"> 
         {% else %}
         <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo">
         {% endif %}

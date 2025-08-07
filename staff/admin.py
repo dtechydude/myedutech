@@ -15,7 +15,7 @@ class TeacherAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_display = ( 'user', 'last_name', 'first_name', 'staff_role', 'phone_home' )
     search_fields = ('first_name',)
     ordering = ['dept__name', 'first_name']
-    raw_id_fields = ['user',]
+    raw_id_fields = ['user', 'dept']
 
 
 

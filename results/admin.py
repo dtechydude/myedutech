@@ -1,18 +1,18 @@
 from doctest import Example
 from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
-from results.models import Examination, Result, Score, MotorAbilityScore
+from results.models import Examination, Score, MotorAbilityScore
 from curriculum.models import Term
 
 
 
-class ResultAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    # inlines = [MotorAbility1Inline, ResultImage1Inline] 
-    # exclude =['remark', 'student_id']
-    list_display=('student', 'subject', 'exam', 'score')
-    # list_filter  = ['student_detail__standard']
-    search_fields = ('student', 'exam')
-    raw_id_fields = ['student', 'exam',]
+# class ResultAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+#     # inlines = [MotorAbility1Inline, ResultImage1Inline] 
+#     # exclude =['remark', 'student_id']
+#     list_display=('student', 'subject', 'exam', 'score')
+#     # list_filter  = ['student_detail__standard']
+#     search_fields = ('student', 'exam')
+#     raw_id_fields = ['student', 'exam',]
 
 
 
@@ -28,7 +28,9 @@ class ExaminationAdmin(admin.ModelAdmin):
 class ScoreAdmin(admin.ModelAdmin):
        
     list_display=('student', 'subject', 'term', 'ca1', 'ca2', 'exam_score', 'total_score')
+    search_fields = ('student', 'subject')
     raw_id_fields = ['student', 'subject', 'term']
+    list_filter  = ['term']
 
 
 
@@ -47,10 +49,10 @@ class MotorAbilityScoreAdmin(admin.ModelAdmin):
             'fields': ('student', 'term',)
         }),
         ('Behavioral Traits (Score out of 5)', {
-            'fields': ('honesty', 'politeness', 'neatness', 'cooperation', 'obedience', 'punctuality',)
+            'fields': ('honesty', 'politeness', 'neatness', 'cooperation', 'leadership', 'attitude', 'emotional_stability', 'perseverance', 'attentiveness', 'obedience', 'punctuality')
         }),
         ('Other Abilities (Score out of 5)', {
-            'fields': ('physical_education', 'games',)
+            'fields': ('musical', 'physical_education', 'handwriting', 'games', 'reading', 'verbal_fluency', 'handling_tools')
         }),
     )
 
@@ -61,8 +63,8 @@ class MotorAbilityScoreInline(admin.TabularInline): # Use TabularInline for a co
     extra = 1 # Number of empty forms to display for new entries
     # Optionally, specify which fields to show in the inline
     fields = (
-        'student', 'honesty', 'politeness', 'neatness', 'cooperation',
-        'obedience', 'punctuality', 'physical_education', 'games'
+        'student', 'honesty', 'politeness', 'neatness', 'cooperation', 'leadership', 'attitude', 'emotional_stability', 'perseverance', 'attentiveness',
+        'obedience', 'punctuality', 'musical', 'physical_education', 'handwriting', 'games', 'reading', 'verbal_fluency', 'handling_tools'
     )
     raw_id_fields = ('student',) # Use raw_id_fields for the student foreign key for better performance with many students
 
@@ -78,11 +80,11 @@ except admin.sites.NotRegistered:
 
 @admin.register(Term)
 class TermAdmin(admin.ModelAdmin):
-    list_display = ('name', 'start_date', 'end_date', 'session')
+    list_display = ('name', 'session', 'start_date', 'end_date')
     list_filter = ('session',)
     search_fields = ('name', 'session__name')
     # Add the MotorAbilityScoreInline here
-    inlines = [MotorAbilityScoreInline]
+    # inlines = [MotorAbilityScoreInline]
 
     # Optional: You could also add an inline for academic Scores if you want to
     # manage them directly from the Term admin page.
@@ -102,7 +104,7 @@ class TermAdmin(admin.ModelAdmin):
 admin.site.register(Examination, ExaminationAdmin)
 # admin.site.register(UploadCertificate, UploadCertificateAdmin)
 # admin.site.register(ExamSubject, ExamSubjectAdmin)
-admin.site.register(Result, ResultAdmin)
+# admin.site.register(Result, ResultAdmin)
 admin.site.register(Score, ScoreAdmin)
 # admin.site.register(ResultSheet3, ResultSheet3Admin)
 # # admin.site.register(ResultImage, ResultImageAdmin)

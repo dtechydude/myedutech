@@ -237,34 +237,20 @@
                 <table class="behavioral-table w-100">
                     <tr>
                         <td>
-                            <span style="color: green;">Honesty:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_honesty|floatformat:2|default:"-" }}</span></strong>
-                        </td>
-                        <td>
-                            <span style="color: green;">Politeness:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_politeness|floatformat:2|default:"-" }}</span></strong>
-                        </td>
-                        <td>
-                            <span style="color: green;">Neatness:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_neatness|floatformat:2|default:"-" }}</span></strong>
-                        </td>
-                        <td>
-                            <span style="color: green;">Cooperation:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_cooperation|floatformat:2|default:"-" }}</span></strong>
-                        </td>
-                        <td>
-                            <span style="color: green;">Obedience: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_obedience|floatformat:2|default:"-" }}</span></strong>
-                        </td>
-                        <td>
-                            <span style="color: green;">Punctuality: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_punctuality|floatformat:2|default:"-" }}</span></strong>
-                        </td>
-                        <td>
-                            <span style="color: green;">Physical Education: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_physical_education|floatformat:2|default:"-" }}</span></strong>
-                        </td>
-                        <td>
+                            <span style="color: green;">Honesty:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_honesty|floatformat:2|default:"-" }}, </span></strong>                      
+                            <span style="color: green;">Politeness:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_politeness|floatformat:2|default:"-" }}, </span></strong>                        
+                            <span style="color: green;">Neatness:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_neatness|floatformat:2|default:"-" }}, </span></strong>                       
+                            <span style="color: green;">Cooperation:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_cooperation|floatformat:2|default:"-" }}, </span></strong>                     
+                            <span style="color: green;">Obedience: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_obedience|floatformat:2|default:"-" }}, </span></strong>                      
+                            <span style="color: green;">Punctuality: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_punctuality|floatformat:2|default:"-" }}, </span></strong>                       
+                            <span style="color: green;">Physical Education: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_physical_education|floatformat:2|default:"-" }}, </span></strong>                      
                             <span style="color: green;">Games: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_games|floatformat:2|default:"-" }}</span></strong>
                         </td>
                     </tr>
                 </table>
             </div>
 
-            <h5 class="text-center mt-4">General Remarks</h5>
+            <h6 class="text-center mt-4">General Remarks</h6>
             <div class="comment-section my-4">
                 <table class="w-100 remark-table" style="border-style: hidden;">
                     <tbody>
@@ -329,11 +315,15 @@
             </div>
 
             <div class="signature-section">
-                <p style="margin-bottom: 5px;">_________________________</p>
-                <p class="font-weight-bold">Principal's Signature</p>
-                <p class="text-muted">Date: {{ "now"|date:"M d, Y" }}</p>
-            </div>
+           {% if school_identity.logo %}
+        <img src="{{ school_identity.signature.url }}" alt="School Logo" style="width: 100px; height: 40px;"> 
+        {% else %}
+        <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo">
+        {% endif %}
+          <p class="font-weight-bold">Principal's Signature</p>
+          <p class="text-muted">Date: {{ "now"|date:"M d, Y" }}</p>
         </div>
+      </div>
     </div>
     
     <div class="text-center mt-5 back-link no-print">

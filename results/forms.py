@@ -94,8 +94,8 @@ class MotorAbilityScoreForm(forms.ModelForm):
     class Meta:
         model = MotorAbilityScore
         fields = [
-            'honesty', 'politeness', 'neatness', 'cooperation',
-            'obedience', 'punctuality', 'physical_education', 'games'
+            'honesty', 'politeness', 'neatness', 'cooperation', 'punctuality', 'leadership', 'attitude', 'emotional_stability', 'perseverance', 'attentiveness',   
+            'obedience', 'punctuality', 'musical', 'physical_education', 'games', 'handwriting', 'reading', 'verbal_fluency', 'handling_tools'
         ]
         widgets = {
             'honesty': forms.NumberInput(attrs={'min': 1, 'max': 5}),
@@ -104,8 +104,20 @@ class MotorAbilityScoreForm(forms.ModelForm):
             'cooperation': forms.NumberInput(attrs={'min': 1, 'max': 5}),
             'obedience': forms.NumberInput(attrs={'min': 1, 'max': 5}),
             'punctuality': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+            'leadership': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+            'attitude': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+            'emotional_stability': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+            'perseverance': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+            'attentiveness': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+
+            'musical': forms.NumberInput(attrs={'min': 1, 'max': 5}),
             'physical_education': forms.NumberInput(attrs={'min': 1, 'max': 5}),
             'games': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+            'handwriting': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+            'reading': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+            'verbal_fluency': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+            'handling_tools': forms.NumberInput(attrs={'min': 1, 'max': 5}),
+
         }
     
     def __init__(self, *args, **kwargs):

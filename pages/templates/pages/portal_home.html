@@ -822,12 +822,13 @@
 						</ul>
 					</li>
 					{% endif %}
-					
+					{% if user.is_authenticated and user.is_superuser or user.is_staff or user.student %}
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
 							<span class="nav-text">Payments/Bills</span>
-						</a>
-						<ul aria-expanded="false">
+						</a>{% endif %}						
+						<ul aria-expanded="false"> 
+							
 							{% if user.is_superuser or user.is_staff %}
 							<li><a href="{% url 'payments:total_payments_report' %}">Payment List</a></li>
 							<li><a href="#">Confirmed Payment</a></li>
@@ -877,21 +878,22 @@
 						</a>
 						<ul aria-expanded="false">
 							{% if user.is_superuser or user.is_staff %}
-							<li><a href="#">1st. Term Results</a></li>
-							<li><a href="#">2nd. Term Results</a></li>
-							<li><a href="#">3rd. Term Results</a></li>
-							<li><a href="/admin/results/resultsheet1/">Admin Edit Results</a></li>
+							<li><a href="/admin/results/examination/">Add Exams</a></li>
+							<li><a href="/admin/results/score/">Enter CA & Exam Scores</a></li>
+							<li><a href="/admin/results/motorabilityscore/">Enter Motor Ability Scores</a></li>
 							
 							{% elif user.student %}
 							<li><a href="{% url 'results:student_dashboard' %}">My Results</a></li>							
 
 							{% elif user.teacher %}
 							{% for r in my_students %}
-							<li><a href="#">1st. Term Results</a></li>
+							<!-- <li><a href="#">1st. Term Results</a></li>
 							<li><a href="#">2nd. Term Results</a></li>
-							<li><a href="#">3rd. Term Results</a></li>
+							<li><a href="#">3rd. Term Results</a></li> -->
 							{% endfor %}
-							<li><a href="{% url 'results:score_entry' %}">Record Results</a></li>							
+							<li><a href="{% url 'results:score_entry' %}">Record Exam Results</a></li>
+							<li><a href="{% url 'results:report_card_list' %}">Student Report Card List</a></li>
+ 					
 							{% endif %}
 						
 
