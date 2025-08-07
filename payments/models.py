@@ -27,7 +27,7 @@ class PaymentCategory(models.Model):
     Defines different categories for student payments (e.g., Tuition, Hostel, Exam Fees).
     """
     name = models.CharField(max_length=100, unique=True,
-                            help_text="Name of the payment category (e.g., 'Tuition Fee', 'Hostel Fee').")
+                            help_text="Name of the payment category (e.g., 'Tuition Fee JSS1', 'Hostel Fee JSS2').")
     description = models.TextField(blank=True, null=True,
                                    help_text="A brief description of the payment category.")
 

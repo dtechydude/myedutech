@@ -49,11 +49,11 @@ class SchoolIdentity(models.Model):
 
 
 class Session(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True)
     start_date = models.DateField(blank=True, null=True, verbose_name='Start Date')
     end_date = models.DateField(blank=True, null=True, verbose_name='End Date')
     desc = models.TextField(max_length=100, blank=True)
-    is_current = models.BooleanField(default=False) # To easily identify the current session
+    is_current = models.BooleanField(default=False, help_text='check the box if the session is current') # To easily identify the current session
     slug = models.SlugField(null=True, blank=True)
 
     class Meta:
@@ -74,7 +74,7 @@ class Term(models.Model):
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='terms')
     start_date = models.DateField()
     end_date = models.DateField()
-    is_current = models.BooleanField(default=False)
+    is_current = models.BooleanField(default=False, help_text='check the box if the term is current term in the current session')
 
     class Meta:
         # Ensures that "First Term" doesn't appear twice within the same session
@@ -87,7 +87,7 @@ class Term(models.Model):
 
 
 class ClassGroup(models.Model):
-    name = models.CharField(max_length=50, blank=True)
+    name = models.CharField(max_length=50, blank=True, unique=True)
     description = models.CharField(max_length=120, blank=True)
     slug = models.SlugField(null=True, blank=True)
     
@@ -149,8 +149,8 @@ def save_lesson_files(instance, filename):
 
 class Subject(models.Model):
     subject_id = models.CharField(max_length=100, unique=True)
-    name = models.CharField(max_length=100)
-    standard = models.ForeignKey(Standard, on_delete=models.CASCADE, related_name='subjects')
+    name = models.CharField(max_length=100, unique=True)
+    # standard = models.ForeignKey(Standard, on_delete=models.CASCADE, related_name='examsubjects', blank=True, null=True)
     # image = models.ImageField(upload_to=save_subject_image, blank=True, verbose_name='Subject Image')
     description = models.CharField(max_length=200, blank=True)
     slug = models.SlugField(null=True, blank=True)
@@ -163,9 +163,10 @@ class Subject(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
-      verbose_name = 'Subjects'
+      verbose_name = ' Subjects'
       verbose_name_plural = 'Subjects'
       ordering = ['name']
+      
 
 
 def save_lesson_files(instance, filename):
@@ -180,10 +181,46 @@ def save_lesson_files(instance, filename):
     
     return os.path.join(upload_to, filename)
 
+# Subject For E-Learning
+class ELearningSubject(models.Model):
+    subject_id = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)
+    standard = models.ForeignKey(Standard, on_delete=models.CASCADE, related_name='subjects')
+    # image = models.ImageField(upload_to=save_subject_image, blank=True, verbose_name='Subject Image')
+    description = models.CharField(max_length=200, blank=True)
+    slug = models.SlugField(null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.name} - {self.standard.name}'
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.subject_id)
+        super().save(*args, **kwargs)
+
+    class Meta:
+      verbose_name = 'E-Learning Subjects'
+      verbose_name_plural = 'E-Learning Subjects'
+      ordering = ['name']
+      unique_together = ('name', 'standard')
+
+
+def save_lesson_files(instance, filename):
+    upload_to = 'Images/'
+    ext = filename.split('.')[-1]
+    # get file name
+    if instance.lesson_id:
+        filename = 'lesson_files/{}.{}'.format(instance.lesson_id,instance.lesson_id, ext)
+        if os.path.exists(filename):
+            new_name = str(instance.lesson_id) + str('1')
+            filename = 'lesson_images/{}/{}.{}'.format(instance.lesson_id,new_name, ext)
+    
+    return os.path.join(upload_to, filename)
+    
+
 class Lesson(models.Model):
     lesson_id = models.CharField(max_length=100, unique=True)
     standard = models.ForeignKey(Standard, on_delete=models.CASCADE)
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='lessons')
+    subject = models.ForeignKey(ELearningSubject, on_delete=models.CASCADE, related_name='lessons')
     name = models.CharField(max_length=250)
     position = models.PositiveSmallIntegerField(verbose_name="Chapter no.")
     video = EmbedVideoField(blank=True, null=True)
@@ -246,5 +283,3 @@ class Reply(models.Model):
     def __str__(self):
         return "reply to" + str(self.comment_name.comm_name)
     
-
-#

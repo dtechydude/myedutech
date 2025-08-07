@@ -8,6 +8,7 @@ class RouteAdmin(admin.ModelAdmin):
     list_display = ('name', 'route_id', 'bus_fee', 'direction', 'staff_in_charge', 'driver', 'driver_phone')
     search_fields = ('name', 'staff_in_charge__full_name',)
     ordering = ['name',]
+    raw_id_fields = ['staff_in_charge']
     exclude = ('slug',)
 
 @admin.register(StudentOnRoute)
@@ -26,6 +27,7 @@ class StudentOnRouteAdmin(admin.ModelAdmin):
         # 'student__student_id', # Remove this if student is a User, as User has no student_id
         'route__name'
     )
+    raw_id_fields = ['student', 'route']
     date_hierarchy = 'signup_date'
 
     # Custom method to get the student's full name

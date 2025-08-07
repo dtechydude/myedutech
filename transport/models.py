@@ -12,12 +12,12 @@ from django.core.validators import MinLengthValidator, MaxValueValidator, MinVal
 
 
 class Route(models.Model):
-    route_id = models.CharField(max_length=8,null=True, blank=True, help_text='Could be Bus Number')
-    name = models.CharField(max_length=200, blank=True )
+    route_id = models.CharField(max_length=8,null=True, unique=True,  blank=True, help_text='Could be Bus Number')
+    name = models.CharField(max_length=200, blank=True, unique=True )
     direction = models.CharField(max_length=200, blank=True)
     bus_fee = models.DecimalField(max_digits=15, decimal_places=2, default=0.0, null=True, help_text='Bus Fare')
     staff_in_charge = models.ForeignKey(Teacher, on_delete=models.CASCADE, default=None, null=True, related_name='official_staff')
-    driver = models.CharField(max_length=200, blank=True, unique=True)
+    driver = models.CharField(max_length=200, blank=True, unique=True, verbose_name='Driver Name')
     driver_phone = models.CharField(max_length=11, blank=True)
     slug = models.SlugField(null=True, blank=True)
 

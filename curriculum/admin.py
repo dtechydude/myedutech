@@ -1,5 +1,5 @@
 from django.contrib import admin
-from curriculum.models import SchoolIdentity, Lesson, Subject, Session, Standard, ClassGroup, Term
+from curriculum.models import SchoolIdentity, Lesson, Subject, ELearningSubject, Session, Standard, ClassGroup, Term
 from embed_video.admin import AdminVideoMixin
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
@@ -21,6 +21,7 @@ class StandardAdmin(ImportExportModelAdmin, admin.ModelAdmin):
    
     list_display=('name', 'desc')
     exclude = ['slug']
+    search_fields = ['name',]
 
 
 class ClassGroupAdmin(ImportExportModelAdmin, admin.ModelAdmin):
@@ -30,9 +31,16 @@ class ClassGroupAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 
 class SubjectAdmin(ImportExportModelAdmin, admin.ModelAdmin):
        
-    list_display=('subject_id', 'name')
-    list_filter = ['standard']
-    search_fields = ('standard',)
+    list_display=('subject_id', 'name', 'description')
+    # list_filter = ['standard']
+    search_fields = ('subject_id', 'name')
+    exclude = ['slug']
+
+class ELearningSubjectAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+
+    list_display=('subject_id', 'name', 'standard', 'description')
+    list_filter = ['standard__name']
+    search_fields = ('standard__name', 'subject_id')
     exclude = ['slug']
 
 class LessonAdmin(ImportExportModelAdmin, admin.ModelAdmin):
@@ -46,6 +54,8 @@ class LessonAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 class TermAdmin(admin.ModelAdmin):
        
     list_display=('name', 'start_date', 'end_date')
+    raw_id_fields = ['session',]
+    # raw_id_fields = ['session',]
 
 
 
@@ -54,6 +64,7 @@ admin.site.register(Session, SessionAdmin)
 admin.site.register(Standard, StandardAdmin)
 admin.site.register(ClassGroup, ClassGroupAdmin)
 admin.site.register(Subject, SubjectAdmin)
+admin.site.register(ELearningSubject, ELearningSubjectAdmin)
 admin.site.register(Lesson, LessonAdmin)
 admin.site.register(SchoolIdentity, SchoolIdentityAdmin)
 admin.site.register(Term, TermAdmin)

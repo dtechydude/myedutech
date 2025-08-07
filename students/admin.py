@@ -19,12 +19,12 @@ class StudentIdInline(admin.TabularInline):
         return False
 
 class StudentAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    inlines = [StudentIdInline] 
+    # inlines = [StudentIdInline] 
     list_display=('user', 'first_name', 'last_name', 'current_class','date_admitted', 'guardian_phone')
     list_filter = ['current_class']
-    search_fields = ('first_name', 'last_name', 'user__username')
-    raw_id_fields = ['user', 'form_teacher', 'badge', 'current_class', 'class_on_admission', 'hostel_name']
-
+    search_fields = ('first_name', 'last_name', 'user__username', 'current_class')
+    raw_id_fields = ['user', 'form_teacher', 'badge', 'class_on_admission', 'hostel_name']
+    autocomplete_fields = ['current_class', 'class_on_admission']
 
 class BadgeAdmin(ImportExportModelAdmin, admin.ModelAdmin):
        

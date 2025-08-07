@@ -19,6 +19,7 @@ from curriculum.models import Term
 class ExaminationAdmin(admin.ModelAdmin):
        
     list_display=('name', 'standard', 'term')
+    autocomplete_fields = ['standard']
 
 # class ResultAdmin(admin.ModelAdmin):
        

@@ -89,7 +89,7 @@ class PaymentAdmin(admin.ModelAdmin):
 @admin.register(PaymentCategory)
 class PaymentCategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
-    search_fields = ('name',)
+    search_fields = ('name',)    
 
 # @admin.register(Term)
 # class TermAdmin(admin.ModelAdmin):
@@ -108,6 +108,7 @@ class CategoryFeeAdmin(admin.ModelAdmin):
     list_display = ('fee_name', 'payment_category', 'term', 'session', 'amount_due')
     list_filter = ('payment_category', 'term', 'session')
     search_fields = ('fee_name', 'payment_category__name', 'term__name', 'session__name')
+    raw_id_fields = ['payment_category', 'term', 'session']
 
 @admin.register(StudentAccountLedger)
 class StudentAccountLedgerAdmin(admin.ModelAdmin):
