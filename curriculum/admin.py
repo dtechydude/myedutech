@@ -30,7 +30,7 @@ class ClassGroupAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 
 class SubjectAdmin(ImportExportModelAdmin, admin.ModelAdmin):
        
-    list_display=('subject_id', 'name', 'standard')
+    list_display=('subject_id', 'name')
     list_filter = ['standard']
     search_fields = ('standard',)
     exclude = ['slug']
