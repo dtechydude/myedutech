@@ -83,12 +83,12 @@
         <div class="content-body">
             <div class="container-fluid">
 				
-				<div class="row page-titles">
+				<!-- <div class="row page-titles"> -->
 					<!-- <ol class="breadcrumb">
 						<li class="breadcrumb-item active"><a href="javascript:void(0)">Students</a></li>
 						<li class="breadcrumb-item"><a href="javascript:void(0)">All-Time List</a></li>
 					</ol> -->
-                </div>
+                <!-- </div> -->
                 
                 <!-- row -->
 
@@ -97,7 +97,7 @@
 					<div class="col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h4 class="card-title" style="color:green;">Users Datatable </h4>
+                                <h4 class="card-title" style="color:green;">All Users Datatable </h4>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
@@ -125,17 +125,17 @@
                                                 <td>{{ s.last_name }}</td>
                                                 <td>{{ s.profile.phone }}</td>                                                
                                                 <td><strong>{{ s.email }}</strong></a></td>
+                                                <td>
                                                 {% if s.is_active %}
-                                                <td>ACTIVE</td>
+                                                ACTIVE
                                                 {% else %}
-                                                <td>INACTIVE</td>
+                                                INACTIVE
                                                 {% endif %}
+                                                </td>
                                                 {% if s.student %}
                                                 <td>STUDENT	</td>
                                                 {% elif s.teacher %}
-                                                <td>TEACHER	</td>
-                                                {% elif s.staff %}
-                                                <td>NON-ACADEMIC</td>
+                                                <td>TEACHER	</td>                                               
                                                 {% elif s.is_staff %}
                                                 <td>ADMIN / <small>SUPERUSER</small></td>                                               
                                                 {% endif %}

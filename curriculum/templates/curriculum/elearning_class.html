@@ -12,7 +12,7 @@
 				<div class="row page-titles">
 					<ol class="breadcrumb">
 						<li class="breadcrumb-item active"><a href="javascript:void(0)">E-LEARNING</a></li>
-						<li class="breadcrumb-item"><a href="javascript:void(0)">Registered Standard List</a></li>
+						<li class="breadcrumb-item"><a href="javascript:void(0)">Available E-Class List</a></li>
 					</ol>
                 </div>
                 <!-- row -->
@@ -21,7 +21,7 @@
                     <div class="col-lg-12">
                         <div class="card">
                             <div class="card-header">
-                                <h6 class="card-title">Click on the standard/class name to explore the subjects</h6>
+                                <p class="card-title">Click on the standard/class name to explore the subjects</p>
                             </div>
 							{% if user.is_authenticated and user.is_superuser or user.teacher %}
                             <div class="card-body">
@@ -42,7 +42,7 @@
                                             <tr>
 												
                                                 <td><strong>{{ standard.id}}</strong></td>
-                                                <td><a href="{% url 'curriculum:subject_list' slug=standard.slug %}"><span>{{standard.name}}</span></a></td>
+                                                <td><a href="{% url 'curriculum:subject_list' slug=standard.slug %}"><span> > <strong>{{standard.name}}</strong></span></a></td>
                                                 <td><a href="{% url 'curriculum:subject_list' slug=standard.slug %}">{% if standard.section %} {{ standard.description }}{% else%}<span>E-learning class</span>{% endif%}</a></td>
                                                 <td>ACTIVE!</td>
                                                                                                 											

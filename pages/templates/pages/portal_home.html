@@ -915,11 +915,11 @@
 							<li><a href="{% url 'curriculum:my-standard' %}">Learning Center</a></li>
 							
 							{% elif user.is_authenticated and user.teacher %}
-							<li><a href="{% url 'curriculum:standard_list' %}">Class List</a></li>
+							<li><a href="{% url 'curriculum:standard_list' %}">E-Class List</a></li>
 							
 							{% elif user.is_authenticated and user.is_superuser or user.staffprofile.staff_role == "admin_officer" %}
-							<li><a href="/admin">Add Subjects & Lessons </a></li>
-							<li><a href="{% url 'curriculum:standard_list' %}">Class List</a></li>										
+							<li><a href="/admin/curriculum/elearningsubject/">Add Subjects & Lessons </a></li>
+							<li><a href="{% url 'curriculum:standard_list' %}">E-Class List</a></li>										
 																
 							{% endif %}
 						</ul>					

@@ -119,6 +119,7 @@ def phone_list(request):
 # email list
 def email_list(request):
     users = User.objects.all()
+
     
     context = {        
         'users': users,   

@@ -6,7 +6,7 @@ from django.db.models import Count
 from django.views.generic import(TemplateView, DetailView,
                                 ListView, FormView, CreateView, 
                                 UpdateView, DeleteView)
-from .models import Lesson, Standard, Subject, save_lesson_files
+from .models import Lesson, Standard, ELearningSubject, save_lesson_files
 from .forms import CommentForm, LessonForm, ReplyForm
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -41,7 +41,7 @@ class SubjectListView(DetailView):
 
 class LessonListView(DetailView):
     context_object_name = 'subjects'
-    model = Subject
+    model = ELearningSubject
     template_name = 'curriculum/course_list.html'
 
 
@@ -116,7 +116,7 @@ class LessonDetailView(DetailView, FormView):
 class LessonCreateView(CreateView):
     form_class = LessonForm
     context_object_name = 'subject'
-    model = Subject
+    model = ELearningSubject
     template_name = 'curriculum/lesson_create.html'
 
     def get_success_url(self):
