@@ -6,6 +6,7 @@ from django.db.models import Count
 from django.contrib.auth.models import User
 from students.models import Student
 from staff.models import Teacher
+from payments.models import BankDetail
 from users.models import Profile
 from curriculum.models import Standard, SchoolIdentity
 # from portal.models import Standard
@@ -143,3 +144,12 @@ def payment_instruction(request):
 
 def payment_chart(request):
     return render(request, 'pages/payment_chart.html')
+
+
+# birthday list
+def bank_detail(request):
+    bank_detail = BankDetail.objects.all()   
+    context = {        
+        'baml_detail': bank_detail,
+    }
+    return render(request, 'pages/bank_detail.html', context)

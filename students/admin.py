@@ -8,6 +8,7 @@ class HostelAdmin(admin.ModelAdmin):
     list_display = ('name', 'hostel_master')
     search_fields = ('name',)
     ordering = ['name',]
+    raw_id_fields = ['hostel_master']
     exclude = ('slug',)
 
 class StudentIdInline(admin.TabularInline):

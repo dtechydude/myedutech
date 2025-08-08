@@ -828,26 +828,25 @@
 						</a>{% endif %}						
 						<ul aria-expanded="false"> 
 							
-							{% if user.is_superuser or user.is_staff %}
-							<li><a href="{% url 'payments:total_payments_report' %}">Payment List</a></li>
-							<li><a href="#">Confirmed Payment</a></li>
+							{% if user.is_superuser or user.is_staff %}							
+							<li><a href="/admin/payments/bankdetail/">Add/Edit BANK INFO</a></li>
+							<li><a href="/admin/payments/paymentcategory/">Add/Edit PAYMENT TYPE</a></li>							
+							<li><a href="/admin/payments/categoryfee/">Add/Edit ALL FEES </a></li>
+							<li><a href="/admin/payments/payment/">Make Payment For Students</a></li>
+							<li><a href="{% url 'payments:payment_history' %}">Payments History</a></li>
 							<li><a href="{% url 'payments:total_payments_report' %}">Payment Summary</a></li>
-							<li><a href="{% url 'payments:debtors_report' %}">Debtors List</a></li>
-							<li><a href="#">Add Bank Info</a></li>
-							<li><a href="/admin/payments/bankdetail/">Edit Bank Info</a></li>
-							<li><a href="/admin/payments/paymentchart/	">Create Payment Chart</a></li>												
-							<li><a href="/admin/payments/payment/">Make Payment</a></li>								
+							<li><a href="{% url 'payments:debtors_report' %}">Debtors List</a></li>										
 							
 							{% endif %}							
-							{% if user.student or user.is_superuser or user.is_staff %}
-							<li><a href="#">Bank Details</a></li>
+							{% if user.student or user.is_superuser or user.is_staff %}							
 							<li><a href="{% url 'pages:help-center' %}">Payment Instruction</a></li>
-							<li><a href="{% url 'payments:payment_chart_list' %}">Payment Chart</a></li>
+							<li><a href="{% url 'pages:bank-detail' %}">Bank Details</a></li>
+							<li><a href="{% url 'payments:payment_chart_list' %}">Payment Chart List</a></li>
 							
 							{% endif %}
 							{% if user.student %}		
-							<li><a href="{% url 'payments:make_payment' %}">Make Payment</a></li>
-							<li><a href="{% url 'payments:payment_history' %}">My Payments</a></li>						
+							<li><a href="{% url 'payments:make_payment' %}">Make New Payment</a></li>
+							<li><a href="{% url 'payments:payment_history' %}">My Payment History</a></li>						
 							</li>		
 							{% endif %}						
 							
@@ -884,13 +883,9 @@
 							{% elif user.student %}
 							<li><a href="{% url 'results:student_dashboard' %}">My Results</a></li>							
 
-							{% elif user.teacher %}
-							{% for r in my_students %}
-							<!-- <li><a href="#">1st. Term Results</a></li>
-							<li><a href="#">2nd. Term Results</a></li>
-							<li><a href="#">3rd. Term Results</a></li> -->
-							{% endfor %}
+							{% elif user.teacher %}						
 							<li><a href="{% url 'results:score_entry' %}">Record Exam Results</a></li>
+							<li><a href="#"> Record Motor Ability</a></li> 
 							<li><a href="{% url 'results:report_card_list' %}">Student Report Card List</a></li>
  					
 							{% endif %}

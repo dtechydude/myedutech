@@ -601,11 +601,11 @@ def make_payment(request):
                 logger = logging.getLogger(__name__)
                 logger.exception("Error recording payment:")
                 context = {'form': form, 'title': 'Record New Payment'}
-                return render(request, 'payments/make_payment.html', context)
+                return render(request, 'payments/test1_make_payment.html', context)
         else:
             messages.error(request, "Please correct the errors in the form.")
             context = {'form': form, 'title': 'Record New Payment'}
-            return render(request, 'payments/make_payment.html', context)
+            return render(request, 'payments/test1_make_payment.html', context)
     else:
         form = PaymentForm(user=request.user)
 
@@ -613,7 +613,7 @@ def make_payment(request):
         'form': form,
         'title': 'Record New Payment'
     }
-    return render(request, 'payments/make_payment.html', context)
+    return render(request, 'payments/test1_make_payment.html', context)
 
 @login_required
 def payment_history(request):
@@ -710,7 +710,7 @@ def payment_history(request):
         'title': 'Payment History',
         'is_staff_user': request.user.is_staff
     }
-    return render(request, 'payments/test_payment_history.html', context)
+    return render(request, 'payments/test1_payment_history.html', context)
 
 
 @login_required

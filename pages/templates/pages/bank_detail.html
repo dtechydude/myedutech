@@ -1,0 +1,157 @@
+{% extends 'pages/portal_home.html'%}
+{% load static %}
+{% block title %}<title>Schoolly - Class Subjects List </title>{% endblock title %}
+
+{% block content_body %}
+ <div class="content-body">
+            <div class="container-fluid">
+				<div class="row page-titles">
+					<ol class="breadcrumb">
+						<li class="breadcrumb-item active"><a href="javascript:void(0)">BANK</a></li>
+						<li class="breadcrumb-item"><a href="javascript:void(0)">Information</a></li>
+					</ol>
+                </div>
+                <!-- row -->
+                <div class="row">
+					<div class="col-xl-4 col-xxl-6 col-lg-6">
+                        <div class="card">
+                            <div class="card-header border-0 pb-0">
+                                <h4 class="card-title">Bank Details</h4>
+                            </div>
+                            <div class="card-body">
+                                <div id="DZ_W_TimeLine" class="widget-timeline dlab-scroll height370">
+                                    <ul class="timeline">
+                                        <li>
+                                            <div class="timeline-badge primary"></div>
+                                            <a class="timeline-panel text-muted" href="#">
+                                                <span>10 minutes ago</span>
+                                                <h6 class="mb-0">Youtube, a video-sharing website, goes live <strong class="text-primary">$500</strong>.</h6>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <div class="timeline-badge info">
+                                            </div>
+                                            <a class="timeline-panel text-muted" href="#">
+                                                <span>20 minutes ago</span>
+                                                <h6 class="mb-0">New order placed <strong class="text-info">#XF-2356.</strong></h6>
+												<p class="mb-0">Quisque a consequat ante Sit amet magna at volutapt...</p>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <div class="timeline-badge danger">
+                                            </div>
+                                            <a class="timeline-panel text-muted" href="#">
+                                                <span>30 minutes ago</span>
+                                                <h6 class="mb-0">john just buy your product <strong class="text-warning">Sell $250</strong></h6>
+                                            </a>
+                                        </li>
+                                 
+                             
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+					</div>
+					<div class="col-xl-4 col-xxl-6 col-lg-6">
+                        <div class="card">
+                            <div class="card-header border-0 pb-0">
+                                <h4 class="card-title">Payment Instruction</h4>
+                            </div>
+                            <div class="card-body">
+                                <div id="DZ_W_TimeLine11" class="widget-timeline dlab-scroll style-1 height370">
+                                    <ul class="timeline">
+                                        <li>
+                                            <div class="timeline-badge primary"></div>
+                                            <a class="timeline-panel text-muted" href="#">
+                                                <span>10 minutes ago</span>
+                                                <h6 class="mb-0">Youtube, a video-sharing website, goes live <strong class="text-primary">$500</strong>.</h6>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <div class="timeline-badge info">
+                                            </div>
+                                            <a class="timeline-panel text-muted" href="#">
+                                                <span>20 minutes ago</span>
+                                                <h6 class="mb-0">New order placed <strong class="text-info">#XF-2356.</strong></h6>
+												<p class="mb-0">Quisque a consequat ante Sit amet magna at volutapt...</p>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <div class="timeline-badge danger">
+                                            </div>
+                                            <a class="timeline-panel text-muted" href="#">
+                                                <span>30 minutes ago</span>
+                                                <h6 class="mb-0">john just buy your product <strong class="text-warning">Sell $250</strong></h6>
+                                            </a>
+                                        </li>
+                                    
+                                    
+                                        
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+					</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content_body %}
+{% block section%}
+<section class="pop-cour">
+    <div class="container com-sp pad-bot-70">
+        <div class="row">
+            <div class="con-title">
+                <h2>List of subjects in -  <span>{{standards.name}}</span> </h2>
+                <p>Use the links below to explore courses in each class.</p>
+            </div>
+        </div>
+   
+
+		{% for subject in standards.subjects.all %}
+        <div class="row">
+			
+            <div class="col-md-6">
+                
+				
+				
+                <div>
+                    <!--POPULAR COURSES-->
+                    <div class="home-top-cour">
+                        <!--POPULAR COURSES IMAGE-->
+						 
+						
+                        <div class="col-md-3"> <img src="{% static 'demoschool/images/course/sm-1.jpg' %}" alt=""> </div>
+                        <!--POPULAR COURSES: CONTENT-->
+                        <div class="col-md-9 home-top-cour-desc">
+
+	
+							 								
+						<h3>{{subject.name}}</h3>
+								
+                        <p><b>Description: </b>{{subject.description|truncatechars:75 }}<br /></p> <span class="home-top-cour-rat">100%</span>
+                        
+                        <div class="hom-list-share">
+                                
+                                <ul>
+                                    <li><a href="{% url 'curriculum:lesson_list' slug=subject.slug standard=standards.slug %}">{{subject.name}}</a></li>
+                                    <li><a href="course-details.html"><i class="fa fa-eye" aria-hidden="true"></i>10 Aavailable</a> </li>
+                                    <li><a href="course-details.html"><i class="fa fa-share-alt" aria-hidden="true"></i> 570</a> </li>
+                                </ul>
+                           
+							
+                   
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> 
+       
+   
+	{% endfor %}
+</section>
+	{% endblock section %}

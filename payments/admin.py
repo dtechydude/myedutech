@@ -3,7 +3,7 @@
 from django.contrib import admin
 from django.contrib import messages
 from decimal import Decimal
-from .models import Payment, PaymentCategory, Term, Session, StudentAccountLedger, CategoryFee, Receipt
+from .models import Payment, PaymentCategory, BankDetail, StudentAccountLedger, CategoryFee, Receipt
 from students.models import Student # Assuming Student model is in 'students' app
 
 @admin.register(Payment)
@@ -91,11 +91,11 @@ class PaymentCategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
     search_fields = ('name',)    
 
-# @admin.register(Term)
-# class TermAdmin(admin.ModelAdmin):
-#     list_display = ('name', 'start_date', 'end_date')
-#     search_fields = ('name',)
-#     list_filter = ('start_date', 'end_date')
+@admin.register(BankDetail)
+class BankDetailAdmin(admin.ModelAdmin):
+    list_display = ('acc_name', 'acc_number', 'bank_name')
+    search_fields = ('acc_name','acc_number', 'bank_name')
+    list_filter = ('bank_name',)
 
 # @admin.register(Session)
 # class SessionAdmin(admin.ModelAdmin):

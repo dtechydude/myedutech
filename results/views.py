@@ -944,15 +944,162 @@ class StudentDashboardView(LoginRequiredMixin, View):
             return redirect('home')
         
 
+# The old mobility score record without teacher restrictions
+
+# class MotorAbilityScoreCreateUpdateView(LoginRequiredMixin, TeacherRequiredMixin, View):
+#     template_name = 'results/motor_ability_score_form.html'
+
+#     def get(self, request, student_id, term_id):
+#         student = get_object_or_404(Student, id=student_id)
+#         term = get_object_or_404(Term, id=term_id)
+
+#         # Try to get an existing score for this student and term
+#         motor_ability_score = MotorAbilityScore.objects.filter(
+#             student=student,
+#             term=term
+#         ).first()
+
+#         if motor_ability_score:
+#             form = MotorAbilityScoreForm(instance=motor_ability_score)
+#         else:
+#             form = MotorAbilityScoreForm()
+        
+#         context = {
+#             'student': student,
+#             'term': term,
+#             'form': form,
+#             'is_update': motor_ability_score is not None
+#         }
+#         return render(request, self.template_name, context)
+
+#     def post(self, request, student_id, term_id):
+#         student = get_object_or_404(Student, id=student_id)
+#         term = get_object_or_404(Term, id=term_id)
+
+#         motor_ability_score = MotorAbilityScore.objects.filter(
+#             student=student,
+#             term=term
+#         ).first()
+
+#         if motor_ability_score:
+#             form = MotorAbilityScoreForm(request.POST, instance=motor_ability_score)
+#         else:
+#             form = MotorAbilityScoreForm(request.POST)
+        
+#         if form.is_valid():
+#             new_score = form.save(commit=False)
+#             new_score.student = student
+#             new_score.term = term
+#             new_score.save()
+#             messages.success(request, f"Motor Ability scores for {student.first_name} ({term.name}) saved successfully!")
+#             # Redirect back to the student's termly report card
+#             return redirect(reverse('results:student_report_card_detail', args=[student.id, term.id]))
+#         else:
+#             messages.error(request, "Please correct the errors in the form.")
+#             context = {
+#                 'student': student,
+#                 'term': term,
+#                 'form': form,
+#                 'is_update': motor_ability_score is not None
+#             }
+#             return render(request, self.template_name, context)
+        
+
+# This view works perfectly but does not give the form teacher sole responsibility of  entering the motor ability
+# # New update to the mobility score record
+# class MotorAbilityScoreCreateUpdateView(LoginRequiredMixin, TeacherRequiredMixin, View):
+#     template_name = 'results/motor_ability_score_form.html'
+
+#     def dispatch(self, request, *args, **kwargs):
+#         # A more efficient way to handle the permission check for both GET and POST
+#         student = get_object_or_404(Student, id=kwargs['student_id'])
+        
+#         # Check if the logged-in teacher is assigned to the student's class
+#         if not student.current_class or student.current_class.class_teacher != request.user.teacher:
+#             messages.error(request, "You do not have permission to record scores for this student.")
+#             return redirect('pages:portal-home')
+            
+#         return super().dispatch(request, *args, **kwargs)
+
+#     def get(self, request, student_id, term_id):
+#         student = get_object_or_404(Student, id=student_id)
+#         term = get_object_or_404(Term, id=term_id)
+
+#         motor_ability_score = MotorAbilityScore.objects.filter(
+#             student=student,
+#             term=term
+#         ).first()
+
+#         if motor_ability_score:
+#             form = MotorAbilityScoreForm(instance=motor_ability_score)
+#         else:
+#             form = MotorAbilityScoreForm()
+        
+#         context = {
+#             'student': student,
+#             'term': term,
+#             'form': form,
+#             'is_update': motor_ability_score is not None
+#         }
+#         return render(request, self.template_name, context)
+
+#     def post(self, request, student_id, term_id):
+#         student = get_object_or_404(Student, id=student_id)
+#         term = get_object_or_404(Term, id=term_id)
+
+#         motor_ability_score = MotorAbilityScore.objects.filter(
+#             student=student,
+#             term=term
+#         ).first()
+
+#         if motor_ability_score:
+#             form = MotorAbilityScoreForm(request.POST, instance=motor_ability_score)
+#         else:
+#             form = MotorAbilityScoreForm(request.POST)
+        
+#         if form.is_valid():
+#             new_score = form.save(commit=False)
+#             new_score.student = student
+#             new_score.term = term
+#             new_score.save()
+#             messages.success(request, f"Motor Ability scores for {student.first_name} ({term.name}) saved successfully!")
+#             return redirect(reverse('results:student_report_card_detail', args=[student.id, term.id]))
+#         else:
+#             messages.error(request, "Please correct the errors in the form.")
+#             context = {
+#                 'student': student,
+#                 'term': term,
+#                 'form': form,
+#                 'is_update': motor_ability_score is not None
+#             }
+#             return render(request, self.template_name, context)
+        
+
+# The new view with form_teacher ability to enter motor ability record
+# In your results/views.py
 
 class MotorAbilityScoreCreateUpdateView(LoginRequiredMixin, TeacherRequiredMixin, View):
-    template_name = 'results/motor_ability_score_form.html'
+    template_name = 'results/test_motor_ability_score_form.html'
 
+    def dispatch(self, request, *args, **kwargs):
+        student = get_object_or_404(Student, id=kwargs['student_id'])
+        
+        # Check if the logged-in user's teacher profile is the student's form_teacher.
+        # It's important to check if form_teacher exists to prevent errors.
+        if student.form_teacher and student.form_teacher == request.user.teacher:
+            # Permission granted, proceed to the view's get or post method
+            return super().dispatch(request, *args, **kwargs)
+        
+        # If the user is not the form teacher, show an error message and redirect.
+        messages.error(request, "You do not have permission to record scores for this student.")
+        return redirect('pages:portal-home')
+    
     def get(self, request, student_id, term_id):
+        # ... (Your existing get method code goes here)
+        # It will only be reached if the dispatch method allows it.
         student = get_object_or_404(Student, id=student_id)
         term = get_object_or_404(Term, id=term_id)
 
-        # Try to get an existing score for this student and term
         motor_ability_score = MotorAbilityScore.objects.filter(
             student=student,
             term=term
@@ -972,6 +1119,8 @@ class MotorAbilityScoreCreateUpdateView(LoginRequiredMixin, TeacherRequiredMixin
         return render(request, self.template_name, context)
 
     def post(self, request, student_id, term_id):
+        # ... (Your existing post method code goes here)
+        # It will only be reached if the dispatch method allows it.
         student = get_object_or_404(Student, id=student_id)
         term = get_object_or_404(Term, id=term_id)
 
@@ -991,7 +1140,6 @@ class MotorAbilityScoreCreateUpdateView(LoginRequiredMixin, TeacherRequiredMixin
             new_score.term = term
             new_score.save()
             messages.success(request, f"Motor Ability scores for {student.first_name} ({term.name}) saved successfully!")
-            # Redirect back to the student's termly report card
             return redirect(reverse('results:student_report_card_detail', args=[student.id, term.id]))
         else:
             messages.error(request, "Please correct the errors in the form.")
