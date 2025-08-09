@@ -816,9 +816,20 @@ class StudentSessionReportCardView(LoginRequiredMixin, View):
             avg_neatness=Avg('neatness'),
             avg_cooperation=Avg('cooperation'),
             avg_obedience=Avg('obedience'),
+            avg_attentiveness=Avg('attentiveness'),
             avg_punctuality=Avg('punctuality'),
+            avg_perseverance=Avg('perseverance'),
+            avg_emotional_stability=Avg('emotional_stability'),
+            avg_attitude=Avg('attitude'),
+            avg_leadership=Avg('leadership'),
             avg_physical_education=Avg('physical_education'),
             avg_games=Avg('games'),
+            avg_musical=Avg('musical'),
+            avg_handwriting=Avg('handwriting'),
+            avg_reading=Avg('reading'),
+            avg_verbal_fluency=Avg('verbal_fluency'),
+            avg_handling_tools=Avg('handling_tools'),
+                      
             # Add any other 'avg_' aggregations for new fields in MotorAbilityScore
         )
 

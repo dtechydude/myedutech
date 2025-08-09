@@ -28,17 +28,17 @@ def get_subject_remark(score):
         return "No score recorded."
     score = float(score)
     if 80 <= score <= 100:
-        return "Excellent performance, strong understanding."
+        return "Excellent."
     elif 70 <= score < 80:
-        return "Very good effort, consistent performance."
+        return "Very Good."
     elif 60 <= score < 70:
-        return "Good performance, but minor areas for improvement."
+        return "Good."
     elif 50 <= score < 60:
-        return "Fair performance, needs more dedication."
+        return "Average."
     elif 40 <= score < 50:
-        return "Needs significant improvement and focused attention."
+        return "Fair."
     elif 0 <= score < 40:
-        return "Poor performance, immediate intervention required."
+        return "Poor."
     else:
         return "Score out of typical range."
 

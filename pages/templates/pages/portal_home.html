@@ -864,7 +864,7 @@
 						{% endif %}
 						{% if user.is_superuser or user.is_staff %}
 						<li><a href="/admin/transport/route/">Add/Edit Route</a></li>
-						<li><a href="/admin/transport/studentbuspayment/">Add Student To Route</a></li>
+						<li><a href="/admin/transport/studentonroute/">Add Student To Route</a></li>
 						<li><a href="{% url 'transport:student_on_bus' %}">Students In Route</a></li>					
 						{% endif %}
 						
@@ -878,15 +878,15 @@
 							{% if user.is_superuser or user.is_staff %}
 							<li><a href="/admin/results/examination/">Add Exams</a></li>
 							<li><a href="/admin/results/score/">Enter CA & Exam Scores</a></li>
-							<li><a href="/admin/results/motorabilityscore/">Enter Motor Ability Scores</a></li>
+							<li><a href="{% url 'results:report_card_list' %}">Report Card List</a></li>
+
 							
 							{% elif user.student %}
 							<li><a href="{% url 'results:student_dashboard' %}">My Results</a></li>							
 
 							{% elif user.teacher %}						
 							<li><a href="{% url 'results:score_entry' %}">Record Exam Results</a></li>
-							<li><a href="#"> Record Motor Ability</a></li> 
-							<li><a href="{% url 'results:report_card_list' %}">Student Report Card List</a></li>
+							<li><a href="{% url 'results:report_card_list' %}">Report Card List</a></li>
  					
 							{% endif %}
 						

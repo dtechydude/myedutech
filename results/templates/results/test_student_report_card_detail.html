@@ -361,13 +361,20 @@
         </div> -->
 
 <div class="d-flex justify-content-center mt-5 no-print">
+    {% if user.teacher or user.is_superuser or user.is_staff %}
     <a href="{% url 'results:report_card_list' %}{% if term %}?term={{ term.id }}{% if student.current_class %}&standard={{ student.current_class.id }}{% endif %}{% elif student.current_class %}?standard={{ student.current_class.id }}{% endif %}" class="btn btn-secondary btn-lg me-4">
         Back to Student List
-    </a>
-
+    </a> | 
+    
     <a href="{% url 'results:motor_ability_score_create_update' student.id term.id %}" class="btn btn-success btn-lg me-4">
         <i class="bi bi-pencil-square"></i> Record Motor Ability Scores
     </a>
+     {% elif user.student %}
+      <a href="{% url 'results:student_dashboard' %}" class="btn btn-secondary btn-lg">Back to Dashboard</a>
+    {% else %}
+      <a href="{% url '/dashboard' %}" class="btn btn-secondary btn-lg">Back to Home</a>
+   
+    {% endif %}
 </div>
 
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>

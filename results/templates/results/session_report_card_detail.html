@@ -238,13 +238,24 @@
                     <tr>
                         <td>
                             <span style="color: green;">Honesty:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_honesty|floatformat:2|default:"-" }}, </span></strong>                      
-                            <span style="color: green;">Politeness:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_politeness|floatformat:2|default:"-" }}, </span></strong>                        
-                            <span style="color: green;">Neatness:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_neatness|floatformat:2|default:"-" }}, </span></strong>                       
-                            <span style="color: green;">Cooperation:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_cooperation|floatformat:2|default:"-" }}, </span></strong>                     
-                            <span style="color: green;">Obedience: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_obedience|floatformat:2|default:"-" }}, </span></strong>                      
-                            <span style="color: green;">Punctuality: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_punctuality|floatformat:2|default:"-" }}, </span></strong>                       
-                            <span style="color: green;">Physical Education: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_physical_education|floatformat:2|default:"-" }}, </span></strong>                      
-                            <span style="color: green;">Games: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_games|floatformat:2|default:"-" }}</span></strong>
+                            <span style="color: green;">Politeness:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_politeness|floatformat:1|default:"-" }}, </span></strong>                        
+                            <span style="color: green;">Neatness:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_neatness|floatformat:1|default:"-" }}, </span></strong>                       
+                            <span style="color: green;">Cooperation:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_cooperation|floatformat:1|default:"-" }}, </span></strong>                     
+                            <span style="color: green;">Obedience: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_obedience|floatformat:1|default:"-" }}, </span></strong>                      
+                            <span style="color: green;">Punctuality: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_punctuality|floatformat:1|default:"-" }}, </span></strong>                       
+                            <span style="color: green;">Attentiveness: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_attentiveness|floatformat:1|default:"-" }}, </span></strong>                      
+                            <span style="color: green;">Perseverance: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_perseverance|floatformat:1|default:"-" }}</span></strong>
+                            <span style="color: green;">Emotional Stability:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_emotional_stability|floatformat:1|default:"-" }}, </span></strong>                      
+                            <span style="color: green;">Attitude:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_attitude|floatformat:1|default:"-" }}, </span></strong>                        
+                            <span style="color: green;">Leadership:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_leadership|floatformat:1|default:"-" }}, </span></strong>                   
+                           
+                            <span style="color: green;">Physical Education: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_physical_education|floatformat:1|default:"-" }}, </span></strong>                      
+                            <span style="color: green;">Games: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_games|floatformat:1|default:"-" }}</span></strong>
+                            <span style="color: green;">Musical:</span> <strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_musical|floatformat:1|default:"-" }}, </span></strong>                     
+                            <span style="color: green;">Handwriting: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_handwriting|floatformat:2|default:"-" }}, </span></strong>                      
+                            <span style="color: green;">Reading: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_reading|floatformat:1|default:"-" }}, </span></strong>
+                            <span style="color: green;">Verbal Fluency: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_verbal_fluency|floatformat:1|default:"-" }}, </span></strong>                      
+                            <span style="color: green;">Handling Tools: </span><strong><span style="font-size:10px; color:#990000;">{{ aggregated_motor_abilities.avg_handling_tools|floatformat:1|default:"-" }}, </span></strong>                                              
                         </td>
                     </tr>
                 </table>
@@ -314,27 +325,27 @@
                 </table>
             </div>
 
-            <div class="signature-section">
-           {% if school_identity.logo %}
-        <img src="{{ school_identity.signature.url }}" alt="School Logo" style="width: 100px; height: 40px;"> 
+        <div class="signature-section">
+          {% if school_identity.signature %}
+        <img src="{{ school_identity.signature.url }}" alt="Signature" style="width: 120px; height: 40px;"> 
         {% else %}
-        <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo">
+        <img src="{% static 'pages/images/sign.jpg' %}" alt="Signature" style="width: 100px; height: auto;">
         {% endif %}
-          <p class="font-weight-bold">Principal's Signature</p>
-          <p class="text-muted">Date: {{ "now"|date:"M d, Y" }}</p>
+          <p class="font-weight-bold">Authorized Signature <br>
+          <span class="text-muted">Date: {{ "now"|date:"M d, Y" }}</span></p>
         </div>
       </div>
     </div>
     
     <div class="text-center mt-5 back-link no-print">
-        {% if user.teacher %}
+        {% if user.teacher or user.is_superuser or user.is_staff %}
             <a href="{% url 'results:session_report_card_list' %}?session={{ session.id }}{% if student.current_class %}&standard={{ student.current_class.id }}{% endif %}" class="btn btn-secondary btn-lg">
                 Back to Student List
             </a>
         {% elif user.student %}
             <a href="{% url 'results:student_dashboard' %}" class="btn btn-secondary btn-lg">Back to Dashboard</a>
         {% else %}
-            <a href="{% url 'home' %}" class="btn btn-secondary btn-lg">Back to Home</a>
+            <a href="{% url '/dashboard' %}" class="btn btn-secondary btn-lg">Back to Home</a>
         {% endif %}
     </div>
 
