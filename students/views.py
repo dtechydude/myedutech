@@ -166,37 +166,6 @@ class StudentDeleteView(LoginRequiredMixin, DeleteView):
         return get_object_or_404(Student, id=id_)
     
 
-# #generate IDCARD PDF
-# @login_required
-# def id_render_pdf_view(request, *args, **kwargs):    
-
-#     pk = kwargs.get('pk')
-    
-#     student_detail = get_object_or_404(Student, pk=pk)
-#     school_identity = SchoolIdentity.objects.get()
-#     template_path = 'students/student_id_pdf.html'
-#     # template_path = 'results/result_sheet.html'
-#     context = {'student_detail': student_detail, 'school_identity':school_identity }
-#     # Create a Django response object, and specify content_type as pdf
-#     response = HttpResponse(content_type='application/pdf')
-#     # if you want to download
-#     # response['Content-Disposition'] = 'attachment; filename="report.pdf"'
-#     # if you just want to display
-#     response['Content-Disposition'] = 'filename="id_card.pdf"'
-
-#     # find the template and render it.
-#     template = get_template(template_path)
-#     html = template.render(context)
-
-#     # create a pdf
-#     pisa_status = pisa.CreatePDF(
-#     html, dest=response)
-#     # if error then show some funy view
-#     if pisa_status.err:
-#         return HttpResponse('We had some errors <pre>' + html + '</pre>')
-#     return response
-
-
 class MyTeacherDetailView(DetailView):
     template_name = 'student/my_teacher_detail.html'
     context_object_name = 'teacher'

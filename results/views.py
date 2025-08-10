@@ -674,7 +674,7 @@ class SessionReportCardListView(LoginRequiredMixin, TeacherRequiredMixin, View):
     Allows teachers/admins to select a session and standard,
     then view a list of students to generate their annual report cards.
     """
-    template_name = 'results/session_report_card_list.html'
+    template_name = 'results/test_session_report_card_list.html'
 
     def get(self, request, *args, **kwargs):
         form = SessionReportCardFilterForm(request.GET)
@@ -881,39 +881,6 @@ class StudentSessionReportCardView(LoginRequiredMixin, View):
         return render(request, self.template_name, context)
     
 
-
-
-# # Modify StudentDashboardView to include session report card links
-# class StudentDashboardView(LoginRequiredMixin, View):
-#     template_name = 'results/student_dashboard.html'
-
-#     def get(self, request, *args, **kwargs):
-#         if hasattr(request.user, 'student'):
-#             student = request.user.student
-            
-#             # Get terms for which the student has scores (for termly reports)
-#             terms_with_scores = Term.objects.filter(score__student=student).distinct().order_by('-start_date')
-
-#             # Get sessions for which the student has scores (for annual reports)
-#             sessions_with_filter = Q(terms__score__student=student)
-            
-#             # Optionally, filter for sessions where all expected terms have scores (e.g., 3 terms)
-#             # This can be complex if not all students have scores for all subjects in all terms.
-#             # For simplicity, we'll just check if student has *any* score in *any* term of a session.
-#             sessions_with_scores = Session.objects.filter(sessions_with_filter).distinct().order_by('-start_date')
-
-#             context = {
-#                 'student': student,
-#                 'terms': terms_with_scores,
-#                 'sessions': sessions_with_scores, # Pass sessions to template
-#             }
-#             return render(request, self.template_name, context)
-#         else:
-#             messages.error(request, "Your user account is not linked to a student profile. Please contact administration.")
-#             return redirect('home') # Redirect to a generic page if not linked
-        
-
-# schools/views.py
 
 # ... (your existing imports) ...
 
@@ -1161,3 +1128,185 @@ class MotorAbilityScoreCreateUpdateView(LoginRequiredMixin, TeacherRequiredMixin
                 'is_update': motor_ability_score is not None
             }
             return render(request, self.template_name, context)
+
+
+# # Logic For getting Student Ranking with the Subject Model having STANDARD as one of the fields
+# class ClassRankingView(LoginRequiredMixin, View):
+#     template_name = 'results/class_ranking.html'
+
+#     def get(self, request, standard_id, term_id, *args, **kwargs):
+#         standard = get_object_or_404(Standard, id=standard_id)
+#         term = get_object_or_404(Term, id=term_id)
+
+#         students_in_class = Student.objects.filter(current_class=standard)
+        
+#         # --- Overall Ranking Logic ---
+#         overall_ranking_data = []
+
+#         for student in students_in_class:
+#             scores = Score.objects.filter(student=student, term=term, total_score__isnull=False)
+            
+#             total_scores_sum = scores.aggregate(total=Sum('total_score'))['total'] or 0
+#             subjects_with_scores_count = scores.count()
+
+#             overall_average = total_scores_sum / subjects_with_scores_count if subjects_with_scores_count > 0 else 0
+            
+#             overall_ranking_data.append({
+#                 'student': student,
+#                 'overall_average': overall_average,
+#             })
+
+#         # Sort and assign ranks for the overall ranking
+#         overall_ranking_data.sort(key=lambda x: x['overall_average'], reverse=True)
+
+#         current_rank = 0
+#         last_average = -1
+#         for i, data in enumerate(overall_ranking_data):
+#             if data['overall_average'] != last_average:
+#                 current_rank = i + 1
+#             data['rank'] = current_rank
+#             last_average = data['overall_average']
+
+#         # --- Subject-Specific Ranking Logic ---
+#         subject_ranking_data = {}
+#         all_subjects = Subject.objects.filter(standard=standard).order_by('name')
+
+#         for subject in all_subjects:
+#             subject_scores = []
+            
+#             for student in students_in_class:
+#                 score = Score.objects.filter(student=student, term=term, subject=subject).first()
+                
+#                 if score and score.total_score is not None:
+#                     subject_scores.append({
+#                         'student': student,
+#                         'total_score': score.total_score,
+#                     })
+
+#             # Sort and assign ranks for the current subject
+#             subject_scores.sort(key=lambda x: x['total_score'], reverse=True)
+            
+#             current_rank_subject = 0
+#             last_score_subject = -1
+#             for i, data in enumerate(subject_scores):
+#                 if data['total_score'] != last_score_subject:
+#                     current_rank_subject = i + 1
+#                 data['rank'] = current_rank_subject
+#                 last_score_subject = data['total_score']
+            
+#             subject_ranking_data[subject.name] = subject_scores
+
+#         context = {
+#             'standard': standard,
+#             'term': term,
+#             'overall_ranking_data': overall_ranking_data,
+#             'subject_ranking_data': subject_ranking_data,
+#         }
+
+#         return render(request, self.template_name, context)
+
+
+class ClassRankingView(LoginRequiredMixin, View):
+    template_name = 'results/class_ranking.html'
+
+    def get(self, request, standard_id, term_id, *args, **kwargs):
+        standard = get_object_or_404(Standard, id=standard_id)
+        term = get_object_or_404(Term, id=term_id)
+
+        students_in_class = Student.objects.filter(current_class=standard)
+        
+        # --- Overall Ranking Logic ---
+        overall_ranking_data = []
+
+        for student in students_in_class:
+            scores = Score.objects.filter(student=student, term=term, total_score__isnull=False)
+            
+            total_scores_sum = scores.aggregate(total=Sum('total_score'))['total'] or 0
+            subjects_with_scores_count = scores.count()
+
+            overall_average = total_scores_sum / subjects_with_scores_count if subjects_with_scores_count > 0 else 0
+            
+            overall_ranking_data.append({
+                'student': student,
+                'overall_average': overall_average,
+            })
+
+        # Sort and assign ranks for the overall ranking
+        overall_ranking_data.sort(key=lambda x: x['overall_average'], reverse=True)
+
+        current_rank = 0
+        last_average = -1
+        for i, data in enumerate(overall_ranking_data):
+            if data['overall_average'] != last_average:
+                current_rank = i + 1
+            data['rank'] = current_rank
+            last_average = data['overall_average']
+
+        # --- Refactored Subject-Specific Ranking Logic ---
+        subject_ranking_data = {}
+        
+        # Dynamically get all subjects for which students in this class have scores.
+        # This is the key change to avoid the Subject->Standard link.
+        all_subjects_in_class = Score.objects.filter(
+            student__in=students_in_class, 
+            term=term, 
+            total_score__isnull=False
+        ).values('subject__name', 'subject_id').distinct().order_by('subject__name')
+
+        for subject_info in all_subjects_in_class:
+            subject_scores = []
+            
+            for student in students_in_class:
+                score = Score.objects.filter(
+                    student=student, 
+                    term=term, 
+                    subject_id=subject_info['subject_id']
+                ).first()
+                
+                if score and score.total_score is not None:
+                    subject_scores.append({
+                        'student': student,
+                        'total_score': score.total_score,
+                    })
+
+            # Sort and assign ranks for the current subject
+            subject_scores.sort(key=lambda x: x['total_score'], reverse=True)
+            
+            current_rank_subject = 0
+            last_score_subject = -1
+            for i, data in enumerate(subject_scores):
+                if data['total_score'] != last_score_subject:
+                    current_rank_subject = i + 1
+                data['rank'] = current_rank_subject
+                last_score_subject = data['total_score']
+            
+            subject_ranking_data[subject_info['subject__name']] = subject_scores
+
+        context = {
+            'standard': standard,
+            'term': term,
+            'overall_ranking_data': overall_ranking_data,
+            'subject_ranking_data': subject_ranking_data,
+        }
+
+        return render(request, self.template_name, context)
+   
+
+class StandardsAndTermsListView(LoginRequiredMixin, View):
+    """
+    Displays a list of all standards and terms, allowing users to select
+    a combination to view class rankings.
+    """
+    template_name = 'results/standards_and_terms_list.html'
+
+    def get(self, request, *args, **kwargs):
+        # Fetch all standards and terms
+        all_standards = Standard.objects.all().order_by('name')
+        all_terms = Term.objects.all().order_by('-start_date')
+
+        context = {
+            'all_standards': all_standards,
+            'all_terms': all_terms,
+        }
+
+        return render(request, self.template_name, context)

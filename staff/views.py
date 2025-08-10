@@ -61,25 +61,6 @@ def my_teacher_view(request):
     return render(request, 'students/my_teacher_detail.html', context)
 
 
-
-# #Displays all staff
-# def staff_list(request):
-#     all_staff = Staff.objects.all().order_by('-date_employed')
-
-#     context ={
-#         'all_staff': all_staff
-#     }
-#     return render(request, 'staff/staff_list.html', context)
-
-# def assign_list(request):
-#     assign = Assign.objects.all().order_by('-class_id')
-
-#     context ={
-#         'assign':assign
-#     }
-#     return render(request, 'staff/assign_list.html', context)
-
-
 # Specific to the login detail
 class TeacherSelfDetailView(LoginRequiredMixin, DetailView):
     template_name = 'staff/teacher_self_detail.html'

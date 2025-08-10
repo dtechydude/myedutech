@@ -1,52 +1,126 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Assigned Classes and Subjects</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjG6hW+ALEwIH" crossorigin="anonymous">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            background-color: #f8f9fa; /* Light background */
         }
-        h1, h2 {
-            color: #333;
+        .header {
+            background-color: #ffffff;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 2rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        ul {
-            list-style-type: none;
-            padding-left: 0;
+        .logo {
+            font-size: 1.75rem;
+            font-weight: bold;
+            color: #007bff; /* Primary blue */
+            text-decoration: none;
         }
-        li {
-            background-color: #f4f4f4;
-            margin-bottom: 5px;
-            padding: 10px;
-            border-radius: 5px;
+        .centered-container {
+            max-width: 600px; /* Further reduced width */
+            margin-top: 3rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            border-bottom: none;
+            border-radius: 0.5rem 0.5rem 0 0;
+            padding: 1rem 1.5rem;
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+        .card-body {
+            padding: 1.5rem;
+            background-color: #fff;
+        }
+        .list-group-item {
+            border-left: none;
+            border-right: none;
+            padding: 0.75rem 1.5rem;
+            border-color: #e0e0e0;
+        }
+        .list-group-item:first-child {
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+        .list-group-item:last-child {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        .btn-secondary {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .text-muted {
+            color: #6c757d !important;
         }
     </style>
 </head>
 <body>
-    <h1>Welcome, {{ teacher.get_full_name }}!</h1>
-    <p>Here are your assigned classes and subjects.</p>
 
-    <h2>My Subjects</h2>
-    {% if teacher.subjects_taught.all %}
-        <ul>
-            {% for subject in teacher.subjects_taught.all %}
-                <li>{{ subject.name }}</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>You have no subjects assigned.</p>
-    {% endif %}
+    <header class="header">
+        <a href="#" class="logo"><img src="{% static 'pages/images/schoolly_logo.png' %}" width="80" height="auto" alt=""></a>
+        <a href="/dashboard" class="btn btn-outline-primary">Back To Dashboard</a>
 
-    <h2>My Classes</h2>
-    {% if teacher.standards_assigned.all %}
-        <ul>
-            {% for standard in teacher.standards_assigned.all %}
-                <li>{{ standard.name }}</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>You have no classes assigned.</p>
-    {% endif %}
+    </header>
+    <div class="centered-container">
+        <div class="text-center mb-4">
+            <h1 class="mb-2">Welcome, {% if teacher.middle_name %}{{ teacher.get_full_name }}! {% else %} {{ teacher.last_name }} {{ teacher.first_name }}! {% endif %}</h1>
+            <p>Here are your assigned classes and subjects.</p>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                My Subjects
+            </div>
+            <div class="card-body">
+                {% if teacher.subjects_taught.all %}
+                    <ul class="list-group list-group-flush">
+                    {% for subject in teacher.subjects_taught.all %}
+                        <li class="list-group-item">{{ subject.name }}</li>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="card-text text-muted">You have no subjects assigned.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                My Classes
+            </div>
+            <div class="card-body">
+                {% if teacher.standards_assigned.all %}
+                    <ul class="list-group list-group-flush">
+                    {% for standard in teacher.standards_assigned.all %}
+                        <li class="list-group-item">{{ standard.name }}</li>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="card-text text-muted">You have no classes assigned.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>

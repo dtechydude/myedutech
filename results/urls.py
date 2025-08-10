@@ -2,7 +2,7 @@ from django.urls import path
 from . import views
 from .views import (
     ScoreEntryView, ScoreEntrySuccessView,
-    ReportCardListView, StudentReportCardView, StudentDashboardView, SessionReportCardListView, StudentSessionReportCardView # Import new views
+    ReportCardListView, StudentReportCardView, StudentDashboardView, SessionReportCardListView, StudentSessionReportCardView, ClassRankingView, StandardsAndTermsListView # Import new views
 )
 
 from django.views.generic import TemplateView # For a simple placeholder home page
@@ -30,6 +30,9 @@ urlpatterns = [
     # Report Card URLs (Teacher/Admin access)
     path('report-cards/', ReportCardListView.as_view(), name='report_card_list'),
     path('report-cards/<int:student_id>/<int:term_id>/', StudentReportCardView.as_view(), name='student_report_card_detail'),
+    
+    path('class-ranking/<int:standard_id>/<int:term_id>/', ClassRankingView.as_view(), name='class_ranking'),
+    path('ranking-list/', StandardsAndTermsListView.as_view(), name='ranking_list'),
 
     # Student Dashboard URL (for students to view their own report cards)
     path('student-dashboard/', StudentDashboardView.as_view(), name='student_dashboard'),

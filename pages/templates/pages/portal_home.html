@@ -810,7 +810,9 @@
 							{% if user.is_superuser or user.is_staff %}
 							<li><a href="/admin/results/examination/">Add Exams</a></li>
 							<li><a href="/admin/results/score/">Enter CA & Exam Scores</a></li>
-							<li><a href="{% url 'results:report_card_list' %}">Report Card List</a></li>
+							<li><a href="{% url 'results:report_card_list' %}">Termly Report Card</a></li>
+							<li><a href="{% url 'results:session_report_card_list' %}">Annual Report Card</a></li>
+							<li><a href="{% url 'results:ranking_list' %}">Student's Exam Ranking</a></li>
 
 							
 							{% elif user.student %}
@@ -818,7 +820,10 @@
 
 							{% elif user.teacher %}						
 							<li><a href="{% url 'results:score_entry' %}">Record Exam Results</a></li>
-							<li><a href="{% url 'results:report_card_list' %}">Report Card List</a></li>
+							<li><a href="{% url 'results:report_card_list' %}">Termly Report Cards</a></li>
+							<li><a href="{% url 'results:session_report_card_list' %}">Annual Report Cards</a></li>
+							<li><a href="{% url 'results:ranking_list' %}">Student's Exam Ranking</a></li>
+
  					
 							{% endif %}
 						

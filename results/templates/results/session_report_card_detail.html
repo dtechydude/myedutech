@@ -132,13 +132,15 @@
 </head>
 <body>
     <div class="no-print">
+        {% comment %}
         <a href="{% url 'results:student_session_report_card_detail' student.id session.id %}?download=pdf"
             target="_blank"
             class="btn btn-primary btn-lg">
             Download Annual Report as PDF
         </a>
+        {% endcomment %}
         <a href="javascript:window.print()" class="btn btn-secondary btn-lg">
-            Print
+            Print Annual Report Card
         </a>
     </div>
 

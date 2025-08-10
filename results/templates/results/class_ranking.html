@@ -1,0 +1,155 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Ranking - {{ standard.name }} - {{ term.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjG6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        body {
+            background-color: #f8f9fa; /* Light background */
+        }
+        .header {
+            background-color: #ffffff;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 1.75rem;
+            font-weight: bold;
+            color: #007bff; /* Primary blue */
+            text-decoration: none;
+        }
+        .centered-container {
+            max-width: 900px;
+            margin: 3rem auto;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            border-radius: 0.5rem;
+        }
+        .card-header-primary {
+            background-color: #007bff;
+            color: white;
+            border-bottom: none;
+            border-radius: 0.5rem 0.5rem 0 0;
+            padding: 1rem 1.5rem;
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+        .card-header-secondary {
+            background-color: #6c757d;
+            color: white;
+            border-bottom: none;
+            border-radius: 0.5rem 0.5rem 0 0;
+            padding: 0.75rem 1.5rem;
+            font-weight: bold;
+            font-size: 1.15rem;
+        }
+        .table thead th {
+            background-color: #e9ecef;
+            color: #495057;
+            padding: 1rem; /* Added padding to header cells */
+        }
+        .table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+        .table td {
+            padding: 0.75rem 1rem; /* Added padding to data cells */
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="#" class="logo"><img src="{% static 'pages/images/schoolly_logo.png' %}" alt="" width="80"></a>
+        <a href="{% url 'results:ranking_list' %}" class="btn btn-outline-primary">Back to Ranking List</a>
+    </header>
+
+    <div class="centered-container">
+        <h1 class="text-center mb-4">Class Ranking</h1>
+
+        <div class="card shadow-sm mb-5">
+            <div class="card-header-primary text-center">
+                Ranking for {{ standard.name }} - {{ term.name }} - {{ term.session.name }}
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="text-center">Position</th>
+                                <th scope="col">Student Name</th>
+                                <th scope="col" class="text-center">Overall Average (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student_data in overall_ranking_data %}
+                            <tr>
+                                <td class="text-center fw-bold">{{ student_data.rank }}</td>
+                                <td>{{ student_data.student.user.get_full_name }}</td>
+                                <td class="text-center">
+                                    {% if student_data.overall_average > 0 %}
+                                        {{ student_data.overall_average|floatformat:2 }}%
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">No students with scores found for this class and term.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {% if subject_ranking_data %}
+        <h2 class="text-center mb-4">Subject Rankings</h2>
+        {% for subject_name, students_list in subject_ranking_data.items %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header-secondary">
+                {{ subject_name }} Ranking
+            </div>
+            <div class="card-body">
+                {% if students_list %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="text-center">Position</th>
+                                <th scope="col">Student Name</th>
+                                <th scope="col" class="text-center">Score (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student_score in students_list %}
+                            <tr>
+                                <td class="text-center fw-bold">{{ student_score.rank }}</td>
+                                <td>{{ student_score.student.user.get_full_name }}</td>
+                                <td class="text-center">{{ student_score.total_score }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center text-muted mb-0">No scores found for this subject.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>

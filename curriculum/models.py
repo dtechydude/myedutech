@@ -150,7 +150,7 @@ def save_lesson_files(instance, filename):
 class Subject(models.Model):
     subject_id = models.CharField(max_length=100, unique=True)
     name = models.CharField(max_length=100, unique=True)
-    # standard = models.ForeignKey(Standard, on_delete=models.CASCADE, related_name='examsubjects', blank=True, null=True)
+    standard = models.ForeignKey(Standard, on_delete=models.CASCADE, related_name='examsubjects', blank=True, null=True)
     # image = models.ImageField(upload_to=save_subject_image, blank=True, verbose_name='Subject Image')
     description = models.CharField(max_length=200, blank=True)
     slug = models.SlugField(null=True, blank=True)

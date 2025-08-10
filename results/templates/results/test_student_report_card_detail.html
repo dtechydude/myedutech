@@ -139,13 +139,15 @@
   <body>
 
     <div class="no-print">
+      {% comment %}
         <a href="{% url 'results:student_report_card_detail' student.id term.id %}?download=pdf"
            target="_blank"
            class="btn btn-primary btn-lg">
             Download Termly Report as PDF
         </a>
+        {% endcomment %}
         <a href="javascript:window.print()" class="btn btn-secondary btn-lg">
-            Print
+            Print Result
         </a>
     </div>
 
