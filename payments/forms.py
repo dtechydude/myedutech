@@ -181,7 +181,7 @@ class PaymentForm(forms.ModelForm):
                 if not is_installment: # If not an installment, amount_received must exactly match net_amount_due
                     # Using quantize for precise Decimal comparison
                     if amount_received is not None and amount_received.quantize(Decimal('0.01')) != net_amount_due.quantize(Decimal('0.01')):
-                        self.add_error('amount_received', f'Amount paid (${amount_received:.2f}) must be equal to the full amount due (${net_amount_due:.2f}) for a full payment. Please pay the full amount or select "Is this an installment payment?".')
+                        self.add_error('amount_received', f'Amount paid (N{amount_received:.2f}) must be equal to the full amount due (N{net_amount_due:.2f}) for a full payment. Please pay the full amount or select "Is this an installment payment?".')
                 # If it IS an installment, any positive amount_received is valid here.
                 # The ledger will track the balance.
 
@@ -216,7 +216,7 @@ class PaymentForm(forms.ModelForm):
                 if not is_installment:
                     # Using quantize for precise Decimal comparison
                     if amount_received is not None and amount_received.quantize(Decimal('0.01')) != calculated_net_due.quantize(Decimal('0.01')):
-                        self.add_error('amount_received', f'Amount paid (${amount_received:.2f}) must be equal to the net amount due (${calculated_net_due:.2f}) for a full payment. Please pay the full amount or mark as installment.')
+                        self.add_error('amount_received', f'Amount paid (N{amount_received:.2f}) must be equal to the net amount due (N{calculated_net_due:.2f}) for a full payment. Please pay the full amount or mark as installment.')
                 # If it IS an installment, any positive amount_received is valid here.
 
         return cleaned_data

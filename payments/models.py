@@ -169,6 +169,9 @@ class Payment(models.Model):
                                                  help_text="Balance remaining for this specific CategoryFee before this payment.")
     balance_after_payment = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
                                                 help_text="Balance remaining for this specific CategoryFee after this payment.")
+    
+    confirm_payment = models.BooleanField(default=False, verbose_name='confirm the payment')   
+
 
 
     class Meta:

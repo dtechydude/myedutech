@@ -58,11 +58,13 @@
         </div>
     </div>
 </div>
-        <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Payment Receipt</h2>
+        <h2 class="text-3xl font-bold text-gray-800 mb-4 text-center">Payment Receipt</h2>
+        <h3 class="text-3xl font-bold text-gray-800 mb-0 text-center">
+            {% if receipt.payment.confirm_payment %} <span style="color:green; font-size: 15px;">"Payment Confirmed" </span>{% else %} <span style="color:red; font-size: 14px;">"Payment Not confirmed Yet"</span> {% endif %}</h3>
 
         <div class="flex justify-between items-start mb-6 border-b pb-4">
             <div>
-                <h3 class="text-xl font-semibold text-gray-700 mb-2">Receipt Details:</h3>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">Receipt Details:</h3> 
                 <p class="text-gray-700"><strong>Receipt #:</strong> <span class="text-blue-700">{{ receipt.receipt_number }}</span></p>
                 <p class="text-gray-700"><strong>Date Issued:</strong> {{ receipt.issue_date|date:"M d, Y" }}</p>
             </div>
@@ -77,12 +79,12 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <p class="text-gray-700"><strong>Name:</strong> {{ receipt.payment.student.first_name }} {{ receipt.payment.student.last_name }}</p>
-                    <p class="text-gray-700"><strong>Student ID:</strong> {{ receipt.payment.student.student_id }}</p>
-                    <p class="text-gray-700"><strong>Class:</strong> {{ receipt.payment.student.student_class.name|default:"N/A" }}</p> {# Assuming 'student_class' exists on Student model #}
+                    <p class="text-gray-700"><strong>Student ID:</strong> {{ receipt.payment.student.user.username }}</p>
+                    <p class="text-gray-700"><strong>Class:</strong> {{ receipt.payment.student.current_class|default:"N/A" }}</p> {# Assuming 'student_class' exists on Student model #}
                 </div>
                 <div>
-                    <p class="text-gray-700"><strong>Email:</strong> {{ receipt.payment.student.email|default:"N/A" }}</p>
-                    <p class="text-gray-700"><strong>Phone:</strong> {{ receipt.payment.student.phone_number|default:"N/A" }}</p>
+                    <p class="text-gray-700"><strong>Email:</strong> {{ receipt.payment.student.user.email|default:"N/A" }}</p>
+                    <p class="text-gray-700"><strong>Phone:</strong> {{ receipt.payment.student.user.profile.phone|default:"N/A" }}</p>
                 </div>
             </div>
         </div>
@@ -109,31 +111,31 @@
                                     <p class="text-sm text-gray-500">Installment {{ receipt.payment.installment_number|default:"-" }} of {{ receipt.payment.total_installments|default:"-" }}</p>
                                 {% endif %}
                             </td>
-                            <td class="py-3 px-4 text-right text-gray-800">${{ receipt.payment.original_amount|floatformat:2|default:"0.00" }}</td>
+                            <td class="py-3 px-4 text-right text-gray-800">N{{ receipt.payment.original_amount|floatformat:2|default:"0.00" }}</td>
                         </tr>
                         {% if receipt.payment.discount_amount > 0 or receipt.payment.discount_percentage > 0 %}
                         <tr class="border-b">
                             <td class="py-2 px-4 text-gray-600">Discount</td>
                             <td class="py-2 px-4 text-right text-red-600">
-                                - ${{ receipt.payment.discount_amount|floatformat:2|default:"0.00" }}
+                                - N{{ receipt.payment.discount_amount|floatformat:2|default:"0.00" }}
                                 {% if receipt.payment.discount_percentage > 0 %} ({{ receipt.payment.discount_percentage|floatformat:2 }}%){% endif %}
                             </td>
                         </tr>
                         {% endif %}
                         <tr class="font-bold">
                             <td class="py-3 px-4 text-gray-800">Net Amount Due</td>
-                            <td class="py-3 px-4 text-right text-blue-600">${{ receipt.payment.net_amount_due|floatformat:2|default:"0.00" }}</td>
+                            <td class="py-3 px-4 text-right text-blue-600">N{{ receipt.payment.net_amount_due|floatformat:2|default:"0.00" }}</td>
                         </tr>
                         <tr class="font-bold bg-green-50">
                             <td class="py-4 px-4 text-xl text-gray-900">Amount Paid</td>
-                            <td class="py-4 px-4 text-right text-green-700 text-2xl">${{ receipt.payment.amount_received|floatformat:2|default:"0.00" }}</td>
+                            <td class="py-4 px-4 text-right text-green-700 text-2xl">N{{ receipt.payment.amount_received|floatformat:2|default:"0.00" }}</td>
                         </tr>
                         {% comment %}
                         If you have a `StudentAccountLedger` and want to show current balance:
                         {% if receipt.payment.student.studentaccountledger_set.first %}
                         <tr class="font-bold">
                             <td class="py-3 px-4 text-gray-800">Current Outstanding Balance</td>
-                            <td class="py-3 px-4 text-right text-red-600">${{ receipt.payment.student.studentaccountledger_set.first.balance|floatformat:2|default:"0.00" }}</td>
+                            <td class="py-3 px-4 text-right text-red-600">N{{ receipt.payment.student.studentaccountledger_set.first.balance|floatformat:2|default:"0.00" }}</td>
                         </tr>
                         {% endif %}
                         {% endcomment %}

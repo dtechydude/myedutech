@@ -46,7 +46,7 @@ class PaymentAdmin(ImportExportModelAdmin, admin.ModelAdmin):
             'fields': ('balance_before_payment', 'balance_after_payment')
         }),
         ('Audit Information', {
-            'fields': ('recorded_by',) # payment_date is auto_now_add, so it's set on creation
+            'fields': ('recorded_by', 'confirm_payment') # payment_date is auto_now_add, so it's set on creation
         }),
     )
 
