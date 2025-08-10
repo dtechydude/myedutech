@@ -23,7 +23,8 @@ class Route(models.Model):
 
     class Meta:
         ordering = ['route_id']
-        verbose_name = 'Route/Fare'
+        verbose_name = 'Bus Routes & Fares'
+        verbose_name_plural = 'Bus Routes & Fares'
 
     def __str__ (self):
         return f'{self.name} - {self.route_id}'
@@ -49,7 +50,8 @@ class StudentOnRoute(models.Model):
     payment_date = models.DateField(verbose_name='Payment Date', blank=True, null=True)
          
     signup_date = models.DateTimeField(auto_now_add=True)
-    is_approved = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=False,  help_text="Check if payment is confirmed.")
+    is_active_on_bus = models.BooleanField(default=False, help_text="Check if student is ACTIVE on bus Uncheck If Student in INACTIVE")
     updated = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -64,8 +66,9 @@ class StudentOnRoute(models.Model):
 
     class Meta:
         ordering = ['student' ]
-
         unique_together = ['student', 'route']
+        verbose_name = 'Students On Bus Route'
+        verbose_name_plural = 'Students On Bus Route'
     
 
     def __str__ (self):

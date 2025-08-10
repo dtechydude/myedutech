@@ -1,13 +1,12 @@
-# payments/admin.py
-
 from django.contrib import admin
 from django.contrib import messages
 from decimal import Decimal
 from .models import Payment, PaymentCategory, BankDetail, StudentAccountLedger, CategoryFee, Receipt
-from students.models import Student # Assuming Student model is in 'students' app
+from import_export.admin import ImportExportModelAdmin
+
 
 @admin.register(Payment)
-class PaymentAdmin(admin.ModelAdmin):
+class PaymentAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     # Fields to display in the list view of the admin
     list_display = (
         'student', 'payment_category', 'term', 'session',
@@ -16,7 +15,7 @@ class PaymentAdmin(admin.ModelAdmin):
     )
     # Fields that can be filtered in the right sidebar of the admin list view
     list_filter = (
-        'status', 'payment_category', 'term', 'session', 'payment_method', 'payment_date'
+        'status', 'payment_category', 'term', 'session', 'payment_method', 'payment_date', 'student__current_class',
     )
     # Fields that can be searched using the search bar in the admin list view
     search_fields = (

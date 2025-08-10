@@ -12,15 +12,16 @@ class RouteAdmin(admin.ModelAdmin):
     exclude = ('slug',)
 
 @admin.register(StudentOnRoute)
-class StudentOnRouteAdmin(admin.ModelAdmin):
+class StudentOnRouteAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_display = (
         'student_full_name',  # This will be a custom method
         'route',
         'signup_date',
         'amount_paid',
+        'is_approved',
         'payment_date',
     )
-    list_filter = ('route', 'signup_date')
+    list_filter = ('route', 'signup_date', 'is_active_on_bus')
     search_fields = (
         'student__first_name', # Corrected: Access directly from User
         'student__last_name',  # Corrected: Access directly from User

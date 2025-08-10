@@ -156,7 +156,7 @@
                                 {% for item in payment_breakdown %}
                                     <tr>
                                         <td class="px-6 py-4 font-weight-medium text-dark">
-                                            {{ item.student__first_name }} {{ item.student__last_name }} ({{ item.student__student_id }})
+                                            {{ item.student__first_name }} {{ item.student__last_name }} - {{ item.student__student_id }}
                                         </td>
                                         <td class="px-6 py-4 text-muted">
                                             {{ item.payment_category__name|default:"N/A" }}

@@ -143,6 +143,12 @@ class Profile(models.Model):
             self.code = code
         super().save(*args, **kwargs)
 
+    class Meta:
+
+        verbose_name = 'User Profiles'
+        verbose_name_plural = 'User Profiles'
+
+
 
 
 class Dept(models.Model):
@@ -151,4 +157,9 @@ class Dept(models.Model):
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        verbose_name = 'School Departments'
+        verbose_name_plural = 'School Departments'
+
     

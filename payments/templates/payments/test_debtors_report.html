@@ -115,6 +115,7 @@
                     <table class="table table-striped table-hover mb-0">
                         <thead>
                             <tr>
+                                <th>S/N</th>
                                 <th scope="col">Student Name</th>
                                 <th scope="col">Student Class</th>
                                 <th scope="col">Term</th>
@@ -127,7 +128,8 @@
                             {% if debtors %}
                                 {% for debtor in debtors %}
                                     <tr>
-                                        <td>{{ debtor.student_name }} {{ debtor.student.last_name }}</td>
+                                        <td>{{forloop.counter}}</td>
+                                        <td>{{ debtor.student_name }}</td>
                                         <td>{{ debtor.student_class }}</td>
                                         <td>{{ debtor.term_name }}</td>
                                         <td>{{ debtor.session_name }}</td>

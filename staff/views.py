@@ -156,3 +156,58 @@ class TeacherStudentCountListView(ListView):
         for teacher in context['teachers']:
             teacher.student_count = teacher.teacher.count() # Add student_count as an attribute
         return context
+    
+
+# Teachers Subjects & Classes Assigned
+def teacher_subjects_standards_view(request):
+    """
+    Displays a list of all teachers, their subjects taught,
+    and the standards they are assigned to.
+    """
+    # Fetch all teacher objects from the database
+    # The .prefetch_related() method is used for efficiency to
+    # fetch all related subjects and standards in a single query.
+    teachers = Teacher.objects.all().prefetch_related('subjects_taught', 'standards_assigned')
+
+    context = {
+        'teachers': teachers,
+        'title': 'Teacher Assignments'
+    }
+    return render(request, 'staff/teacher_assignments.html', context)
+
+# Visiting An Individual Teachers Assigned Classes And Subjects
+def teacher_profile_view(request, teacher_id):
+    """
+    Displays the subjects and standards assigned to a specific teacher.
+    """
+    # Fetch the specific teacher object by ID, or return a 404 error if not found.
+    teacher = get_object_or_404(
+        Teacher.objects.prefetch_related('subjects_taught', 'standards_assigned'), 
+        id=teacher_id
+    )
+    
+    context = {
+        'teacher': teacher,
+        'title': f'{teacher.get_full_name()} Assignments'
+    }
+    return render(request, 'staff/teacher_assigned_page.html', context)
+
+# Each Teachers Seeing Their Assigned Subects & Classes
+@login_required
+def my_assignments_view(request):
+    """
+    Displays the subjects and standards assigned to the currently logged-in teacher.
+    """
+    # Get the Teacher object associated with the logged-in user.
+    # The get_object_or_404 is a good way to handle cases where a user account
+    # doesn't have a corresponding Teacher object.
+    teacher = get_object_or_404(
+        Teacher.objects.prefetch_related('subjects_taught', 'standards_assigned'),
+        user=request.user
+    )
+
+    context = {
+        'teacher': teacher,
+        'title': 'My Assignments'
+    }
+    return render(request, 'staff/teacher_self_assignments.html', context)

@@ -508,10 +508,10 @@ from django.template.loader import get_template
 from curriculum.models import SchoolIdentity
 import csv # For CSV export
 from io import StringIO # For CSV export
-from .utils import get_debtors_data, get_total_payments_data, render_to_pdf # Import render_to_pdf
+# from .utils import get_debtors_data, get_total_payments_data, render_to_pdf # Import render_to_pdf
 
 # Import the refactored utility functions
-from .utils import get_debtors_data, get_total_payments_data
+from .utils import get_debtors_data, get_total_payments_data, render_to_pdf
 
 # For PDF generation (using django-weasyprint which wraps xhtml2pdf/wkhtmltopdf)
 from django.conf import settings # To access STATIC_URL for PDF images
@@ -774,6 +774,7 @@ def receipt_pdf(request, receipt_id):
     
     messages.error(request, "Could not generate PDF for the receipt.")
     return redirect('payments:view_receipt', receipt_id=receipt.id) # Redirect back if PDF generation fails
+
 
 
 @login_required

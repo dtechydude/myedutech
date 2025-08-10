@@ -67,8 +67,8 @@ class Badge(models.Model):
         super().save(*args, **kwargs)
     
     class Meta:       
-        verbose_name = 'Prefect'
-        verbose_name_plural = 'Prefects'
+        verbose_name = 'Prefect Badge'
+        verbose_name_plural = 'Prefect Badge'
 
 
 
@@ -189,6 +189,11 @@ class Student(models.Model):
     
     def get_absolute_url(self):
         return reverse('students:student-detail', kwargs={'id':self.USN})
+    
+    class Meta:
+        verbose_name = 'Student Details'
+        verbose_name_plural = 'Student Details'
+
     
 # Student ID Card Generation
 class StudentId(models.Model):

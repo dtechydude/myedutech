@@ -150,6 +150,6 @@ def payment_chart(request):
 def bank_detail(request):
     bank_detail = BankDetail.objects.all()   
     context = {        
-        'baml_detail': bank_detail,
+        'bank_detail': bank_detail,
     }
     return render(request, 'pages/bank_detail.html', context)

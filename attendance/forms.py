@@ -165,15 +165,32 @@ class AttendanceReportForm(forms.Form):
         })
     )
 
-    # REORDERED: Custom arguments come AFTER *args, **kwargs
-    def __init__(self, *args, teacher=None, **kwargs):
+    # # REORDERED: Custom arguments come AFTER *args, **kwargs
+    # def __init__(self, *args, teacher=None, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     # Filter students based on the current teacher
+    #     if teacher:
+    #         self.fields['student'].queryset = Student.objects.filter(form_teacher=teacher).order_by('first_name', 'last_name')
+    #     else:
+    #         # If no teacher is provided, perhaps show all students or restrict access
+    #         self.fields['student'].queryset = Student.objects.all().order_by('first_name', 'last_name')
+
+    def __init__(self, *args, **kwargs):
+        teacher = kwargs.pop('teacher', None)
+        is_superuser = kwargs.pop('is_superuser', False)
         super().__init__(*args, **kwargs)
-        # Filter students based on the current teacher
-        if teacher:
-            self.fields['student'].queryset = Student.objects.filter(form_teacher=teacher).order_by('first_name', 'last_name')
+
+        # If the user is a superuser, show all students.
+        # Otherwise, filter the student queryset by the form teacher's students.
+        if not is_superuser and teacher:
+            self.fields['student'].queryset = Student.objects.filter(
+                form_teacher=teacher
+            ).order_by('last_name', 'first_name')
+        elif is_superuser:
+            self.fields['student'].queryset = Student.objects.all().order_by('last_name', 'first_name')
         else:
-            # If no teacher is provided, perhaps show all students or restrict access
-            self.fields['student'].queryset = Student.objects.all().order_by('first_name', 'last_name')
+            # If neither a teacher nor a superuser, show no students or a limited set
+            self.fields['student'].queryset = Student.objects.none()
 
 
     def clean(self):

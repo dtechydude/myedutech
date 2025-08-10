@@ -66,6 +66,8 @@ class Score(models.Model):
         # Each student can only have one score entry per subject per term
         unique_together = ('student', 'subject', 'term')
         ordering = ['student__first_name', 'student__last_name']
+        verbose_name = 'Exams & CA Scores'
+        verbose_name_plural = 'Exams & CA Scores'
 
     def __str__(self):
         return f"{self.student.first_name} - {self.subject.name} ({self.term.name})"

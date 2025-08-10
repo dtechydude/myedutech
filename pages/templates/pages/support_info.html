@@ -105,7 +105,7 @@
                                 <h4 class="card-title">The School Support Contact</h4>
                             </div>
                             <div class="card-body">
-                                <div id="DZ_W_TimeLine" class="widget-timeline dlab-scroll height370">
+                                <div id="DZ_W_TimeLine" class="widget-timeline dlab-scroll height570">
                                     {% for s in school_contact %}
                                     <ul class="timeline">
                                         
@@ -123,8 +123,8 @@
                                             </div>
                                             <a class="timeline-panel text-muted" href="#">
                                                 <span>School's Phones</span>
-                                                <h6 class="mb-0">{{ s.phone1 }} <strong class="text-info">PHONE.</strong></h6>
-												<p class="mb-0">{{s.phone2}}</p>
+                                                <h6 class="mb-0">Phone 1: (+234) {{ s.phone1 }} <strong class="text-info"><br> Phone 2: (+234) {{s.phone2}}</strong></h6>
+											
                                             </a>
                                         </li>
                                         <li>
@@ -132,7 +132,7 @@
                                             </div>
                                             <a class="timeline-panel text-muted" href="#">
                                                 <span>School's EMAIL</span>
-                                                <h6 class="mb-0">{{ s.email }} <strong class="text-warning">Sell $250</strong></h6>
+                                                <h6 class="mb-0">{{ s.email }} <strong class="text-warning"></strong></h6>
                                             </a>
                                         </li>
                                         <li>
@@ -164,7 +164,7 @@
                                 <h4 class="card-title">SchoollyEdTech Support Center</h4>
                             </div>
                             <div class="card-body">
-                                <div id="DZ_W_TimeLine11" class="widget-timeline dlab-scroll style-1 height370">
+                                <div id="DZ_W_TimeLine11" class="widget-timeline dlab-scroll style-1 height570">
                                     <ul class="timeline">
                                         <li>
                                             <div class="timeline-badge primary"></div>

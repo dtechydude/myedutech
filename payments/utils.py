@@ -161,7 +161,7 @@ def get_debtors_data(term_id=None, session_id=None):
     debtors_list = []
     for account_entry in debtor_accounts:
         debtors_list.append({
-            'student_name': account_entry.student.user.get_full_name(),
+            'student_name': account_entry.student.get_full_name(),
             'student_class': account_entry.student.current_class.name if account_entry.student.current_class else 'N/A',
             'term_name': account_entry.term.name if account_entry.term else 'N/A',
             'session_name': account_entry.session.name if account_entry.session else 'N/A',

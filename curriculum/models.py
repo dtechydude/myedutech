@@ -119,8 +119,8 @@ class Standard(models.Model):
 
 
     class Meta:
-        verbose_name = 'Standard'
-        verbose_name_plural = 'Standards'
+        verbose_name = 'Standard (GRADE LEVELS)'
+        verbose_name_plural = 'Standards (GRADE LEVELS)'
         ordering =['name']
 
     def __str__(self):

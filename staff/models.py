@@ -109,8 +109,14 @@ class Teacher(models.Model):
     def __str__(self):
         return f'{self.first_name} - {self.last_name}'
     
+    def get_full_name(self):
+        """
+        Returns the student's full name.
+        """
+        return f"{self.first_name} {self.middle_name } {self.last_name}"
+    
     class Meta:
         ordering = ['last_name']
         
-        verbose_name = 'Staff/Teachers'
-        verbose_name_plural = 'Staff/Teachers'
+        verbose_name = 'Teachers & Staff Details'
+        verbose_name_plural = 'Teachers & Staff Details'

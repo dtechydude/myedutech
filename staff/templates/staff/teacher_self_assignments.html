@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        li {
+            background-color: #f4f4f4;
+            margin-bottom: 5px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome, {{ teacher.get_full_name }}!</h1>
+    <p>Here are your assigned classes and subjects.</p>
+
+    <h2>My Subjects</h2>
+    {% if teacher.subjects_taught.all %}
+        <ul>
+            {% for subject in teacher.subjects_taught.all %}
+                <li>{{ subject.name }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You have no subjects assigned.</p>
+    {% endif %}
+
+    <h2>My Classes</h2>
+    {% if teacher.standards_assigned.all %}
+        <ul>
+            {% for standard in teacher.standards_assigned.all %}
+                <li>{{ standard.name }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You have no classes assigned.</p>
+    {% endif %}
+</body>
+</html>

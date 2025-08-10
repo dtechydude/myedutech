@@ -88,19 +88,100 @@ def take_daily_attendance(request):
     return render(request, 'attendance/test2_take_attendance.html', context)
 
 
-#Attendance Report
+# #Attendance Report for teacher view only
+# @login_required
+# def attendance_report(request):
+#     current_user = request.user
+#     teacher = None
+#     try:
+#         teacher = Teacher.objects.get(user=current_user)
+#     except Teacher.DoesNotExist:
+#         pass
+
+#     report_form = AttendanceReportForm(request.GET or None, teacher=teacher)
+    
+#     # Initialize these variables with default empty values BEFORE the if statement
+#     attendance_data = {}
+#     student_attendance_summary = {} 
+    
+#     today = date.today()
+#     default_start_date = today - timedelta(days=6)
+#     default_end_date = today
+
+#     context_start_date = default_start_date
+#     context_end_date = default_end_date
+#     selected_student_id = None # Initialize as None
+
+#     if report_form.is_valid():
+#         form_start_date = report_form.cleaned_data.get('start_date')
+#         form_end_date = report_form.cleaned_data.get('end_date')
+#         selected_student = report_form.cleaned_data.get('student')
+
+#         if form_start_date:
+#             context_start_date = form_start_date
+#         if form_end_date:
+#             context_end_date = form_end_date
+
+#         if selected_student:
+#             selected_student_id = selected_student.id
+
+#         attendance_records_query = Attendance.objects.filter(
+#             date__range=(context_start_date, context_end_date)
+#         )
+#         if selected_student:
+#             attendance_records_query = attendance_records_query.filter(student=selected_student)
+#         elif teacher:
+#             teacher_students = Student.objects.filter(form_teacher=teacher)
+#             attendance_records_query = attendance_records_query.filter(student__in=teacher_students)
+
+#         # The loop that populates attendance_data and student_attendance_summary
+#         for record in attendance_records_query.order_by('student__last_name', 'date'):
+#             student = record.student
+#             record_date = record.date
+
+#             if student not in attendance_data:
+#                 attendance_data[student] = {}
+#                 student_attendance_summary[student] = {'present': 0, 'absent': 0, 'total_days': 0}
+
+#             attendance_data[student][record_date] = record
+            
+#             # Count present/absent
+#             if record.present:
+#                 student_attendance_summary[student]['present'] += 1
+#             else:
+#                 student_attendance_summary[student]['absent'] += 1
+#             student_attendance_summary[student]['total_days'] += 1
+
+
+#     context = {
+#         'report_form': report_form,
+#         'attendance_data': attendance_data,
+#         'selected_student_id': selected_student_id,
+#         'start_date': context_start_date,
+#         'end_date': context_end_date,
+#         'teacher': teacher,
+#         'student_attendance_summary': student_attendance_summary,
+#     }
+#     return render(request, 'attendance/test_attendance_report.html', context) # Make sure this points to the correct template name
+
+
 @login_required
 def attendance_report(request):
     current_user = request.user
     teacher = None
-    try:
-        teacher = Teacher.objects.get(user=current_user)
-    except Teacher.DoesNotExist:
-        pass
 
-    report_form = AttendanceReportForm(request.GET or None, teacher=teacher)
+    # New logic: Superusers have special privileges
+    is_superuser = current_user.is_superuser
+
+    if not is_superuser:
+        try:
+            # Only try to get a Teacher object if the user is not a superuser
+            teacher = Teacher.objects.get(user=current_user)
+        except Teacher.DoesNotExist:
+            pass
     
-    # Initialize these variables with default empty values BEFORE the if statement
+    report_form = AttendanceReportForm(request.GET or None, teacher=teacher, is_superuser=is_superuser)
+    
     attendance_data = {}
     student_attendance_summary = {} 
     
@@ -110,7 +191,7 @@ def attendance_report(request):
 
     context_start_date = default_start_date
     context_end_date = default_end_date
-    selected_student_id = None # Initialize as None
+    selected_student_id = None
 
     if report_form.is_valid():
         form_start_date = report_form.cleaned_data.get('start_date')
@@ -128,13 +209,15 @@ def attendance_report(request):
         attendance_records_query = Attendance.objects.filter(
             date__range=(context_start_date, context_end_date)
         )
+        
+        # New logic: If superuser, show all students. Otherwise, filter by selected student or teacher.
         if selected_student:
             attendance_records_query = attendance_records_query.filter(student=selected_student)
-        elif teacher:
+        elif not is_superuser and teacher:
             teacher_students = Student.objects.filter(form_teacher=teacher)
             attendance_records_query = attendance_records_query.filter(student__in=teacher_students)
+        # If is_superuser and no specific student is selected, the query remains unfiltered by student.
 
-        # The loop that populates attendance_data and student_attendance_summary
         for record in attendance_records_query.order_by('student__last_name', 'date'):
             student = record.student
             record_date = record.date
@@ -145,13 +228,11 @@ def attendance_report(request):
 
             attendance_data[student][record_date] = record
             
-            # Count present/absent
             if record.present:
                 student_attendance_summary[student]['present'] += 1
             else:
                 student_attendance_summary[student]['absent'] += 1
             student_attendance_summary[student]['total_days'] += 1
-
 
     context = {
         'report_form': report_form,
@@ -160,6 +241,7 @@ def attendance_report(request):
         'start_date': context_start_date,
         'end_date': context_end_date,
         'teacher': teacher,
+        'is_superuser': is_superuser, # Pass this to the template for conditional logic
         'student_attendance_summary': student_attendance_summary,
     }
-    return render(request, 'attendance/test_attendance_report.html', context) # Make sure this points to the correct template name
+    return render(request, 'attendance/test_attendance_report.html', context)

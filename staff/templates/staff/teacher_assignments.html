@@ -7,7 +7,7 @@
     
 	<!-- PAGE TITLE HERE -->
     {% block title %}
-	<title>Students On Bus</title>
+	<title>Teachers List</title>
 	{% endblock title %}
 	
 	<!-- FAVICONS ICON -->
@@ -81,78 +81,74 @@
         ***********************************-->
         {% block content_body %}
         <div class="content-body">
-            <div class="container-fluid">				
-                
+            <div class="container-fluid">		
+			                
                 <!-- row -->
-                <div class="row">                
+
+                <div class="row">
+                
 					<div class="col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h4 class="card-title" style="color:orangered;"><i class="fa fa-bus" aria-hidden="true"></i> - Students On Bus </h4>
+                                <h4 class="card-title" style="color:orangered;">Teachers Subjects & Class Assigned </h4>
                             </div>
                             <div class="card-body">
-                                 {% if student_signups %}
                                 <div class="table-responsive">
                                     <table id="example3" class="display" style="min-width: 845px">
                                         <thead>
                                             <tr>
-                                                <th>#</th>
-                                                <th>Student Name</th>
-                                                <th>Grade/Class</th>
-                                                <th>Bus Route</th>
-                                                <th>Sign-up Date</th> 
-                                                <th>Payment Status</th>                                              
-                                                
+                                                <th>S/N</th>
+                                                 <th>Teacher Name</th>
+                                                <th>Subjects Taught</th>
+                                                <th>Standards Assigned</th> 
+                                                <th>Action</th>                                            
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {% for signup in student_signups %}
-                                                {% if signup.is_active_on_bus == True %}
-                                        
+                                            {% for teacher in teachers %}
                                             <tr>
-                                               <td>{{ forloop.counter }}</td>
-                                                <td>{% if signup.student %}
-                                                    {{ signup.student.first_name }} {{ signup.student.last_name }}                                                    {% else %}
-                                                    N/A (Student Deleted)
-                                                    {% endif %}
-                                                    </td>
-                                                     <td>{% if signup.student %}
-                                                    {{ signup.student.student.current_class }} 
-                                                    {% else %}
-                                                    N/A (Student Deleted)
-                                                    {% endif %}
-                                                    </td>
-                                                    <td>
-                                                    {% if signup.route %}
-                                                    {{ signup.route.name }}
-                                                    {% else %}
-                                                    N/A (Route Deleted)
-                                                    {% endif %}
-                                                    </td>                                                     
-                                                    <td>{{ signup.signup_date|date:"F j, Y, P" }}</td>
-                                                     <td>
-                                                    {% if signup.is_approved %}
-                                                    <span style="color: green;">Approved</span>
-                                                    {% else %}
-                                                   <span style="color: red;">Pending</span>
-                                                    {% endif %}
-                                                    </td>
-                                                {% endif %}    
+                                                <td>{{ forloop.counter }}</td>
+												<td><a href="{% url 'staff:teacher_profile' teacher.id %}"> {{ teacher.get_full_name }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                     {% if teacher.subjects_taught.all %}
+                                                <ul>
+                                                    {% for subject in teacher.subjects_taught.all %}
+                                                        <li>{{ subject.name }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                                {% else %}
+                                                <p>No subjects have been assigned to this teacher.</p>
+                                            {% endif %}
+                                                </td>
+
+                                                <td>
+                                                     {% if teacher.standards_assigned.all %}
+                                                    <ul>
+                                                        {% for standard in teacher.standards_assigned.all %}
+                                                            <li>{{ standard.name }}</li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                {% else %}
+                                                    <p>No classes have been assigned to this teacher.</p>
+                                                {% endif %}
+                                                </td> 
+                                                <td> <a href="{% url 'staff:teacher_profile' teacher.id %}"><strong> View Details</strong></a>
+                                                </td>                                          
+                                                                                
                                                 {% endfor %}
-                                            </tr>   
-                                                                              
-                                                                                   
+                                            </tr>                                                                                    
+                                         
                                         </tbody>
                                     </table>
                                 </div>
-                                {% else %}
-                                <div class="alert alert-info" role="alert">
-                                    No students currently signed up for bus routes.
-                                </div>
-                                {% endif %}
                             </div>
                         </div>
                     </div>
+
+
+
 				</div>
             </div>
         </div>

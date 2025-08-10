@@ -10,6 +10,11 @@ app_name ='staff'
 urlpatterns = [
 
      path('teacher_list/', staff_views.teachers_list, name='teacher-list'),
+     path('assignments/', staff_views.teacher_subjects_standards_view, name='teacher_assignments'),
+     path('<int:teacher_id>/profile/', staff_views.teacher_profile_view, name='teacher_profile'),
+     path('my-assignments/', staff_views.my_assignments_view, name='my_assignments'),
+
+
     #  path('staff_list/', staff_views.staff_list, name='staff-list'),
     #  path('assign_list/', staff_views.assign_list, name='assign-list'),
      path('my_teacher_view/', staff_views.my_teacher_view, name='my_teacher_view'),
@@ -33,8 +38,7 @@ urlpatterns = [
 
      # URL to list all teachers and their student counts (class-based)
     path('teachers/cbv_all_counts/', TeacherStudentCountListView.as_view(), name='cbv_all_teachers_student_counts'),
-
-
+    
      
 
 ]
