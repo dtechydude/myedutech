@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,7 +33,7 @@
 <body>
 
 <header class="header d-flex justify-content-between align-items-center">
-    <a href="/dashboard" class="logo">School Name</a>
+    <a href="/dashboard/" class="logo"><img src="{% static 'pages/images/schoolly_logo.png' %}" alt="" width="80"></a>
     <a href="/dashboard" class="btn btn-outline-primary">
         <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
     </a>

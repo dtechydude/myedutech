@@ -841,12 +841,14 @@
 						<ul aria-expanded="false">
 							<li><a href="{% url 'users:register' %}">SignUp Teacher/staff</a></li>
 							<li><a href="/admin/staff/teacher/">Onboard Teacher</a></li>
+							<li><a href="{% url 'staff:teacher-list' %}">All Teachers</a></li>
 							<li><a href="{% url 'staff:assign_form_teacher' %}">Assign FormTeacher(HEAD)</a></li> 
 							<li><a href="{% url 'staff:assign_form_teacher_to_classgroup' %}">Assign FormTeacher To CLASSGROUP</a></li>
-							<li><a href="{% url 'staff:teacher-list' %}">Teachers Details</a></li>
 							<li><a href="{% url 'staff:teacher_assignments' %}">Teacher's Subj./Classes</a></li>
 							<li><a href="{% url 'staff:cbv_all_teachers_student_counts' %}">Teacher's Students Count</a></li>
-					
+							<li><a href="{% url 'curriculum:form_teachers_head' %}">FormTeachers (HEAD)</a></li>
+							<li><a href="{% url 'curriculum:classgroup_form_teachers' %}">ClassGroup FormTeachers</a></li>
+
 						</ul>
 					</li>
 					{% endif %}

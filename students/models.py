@@ -94,7 +94,7 @@ class Student(models.Model):
     last_name = models.CharField(max_length=20)    
     current_class = models.ForeignKey(Standard, on_delete=models.SET_NULL, null=True, blank=True, related_name='students')
     class_group = models.ForeignKey(ClassGroup, on_delete=models.SET_NULL, null=True, blank=True, related_name='classes')
-    form_teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, blank=True, null=True, related_name='teacher', help_text='This field will be automatically updated when form teacher is set the standard')
+    form_teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, blank=True, null=True, related_name='teacher', help_text='This field will be automatically updated when form teacher is set in the standard')
     badge =  models.ForeignKey(Badge, on_delete=models.CASCADE, blank=True, null=True, verbose_name='Prefect')
     
     female = 'female'

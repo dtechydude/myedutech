@@ -173,9 +173,6 @@ class ClassGroup(models.Model):
 
 
 
-
-
-
 class Subject(models.Model):
     subject_id = models.CharField(max_length=100, unique=True)
     name = models.CharField(max_length=100, unique=True)

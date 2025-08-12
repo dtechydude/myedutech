@@ -6,7 +6,7 @@ from django.db.models import Count
 from django.views.generic import(TemplateView, DetailView,
                                 ListView, FormView, CreateView, 
                                 UpdateView, DeleteView)
-from .models import Lesson, Standard, ELearningSubject, save_lesson_files
+from .models import Lesson, Standard, ELearningSubject, ClassGroup, save_lesson_files
 from .forms import CommentForm, LessonForm, ReplyForm
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -181,6 +181,29 @@ def class_list(request):
 
     }
     return render(request, 'curriculum/classes_list.html', context)
+
+
+#Displays all teachers
+def classgroup_form_teachers_list(request):
+    all_teachers = ClassGroup.objects.all()   
+
+    context = {
+        'all_teachers': all_teachers
+    }
+    return render(request, 'curriculum/classgroup_form_teachers_list.html', context)
+
+
+#Displays all teachers
+def form_teachers_head_list(request):
+    all_teachers = Standard.objects.all()   
+
+    context = {
+        'all_teachers': all_teachers
+    }
+    return render(request, 'curriculum/form_teachers_head_list.html', context)
+
+
+   
 
 
    

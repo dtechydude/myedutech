@@ -7,7 +7,7 @@
     
 	<!-- PAGE TITLE HERE -->
     {% block title %}
-	<title>Non-Academic Staff List</title>
+	<title>Class Group Form Teachers List</title>
 	{% endblock title %}
 	
 	<!-- FAVICONS ICON -->
@@ -82,14 +82,7 @@
         {% block content_body %}
         <div class="content-body">
             <div class="container-fluid">
-				
-				<div class="row page-titles">
-					<!-- <ol class="breadcrumb">
-						<li class="breadcrumb-item active"><a href="javascript:void(0)">Students</a></li>
-						<li class="breadcrumb-item"><a href="javascript:void(0)">All-Time List</a></li>
-					</ol> -->
-                </div>
-                
+				                
                 <!-- row -->
 
                 <div class="row">
@@ -97,7 +90,7 @@
 					<div class="col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h4 class="card-title" style="color:orangered;">Non-Academic Staff List </h4>
+                                <h4 class="card-title" style="color:brown;">Form Teachers (HEAD) List </h4>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
@@ -105,35 +98,22 @@
                                         <thead>
                                             <tr>
                                                 <th>S/N</th>
-                                                <th>Image</th>
-                                                <th>Full Name</th>
-                                                <th>Username</th>                                               
-                                                <th>Dept.</th>                                                
-                                                <th>Phone</th>
-                                                <th>Email</th>
-                                                <th>Emp.Date</th>
-                                                <th>Action</th>
+                                                <th>Standard</th>
+                                                <th>Promotion Order</th>
+                                                <th>FormTeacher (HEAD)</th> 
+                                                <th>PHONE</th>                                                
+                                                
+                                            
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {% for ts in all_teachers %}
                                             <tr>
                                                 <td>{{ forloop.counter }}</td>
-												<td><a href="{% url 'staff:teacher-detail' ts.id %}"><img class="rounded-circle" width="40" height="40" src="{{ts.user.profile.image.url}}" alt=""></a></td>
-                                                <td>{{ ts.full_name }}</td>
-                                                <td>{{ ts.user.username }}</td>
-                                                <td>{{ ts.dept }}</td>
-                                                <td>{{ ts.user.profile.phone }}</td>
-                                                <td>{{ ts.user.email }}</td>
-                                                <td><a href="javascript:void(0);"><strong>{{ ts.date_employed | date:"d/m/Y" }}</strong></a></td>
-                                                <!-- <td><a href="javascript:void(0);"><strong>info@example.com</strong></a></td> -->
-                                                <td>
-                                                    <td>
-                                                        <div class="d-flex">
-                                                            <a href="{% url 'students:student-detail' s.USN %}" class="btn btn-primary shadow btn-xs sharp me-1"><i class="fas fa-eye"></i></a>
-                                                            <a href="#" class="btn btn-danger shadow btn-xs sharp"><i class="fa fa-pencil-alt"></i></a>
-                                                        </div>
-                                                    </td>
+                                                <td>{{ ts.name }}</td>
+                                                <td>{{ ts.promotion_order }}</td>
+                                               <td>{{ ts.form_teacher.first_name }} {{ ts.form_teacher.first_name }}</td>                                                
+                                                <td>{{ ts.form_teacher.phone_home }}</td>
                                                 {% endfor %}
                                             </tr>
                                            
