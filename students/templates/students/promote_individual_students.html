@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .header {
+            background-color: #ffffff;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+        .logo {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #0d6efd;
+            text-decoration: none;
+        }
+        .container {
+            max-width: 800px;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+
+<header class="header d-flex justify-content-between align-items-center">
+    <a href="/dashboard" class="logo">School Name</a>
+    <a href="/dashboard" class="btn btn-outline-primary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+    </a>
+</header>
+
+<div class="container">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Individual Student Promotion</h4>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <div class="mb-4">
+                <h5 class="card-title">1. Select Class to View Students</h5>
+                <form method="get" action="{% url 'students:promote_individual_students' %}" class="d-flex align-items-end">
+                    <div class="me-3 flex-grow-1">
+                        <label for="class-select" class="form-label">From Class:</label>
+                        <select class="form-select" id="class-select" name="class" required>
+                            <option value="">-- Choose a class --</option>
+                            {% for class in classes %}
+                            <option value="{{ class.id }}" {% if from_class and from_class.id == class.id %}selected{% endif %}>{{ class.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-secondary">Load Students</button>
+                </form>
+            </div>
+
+            {% if from_class %}
+            <hr>
+            <div class="mt-4">
+                <h5 class="card-title">2. Select Students to Promote from {{ from_class.name }}</h5>
+                <form method="post" action="{% url 'students:promote_individual_students' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="from_class_id" value="{{ from_class.id }}">
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="select-all-students">
+                            <label class="form-check-label fw-bold" for="select-all-students">Select All</label>
+                        </div>
+                        <ul class="list-group list-group-flush border rounded mt-2" style="max-height: 250px; overflow-y: auto;">
+                            {% for student in students %}
+                            <li class="list-group-item d-flex align-items-center">
+                                <input class="form-check-input me-2 student-checkbox" type="checkbox" name="selected_students" value="{{ student.id }}" id="student-{{ student.id }}">
+                                <label class="form-check-label flex-grow-1" for="student-{{ student.id }}">
+                                    {{ student.get_full_name }} ({{ student.USN }})
+                                </label>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item text-center text-muted">No students found in this class.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="to_class" class="form-label fw-bold">3. Select Destination Class</label>
+                        <select class="form-select" id="to_class" name="to_class" required>
+                            <option value="">-- Choose a class --</option>
+                            {% for class in next_class_options %}
+                            <option value="{{ class.id }}">{{ class.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-success mt-3 w-100">
+                        <i class="fas fa-arrow-up me-2"></i> Promote Selected Students
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectAllCheckbox = document.getElementById('select-all-students');
+        const studentCheckboxes = document.querySelectorAll('.student-checkbox');
+        
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                studentCheckboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+            });
+        }
+    });
+</script>
+</body>
+</html>

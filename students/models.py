@@ -94,7 +94,7 @@ class Student(models.Model):
     last_name = models.CharField(max_length=20)    
     current_class = models.ForeignKey(Standard, on_delete=models.SET_NULL, null=True, blank=True, related_name='students')
     class_group = models.ForeignKey(ClassGroup, on_delete=models.SET_NULL, null=True, blank=True, related_name='classes')
-    form_teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, blank=True, null=True, related_name='teacher')
+    form_teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, blank=True, null=True, related_name='teacher', help_text='This field will be automatically updated when form teacher is set the standard')
     badge =  models.ForeignKey(Badge, on_delete=models.CASCADE, blank=True, null=True, verbose_name='Prefect')
     
     female = 'female'
@@ -178,21 +178,33 @@ class Student(models.Model):
 
     student_status = models.CharField(max_length=15, choices=student_status, default=active)
 
-    def __str__(self):
-        return f'{self.first_name} - {self.last_name}'
-    
-    class Meta:
-        ordering = ['user']   
+    # def __str__(self):
+    #     return f'{self.first_name} - {self.last_name}'
     
     def get_full_name(self):
         return f"{self.first_name} {self.last_name}"
     
+    def __str__(self):
+        return self.get_full_name()
+    
     def get_absolute_url(self):
-        return reverse('students:student-detail', kwargs={'id':self.USN})
+        return reverse('students:student-detail', kwargs={'id':self.USN})    
+
     
     class Meta:
         verbose_name = 'Student Details'
         verbose_name_plural = 'Student Details'
+        ordering = ['user']
+
+    @property
+    def get_form_teacher(self):
+        """
+        Returns the form teacher from the assigned ClassGroup.
+        """
+        return self.class_group.form_teacher if self.class_group else None
+    
+   
+
 
     
 # Student ID Card Generation

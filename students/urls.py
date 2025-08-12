@@ -14,6 +14,12 @@ urlpatterns = [
     path('my-classmates/', students_views.my_classmates_view, name='my_classmates'),
     path('hostel_list/', students_views.hostel_list, name='hostel_list'),
     path('student/id-card/<int:student_id>/', students_views.StudentIDCardView.as_view(), name='student_id_card'),
+    path('promote-students/', students_views.promote_students_view, name='promote_students'),
+    path('promote-individual-students/', students_views.promote_individual_students_view, name='promote_individual_students'),
+    path('assign-classgroup-to-students/', students_views.assign_classgroup_to_students_view, name='assign_classgroup_to_students'),
+
+
+
 
     # path('create-student-profile/', views.create_student_profile, name='create_student_profile'), # Example
 

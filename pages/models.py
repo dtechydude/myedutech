@@ -12,3 +12,6 @@ class BankDetail(models.Model):
     class Meta:
         ordering:['bank_name']
         # unique_together = ['acc_number', 'bank_name']
+
+
+        

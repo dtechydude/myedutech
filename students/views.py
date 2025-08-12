@@ -15,7 +15,7 @@ from staff.models import Teacher
 from students.forms import StudentUpdateForm
 from users.forms import UserRegisterForm
 from curriculum.models import SchoolIdentity
-from curriculum.models import Standard
+from curriculum.models import Standard, ClassGroup
 # from results.models import ResultSheet
 import io
 from reportlab.pdfgen import canvas
@@ -227,3 +227,264 @@ class StudentIDCardView(LoginRequiredMixin, View):
         }
         return render(request, 'students/test_student_id_card.html', context)
 
+
+# Student Promotion Logic
+def is_authorized_to_promote(user):
+    """
+    Checks if the user is an admin or a staff member.
+    """
+    return user.is_superuser or hasattr(user, 'teacher')
+
+@user_passes_test(is_authorized_to_promote)
+def promote_students_view(request):
+    """
+    View to promote all students from one class to the next using a defined promotion order.
+    """
+    if request.method == 'POST':
+        from_class_id = request.POST.get('from_class')
+        
+        if not from_class_id:
+            messages.error(request, "Please select a class to promote.")
+            return redirect('promote_students')
+
+        try:
+            from_class = Standard.objects.get(id=from_class_id)
+            
+            # Permission Check
+            is_admin = request.user.is_superuser
+            is_form_teacher = False
+            if hasattr(request.user, 'teacher'):
+                # Assuming Standard has a ForeignKey to Teacher
+                is_form_teacher = (from_class.form_teacher == request.user.teacher)
+
+            if not is_admin and not is_form_teacher:
+                messages.error(request, "You do not have permission to promote this class.")
+                return redirect('promote_students')
+
+            # Find the next class based on the promotion_order
+            try:
+                next_class = Standard.objects.get(promotion_order=from_class.promotion_order + 1)
+                promotion_type = 'promoted'
+            except Standard.DoesNotExist:
+                # If there is no next class, students will be graduated
+                next_class = None
+                promotion_type = 'graduated'
+            
+            with transaction.atomic():
+                students_to_promote = Student.objects.filter(current_class=from_class)
+                count = students_to_promote.count()
+                
+                if promotion_type == 'promoted':
+                    students_to_promote.update(current_class=next_class)
+                    messages.success(request, f"Successfully promoted {count} students from {from_class.name} to {next_class.name}.")
+                else:
+                    students_to_promote.update(current_class=None, student_status='graduated')
+                    messages.success(request, f"Successfully graduated {count} students from {from_class.name}.")
+            
+        except Standard.DoesNotExist:
+            messages.error(request, "The selected class does not exist.")
+        except Exception as e:
+            messages.error(request, f"An unexpected error occurred: {e}")
+            
+        return redirect('students:promote_students')
+
+    # GET request: display the form
+    classes = Standard.objects.all().order_by('promotion_order')
+    context = {
+        'classes': classes,
+        'title': 'Promote Students',
+    }
+    return render(request, 'students/promote_students.html', context)
+
+
+# Promoting Individual Students Using the Standard Model
+def is_authorized_to_promote(user):
+    """
+    Checks if the user is an admin or a staff member.
+    """
+    return user.is_superuser or hasattr(user, 'teacher')
+
+@user_passes_test(is_authorized_to_promote)
+def promote_individual_students_view(request):
+    """
+    View to promote specific students from a selected class.
+    """
+    classes = Standard.objects.all().order_by('promotion_order')
+    students = Student.objects.none()
+    from_class = None
+    next_class_options = Standard.objects.none()
+
+    if request.method == 'POST':
+        from_class_id = request.POST.get('from_class_id')
+        selected_students_ids = request.POST.getlist('selected_students')
+        to_class_id = request.POST.get('to_class')
+
+        if not from_class_id or not selected_students_ids or not to_class_id:
+            messages.error(request, "Invalid promotion request. Please select a class, students, and a destination class.")
+            return redirect('promote_individual_students')
+
+        try:
+            from_class = get_object_or_404(Standard, id=from_class_id)
+            to_class = get_object_or_404(Standard, id=to_class_id)
+            
+            # Permission Check (re-check on POST for security)
+            is_admin = request.user.is_superuser
+            is_form_teacher = False
+            if hasattr(request.user, 'teacher'):
+                # Assuming Standard has a ForeignKey to Teacher
+                is_form_teacher = (from_class.form_teacher == request.user.teacher)
+
+            if not is_admin and not is_form_teacher:
+                messages.error(request, "You do not have permission to promote students from this class.")
+                return redirect('promote_individual_students')
+
+            with transaction.atomic():
+                students_to_promote = Student.objects.filter(
+                    current_class=from_class,
+                    id__in=selected_students_ids
+                )
+                count = students_to_promote.count()
+                
+                students_to_promote.update(current_class=to_class)
+                
+            messages.success(request, f"Successfully promoted {count} students from {from_class.name} to {to_class.name}.")
+            
+        except Standard.DoesNotExist:
+            messages.error(request, "One of the selected classes does not exist.")
+        except Exception as e:
+            messages.error(request, f"An unexpected error occurred: {e}")
+            
+        return redirect('students:promote_individual_students')
+
+    # GET request: Display the student selection form
+    selected_class_id = request.GET.get('class')
+    if selected_class_id:
+        from_class = get_object_or_404(Standard, id=selected_class_id)
+        students = Student.objects.filter(current_class=from_class).order_by('last_name', 'first_name')
+        
+        # Get next class options (all classes after the selected one)
+        next_class_options = Standard.objects.filter(
+            promotion_order__gt=from_class.promotion_order
+        ).order_by('promotion_order')
+
+    context = {
+        'classes': classes,
+        'students': students,
+        'from_class': from_class,
+        'next_class_options': next_class_options,
+        'title': 'Individual Student Promotion',
+    }
+    return render(request, 'students/promote_individual_students.html', context)
+
+
+# Promoting Using The ClassGroup Model Not Yet implemented
+@user_passes_test(is_authorized_to_promote)
+def promote_students_by_group_view(request):
+    if request.method == 'POST':
+        from_group_id = request.POST.get('from_group')
+        
+        if not from_group_id:
+            messages.error(request, "Please select a class group to promote.")
+            return redirect('promote_students_by_group')
+
+        try:
+            from_group = ClassGroup.objects.get(id=from_group_id)
+            from_standard = from_group.standard
+            
+            try:
+                next_standard = Standard.objects.get(promotion_order=from_standard.promotion_order + 1)
+                next_group = ClassGroup.objects.get(standard=next_standard, promotion_order=from_group.promotion_order)
+                promotion_type = 'promoted'
+            except (Standard.DoesNotExist, ClassGroup.DoesNotExist):
+                next_group = None
+                promotion_type = 'graduated'
+
+            # ... permission checks (as before)
+
+            with transaction.atomic():
+                students_to_promote = Student.objects.filter(current_class=from_group)
+                count = students_to_promote.count()
+                
+                if promotion_type == 'promoted':
+                    students_to_promote.update(current_class=next_group)
+                    messages.success(request, f"Successfully promoted {count} students from {from_group.name} to {next_group.name}.")
+                else:
+                    students_to_promote.update(current_class=None, student_status='graduated')
+                    messages.success(request, f"Successfully graduated {count} students from {from_group.name}.")
+            
+        except Exception as e:
+            messages.error(request, f"An error occurred: {e}")
+            
+        return redirect('promote_students_by_group')
+
+    # GET request
+    groups = ClassGroup.objects.all().order_by('standard__promotion_order', 'promotion_order')
+    context = {
+        'groups': groups,
+        'title': 'Promote Students by Group',
+    }
+    return render(request, 'schools/promote_students_by_group.html', context)
+
+
+# View For Assigning Class Group To Students
+def is_authorized_staff(user):
+    return user.is_superuser or user.is_staff
+
+@user_passes_test(is_authorized_staff)
+def assign_classgroup_to_students_view(request):
+    """
+    Allows batch assignment of a ClassGroup to students within a specific Standard.
+    """
+    if request.method == 'POST':
+        standard_id = request.POST.get('standard_id')
+        classgroup_id = request.POST.get('classgroup')
+        selected_student_ids = request.POST.getlist('selected_students')
+
+        if not standard_id or not classgroup_id or not selected_student_ids:
+            messages.error(request, "Please select a standard, a class group, and at least one student.")
+            return redirect('assign_classgroup_to_students')
+
+        try:
+            standard = get_object_or_404(Standard, id=standard_id)
+            classgroup = get_object_or_404(ClassGroup, id=classgroup_id)
+
+            # Important: Validate that the selected ClassGroup belongs to the selected Standard.
+            if classgroup.standard != standard:
+                messages.error(request, "The selected class group does not belong to the selected standard.")
+                return redirect('assign_classgroup_to_students')
+            
+            with transaction.atomic():
+                students_to_update = Student.objects.filter(id__in=selected_student_ids, current_class=standard)
+                count = students_to_update.count()
+                
+                # Update the students' class_group field. The form_teacher is automatically
+                # determined by this relationship.
+                students_to_update.update(class_group=classgroup)
+                
+            messages.success(request, f"Successfully assigned {count} students to {classgroup.name}.")
+
+        except Exception as e:
+            messages.error(request, f"An error occurred: {e}")
+
+        return redirect('students:assign_classgroup_to_students')
+    
+    # GET request
+    standards = Standard.objects.all().order_by('name')
+    selected_standard = None
+    students = Student.objects.none()
+    class_groups = ClassGroup.objects.none()
+
+    standard_id_param = request.GET.get('standard')
+    if standard_id_param:
+        selected_standard = get_object_or_404(Standard, id=standard_id_param)
+        students = Student.objects.filter(current_class=selected_standard).order_by('first_name')
+        class_groups = ClassGroup.objects.filter(standard=selected_standard).order_by('name')
+
+    context = {
+        'standards': standards,
+        'selected_standard': selected_standard,
+        'students': students,
+        'class_groups': class_groups,
+        'title': 'Assign Class Group to Students',
+    }
+    return render(request, 'students/assign_classgroup.html', context)

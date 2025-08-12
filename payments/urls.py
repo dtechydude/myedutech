@@ -25,7 +25,9 @@ urlpatterns = [
     path('debtors-report/pdf/', payment_views.debtors_report_pdf, name='debtors_report_pdf'),
     # This is the line that needs to be absolutely correct:
     path('debtors-report/csv/', payment_views.debtors_report_csv, name='debtors_report_csv'), # <-- ENSURE name='debtors_report_csv' matches exactly
-
+    
+    # Route For getting summary for term
+    path('finance-dashboard/', payment_views.FinanceDashboardView.as_view(), name='finance_dashboard'),
 
     # New AJAX endpoint for CategoryFee details
     path('api/get_category_fee_details/', payment_views.get_category_fee_details, name='get_category_fee_details'),
@@ -37,23 +39,3 @@ urlpatterns = [
     # path('students/', include('student_management_app.urls')),
 ]
 
-# If you have a dedicated 'payments' app, your project's urls.py might look like:
-# urlpatterns = [
-#     path('admin/', admin.site.urls),
-#     path('accounts/', include('django.contrib.auth.urls')), # For login/logout
-#     path('payments/', include('payments.urls')), # Include your new payments app URLs
-#     # ... other app URLs
-# ]
-
-# And in payments/urls.py:
-# from django.urls import path
-# from . import views
-#
-# urlpatterns = [
-#     path('make/', views.make_payment, name='make_payment'),
-#     path('history/', views.payment_history, name='payment_history'),
-#     path('receipt/<int:receipt_id>/', views.view_receipt, name='view_receipt'),
-#     path('report/debtors/', views.debtors_report, name='debtors_report'),
-#     path('report/total/', views.total_payments_report, name='total_payments_report'),
-#     path('api/get_category_fee_details/', views.get_category_fee_details, name='get_category_fee_details'),
-# ]

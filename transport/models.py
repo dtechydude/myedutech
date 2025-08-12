@@ -73,3 +73,9 @@ class StudentOnRoute(models.Model):
 
     def __str__ (self):
        return f'{self.student}'
+    
+    
+    @property
+    def balance_payment (self):
+       return self.route.bus_fee - (self.amount_paid)
+    

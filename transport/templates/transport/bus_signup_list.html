@@ -101,7 +101,9 @@
                                                 <th>Grade/Class</th>
                                                 <th>Bus Route</th>
                                                 <th>Sign-up Date</th> 
-                                                <th>Payment Status</th>                                              
+                                                <th>Amount Paid</th> 
+                                                <th>Balance Due</th> 
+                                                <th>Status</th>                                              
                                                 
                                             </tr>
                                         </thead>
@@ -128,9 +130,16 @@
                                                     {% else %}
                                                     N/A (Route Deleted)
                                                     {% endif %}
-                                                    </td>                                                     
-                                                    <td>{{ signup.signup_date|date:"F j, Y, P" }}</td>
-                                                     <td>
+                                                    </td>                                                                                                 
+                                            
+                                                    <td>{{ signup.signup_date| date:"d/m/Y" }}</td>                                                    
+                                                    <td>                                                   
+                                                    <strong>{{ signup.amount_paid }} </strong>                                                   
+                                                    </td> 
+                                                      <td>                                                  
+                                                    {{ signup.balance_payment }}
+                                                    </td> 
+                                                    <td>
                                                     {% if signup.is_approved %}
                                                     <span style="color: green;">Approved</span>
                                                     {% else %}

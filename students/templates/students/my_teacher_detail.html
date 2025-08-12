@@ -88,18 +88,19 @@
 														<img src="{{ teacher.user.profile.image.url }}" alt="">
 														<div>															
 															<h2 class="font-w600">{{ teacher.first_name }} {{ teacher.last_name }}</h2>
-															<span class="text-secondary">{{ teacher.user.username }}</span>
+															<span class="text-secondary"><strong>Username:</strong> {{ teacher.user.username }}</span>
 															<div class="call d-flex align-items-center"> 
 															<a href="javascript:void(0);"><i class="fas fa-phone-alt text-secondary"></i></a>
 																<button class="btn btn-secondary ms-3">
-																	<svg class="me-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24.18" viewBox="0 0 24 24.18">
+																	<!-- <svg class="me-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24.18" viewBox="0 0 24 24.18">
 																	  <g id="_032-speech-bubble" data-name="032-speech-bubble" transform="translate(-1.63 0)">
 																		<g id="Group_9" data-name="Group 9" transform="translate(1.63 0)">
 																		  <path id="Path_118" data-name="Path 118" d="M22.193,3.6A12,12,0,0,0,1.636,12.361a11.434,11.434,0,0,0,.82,4.015,11.885,11.885,0,0,0,1.7,2.969l-.99,2.347a1.778,1.778,0,0,0,1.951,2.46l4.581-.792A12.013,12.013,0,0,0,22.193,3.6ZM12.749,16.8H9.61a.9.9,0,1,1,0-1.81h3.139a.911.911,0,0,1,.9.9A.893.893,0,0,1,12.749,16.8Zm4.892-3.676H9.61a.911.911,0,0,1-.9-.9.893.893,0,0,1,.9-.9h8.031a.9.9,0,1,1,0,1.81Zm0-3.7H9.61a.9.9,0,1,1,0-1.81h8.031a.911.911,0,0,1,.9.9A.93.93,0,0,1,17.641,9.421Z" transform="translate(-1.63 0)" fill="#fff"/>
 																		</g>
 																	  </g>
-																	</svg>
-																	{{ teacher.user.profile.phone }}
+																	</svg> -->
+																	(+234) {{ teacher.user.profile.phone }} <br>
+																	(+234 ) {{ teacher.phone_home }}
 																</button>	
 															</div>
 														</div>
@@ -117,27 +118,39 @@
 													</div>
 													<div class="d-flex">
 														<div class="mt-4 check-status">
-															<span class="d-block mb-2">Date Employed</span>	
+															<span class="d-block mb-2"><strong>E-mail</strong></span>	
+															<span class="font-w500 fs-16">{{ teacher.user.email }}</span>
+														</div>
+														<div class="mt-4">
+															<span class="d-block mb-2"><strong>Teacher's Role</strong></span>	
+															<span class="font-w500 fs-16">{{ teacher.staff_role }}</span>
+														</div>														
+													</div>
+												</div>
+												<div class="d-flex">
+														<div class="mt-4 check-status">
+															<span class="d-block mb-2"><strong>Date Employed</strong></span>	
 															<span class="font-w500 fs-16">{{ teacher.date_employed }}</span>
 														</div>
 														<div class="mt-4">
-															<span class="d-block mb-2">Marital Status</span>	
+															<span class="d-block mb-2"><strong>Marital Status</strong></span>	
 															<span class="font-w500 fs-16">{{ teacher.marital_status }}</span>
-														</div>
+																											
 													</div>
 												</div>
 												<div class="d-flex flex-wrap">
-													<div class="mt-4 check-status">
+													<div class="mt-4 check-status p-3">
 														<span class="d-block mb-2">About My Teacher</span>	
 														<h4 class="font-w500 fs-24">Teacher's Bio</h4>
+														{% if teacher.user.profile.bio %}
+													<p class="mt-2">{{ teacher.user.profile.bio }}</p>
+													{% else %}
+													<p class="mt-2" >Your Teacher Has Not Updated His Bio</p>
+													{% endif %}
 													</div>
 													</div>
-												{% if teacher.user.profile.bio %}
-												<p class="mt-2">{{ teacher.user.profile.bio }}</p>
-												{% else %}
-												<p class="mt-2">Your Teacher Has Not Updated His Bio</p>
-												{% endif %}
-												<div class="facilities">
+													</div>												
+												<!-- <div class="facilities">
 													<div class="mb-3 ">
 														<span class="d-block mb-3">Other Info</span>
 														<a href="javascript:void(0);" class="btn btn-secondary light btn-lg">
@@ -159,11 +172,11 @@
 													
 												</div>
 											</div>
-										</div>
+										</div> -->
 										<div class="col-xl-6 p-0">
 											<div class="guest-carousel owl-carousel owl-carousel owl-loaded owl-drag owl-dot">
 												<div class="item">
-													<img src="{% static 'pages/images/schoolly_logo.png' %}" alt="">
+													<!-- <img src="{% static 'pages/images/schoolly_logo.png' %}" alt=""> -->
 													<!-- <div class="rooms">
 														<div class="booked">
 															<p class="fs-20 font-w500">Smart School</p>

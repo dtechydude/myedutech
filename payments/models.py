@@ -65,8 +65,8 @@ class CategoryFee(models.Model):
     def __str__(self):
         # Updated to include fee_name if available
         if self.fee_name:
-            return f"{self.fee_name} ({self.payment_category.name}) for {self.term.name} ({self.session.name}): ${self.amount_due}"
-        return f"{self.payment_category.name} for {self.term.name} ({self.session.name}): ${self.amount_due}"
+            return f"{self.fee_name} ({self.payment_category.name}) for {self.term.name} ({self.session.name}): N{self.amount_due}"
+        return f"{self.payment_category.name} for {self.term.name} ({self.session.name}): N{self.amount_due}"
 
 
 class StudentAccountLedger(models.Model):

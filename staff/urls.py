@@ -13,6 +13,10 @@ urlpatterns = [
      path('assignments/', staff_views.teacher_subjects_standards_view, name='teacher_assignments'),
      path('<int:teacher_id>/profile/', staff_views.teacher_profile_view, name='teacher_profile'),
      path('my-assignments/', staff_views.my_assignments_view, name='my_assignments'),
+     path('assign-form-teacher/', staff_views.assign_form_teacher_view, name='assign_form_teacher'),
+     path('assign-form-teacher-to-classgroup/', staff_views.assign_form_teacher_to_classgroup_view, name='assign_form_teacher_to_classgroup'),
+
+
 
 
     #  path('staff_list/', staff_views.staff_list, name='staff-list'),

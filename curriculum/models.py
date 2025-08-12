@@ -85,23 +85,22 @@ class Term(models.Model):
         return f"{self.name} ({self.session.name})"    
 
 
-
-class ClassGroup(models.Model):
-    name = models.CharField(max_length=50, blank=True, unique=True)
-    description = models.CharField(max_length=120, blank=True)
-    slug = models.SlugField(null=True, blank=True)
+# OLD CLASS GROUP MODEL
+# class ClassGroup(models.Model):
+#     name = models.CharField(max_length=50, blank=True, unique=True)
+#     description = models.CharField(max_length=120, blank=True)
+#     slug = models.SlugField(null=True, blank=True)
     
-    def __str__ (self):
-        return f'{self.name}'
+#     def __str__ (self):
+#         return f'{self.name}'
     
-    class Meta:
-        verbose_name_plural = 'Class Group'
-        verbose_name_plural = "Class Group"
+#     class Meta:
+#         verbose_name_plural = 'Class Group'
+#         verbose_name_plural = "Class Group"
         
-    def save(self, *args, **kwargs):
-        self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
+#     def save(self, *args, **kwargs):
+#         self.slug = slugify(self.name)
+#         super().save(*args, **kwargs)
 
 
 def save_subject_image(instance, filename):
@@ -114,14 +113,23 @@ def save_subject_image(instance, filename):
 
 class Standard(models.Model):   
     name = models.CharField(max_length=100, unique=True)
-    desc = models.CharField(max_length=200, blank=True, null=True, verbose_name='description')  
+    form_teacher = models.ForeignKey(
+        'staff.Teacher',  # Use 'app_name.ModelName'
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='form_class'
+    )
+    desc = models.CharField(max_length=200, blank=True, null=True, verbose_name='description') 
+    promotion_order = models.IntegerField(unique=True, help_text="Order of classes for promotion (e.g., 1 for Basic 1, 2 for Basic 2)")
+ 
     slug = models.SlugField(null=True, blank=True)
 
 
     class Meta:
         verbose_name = 'Standard (GRADE LEVELS)'
         verbose_name_plural = 'Standards (GRADE LEVELS)'
-        ordering =['name']
+        ordering =['promotion_order']
 
     def __str__(self):
         return self.name
@@ -129,7 +137,6 @@ class Standard(models.Model):
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
         super().save(*args, **kwargs)
-    
 
 
 def save_lesson_files(instance, filename):
@@ -143,6 +150,28 @@ def save_lesson_files(instance, filename):
             filename = 'lesson_images/{}/{}.{}'.format(instance.lesson_id,new_name, ext)
     
     return os.path.join(upload_to, filename)
+
+
+# NEW CLASSGROUP MODEL
+class ClassGroup(models.Model):
+    name = models.CharField(max_length=100, help_text="e.g., Creche-Gold, Basic 1-A")
+    standard = models.ForeignKey(Standard, on_delete=models.CASCADE, related_name='groups', default= 1)
+    form_teacher = models.ForeignKey('staff.Teacher', on_delete=models.SET_NULL, null=True, blank=True, related_name='groups')
+    
+    # New field to define the order of groups within a class for promotion
+    # promotion_order = models.IntegerField(default=0)
+
+    class Meta:
+        verbose_name = 'Class Group'
+        verbose_name_plural = 'Class Groups'
+        unique_together = ('standard', 'name')
+        # ordering = ['standard__promotion_order', 'promotion_order']
+        ordering = ['standard']
+
+    def __str__(self):
+        return f"{self.standard.name} - {self.name}"
+
+
 
 
 

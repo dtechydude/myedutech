@@ -3,7 +3,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test, permission_required
 from django.contrib import messages
 from django.db import transaction
-from django.db.models import Sum, F, Q, Max, Min
+from django.utils.decorators import method_decorator
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views import View
+from django.db.models import Sum, F,  ExpressionWrapper, DecimalField, Q, Max, Min
 from .models import Payment, Receipt, PaymentCategory, StudentAccountLedger, CategoryFee
 from curriculum.models import Term, Session
 from .forms import PaymentForm
@@ -562,3 +565,110 @@ def total_payments_report_csv(request):
         writer.writerow([category, amount])
 
     return response
+
+
+
+# Calculating Total Income Per term and outstanding
+
+def is_staff_user(user):
+    return user.is_staff
+
+@method_decorator(user_passes_test(is_staff_user), name='dispatch')
+class FinanceDashboardView(LoginRequiredMixin, View):
+    """
+    Dashboard view for staff to see an overview of school finances.
+    Calculates total income and debt per term and session.
+    """
+    template_name = 'payments/finance_dashboard.html'
+
+    def get(self, request, *args, **kwargs):
+        session_id = request.GET.get('session')
+        
+        payments = Payment.objects.filter(status='completed')
+
+        if session_id:
+            payments = payments.filter(session__id=session_id)
+
+        # Calculate Total Income Per Term and Session
+        income_by_term_qs = payments.values(
+            'session__name', 'term__name'
+        ).annotate(
+            total_income=Sum('amount_received')
+        ).order_by('session__start_date', 'term__start_date')
+        
+        # Calculate Total Debt Per Term and Session
+        debt_by_term_qs = payments.annotate(
+            net_amount_due=ExpressionWrapper(
+                F('original_amount') - F('discount_amount'), 
+                output_field=DecimalField()
+            )
+        ).values(
+            'session__name', 'term__name'
+        ).annotate(
+            total_due=Sum('net_amount_due')
+        ).order_by('session__start_date', 'term__start_date')
+
+        # Combine income and debt data
+        income_and_debt_by_term = {}
+        for item in income_by_term_qs:
+            key = (item['session__name'], item['term__name'])
+            if key not in income_and_debt_by_term:
+                income_and_debt_by_term[key] = {
+                    'session__name': item['session__name'],
+                    'term__name': item['term__name'],
+                    'total_income': Decimal('0.00'),
+                    'total_due': Decimal('0.00'),
+                    'total_debt': Decimal('0.00'),
+                }
+            income_and_debt_by_term[key]['total_income'] = item['total_income'] or Decimal('0.00')
+
+        for item in debt_by_term_qs:
+            key = (item['session__name'], item['term__name'])
+            if key not in income_and_debt_by_term:
+                income_and_debt_by_term[key] = {
+                    'session__name': item['session__name'],
+                    'term__name': item['term__name'],
+                    'total_income': Decimal('0.00'),
+                    'total_due': Decimal('0.00'),
+                    'total_debt': Decimal('0.00'),
+                }
+            
+            income_and_debt_by_term[key]['total_due'] = item['total_due'] or Decimal('0.00')
+            # Calculate total debt for this term/session
+            income_and_debt_by_term[key]['total_debt'] = (
+                income_and_debt_by_term[key]['total_due'] - income_and_debt_by_term[key]['total_income']
+            )
+
+        # Sort the final list of dictionaries
+        income_and_debt_list = sorted(
+            income_and_debt_by_term.values(), 
+            key=lambda x: (x['session__name'], x['term__name'])
+        )
+
+        # Calculate dashboard metrics
+        total_income_all_terms = payments.aggregate(Sum('amount_received'))['amount_received__sum'] or Decimal('0.00')
+        
+        total_due_all_terms_qs = payments.annotate(
+            net_amount_due=ExpressionWrapper(
+                F('original_amount') - F('discount_amount'), 
+                output_field=DecimalField()
+            )
+        ).aggregate(
+            total_due=Sum('net_amount_due')
+        )
+        total_due_all_terms = total_due_all_terms_qs['total_due'] or Decimal('0.00')
+        
+        total_outstanding_debt = total_due_all_terms - total_income_all_terms
+
+        # Get all sessions for the filter dropdown
+        sessions = Session.objects.all().order_by('-start_date')
+
+        context = {
+            'title': 'Finance Dashboard',
+            'income_and_debt_list': income_and_debt_list,
+            'total_outstanding_debt': total_outstanding_debt,
+            'total_income_all_terms': total_income_all_terms,
+            'sessions': sessions,
+            'selected_session_id': session_id,
+        }
+        return render(request, self.template_name, context)

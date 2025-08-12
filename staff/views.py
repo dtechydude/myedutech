@@ -1,11 +1,12 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
 from django.db.models import Count
 from django.db.models import F
+from django.db import transaction
 #converting html to pdf
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template.loader import get_template
@@ -13,7 +14,7 @@ from django.template.loader import get_template
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from staff.models import Teacher
 from students.models import Student
-from curriculum.models import Standard
+from curriculum.models import Standard, ClassGroup
 from staff.forms import TeacherUpdateForm, StaffRegisterForm, StaffUpdateForm
 # from attendance.models import AttendanceTotal, Attendance, AttendanceClass
 
@@ -192,3 +193,94 @@ def my_assignments_view(request):
         'title': 'My Assignments'
     }
     return render(request, 'staff/teacher_self_assignments.html', context)
+
+# View to Assign a Form Teacher to A Standard
+def is_superuser(user):
+    return user.is_superuser
+
+@user_passes_test(is_superuser)
+def assign_form_teacher_view(request):
+    """
+    View to assign a form teacher to a class and update all students in that class.
+    """
+    if request.method == 'POST':
+        class_id = request.POST.get('class')
+        teacher_id = request.POST.get('teacher')
+
+        if not class_id or not teacher_id:
+            messages.error(request, "Please select both a class and a teacher.")
+            return redirect('assign_form_teacher')
+
+        try:
+            standard = get_object_or_404(Standard, id=class_id)
+            teacher = get_object_or_404(Teacher, id=teacher_id)
+
+            with transaction.atomic():
+                # 1. Update the Standard model with the new form teacher.
+                standard.form_teacher = teacher
+                standard.save()
+                
+                # 2. Update all students in that class with the new form teacher.
+                students_in_class = Student.objects.filter(current_class=standard)
+                count = students_in_class.count()
+                students_in_class.update(form_teacher=teacher)
+
+            messages.success(request, f"Successfully assigned {teacher} as the form teacher for {standard.name} and updated {count} students.")
+
+        except Exception as e:
+            messages.error(request, f"An error occurred: {e}")
+
+        return redirect('staff:assign_form_teacher')
+
+    classes = Standard.objects.all().order_by('name')
+    teachers = Teacher.objects.all().order_by('user__last_name')
+    
+    context = {
+        'classes': classes,
+        'teachers': teachers,
+        'title': 'Assign Form Teacher',
+    }
+    return render(request, 'staff/assign_form_teacher.html', context)
+
+# Assign A Form Teacher To A ClassGroup
+def is_authorized_staff(user):
+    return user.is_superuser or user.is_staff
+
+@user_passes_test(is_authorized_staff)
+def assign_form_teacher_to_classgroup_view(request):
+    """
+    Assigns a form teacher to a specific class group.
+    """
+    if request.method == 'POST':
+        class_group_id = request.POST.get('class_group')
+        teacher_id = request.POST.get('teacher')
+
+        if not class_group_id or not teacher_id:
+            messages.error(request, "Please select both a class group and a teacher.")
+            return redirect('staff:assign_form_teacher_to_classgroup')
+
+        try:
+            class_group = get_object_or_404(ClassGroup, id=class_group_id)
+            teacher = get_object_or_404(Teacher, id=teacher_id)
+
+            with transaction.atomic():
+                class_group.form_teacher = teacher
+                class_group.save()
+            
+            messages.success(request, f"Successfully assigned {teacher.user.get_full_name()} as the form teacher for {class_group.name}.")
+
+        except Exception as e:
+            messages.error(request, f"An error occurred: {e}")
+
+        return redirect('staff:assign_form_teacher_to_classgroup')
+
+    # GET request
+    class_groups = ClassGroup.objects.all().order_by('standard__name', 'name')
+    teachers = Teacher.objects.all().order_by('user__first_name')
+    
+    context = {
+        'class_groups': class_groups,
+        'teachers': teachers,
+        'title': 'Assign Form Teacher to Class Group',
+    }
+    return render(request, 'staff/assign_formteacher_to_classgroup.html', context)

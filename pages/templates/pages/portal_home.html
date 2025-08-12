@@ -770,6 +770,7 @@
 							<li><a href="{% url 'students:student-list' %}">All Students</a></li>
 							<li><a href="{% url 'students:boarder-list' %}">All Boarders</a></li>
 							<li><a href="{% url 'students:student-in-class' %}">No. In Class</a></li>
+							<li><a href="{% url 'students:assign_classgroup_to_students' %}">Assign Students To ClassGroup</a></li>
 							
 							{% elif user.teacher %}							
 							<li><a href="{% url 'students:student-list' %}">My Students</a></li>
@@ -813,6 +814,8 @@
 							<li><a href="{% url 'results:report_card_list' %}">Termly Report Card</a></li>
 							<li><a href="{% url 'results:session_report_card_list' %}">Annual Report Card</a></li>
 							<li><a href="{% url 'results:ranking_list' %}">Student's Exam Ranking</a></li>
+							<li><a href="{% url 'students:promote_individual_students' %}">Promote Students (Individual)</a></li>
+							<li><a href="{% url 'students:promote_students' %}">Promote Students (Batch) </a></li>
 
 							
 							{% elif user.student %}
@@ -838,7 +841,8 @@
 						<ul aria-expanded="false">
 							<li><a href="{% url 'users:register' %}">SignUp Teacher/staff</a></li>
 							<li><a href="/admin/staff/teacher/">Onboard Teacher</a></li>
-							{% comment %} <li><a href="{% url 'staff:staff-list' %}">Staff List</a></li> {% endcomment %}
+							<li><a href="{% url 'staff:assign_form_teacher' %}">Assign FormTeacher(HEAD)</a></li> 
+							<li><a href="{% url 'staff:assign_form_teacher_to_classgroup' %}">Assign FormTeacher To CLASSGROUP</a></li>
 							<li><a href="{% url 'staff:teacher-list' %}">Teachers Details</a></li>
 							<li><a href="{% url 'staff:teacher_assignments' %}">Teacher's Subj./Classes</a></li>
 							<li><a href="{% url 'staff:cbv_all_teachers_student_counts' %}">Teacher's Students Count</a></li>
@@ -860,7 +864,8 @@
 							<li><a href="/admin/payments/payment/">Make Payment For Students</a></li>
 							<li><a href="{% url 'payments:payment_history' %}">Payments History</a></li>
 							<li><a href="{% url 'payments:total_payments_report' %}">Payment Summary</a></li>
-							<li><a href="{% url 'payments:debtors_report' %}">Debtors List</a></li>										
+							<li><a href="{% url 'payments:debtors_report' %}">Debtors List</a></li>	
+							<li><a href="{% url 'payments:finance_dashboard' %}">Finance Dashboard</a></li>										
 							
 							{% endif %}							
 							{% if user.student or user.is_superuser or user.is_staff %}							
