@@ -61,3 +61,6 @@ def get_overall_remark(average_score):
         return "Below average performance. Urgent need for improvement and support."
     else:
         return "Average score out of typical range."
+    
+
+

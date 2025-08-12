@@ -35,8 +35,16 @@ from django.views import View
 
 #Displays all students
 def student_list(request):
-    all_students = Student.objects.all().order_by('-date_admitted')
-    my_students = Student.objects.filter(form_teacher__user=request.user).order_by('user')
+    # Exclude graduated students from the list of all students
+    all_students = Student.objects.exclude(student_status='graduated').order_by('-date_admitted')
+    
+    # Exclude graduated students from the list of students for the logged-in teacher
+    my_students = Student.objects.filter(
+        form_teacher__user=request.user
+    ).exclude(student_status='graduated').order_by('user')
+
+    # all_students = Student.objects.all().order_by('-date_admitted')
+    # my_students = Student.objects.filter(form_teacher__user=request.user).order_by('user')
 
     
     context ={
@@ -63,6 +71,71 @@ def student_boarder_list(request):
         return render(request, 'students/student_boarder_list.html', context)
     else:
          return render(request, 'pages/portal_home.html')
+
+# GRADUATED Students List
+def graduated_students_list(request):
+    """
+    Displays a list of all students who have a status of 'graduated'.
+    """
+    graduated_students = Student.objects.filter(student_status='graduated').order_by('last_name', 'first_name')
+    
+    context = {
+        'graduated_students': graduated_students,
+        'title': 'Graduated Students',
+    }
+    return render(request, 'students/graduated_students_list.html', context)
+
+# GRADUATED Students(Move Students To Graduated)
+def is_authorized_staff(user):
+    return user.is_superuser or user.is_staff
+
+@user_passes_test(is_authorized_staff)
+def graduate_students_view(request):
+    """
+    Filters students by class, allows selecting multiple students,
+    and changes their status to 'graduated' in a batch.
+    """
+    students = Student.objects.none()
+    selected_standard = None
+    
+    if request.method == 'POST':
+        selected_student_ids = request.POST.getlist('selected_students')
+        standard_id = request.POST.get('standard_id')
+
+        if not selected_student_ids:
+            messages.error(request, "Please select at least one student to graduate.")
+            return redirect('graduate_students')
+
+        try:
+            with transaction.atomic():
+                students_to_graduate = Student.objects.filter(id__in=selected_student_ids)
+                count = students_to_graduate.count()
+                
+                students_to_graduate.update(student_status='graduated')
+                
+            messages.success(request, f"Successfully graduated {count} students.")
+
+        except Exception as e:
+            messages.error(request, f"An error occurred: {e}")
+
+        return redirect('students:graduate_students')
+    
+    # GET request
+    standard_id_param = request.GET.get('standard')
+    if standard_id_param:
+        selected_standard = get_object_or_404(Standard, id=standard_id_param)
+        # Filter active students in the selected class
+        students = Student.objects.filter(current_class=selected_standard).exclude(student_status='graduated').order_by('last_name')
+
+    standards = Standard.objects.all().order_by('name')
+
+    context = {
+        'standards': standards,
+        'students': students,
+        'selected_standard': selected_standard,
+        'title': 'Graduate Students',
+    }
+    return render(request, 'students/graduate_students.html', context)
     
 
  # Hostel List

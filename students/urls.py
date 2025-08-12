@@ -13,6 +13,10 @@ urlpatterns = [
     path('student_in_class/', students_views.student_in_class, name='student-in-class'),
     path('my-classmates/', students_views.my_classmates_view, name='my_classmates'),
     path('hostel_list/', students_views.hostel_list, name='hostel_list'),
+    path('graduated_students_list/', students_views.graduated_students_list, name='graduated_students_list'),
+    path('graduate-students/', students_views.graduate_students_view, name='graduate_students'),
+
+
     path('student/id-card/<int:student_id>/', students_views.StudentIDCardView.as_view(), name='student_id_card'),
     path('promote-students/', students_views.promote_students_view, name='promote_students'),
     path('promote-individual-students/', students_views.promote_individual_students_view, name='promote_individual_students'),

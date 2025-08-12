@@ -9,7 +9,6 @@ from staff.models import Teacher
 from students.models import Student
 from django.contrib import messages # Import messages
 
-
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views import View
 from django.db import transaction

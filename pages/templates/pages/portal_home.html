@@ -767,10 +767,13 @@
 							{% if user.is_superuser or user.is_staff %}
 							<li><a href="{% url 'users:register' %}">SignUp Student</a></li>
 							<li><a href="/admin/students/student/">Onboard Student</a></li>
-							<li><a href="{% url 'students:student-list' %}">All Students</a></li>
+							<li><a href="{% url 'students:student-list' %}">All CURRENT Students</a></li>
 							<li><a href="{% url 'students:boarder-list' %}">All Boarders</a></li>
 							<li><a href="{% url 'students:student-in-class' %}">No. In Class</a></li>
 							<li><a href="{% url 'students:assign_classgroup_to_students' %}">Assign Students To ClassGroup</a></li>
+							<li><a href="{% url 'students:graduate_students' %}">Move Students To Alumni</a></li>
+							<li><a href="{% url 'students:graduated_students_list' %}">GRADUATED/ALUMNI List</a></li>
+
 							
 							{% elif user.teacher %}							
 							<li><a href="{% url 'students:student-list' %}">My Students</a></li>

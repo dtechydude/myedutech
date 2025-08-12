@@ -22,6 +22,7 @@ class StandardAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_display=('name', 'promotion_order', 'form_teacher', 'desc')
     exclude = ['slug']
     search_fields = ['name',]
+    autocomplete_fields = ['form_teacher']
 
 
 class ClassGroupAdmin(ImportExportModelAdmin, admin.ModelAdmin):
