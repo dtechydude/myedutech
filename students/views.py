@@ -208,15 +208,31 @@ class StudentDetailView(DetailView):
         id_ = self.kwargs.get("id")
         return get_object_or_404(Student, USN=id_)
     
-# Specific to the login detail
+# # Specific to the login detail
+# class StudentSelfDetailView(LoginRequiredMixin, DetailView):
+#     template_name = 'students/student_self_detail.html'
+#     model = Student
+
+#     def get_object(self, queryset=None):
+#            if queryset is None:
+#                queryset = self.get_queryset()
+#            return queryset.filter(user=self.request.user).first()
+
+
+## Specific to the login detail New Logic to handle student does not exist
 class StudentSelfDetailView(LoginRequiredMixin, DetailView):
-    template_name = 'students/student_self_detail.html'
     model = Student
+    template_name = 'students/student_self_detail.html'
+    context_object_name = 'student'
 
     def get_object(self, queryset=None):
-           if queryset is None:
-               queryset = self.get_queryset()
-           return queryset.filter(user=self.request.user).first()
+        try:
+            # Attempt to find the Student object linked to the logged-in user.
+            return Student.objects.get(user=self.request.user)
+        except Student.DoesNotExist:
+            # If no student is found, redirect to a safe page with an error message.
+            messages.error(self.request, "Your student profile could not be found. Please contact the school administration for assistance.")
+            return redirect('pages:portal-home') # Adjust this URL as needed
 
 
 class StudentUpdateView(LoginRequiredMixin, UpdateView):
