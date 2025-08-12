@@ -407,14 +407,36 @@ def debtors_report_csv(request):
 
 @login_required
 def payment_chart_list(request):
-    payment_chart_list = CategoryFee.objects.all()   
+    # Retrieve the current active session
+    try:
+        current_session = Session.objects.get(is_current=True)
+    except Session.DoesNotExist:
+        current_session = None
+
+    payment_chart_list = []
+    if current_session:
+        # Filter CategoryFee objects to display only those belonging to the current session
+        payment_chart_list = CategoryFee.objects.filter(session=current_session)
 
     context = {
         'payment_chart_list': payment_chart_list,
-        
     }
-    return render (request, 'payments/fees_table.html', context )
+    return render(request, 'payments/fees_table.html', context)
 
+# Old Payment Chart List
+@login_required
+def archive_payment_chart_list(request):
+    """
+    Displays payment charts for all sessions that are not currently active.
+    """
+    # Use a direct lookup across the ForeignKey to filter by the session's 'is_current' status
+    archive_payment_chart_list = CategoryFee.objects.filter(session__is_current=False).order_by('session__name', 'term__name')
+
+    context = {
+        'archive_payment_chart_list': archive_payment_chart_list,
+        'title': 'Archived Fees Chart'
+    }
+    return render(request, 'payments/archived_fees_table.html', context)
 
 @login_required
 def get_category_fee_details(request):

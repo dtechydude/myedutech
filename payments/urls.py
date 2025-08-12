@@ -17,6 +17,8 @@ urlpatterns = [
     path('payments/history/', payment_views.payment_history, name='payment_history'),
     path('payments/receipt/<int:receipt_id>/', payment_views.view_receipt, name='view_receipt'),
     path('category_fee/', payment_views.payment_chart_list, name='payment_chart_list'),
+    path('archived-fees-chart/', payment_views.archive_payment_chart_list, name='archive_payment_chart_list'),
+
 
     # New Report URLs
     path('payments/report/debtors/', payment_views.debtors_report, name='debtors_report'),

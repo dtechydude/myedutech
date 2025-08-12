@@ -59,18 +59,23 @@ def student_list(request):
          return render(request, 'pages/portal_home.html')
     
     
- # for boarding students   
+# For Boading Students
 def student_boarder_list(request):
-    boarder_student = Student.objects.filter(student_type='boarder').order_by('-date_admitted')
-    # boarder_student = Student.objects.all().order_by('-date_admitted')
+    # Filter for 'boarder' students and exclude any with a 'graduated' status
+    boarder_student = Student.objects.filter(
+        student_type='boarder'
+    ).exclude(
+        student_status='graduated'
+    ).order_by('-date_admitted')
 
-    context ={
-        'boarder_student':boarder_student
+    context = {
+        'boarder_student': boarder_student
     }
+
     if request.user.is_superuser or request.user.is_staff:
         return render(request, 'students/student_boarder_list.html', context)
     else:
-         return render(request, 'pages/portal_home.html')
+        return render(request, 'pages/portal_home.html')
 
 # GRADUATED Students List
 def graduated_students_list(request):
@@ -133,7 +138,7 @@ def graduate_students_view(request):
         'standards': standards,
         'students': students,
         'selected_standard': selected_standard,
-        'title': 'Graduate Students',
+        'title': 'Graduate Students To Alumni',
     }
     return render(request, 'students/graduate_students.html', context)
     
