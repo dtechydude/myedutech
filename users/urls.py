@@ -26,6 +26,14 @@ urlpatterns = [
     path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='users/password_reset_done.html'), name="password_reset_done"),
     path('password-reset-confirm/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='users/password_reset_confirm.html', success_url = reverse_lazy('users:login')), name="password_reset_confirm"),
     path('password-reset-complete/', auth_views.PasswordResetCompleteView.as_view(template_name='users/password_reset_complete.html'), name="password_reset_complete"),
+
+
+    path('enroll/', user_views.enroll_student, name='enroll_student'),
+    path('enroll/details/', user_views.enroll_student_details, name='enroll_student_details'),
+    # Add a URL for a success page
+    path('enroll/success/', user_views.enroll_success, name='success_page'),
+    path('check-username/', user_views.check_username, name='check_username'),
+
     
    
 ]

@@ -30,6 +30,8 @@ urlpatterns = [
     
     # Route For getting summary for term
     path('finance-dashboard/', payment_views.FinanceDashboardView.as_view(), name='finance_dashboard'),
+    path('finance-dashboard-chartview/', payment_views.finance_dashboard, name='finance_dashboard_chartview'),
+
 
     # New AJAX endpoint for CategoryFee details
     path('api/get_category_fee_details/', payment_views.get_category_fee_details, name='get_category_fee_details'),

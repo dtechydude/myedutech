@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from .models import Profile
+from students.models import Student
 # from staff.models import Teacher
 
 
@@ -62,3 +63,40 @@ class TeacherEmploymentUpdateForm(forms.ModelForm):
     # class Meta:
     #     model = Teacher
     #     fields = ['first_name', 'qualification', 'year', 'marital_status', 'phone_home', 'professional_body', 'next_of_kin_name', 'next_of_kin_phone']
+
+
+
+# Student Enrollment Form
+class UserRegistrationForm(forms.ModelForm):
+    password = forms.CharField(label='Password', widget=forms.PasswordInput)
+    password2 = forms.CharField(label='Repeat Password', widget=forms.PasswordInput)
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'username']
+
+    def clean_password2(self):
+        cd = self.cleaned_data
+        if cd['password'] != cd['password2']:
+            raise forms.ValidationError('Passwords don\'t match.')
+        return cd['password2']
+
+class StudentEnrollmentForm(forms.ModelForm):
+    # Form fields for Student model
+    class Meta:
+        model = Student
+        fields = [
+            'USN', 'middle_name', 'current_class', 'class_group', 
+            'gender', 'DOB', 'blood_group', 'genotype', 
+            'health_remark', 'student_type', 'hostel_name',
+            'date_admitted', 'class_on_admission', 
+            'guardian_name', 'guardian_address', 'guardian_phone', 
+            'guardian_email', 'relationship', 
+            
+        ]
+        widgets = {
+            'USN': forms.TextInput(attrs={'readonly': 'readonly'}),
+        }
+    
+    # Guardian details are part of the Student model, so we don't need separate fields here.
+    # The form automatically handles the fields defined in `Meta`.

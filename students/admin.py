@@ -26,6 +26,7 @@ class StudentAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     search_fields = ('first_name', 'last_name', 'user__username', 'current_class')
     raw_id_fields = ['user', 'form_teacher', 'badge', 'class_on_admission', 'hostel_name']
     autocomplete_fields = ['current_class', 'class_on_admission']
+    exclude=('fee_balance',)
 
 class BadgeAdmin(ImportExportModelAdmin, admin.ModelAdmin):
        

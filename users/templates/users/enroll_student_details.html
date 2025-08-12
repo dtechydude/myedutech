@@ -1,0 +1,263 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 2: Student Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempus-dominus/6.7.13/css/tempus-dominus.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .form-card {
+            max-width: 900px;
+            margin: 50px auto;
+            border-radius: 1rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container d-flex align-items-center justify-content-center min-vh-100">
+    <div class="card form-card p-4 p-md-5 w-100">
+        <div class="mb-4">
+            <a href="/dashboard/" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+
+        <div class="text-center mb-4">
+            {% if school_identity and school_identity.logo %}
+                <img src="{{ school_identity.logo.url }}" alt="{{ school_identity.school_name }} Logo" class="mb-3" style="height: 60px;">
+            {% endif %}
+            <h1 class="text-3xl fw-bold mb-0">
+                {% if school_identity %}{{ school_identity.school_name }}{% else %}Student Enrollment{% endif %}
+            </h1>
+            <p class="text-muted mt-2">Step 2 of 2: Fill in student details for **{{ user_first_name }} {{ user_last_name }}**</p>
+        </div>
+
+        {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                    <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div id="validation-alert" class="alert alert-danger fade show d-none" role="alert">
+            Please fill out all **required fields** before submitting.
+        </div>
+
+        <form method="post" novalidate id="studentForm">
+            {% csrf_token %}
+            <div class="accordion" id="studentFormAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                            1. Personal Information
+                        </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#studentFormAccordion">
+                        <div class="accordion-body">
+                            <div class="row g-4">
+                                <div class="col-md-4">
+                                    <label for="{{ student_form.USN.id_for_label }}" class="form-label">{{ student_form.USN.label }}</label>
+                                    {{ student_form.USN }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ student_form.middle_name.id_for_label }}" class="form-label">{{ student_form.middle_name.label }}</label>
+                                    {{ student_form.middle_name }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ student_form.gender.id_for_label }}" class="form-label">{{ student_form.gender.label }}</label>
+                                    {{ student_form.gender }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ student_form.DOB.id_for_label }}" class="form-label">{{ student_form.DOB.label }}</label>
+                                    <div class="input-group" id="dob-picker-container" data-td-target-input="#id_DOB" data-td-target-toggle="#dob-picker-container">
+                                        {{ student_form.DOB }}
+                                        <span class="input-group-text" data-td-toggle="datetimepicker">
+                                            <i class="fa-solid fa-calendar"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ student_form.current_class.id_for_label }}" class="form-label">{{ student_form.current_class.label }} <span class="text-danger">*</span></label>
+                                    {{ student_form.current_class }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ student_form.class_group.id_for_label }}" class="form-label">{{ student_form.class_group.label }}</label>
+                                    {{ student_form.class_group }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ student_form.student_type.id_for_label }}" class="form-label">{{ student_form.student_type.label }}</label>
+                                    {{ student_form.student_type }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ student_form.hostel_name.id_for_label }}" class="form-label">{{ student_form.hostel_name.label }}</label>
+                                    {{ student_form.hostel_name }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ student_form.badge.id_for_label }}" class="form-label">{{ student_form.badge.label }} <span class="text-danger">*</span></label>
+                                    {{ student_form.badge }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ student_form.date_admitted.id_for_label }}" class="form-label">{{ student_form.date_admitted.label }} <span class="text-danger">*</span></label>
+                                    <div class="input-group" id="date-admitted-picker-container" data-td-target-input="#id_date_admitted" data-td-target-toggle="#date-admitted-picker-container">
+                                        {{ student_form.date_admitted }}
+                                        <span class="input-group-text" data-td-toggle="datetimepicker">
+                                            <i class="fa-solid fa-calendar"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ student_form.class_on_admission.id_for_label }}" class="form-label">{{ student_form.class_on_admission.label }} <span class="text-danger">*</span></label>
+                                    {{ student_form.class_on_admission }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingTwo">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            2. Medical Information
+                        </button>
+                    </h2>
+                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#studentFormAccordion">
+                        <div class="accordion-body">
+                            <div class="row g-4">
+                                <div class="col-md-4">
+                                    <label for="{{ student_form.blood_group.id_for_label }}" class="form-label">{{ student_form.blood_group.label }}</label>
+                                    {{ student_form.blood_group }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ student_form.genotype.id_for_label }}" class="form-label">{{ student_form.genotype.label }}</label>
+                                    {{ student_form.genotype }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ student_form.health_remark.id_for_label }}" class="form-label">{{ student_form.health_remark.label }}</label>
+                                    {{ student_form.health_remark }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingThree">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                            3. Guardian Information
+                        </button>
+                    </h2>
+                    <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#studentFormAccordion">
+                        <div class="accordion-body">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label for="{{ student_form.guardian_name.id_for_label }}" class="form-label">{{ student_form.guardian_name.label }} <span class="text-danger">*</span></label>
+                                    {{ student_form.guardian_name }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ student_form.relationship.id_for_label }}" class="form-label">{{ student_form.relationship.label }} <span class="text-danger">*</span></label>
+                                    {{ student_form.relationship }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ student_form.guardian_phone.id_for_label }}" class="form-label">{{ student_form.guardian_phone.label }}</label>
+                                    {{ student_form.guardian_phone }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ student_form.guardian_email.id_for_label }}" class="form-label">{{ student_form.guardian_email.label }}</label>
+                                    {{ student_form.guardian_email }}
+                                </div>
+                                <div class="col-12">
+                                    <label for="{{ student_form.guardian_address.id_for_label }}" class="form-label">{{ student_form.guardian_address.label }}</label>
+                                    {{ student_form.guardian_address }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid mt-5">
+                <button type="submit" name="student_submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-user-plus me-2"></i>Enroll Student
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tempus-dominus/6.7.13/js/tempus-dominus.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Bootstrap classes to Django form fields
+        document.querySelectorAll('input, select, textarea').forEach(field => {
+            if (field.type !== 'submit' && field.type !== 'hidden') {
+                field.classList.add('form-control');
+            }
+        });
+
+        // Initialize Tempus Dominus for date pickers
+        // Ensure the ID of the picker container matches the data-td-target-toggle value
+        const dobPickerElement = document.getElementById('dob-picker-container');
+        if (dobPickerElement) {
+            new tempusDominus.TempusDominus(dobPickerElement, {
+                localization: {
+                    locale: 'en',
+                    format: 'L'
+                }
+            });
+        }
+        
+        const dateAdmittedPickerElement = document.getElementById('date-admitted-picker-container');
+        if (dateAdmittedPickerElement) {
+            new tempusDominus.TempusDominus(dateAdmittedPickerElement, {
+                localization: {
+                    locale: 'en',
+                    format: 'L'
+                }
+            });
+        }
+
+        // Client-side form validation on submit
+        const form = document.getElementById('studentForm');
+        form.addEventListener('submit', function(event) {
+            let hasError = false;
+            const requiredFields = [
+                'id_current_class', 'id_badge', 'id_class_on_admission', 
+                'id_date_admitted', 'id_guardian_name', 'id_relationship'
+            ];
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field && !field.value) {
+                    field.classList.add('is-invalid');
+                    hasError = true;
+                } else if (field) {
+                    field.classList.remove('is-invalid');
+                    field.classList.add('is-valid');
+                }
+            });
+
+            if (hasError) {
+                event.preventDefault();
+                const validationAlert = document.getElementById('validation-alert');
+                validationAlert.classList.remove('d-none');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+    });
+</script>
+</body>
+</html>

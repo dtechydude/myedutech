@@ -1,0 +1,197 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 1: User Registration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .form-card {
+            max-width: 650px;
+            margin: 50px auto;
+            border-radius: 1rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <div class="container d-flex align-items-center justify-content-center min-vh-100">
+        <div class="card form-card p-4 p-md-5 w-100">
+            <div class="mb-4">
+                <a href="/dashboard/" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+            <div class="text-center mb-4">                
+                {% if school_identity and school_identity.logo %}
+                    <img src="{{ school_identity.logo.url }}" alt="{{ school_identity.school_name }} Logo" class="mb-3" style="height: 60px;">
+                {% endif %}
+                <h3 class="text-3xl fw-bold mb-0">
+                    {% if school_identity %}{{ school_identity.name }}{% else %}Student Enrollment{% endif %}
+                </h3>
+                <p class="text-muted mt-2">Step 1 of 2: Create a user account</p>
+            </div>
+
+            {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                        <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" novalidate id="userRegistrationForm">
+                {% csrf_token %}
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label for="id_first_name" class="form-label">First Name</label>
+                        {{ user_form.first_name }}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_last_name" class="form-label">Last Name</label>
+                        {{ user_form.last_name }}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_email" class="form-label">Email</label>
+                        {{ user_form.email }}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_username" class="form-label">Username (USN)</label>
+                        <div class="input-group has-validation">
+                            {{ user_form.username }}
+                            <div class="invalid-feedback" id="usernameFeedback">
+                                </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_password" class="form-label">Password</label>
+                        <div class="input-group">
+                            {{ user_form.password }}
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="fa-solid fa-eye" id="passwordToggleIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_password2" class="form-label">Confirm Password</label>
+                        <div class="input-group has-validation">
+                            {{ user_form.password2 }}
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword2">
+                                <i class="fa-solid fa-eye" id="passwordToggleIcon2"></i>
+                            </button>
+                            <div class="invalid-feedback" id="passwordMatchFeedback">
+                                Passwords do not match.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid mt-5">
+                    <button type="submit" name="user_submit" class="btn btn-primary btn-lg" id="submitBtn">
+                        Continue to Student Details
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add Bootstrap classes to Django form fields
+            document.querySelectorAll('input').forEach(input => {
+                if (input.type !== 'submit' && input.type !== 'hidden') {
+                    input.classList.add('form-control');
+                }
+            });
+
+            // Password Visibility Toggles
+            const togglePassword = document.getElementById('togglePassword');
+            const password = document.getElementById('id_password');
+            const passwordToggleIcon = document.getElementById('passwordToggleIcon');
+            
+            togglePassword.addEventListener('click', function (e) {
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
+                passwordToggleIcon.classList.toggle('fa-eye-slash');
+            });
+
+            const togglePassword2 = document.getElementById('togglePassword2');
+            const password2 = document.getElementById('id_password2');
+            const passwordToggleIcon2 = document.getElementById('passwordToggleIcon2');
+
+            togglePassword2.addEventListener('click', function (e) {
+                const type = password2.getAttribute('type') === 'password' ? 'text' : 'password';
+                password2.setAttribute('type', type);
+                passwordToggleIcon2.classList.toggle('fa-eye-slash');
+            });
+
+            // Password Match Validation
+            password.addEventListener('keyup', validatePasswords);
+            password2.addEventListener('keyup', validatePasswords);
+            function validatePasswords() {
+                const feedback = document.getElementById('passwordMatchFeedback');
+                if (password.value !== password2.value) {
+                    password2.classList.add('is-invalid');
+                    feedback.style.display = 'block';
+                    document.getElementById('submitBtn').disabled = true;
+                } else {
+                    password2.classList.remove('is-invalid');
+                    password2.classList.add('is-valid');
+                    feedback.style.display = 'none';
+                    checkAllValidations();
+                }
+            }
+
+            // Username (USN) check
+            const usernameInput = document.getElementById('id_username');
+            usernameInput.addEventListener('change', checkUsername);
+            function checkUsername() {
+                const username = usernameInput.value;
+                const feedback = document.getElementById('usernameFeedback');
+                
+                $.ajax({
+                    url: "{% url 'users:check_username' %}", 
+                    data: { 'username': username },
+                    dataType: 'json',
+                    success: function(data) {
+                        if (data.is_taken) {
+                            usernameInput.classList.add('is-invalid');
+                            feedback.textContent = 'This username is already taken.';
+                            document.getElementById('submitBtn').disabled = true;
+                        } else {
+                            usernameInput.classList.remove('is-invalid');
+                            usernameInput.classList.add('is-valid');
+                            feedback.textContent = '';
+                            checkAllValidations();
+                        }
+                    }
+                });
+            }
+
+            function checkAllValidations() {
+                const isPasswordMatch = password.value === password2.value && password.value !== '';
+                const isUsernameValid = !usernameInput.classList.contains('is-invalid');
+                
+                if (isPasswordMatch && isUsernameValid) {
+                    document.getElementById('submitBtn').disabled = false;
+                } else {
+                    document.getElementById('submitBtn').disabled = true;
+                }
+            }
+            
+            document.getElementById('submitBtn').disabled = true;
+
+        });
+    </script>
+</body>
+</html>

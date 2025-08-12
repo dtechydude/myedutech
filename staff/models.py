@@ -40,7 +40,7 @@ class Teacher(models.Model):
     dept = models.ForeignKey(Dept, on_delete=models.CASCADE, default=1, related_name='my_dept')
     # class_in_charge = models.ForeignKey(Standard, on_delete=models.CASCADE, blank=True, null=True, related_name='myclasses')
     subjects_taught = models.ManyToManyField(Subject, related_name='teachers')
-    standards_assigned = models.ManyToManyField(Standard, related_name='teachers')
+    standards_assigned = models.ManyToManyField(Standard, blank=True, related_name='teachers')
     female = 'female'
     male = 'male'
     select_gender = 'select_gender'

@@ -6,7 +6,7 @@ from django.db import transaction
 from django.utils.decorators import method_decorator
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
-from django.db.models import Sum, F,  ExpressionWrapper, DecimalField, Q, Max, Min
+from django.db.models import Sum, F,  ExpressionWrapper, DecimalField, Q, Max, Min, OuterRef, Subquery
 from .models import Payment, Receipt, PaymentCategory, StudentAccountLedger, CategoryFee
 from curriculum.models import Term, Session
 from .forms import PaymentForm
@@ -515,7 +515,7 @@ def total_payments_report(request):
         'sessions': sessions,
         'students': students,
     }
-    return render(request, 'payments/test_total_payments_report.html', context)
+    return render(request, 'payments/total_payments_report.html', context)
 
 
 @login_required
@@ -694,3 +694,62 @@ class FinanceDashboardView(LoginRequiredMixin, View):
             'selected_session_id': session_id,
         }
         return render(request, self.template_name, context)
+
+ # Function Based View For the Finance Dashboard   
+def finance_dashboard(request):
+    selected_session_id = request.GET.get('session')
+    
+    # Base queryset for filtering all payment and fee data
+    payment_queryset = Payment.objects.all()
+    if selected_session_id:
+        payment_queryset = payment_queryset.filter(session_id=selected_session_id)
+
+    # 1. Calculate total income
+    total_income_all_terms = payment_queryset.aggregate(
+        total_income=Sum('amount_received')
+    )['total_income'] or 0
+
+    # 2. Calculate total outstanding debt
+    # This is a bit more complex. We need to find the latest payment for each student
+    # and sum up the 'balance_after_payment' from those latest payments.
+    latest_payments_subquery = payment_queryset.values('student_id').annotate(
+        max_id=Max('id')
+    ).values('max_id')
+
+    total_outstanding_debt = payment_queryset.filter(
+        id__in=Subquery(latest_payments_subquery)
+    ).aggregate(
+        total_debt=Sum('balance_after_payment')
+    )['total_debt'] or 0
+    
+    # 3. Aggregate income per term/session for the chart
+    income_and_debt_list = payment_queryset.values(
+        'session__name', 'term__name'
+    ).annotate(
+        total_income=Sum('amount_received'),
+        total_debt=Sum('balance_after_payment')
+    ).order_by('session__name', 'term__name')
+
+    # --- Chart Data Preparation ---
+    chart_labels = []
+    chart_income_data = []
+    chart_debt_data = []
+
+    for item in income_and_debt_list:
+        chart_labels.append(f"{item['session__name']} - {item['term__name']}")
+        chart_income_data.append(float(item['total_income'] or 0))
+        chart_debt_data.append(float(item['total_debt'] or 0))
+    # --- End of Chart Data Preparation ---
+
+    context = {
+        'total_income_all_terms': total_income_all_terms,
+        'total_outstanding_debt': total_outstanding_debt,
+        'income_and_debt_list': income_and_debt_list,
+        'sessions': Session.objects.all().order_by('-start_date'),
+        'selected_session_id': selected_session_id,
+        'title': 'Finance Dashboard',
+        'chart_labels': chart_labels,
+        'chart_income_data': chart_income_data,
+        'chart_debt_data': chart_debt_data,
+    }
+    return render(request, 'payments/test_finance_dashboard.html', context)
