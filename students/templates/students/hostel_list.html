@@ -109,7 +109,7 @@
                                             <tr>
                                                 <td>{{ forloop.counter }}</td>												
                                                 <td>{{ s.name }}</td>
-                                                <td>{{ s.hostel_master.first_name }}</td>
+                                                <td>{{ s.hostel_master.get_full_name }}</td>
                                                                                            
                                                 {% endfor %}
                                             </tr>

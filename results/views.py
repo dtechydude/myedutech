@@ -5,6 +5,7 @@ from django.db.models import Sum, Avg, F # F object for database expressions
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Avg, Q # Import Q for complex queries if needed
 from curriculum.models import Session, Term, Standard, Subject
+from attendance.models import Attendance
 from staff.models import Teacher
 from students.models import Student
 from django.contrib import messages # Import messages
@@ -12,6 +13,7 @@ from django.contrib import messages # Import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views import View
 from django.db import transaction
+from django.core.exceptions import ValidationError
 from django.forms import formset_factory
 from .models import Score, MotorAbilityScore
 from .forms import ScoreEntryForm, ReportCardFilterForm, SessionReportCardFilterForm, MotorAbilityScoreForm # Import new form
@@ -260,6 +262,7 @@ class TeacherRequiredMixin(UserPassesTestMixin):
     def test_func(self):
         return hasattr(self.request.user, 'teacher')
 
+
 class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
     template_name = 'results/score_entry.html'
 
@@ -272,27 +275,26 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
             return render(request, self.template_name, {})
 
         assigned_subjects = teacher.subjects_taught.all()
-        assigned_standards = teacher.standards_assigned.all() # Changed assigned_classes to assigned_standards
+        assigned_standards = teacher.standards_assigned.all()
 
         selected_subject = None
         selected_standard = None
 
         selected_subject_id = request.GET.get('subject', assigned_subjects.first().id if assigned_subjects.exists() else None)
-        selected_standard_id = request.GET.get('standard', assigned_standards.first().id if assigned_standards.exists() else None) # Changed 'class' to 'standard'
+        selected_standard_id = request.GET.get('standard', assigned_standards.first().id if assigned_standards.exists() else None)
 
-        students_in_standard = [] # Changed students_in_class to students_in_standard
+        students_in_standard = []
         ScoreFormSet = formset_factory(ScoreEntryForm, extra=0)
 
         if selected_subject_id and selected_standard_id:
             try:
                 selected_subject = Subject.objects.get(id=selected_subject_id)
-                selected_standard = Standard.objects.get(id=selected_standard_id) # Changed Class.objects.get to Standard.objects.get
-            except (Subject.DoesNotExist, Standard.DoesNotExist): # Changed Class.DoesNotExist to Standard.DoesNotExist
+                selected_standard = Standard.objects.get(id=selected_standard_id)
+            except (Subject.DoesNotExist, Standard.DoesNotExist):
                 messages.error(request, 'Invalid subject or standard selected.')
-                # Keep selected_subject and selected_standard as None to avoid trying to filter students
             
             if selected_subject and selected_standard:
-                students_in_standard = Student.objects.filter(current_class=selected_standard).order_by('first_name', 'last_name') # Changed current_class to current_standard
+                students_in_standard = Student.objects.filter(current_class=selected_standard).order_by('first_name', 'last_name')
                 
                 initial_data = []
                 for student in students_in_standard:
@@ -313,22 +315,25 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
                     })
                 
                 formset = ScoreFormSet(initial=initial_data)
-            else:
-                formset = ScoreFormSet() # Empty formset if subject/standard not found
         else:
-            formset = ScoreFormSet() # Empty formset if no subject/standard selected initially
+            formset = ScoreFormSet()
 
-
+        try:
+            school_identity = SchoolIdentity.objects.first()
+        except SchoolIdentity.DoesNotExist:
+            school_identity = None
+        
         context = {
             'current_term': current_term,
             'assigned_subjects': assigned_subjects,
-            'assigned_standards': assigned_standards, # Changed assigned_classes to assigned_standards
+            'assigned_standards': assigned_standards,
             'selected_subject_id': int(selected_subject_id) if selected_subject_id else None,
-            'selected_standard_id': int(selected_standard_id) if selected_standard_id else None, # Changed selected_class_id to selected_standard_id
-            'selected_subject': selected_subject, # New: Pass the object
-            'selected_standard': selected_standard, # New: Pass the object
+            'selected_standard_id': int(selected_standard_id) if selected_standard_id else None,
+            'selected_subject': selected_subject,
+            'selected_standard': selected_standard,
             'formset': formset,
-            'students_in_standard': students_in_standard, # Changed students_in_class to students_in_standard
+            'students_in_standard': students_in_standard,
+            'school_identity': school_identity,
         }
         return render(request, self.template_name, context)
 
@@ -338,90 +343,98 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
         current_term = Term.objects.filter(is_current=True).first()
         if not current_term:
             messages.error(request, 'No current term set. Please contact administration.')
-            return render(request, self.template_name, {}) # Render rather than redirect to keep POST data if possible
+            return render(request, self.template_name, {})
 
         selected_subject_id = request.POST.get('selected_subject_id')
-        selected_standard_id = request.POST.get('selected_standard_id') # Changed selected_class_id to selected_standard_id
+        selected_standard_id = request.POST.get('selected_standard_id')
 
         if not selected_subject_id or not selected_standard_id:
             messages.error(request, 'Subject or standard not selected. Please try again.')
-            return redirect('score_entry') # Redirect to clear POST data
+            return redirect('score_entry')
 
         try:
             selected_subject = Subject.objects.get(id=selected_subject_id)
-            selected_standard = Standard.objects.get(id=selected_standard_id) # Changed Class.objects.get to Standard.objects.get
-        except (Subject.DoesNotExist, Standard.DoesNotExist): # Changed Class.DoesNotExist to Standard.DoesNotExist
+            selected_standard = Standard.objects.get(id=selected_standard_id)
+        except (Subject.DoesNotExist, Standard.DoesNotExist):
             messages.error(request, 'Invalid subject or standard selected.')
-            return redirect('score_entry') # Redirect if invalid IDs submitted
+            return redirect('score_entry')
 
         if not teacher.subjects_taught.filter(id=selected_subject.id).exists() or \
-           not teacher.standards_assigned.filter(id=selected_standard.id).exists(): # Changed classes_assigned to standards_assigned
+           not teacher.standards_assigned.filter(id=selected_standard.id).exists():
             messages.error(request, 'You are not authorized to enter scores for this subject or standard.')
             return redirect('score_entry')
 
-        students_in_standard = Student.objects.filter(current_class=selected_standard).order_by('first_name', 'last_name') # Changed current_class to current_standard
-        ScoreFormSet = formset_factory(ScoreEntryForm)
+        students_in_standard = Student.objects.filter(current_class=selected_standard).order_by('first_name', 'last_name')
+        ScoreFormSet = formset_factory(ScoreEntryForm, extra=len(students_in_standard))
 
         formset = ScoreFormSet(request.POST)
 
         if formset.is_valid():
-            with transaction.atomic():
-                for form in formset:
-                    student_id = form.cleaned_data['student_id']
-                    score_id = form.cleaned_data['score_id']
-                    ca1 = form.cleaned_data['ca1']
-                    ca2 = form.cleaned_data['ca2']
-                    ca3 = form.cleaned_data['ca3']
-                    exam_score = form.cleaned_data['exam_score']
+            try:
+                with transaction.atomic():
+                    for form in formset:
+                        student_id = form.cleaned_data['student_id']
+                        score_id = form.cleaned_data['score_id']
+                        ca1 = form.cleaned_data.get('ca1')
+                        ca2 = form.cleaned_data.get('ca2')
+                        ca3 = form.cleaned_data.get('ca3')
+                        exam_score = form.cleaned_data.get('exam_score')
+                        student = get_object_or_404(Student, id=student_id)
 
-                    student = get_object_or_404(Student, id=student_id)
-
-                    if score_id:
-                        score_instance = get_object_or_404(Score, id=score_id)
-                        score_instance.ca1 = ca1
-                        score_instance.ca2 = ca2
-                        score_instance.ca3 = ca3
-                        score_instance.exam_score = exam_score
-                        score_instance.save()
-                    else:
-                        Score.objects.create(
-                            student=student,
-                            subject=selected_subject,
-                            term=current_term,
-                            ca1=ca1,
-                            ca2=ca2,
-                            ca3=ca3,
-                            exam_score=exam_score
-                        )
-            messages.success(request, 'Scores saved successfully!')
-            return redirect('results:score_entry_success')
-        else:
-            messages.error(request, 'Please correct the errors below.')
-            assigned_subjects = teacher.subjects_taught.all()
-            assigned_standards = teacher.standards_assigned.all() # Changed assigned_classes to assigned_standards
-             
-            # ADDITION START
+                        if score_id:
+                            score_instance = get_object_or_404(Score, id=score_id)
+                            score_instance.ca1 = ca1
+                            score_instance.ca2 = ca2
+                            score_instance.ca3 = ca3
+                            score_instance.exam_score = exam_score
+                            score_instance.save() 
+                        else:
+                            Score.objects.create(
+                                student=student,
+                                subject=selected_subject,
+                                term=current_term,
+                                ca1=ca1,
+                                ca2=ca2,
+                                ca3=ca3,
+                                exam_score=exam_score
+                            )
+                messages.success(request, 'Scores saved successfully!')
+                return redirect('results:score_entry_success')
+            except ValidationError as e:
+                # Catch the specific model-level ValidationError here
+                for field, error_list in e.message_dict.items():
+                    for error_msg in error_list:
+                        messages.error(request, f"Validation Error: {error_msg}")
+                
+                # Fall through to the rendering block
+                pass
+        
+        # This block now serves as the single point for re-rendering the page on any error
+        messages.error(request, 'Please correct the errors below.')
+        assigned_subjects = teacher.subjects_taught.all()
+        assigned_standards = teacher.standards_assigned.all()
+        
         try:
             school_identity = SchoolIdentity.objects.first()
         except SchoolIdentity.DoesNotExist:
             school_identity = None
-        # ADDITION END
 
-           
+        context = {
+            'current_term': current_term,
+            'assigned_subjects': assigned_subjects,
+            'assigned_standards': assigned_standards,
+            'selected_subject_id': int(selected_subject_id) if selected_subject_id else None,
+            'selected_standard_id': int(selected_standard_id) if selected_standard_id else None,
+            'selected_subject': selected_subject,
+            'selected_standard': selected_standard,
+            'formset': formset,
+            'students_in_standard': students_in_standard,
+            'school_identity': school_identity,
+        }
+        return render(request, self.template_name, context)
 
-            context = {
-                'current_term': current_term,
-                'assigned_subjects': assigned_subjects,
-                'assigned_standards': assigned_standards, # Changed assigned_classes to assigned_standards
-                'selected_subject_id': int(selected_subject_id) if selected_subject_id else None,
-                'selected_standard_id': int(selected_standard_id) if selected_standard_id else None, # Changed selected_class_id to selected_standard_id
-                'selected_subject': selected_subject, # Pass the object back on error
-                'selected_standard': selected_standard, # Pass the object back on error
-                'formset': formset,
-                'students_in_standard': students_in_standard, # Pass for display
-                'school_identity': school_identity, # <-- ADD THIS LINE
-            }
-            return render(request, self.template_name, context)
+
+
 
 # Simple success view
 class ScoreEntrySuccessView(LoginRequiredMixin, View):
@@ -432,7 +445,6 @@ class ScoreEntrySuccessView(LoginRequiredMixin, View):
 
 
 # Currently working Logics
-
 class ReportCardListView(LoginRequiredMixin, TeacherRequiredMixin, View):
     """
     Allows teachers/admins to select a term and standard,
@@ -486,12 +498,58 @@ class ReportCardListView(LoginRequiredMixin, TeacherRequiredMixin, View):
         return render(request, self.template_name, context)
 
 
+#New Report Card View to capture the attendance 
+# Placeholder functions from the original code
+def get_grade(score):
+    if score >= 80:
+        return "A"
+    elif score >= 71:
+        return "B+"
+    elif score >= 60:
+        return "B"
+    elif score >= 50:
+        return "C"
+    elif score >= 45:
+        return "D"
+    elif score >= 40:
+        return "E"
+    else:
+        return "F"
+
+def get_subject_remark(score):
+    if score >= 80:
+        return "Excellent"
+    elif score >= 71:
+        return "Very Good"
+    elif score >= 60:
+        return "Good"
+    elif score >= 50:
+        return "Fair"
+    elif score >= 40:
+        return "Pass"
+    else:
+        return "Fail"
+
+def get_overall_remark(average):
+    if average >= 80:
+        return "Outstanding"
+    elif average >= 71:
+        return "Very Good"
+    elif average >= 60:
+        return "Good"
+    elif average >= 50:
+        return "Fair"
+    elif average >= 40:
+        return "Poor"
+    else:
+        return "Very Poor"
+
+
 class StudentReportCardView(LoginRequiredMixin, View):
     """
     Generates and displays a single student's report card for a specific term.
     Accessible by teachers/admins (for any student) and by the student themselves.
     """
-    # template_name = 'results/student_report_card_detail.html'
     template_name = 'results/test_student_report_card_detail.html'
     pdf_template_name = 'results/test_student_report_card_pdf.html' # Dedicated template for PDF layout
 
@@ -500,15 +558,33 @@ class StudentReportCardView(LoginRequiredMixin, View):
         term = get_object_or_404(Term, id=term_id)
 
         # Authorization Check
-        # If the user is NOT a teacher:
         if not hasattr(request.user, 'teacher'):
-            # Check if the logged-in user is linked to this specific student
-            # And if that student object matches the student_id in the URL
             if not (hasattr(request.user, 'student') and request.user.student == student):
                 messages.error(request, "You are not authorized to view this report card.")
-                # Redirect to a safer place, e.g., student dashboard or home
                 return redirect('student_dashboard' if hasattr(request.user, 'student') else 'home') 
+
+        # --- FIX: Updated code for ATTENDANCE and NEXT TERM ---
+        # Get all attendance records for the student in the given term
+        student_attendance = Attendance.objects.filter(student=student, date__gte=term.start_date, date__lte=term.end_date)
         
+        # Calculate days present and absent using the `present` boolean field
+        days_present = student_attendance.filter(present=True).count()
+        days_absent = student_attendance.filter(present=False).count()
+        
+        # Calculate total school days opened for the student's class during the term
+        total_school_days = Attendance.objects.filter(
+            student__current_class=student.current_class, 
+            date__gte=term.start_date, 
+            date__lte=term.end_date
+        ).values('date').distinct().count()
+
+        # Get the next term's start date. Assumes terms are ordered by start_date.
+        next_term = Term.objects.filter(start_date__gt=term.end_date).order_by('start_date').first()
+        next_term_start_date = next_term.start_date if next_term else None
+
+        # Count total students in the student's class
+        total_students_in_class = Student.objects.filter(current_class=student.current_class).count()
+
         # Fetch scores for the student in the selected term
         scores = Score.objects.filter(student=student, term=term).select_related('subject').order_by('subject__name')
 
@@ -517,10 +593,7 @@ class StudentReportCardView(LoginRequiredMixin, View):
         subjects_with_scores_count = 0
 
         for score in scores:
-            # The Score model's save method already calculates total_score.
-            # We'll use that directly. If total_score is None, default to 0 for calculations.
             current_total_score = score.total_score if score.total_score is not None else 0
-            # Calculate the total CA score
             total_ca = (score.ca1 or 0) + (score.ca2 or 0) + (score.ca3 or 0)
 
             report_data.append({
@@ -528,14 +601,13 @@ class StudentReportCardView(LoginRequiredMixin, View):
                 'ca1': score.ca1 if score.ca1 is not None else 'N/A',
                 'ca2': score.ca2 if score.ca2 is not None else 'N/A',
                 'ca3': score.ca3 if score.ca3 is not None else 'N/A',
-                'total_ca': total_ca,  # <-- Added the total CA score here
+                'total_ca': total_ca,
                 'exam_score': score.exam_score if score.exam_score is not None else 'N/A',
-                'total_score': current_total_score, # Use the calculated total
+                'total_score': current_total_score,
                 'grade': get_grade(current_total_score),
                 'remark': get_subject_remark(current_total_score),
             })
             
-            # Only include subjects with an actual total score in the overall average calculation
             if score.total_score is not None:
                 total_scores_sum += current_total_score
                 subjects_with_scores_count += 1
@@ -546,35 +618,30 @@ class StudentReportCardView(LoginRequiredMixin, View):
             overall_average = total_scores_sum / subjects_with_scores_count
             overall_remark = get_overall_remark(overall_average)
 
-        # --- Fetch Motor Ability Score for this specific term ---
-        # .first() is used because unique_together ensures only one record,
-        # but .get() would raise an error if no record exists.
         motor_ability_score = MotorAbilityScore.objects.filter(student=student, term=term).first()
         
-        # You might also fetch comments or other term-specific data here
-        # comment = Comment.objects.filter(student=student, term=term).first()
-        # --- NEW CODE: Fetch SchoolIdentity Information ---
         try:
             school_identity = SchoolIdentity.objects.first()
         except SchoolIdentity.DoesNotExist:
             school_identity = None
 
-
         context = {
             'student': student,
             'term': term,
             'report_data': report_data,
-            'overall_average': f"{overall_average:.2f}" if overall_average is not None else 'N/A', # Format to 2 decimal places
+            'overall_average': f"{overall_average:.2f}" if overall_average is not None else 'N/A',
             'overall_remark': overall_remark,
             'motor_ability_score': motor_ability_score,
-            'school_identity': school_identity
+            'school_identity': school_identity,
+            'total_school_days': total_school_days,
+            'days_present': days_present,
+            'days_absent': days_absent,
+            'next_term_start_date': next_term_start_date,
+            'total_students_in_class': total_students_in_class,
         }
 
-        # Handle PDF download request
         if 'download' in request.GET and request.GET['download'] == 'pdf':
             filename = f"{student.first_name.replace(' ', '_')}_{term.name.replace(' ', '_')}_TermlyReportCard.pdf"
-            
-            # Use the dedicated PDF template and the render helper
             pdf_response = render_to_pdf_xhtml2pdf(self.pdf_template_name, context)
             
             if pdf_response:
@@ -583,9 +650,8 @@ class StudentReportCardView(LoginRequiredMixin, View):
             else:
                 return HttpResponse("Error generating PDF.", status=500)
 
-        # Default: Render the regular HTML page
         return render(request, self.template_name, context)
-        
+
 
 
 # # --- VIEW FOR INDIVIDUAL TERMLY REPORT CARDS ---
@@ -667,7 +733,7 @@ def render_to_pdf_xhtml2pdf(template_src, context_dict={}):
     return HttpResponse("We had some errors <pre>%s</pre>" % html, status=500)
 
 
-
+# Old Session Report Card View without attendance
 class SessionReportCardListView(LoginRequiredMixin, TeacherRequiredMixin, View):
     """
     Allows teachers/admins to select a session and standard,
@@ -718,15 +784,176 @@ class SessionReportCardListView(LoginRequiredMixin, TeacherRequiredMixin, View):
         return render(request, self.template_name, context)
 
 
+# # Old SessionReport Card View
+# class StudentSessionReportCardView(LoginRequiredMixin, View):
+#     """
+#     Generates and displays a single student's cumulative report card for a specific academic session.
+#     Accessible by teachers/admins (for any student) and by the student themselves.
+#     """
+#     template_name = 'results/session_report_card_detail.html'
+#     # template_name = 'results/test_result_template.html'
+#     pdf_template_name = 'results/session_report_card_pdf.html' # Dedicated PDF template (recommended)
+
+
+#     def get(self, request, student_id, session_id, *args, **kwargs):
+#         student = get_object_or_404(Student, id=student_id)
+#         session = get_object_or_404(Session, id=session_id)
+
+#         # Authorization Check: Teachers/Admins can view any, student can view their own.
+#         if not hasattr(request.user, 'teacher'): # If not a teacher
+#             if not (hasattr(request.user, 'student') and request.user.student == student):
+#                 messages.error(request, "You are not authorized to view this report card.")
+#                 return redirect('student_dashboard' if hasattr(request.user, 'student') else 'home')
+
+#         # Get all terms within this session, ordered chronologically for consistent display
+#         terms_in_session = session.terms.all().order_by('start_date')
+#         if not terms_in_session.exists():
+#             messages.warning(request, f"No terms defined for {session.name}. Cannot generate report card.")
+#             return redirect(request.META.get('HTTP_REFERER', 'session_report_card_list')) # Go back or to list
+
+#         # Aggregate scores for each subject across all terms in the session
+#         # This groups scores by subject and sums their total_score for the student within the session's terms.
+#         subject_cumulative_data = Score.objects.filter(
+#             student=student,
+#             term__in=terms_in_session # Filter by terms belonging to this session
+#         ).values('subject__name', 'subject__id').annotate(
+#             cumulative_total_score=Sum('total_score')
+#         ).order_by('subject__name')
+
+#         report_data = []
+#         overall_effective_average_sum = 0
+#         subjects_counted_for_overall_average = 0
+        
+#         # Determine maximum possible cumulative score per subject for all terms in the session
+#         # Assuming each term's total_score is out of 100 (adjust if your max score per term differs)
+#         max_possible_score_per_term = 100 # Change this if your total_score for a single term is not out of 100
+#         max_possible_cumulative_score_per_subject = max_possible_score_per_term * terms_in_session.count() 
+
+#         for item in subject_cumulative_data:
+#             subject_name = item['subject__name']
+#             cumulative_score_raw = item['cumulative_total_score']
+
+#             # Get individual term scores for this subject for display in the table
+#             term_scores_for_subject = {}
+#             for term in terms_in_session:
+#                 try:
+#                     score_instance = Score.objects.get(student=student, subject__id=item['subject__id'], term=term)
+#                     # Display total_score, or 'N/A' if score is None for that term
+#                     term_scores_for_subject[term.name] = score_instance.total_score if score_instance.total_score is not None else 'N/A'
+#                 except Score.DoesNotExist:
+#                     term_scores_for_subject[term.name] = 'N/A' # Mark as N/A if no score exists for that term/subject
+
+#             effective_subject_average = None
+#             if cumulative_score_raw is not None and max_possible_cumulative_score_per_subject > 0:
+#                 # Calculate the effective average out of 100
+#                 effective_subject_average = (cumulative_score_raw / max_possible_cumulative_score_per_subject) * 100
+                
+#                 # Only include subjects with a valid average in the overall average calculation
+#                 overall_effective_average_sum += effective_subject_average
+#                 subjects_counted_for_overall_average += 1
+
+#             report_data.append({
+#                 'subject': subject_name,
+#                 'term_scores': term_scores_for_subject, # Dictionary of {TermName: Score}
+#                 'cumulative_total_score': f"{cumulative_score_raw:.2f}" if cumulative_score_raw is not None else 'N/A',
+#                 'effective_subject_average': f"{effective_subject_average:.2f}" if effective_subject_average is not None else 'N/A',
+#                 'grade': get_grade(effective_subject_average),
+#                 'remark': get_subject_remark(effective_subject_average),
+#             })
+
+#         overall_session_average = None
+#         overall_remark = "No scores recorded for this session."
+
+#         if subjects_counted_for_overall_average > 0:
+#             overall_session_average = overall_effective_average_sum / subjects_counted_for_overall_average
+#             overall_remark = get_overall_remark(overall_session_average)
+
+#         # --- Aggregating Motor Ability Scores across all terms in the session ---
+#         # Get all MotorAbilityScore instances for this student within this session
+#         motor_ability_scores_for_session = MotorAbilityScore.objects.filter(
+#             student=student,
+#             term__session=session # Filter by terms belonging to this specific session
+#         )
+
+#         # Calculate the average score for each motor ability category across all relevant terms
+#         aggregated_motor_abilities = motor_ability_scores_for_session.aggregate(
+#             avg_honesty=Avg('honesty'),
+#             avg_politeness=Avg('politeness'),
+#             avg_neatness=Avg('neatness'),
+#             avg_cooperation=Avg('cooperation'),
+#             avg_obedience=Avg('obedience'),
+#             avg_attentiveness=Avg('attentiveness'),
+#             avg_punctuality=Avg('punctuality'),
+#             avg_perseverance=Avg('perseverance'),
+#             avg_emotional_stability=Avg('emotional_stability'),
+#             avg_attitude=Avg('attitude'),
+#             avg_leadership=Avg('leadership'),
+#             avg_physical_education=Avg('physical_education'),
+#             avg_games=Avg('games'),
+#             avg_musical=Avg('musical'),
+#             avg_handwriting=Avg('handwriting'),
+#             avg_reading=Avg('reading'),
+#             avg_verbal_fluency=Avg('verbal_fluency'),
+#             avg_handling_tools=Avg('handling_tools'),
+                      
+#             # Add any other 'avg_' aggregations for new fields in MotorAbilityScore
+#         )
+
+#         # Process aggregated values: round to nearest integer and cap at 5
+#         # Also ensure values are 0 if no scores were present (Avg returns None for no data)
+#         processed_aggregated_motor_abilities = {}
+#         for key, value in aggregated_motor_abilities.items():
+#             if value is not None:
+#                 # Round the average and cap it at the max score (5)
+#                 processed_aggregated_motor_abilities[key] = round(min(value, 5)) 
+#             else:
+#                 processed_aggregated_motor_abilities[key] = 0 # Default to 0 if no scores for that trait
+         
+#             # ADDITION START
+#             try:
+#                 school_identity = SchoolIdentity.objects.first()
+#             except SchoolIdentity.DoesNotExist:
+#                 school_identity = None
+#             # ADDITION END
+
+
+#         context = {
+#             'student': student,
+#             'session': session,
+#             'terms_in_session': terms_in_session, # Pass terms for dynamic table headers
+#             'report_data': report_data,
+#             'overall_session_average': f"{overall_session_average:.2f}" if overall_session_average is not None else 'N/A',
+#             'overall_remark': overall_remark,
+#             # 'academic_session_summary': academic_session_summary, # Example
+#             'aggregated_motor_abilities': processed_aggregated_motor_abilities, # Pass the processed aggregated data
+#             # Add any other overall session report card data here (e.g., overall comments)
+#             'school_identity':school_identity
+#         }
+
+#         # PDF Download Logic using xhtml2pdf
+#         if 'download' in request.GET and request.GET['download'] == 'pdf':
+#             filename = f"{student.first_name.replace(' ', '_')}_{session.name.replace(' ', '_')}_AnnualReportCard.pdf"
+            
+#             # Use the dedicated PDF template here
+#             pdf_response = render_to_pdf_xhtml2pdf(self.pdf_template_name, context)
+            
+#             if pdf_response:
+#                 pdf_response['Content-Disposition'] = f'attachment; filename="{filename}"'
+#                 return pdf_response
+#             else:
+#                 return HttpResponse("Error generating PDF.", status=500)
+
+#         # If not download=pdf, render the regular HTML page
+#         return render(request, self.template_name, context)
+    
+# NEW SESSION REPORT CARD VIEW THAT CAPTURES ATTENDANCE 
 class StudentSessionReportCardView(LoginRequiredMixin, View):
     """
     Generates and displays a single student's cumulative report card for a specific academic session.
     Accessible by teachers/admins (for any student) and by the student themselves.
     """
     template_name = 'results/session_report_card_detail.html'
-    # template_name = 'results/test_result_template.html'
     pdf_template_name = 'results/session_report_card_pdf.html' # Dedicated PDF template (recommended)
-
 
     def get(self, request, student_id, session_id, *args, **kwargs):
         student = get_object_or_404(Student, id=student_id)
@@ -828,8 +1055,6 @@ class StudentSessionReportCardView(LoginRequiredMixin, View):
             avg_reading=Avg('reading'),
             avg_verbal_fluency=Avg('verbal_fluency'),
             avg_handling_tools=Avg('handling_tools'),
-                      
-            # Add any other 'avg_' aggregations for new fields in MotorAbilityScore
         )
 
         # Process aggregated values: round to nearest integer and cap at 5
@@ -841,14 +1066,38 @@ class StudentSessionReportCardView(LoginRequiredMixin, View):
                 processed_aggregated_motor_abilities[key] = round(min(value, 5)) 
             else:
                 processed_aggregated_motor_abilities[key] = 0 # Default to 0 if no scores for that trait
-         
-            # ADDITION START
-            try:
-                school_identity = SchoolIdentity.objects.first()
-            except SchoolIdentity.DoesNotExist:
-                school_identity = None
-            # ADDITION END
 
+        # ADDITION START
+        # --- Attendance Report Logic ---
+        # Assumes a model named `Attendance` exists with fields `student` and `date_present` (boolean) or similar.
+        # This is a sample implementation. Adjust model and field names as needed.
+        from django.db.models import Count
+        from datetime import date
+
+        # Get all attendance records for the student within the session's date range
+        attendance_records = Attendance.objects.filter(
+            student=student,
+            date__gte=session.start_date,
+            date__lte=session.end_date
+        )
+
+        # Calculate total school days, days present, and days absent
+        # Assuming each attendance record represents a school day
+        total_school_days = attendance_records.aggregate(total=Count('id'))['total'] or 0
+        # days_present = attendance_records.filter(status='present').aggregate(count=Count('id'))['count'] or 0
+        days_absent = attendance_records.filter(present=False).aggregate(count=Count('id'))['count'] or 0
+        days_present = attendance_records.filter(present=True).aggregate(count=Count('id'))['count'] or 0
+        # --- Next Session Logic ---
+        # Find the next session chronologically
+        next_session = Session.objects.filter(start_date__gt=session.end_date).order_by('start_date').first()
+        next_session_start_date = next_session.start_date if next_session else None
+
+        # --- Fetch School Identity ---
+        try:
+            school_identity = SchoolIdentity.objects.first()
+        except SchoolIdentity.DoesNotExist:
+            school_identity = None
+        # ADDITION END
 
         context = {
             'student': student,
@@ -857,10 +1106,12 @@ class StudentSessionReportCardView(LoginRequiredMixin, View):
             'report_data': report_data,
             'overall_session_average': f"{overall_session_average:.2f}" if overall_session_average is not None else 'N/A',
             'overall_remark': overall_remark,
-            # 'academic_session_summary': academic_session_summary, # Example
             'aggregated_motor_abilities': processed_aggregated_motor_abilities, # Pass the processed aggregated data
-            # Add any other overall session report card data here (e.g., overall comments)
-            'school_identity':school_identity
+            'school_identity': school_identity,
+            'total_school_days': total_school_days,
+            'days_present': days_present,
+            'days_absent': days_absent,
+            'next_session_start_date': next_session_start_date
         }
 
         # PDF Download Logic using xhtml2pdf
@@ -878,7 +1129,9 @@ class StudentSessionReportCardView(LoginRequiredMixin, View):
 
         # If not download=pdf, render the regular HTML page
         return render(request, self.template_name, context)
-    
+
+
+
 
 
 # ... (your existing imports) ...

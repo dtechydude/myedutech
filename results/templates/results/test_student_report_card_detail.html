@@ -221,9 +221,10 @@
                 <td>{{ data.ca3|default:"-" }}</td>
                 <td>{{ data.total_ca|default:"-" }}</td>
                 <td>{{ data.exam_score|default:"-" }}</td>
-                <td><strong>{{ data.total_score }}</strong></td>
+                <td><strong>{% if data.total_score > 40 %}{{ data.total_score }} {% else %}<span style="color: red;">{{ data.total_score }}</span> {% endif %}</strong></td>
                 <td>{{ data.grade }}</td>
                 <td>{{ data.remark }}</td>
+
               </tr>
               {% endfor %}
             </tbody>
@@ -264,10 +265,10 @@
               </tr>
           </table>
         </div>
-        <div class="behavioral-summary">
+        <!-- <div class="behavioral-summary">
             <strong>Total Score:</strong> {{ motor_ability_score.total_score|default:"-" }} / {{ motor_ability_score.max_possible_score|default:"-" }} |
             <strong>Average Score:</strong> {{ motor_ability_score.average_score|floatformat:2|default:"-" }}
-        </div>
+        </div> -->
 
         <h6 class="text-center mt-4">General Remarks</h6>
         <div class="comment-section my-4">
