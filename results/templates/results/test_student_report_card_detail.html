@@ -175,7 +175,7 @@
         <table class="info-table w-100 mb-3">
           <tr>
             <td colspan="2"><strong>Student Name:</strong> {{ student.last_name|upper }} {{ student.first_name|upper }} {% if student.middle_name %}{{ student.middle_name|upper }}{% endif %}</td>
-            <td><strong>Admission No:</strong> {{ student.USN|default:"N/A" }}</td>
+            <td><strong>Student ID:</strong> {{ student.USN|default:"N/A" }}</td>
             <td><strong>Class:</strong> {{ student.current_class.name|default:"N/A" }}</td>
             <td><strong>No in Class:</strong> {{ total_students_in_class|default:"N/A" }}</td>
             <td rowspan="2" style="width: 80px; text-align:center;">
@@ -188,8 +188,8 @@
           </tr>
           <tr>
             <td><strong>Days Sch. Opened:</strong> {{ total_school_days|default:"N/A" }}</td>
-            <td><strong>Days Present:</strong> {{ days_present|default:"N/A" }}</td>
-            <td><strong>Days Absent:</strong> {{ days_absent|default:"N/A" }}</td>
+            <td style="color: green;"><strong>Days Present:</strong> {{ days_present|default:"N/A" }}</td>
+            <td style="color:red;"><strong>Days Absent:</strong> {{ days_absent|default:"N/A" }}</td>
             <td colspan="2"><strong>Next Term Begins:</strong> {{ next_term_start_date|date:"M d, Y"|default:"N/A" }}</td>
           </tr>
         </table>
@@ -232,7 +232,7 @@
         </div>
         
         <div class="summary-section text-center my-3">
-          <p><strong>Overall Average Score:</strong> <span style="color: #0056b3;">{{ overall_average|floatformat:2 }}%</span></p>
+          <p><strong>Overall Average Score:</strong> <span style="color: #0056b3; font-size: 16px;">{{ overall_average|floatformat:2 }}%</span></p>
         </div>
 
         <h6 class="text-center mt-3">Motor Ability & Behavioral Traits (Score out of 5)</h6>
