@@ -81,7 +81,7 @@
 				
 				<div class="row page-titles">
 					<ol class="breadcrumb">
-						<li class="breadcrumb-item active"><a href="javascript:void(0)">Teacher Profile Details</a></li>
+						<li class="breadcrumb-item active"><a href="javascript:void(0)">Teacher's Profile Details</a></li>
 					</ol>
                 </div>
                 <!-- row -->
@@ -132,7 +132,7 @@
                                                     </div>                                                               
 												
 												</div>
-												<div class="mt-4">
+												<div class="mt-2">
                                                     {% if user.teacher or user.staff %}
 													<a href="{% url 'users:employment_profile' %}" class="btn btn-primary mb-1 me-1">Edit Employment</a> 
 													<!-- <a href="{% url 'users:profile' %}" class="btn btn-primary mb-1" data-bs-toggle="modal" data-bs-target="#sendMessageModal">Edit Profile</a> -->
@@ -203,7 +203,7 @@
 									<div class="card-body">
 										<div class="profile-interest">
 											<h5 class="text-primary d-inline">Staff Role</h5>
-                                            <h4>{{teacher.staff_role }} </h4>
+                                            <h4>{{teacher.staff_role |upper }} </h4>
 										
 										</div>
 									</div> 
@@ -229,8 +229,8 @@
 											<div class="media pt-3 pb-3">
 												<!-- <img src="images/profile/5.jpg" alt="image" class="me-3 rounded" width="75"> -->
 												<div class="media-body">
-													<h5 class="m-b-5"><a href="" class="text-black"> - <u>Portal Manual</u></a></h5>
-                                                    <h5 class="m-b-5"><a href="" class="text-black"> - <u>Contact Support</u></a></h5>
+													<h5 class="m-b-5"><a href="{% url 'pages:help-center' %}" class="text-black"> - <u>Portal Manual</u></a></h5>
+                                                    <h5 class="m-b-5"><a href="{% url 'pages:support_info' %}" class="text-black"> - <u>Contact Support</u></a></h5>
 												</div>
 											</div>
 																					
@@ -292,7 +292,7 @@
                                                         <div class="col-sm-3 col-5">
                                                             <h5 class="f-w-500">Staff Role <span class="pull-end">:</span></h5>
                                                         </div>
-                                                        <div class="col-sm-9 col-7"><span>{{ teacher.staff_role }}</span>
+                                                        <div class="col-sm-9 col-7"><span>{{ teacher.staff_role|upper }}</span>
                                                         </div>
                                                     </div>
                                                     <div class="row mb-2">
@@ -322,7 +322,7 @@
                                                         <div class="col-sm-3 col-5">
                                                             <h5 class="f-w-500">Empl. Date<span class="pull-end">:</span></h5>
                                                         </div>
-                                                        <div class="col-sm-9 col-7"><span>{{ teacher.emp_date }}</span>
+                                                        <div class="col-sm-9 col-7"><span>{{ teacher.date_employed }}</span>
                                                         </div>
                                                     </div>
                                                     <div class="row mb-2">
@@ -403,18 +403,7 @@
                                                         <div class="col-sm-9 col-7"><span>{{ teacher.next_of_kin_name }}</span>
                                                         </div>
                                                     </div>
-                                                    
-
-                                                    <div class="profile-skills mb-5">
-                                                        <h4 class="text-primary mb-2">Quick Links</h4>
-                                                        <a href="{% url 'pages:portal-home' %}" class="btn btn-primary light btn-xs mb-1">Dashboard Home</a>
-                                                        <!-- <a href="javascript:void(0);" class="btn btn-primary light btn-xs mb-1">All Payments</a>
-                                                        <a href="javascript:void(0);" class="btn btn-primary light btn-xs mb-1">1st Term Results</a>
-                                                        <a href="javascript:void(0);" class="btn btn-primary light btn-xs mb-1">2nd Term Results</a>
-                                                        <a href="javascript:void(0);" class="btn btn-primary light btn-xs mb-1">3rd Term Results</a> -->
-                                                    </div>
-                                               
-
+                     
                                                 </div>
                                             </div>
                                           

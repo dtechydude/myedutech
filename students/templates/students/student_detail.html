@@ -81,7 +81,7 @@
 				
 				<div class="row page-titles">
 					<ol class="breadcrumb">
-						<li class="breadcrumb-item active"><a href="javascript:void(0)">Profile</a></li>
+						<li class="breadcrumb-item active"><a href="javascript:void(0)">Student's Profile</a></li>
 						<li class="breadcrumb-item"><a href="javascript:void(0)">Detail</a></li>
 					</ol>
                 </div>
@@ -130,11 +130,11 @@
 											<div class="text-center">
 												<div class="row">
                                                     <div>
-                                                       <h4>Student's Status : <span style="color:brown; font-size: 25px;">{{student.student_status |capfirst}}</span></h4>
+                                                       <h6>Student's Status : <span style="color:brown; font-size: 15px;">{{student.student_status |capfirst}}</span></h6>
                                                     </div>                                                               
 												
 												</div>
-												<div class="mt-4">
+												<div class="mt-2">
 													<a href="{% url 'students:student-update' student.USN %}" class="btn btn-primary mb-1 me-1">Update Profile</a> 
 													<!-- <a href="javascript:void(0);" class="btn btn-primary mb-1" data-bs-toggle="modal" data-bs-target="#sendMessageModal">School Bus</a> -->
 												</div>
@@ -188,8 +188,8 @@
 									<div class="card-body">
 										<div class="profile-blog">
 											<h5 class="text-primary d-inline">Student's Bio</h5>
-											<img src="images/profile/1.jpg" alt="" class="img-fluid mt-4 mb-4 w-100">
-											<h4><a href="post-details.html" class="text-black">{{ student.user.first_name }} {{ student.user.last_name}}</a></h4>
+											<img src="" alt="" class="img-fluid mt-4 mb-4 w-100">
+											<h4><a href="" class="text-black">{{ student.user.first_name }} {{ student.user.last_name}}</a></h4>
 											
                                             {% if student.user.profile.bio %}
                                             <p class="mb-0">{{ student.user.profile.bio }}</p>
@@ -204,8 +204,33 @@
 								<div class="card">
 									<div class="card-body">
 										<div class="profile-interest">
-											<h5 class="text-primary d-inline">FOR BOARDING STUDENTS</h5>
-                                            <P>HOSTEL: </P>
+											<h5 class="text-primary d-inline">STUDENT'S TYPE</h5>
+                                            <P>{% if student.student_type == 'day_student' %}DAY STUDENT
+                                                {% else %} BOARDING STUDENT {% endif %} </P>
+										
+										</div>
+									</div> 
+								</div>
+							</div>
+                            <div class="col-xl-12">
+								<div class="card">
+									<div class="card-body">
+										<div class="profile-interest">
+											<h5 class="text-primary d-inline">FORM TEACHER</h5>
+                                            <P>{% if student.form_teacher %} <strong>ID:</strong> {{ student.form_teacher.user }}<br> <strong>NAME:</strong> {{ student.form_teacher.get_full_name }}
+                                                {% else %} Not Assigned {% endif %} </P>
+										
+										</div>
+									</div> 
+								</div>
+							</div>
+                                                     <div class="col-xl-12">
+								<div class="card">
+									<div class="card-body">
+										<div class="profile-interest">
+											<h5 class="text-primary d-inline">HOSTEL DETAIL</h5>
+                                            <P>{% if student.hostel_name %} <strong>NAME:</strong>  {{ student.hostel_name.name }} <br> <strong>MASTER:</strong> {{ student.hostel_name.hostel_master.get_full_name }}
+                                                {% else %} You Are Not A Boarding Student {% endif %} </P>
 										
 										</div>
 									</div> 
@@ -215,11 +240,11 @@
 								<div class="card">
 									<div class="card-body">
 										<div class="profile-news">
-											<h5 class="text-primary d-inline">School Transport Route</h5>
+											<h5 class="text-primary d-inline">School Bus Route</h5>
 											<div class="media pt-3 pb-3">
-                                                <i class="fa fa-bus me-3 rounded" aria-hidden="true"  style="font-size: 32px;"></i>
-												<div class="media-body">
-													<h5 class="m-b-5"><a href="" class="text-black"><u>Check Route</u></a></h5>
+                                                <i class="fa fa-bus me-3 rounded" aria-hidden="true"  style="font-size: 20px;"></i>
+												<div class="media-body">                                                    
+													<h5 class="m-b-3"><a href="{% url 'transport:student_own_route_detail'%}" class="text-black"><u> > View My Route</u></a></h5>
 												</div>
 											</div>
 																					

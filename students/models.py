@@ -74,7 +74,7 @@ class Badge(models.Model):
 
 class Hostel(models.Model):
     name = models.CharField(max_length=50, blank=True, null=True)
-    hostel_master = models.ForeignKey(Teacher, on_delete=models.CASCADE, null=True, help_text='select hostel master')    
+    hostel_master = models.ForeignKey(Teacher, on_delete=models.CASCADE, blank=True, null=True, help_text='select hostel master')    
     desc = models.CharField(max_length=50, blank=True)
     slug = models.SlugField(null=True, blank=True)
     

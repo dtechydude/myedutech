@@ -1038,11 +1038,11 @@
 														<h5 class="mb-0 font-w600">{{ student_num }}</h5>
 														<p class="mb-0 text-nowrap ">Total Students</p>
 														{% elif user.is_authenticated and user.teacher %}
-														<h5 class="mb-0 font-w600">{{ user.profile.code }}</h5>
-														<p class="mb-0 text-nowrap ">My CODE</p>
+														<h5 class="mb-0 font-w600">{{ user.teacher.date_employed }}</h5>
+														<p class="mb-0 text-nowrap ">Empl. Date</p>
 														{% elif user.is_authenticated and user.student %}
-														<h5 class="mb-0 font-w600">{{ user.profile.code }}</h5>
-														<p class="mb-0 text-nowrap ">My Code</p>
+														<h5 class="mb-0 font-w600">{{ user.student.student_status }}</h5>
+														<p class="mb-0 text-nowrap ">Status</p>
 														{% else %}
 														<h3 class="mb-0 font-w600">xxxxx</h3>
 														<p class="mb-0 text-nowrap ">No Info</p>
@@ -1131,10 +1131,10 @@
 															<h4>My Profile Details</h4>
 															<div class="users d-flex align-items-center">																
 																<div>
-																	<span class="fs-16 font-w500 me-3">{{ user.first_name }} - <strong>{{ user.last_name}}</strong></span><br>
+																	<span class="fs-16 font-w500 me-3">NAME: {{ user.first_name }}  <strong>{{ user.last_name}}</strong></span><br>
 																	<span style="color: brown;">Updated: {{ user.profile.updated }}</span> <br>
-																	<span><strong>Email:</strong> {{ user.email }}</span> <br>
-																	<span><strong>Phone:</strong> {{ user.profile.phone }}</span><br>
+																	<span><strong>E-MAIL:</strong> {{ user.email }}</span> <br>
+																	<span><strong>PROFILE PHONE: </strong> {{ user.profile.phone }}</span><br>
 																	<span> <strong>ROLE:</strong> </span><span style="color: brown;"> 
 																		{% if user.is_superuser %}SUPERUSER 
 																		{% elif user.student %}
