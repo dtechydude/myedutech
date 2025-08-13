@@ -16,6 +16,9 @@ urlpatterns = [
      path('assign-form-teacher/', staff_views.assign_form_teacher_view, name='assign_form_teacher'),
      path('assign-form-teacher-to-classgroup/', staff_views.assign_form_teacher_to_classgroup_view, name='assign_form_teacher_to_classgroup'),
 
+     path('teacher/signup/user/', staff_views.teacher_user_signup, name='teacher_user_signup'),
+     path('teacher/signup/details/', staff_views.teacher_details_signup, name='teacher_details_signup'),
+     path('teacher/signup/success/', staff_views.teacher_signup_success, name='teacher_signup_success'),
 
 
 

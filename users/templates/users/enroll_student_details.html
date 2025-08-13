@@ -34,10 +34,10 @@
             {% if school_identity and school_identity.logo %}
                 <img src="{{ school_identity.logo.url }}" alt="{{ school_identity.school_name }} Logo" class="mb-3" style="height: 60px;">
             {% endif %}
-            <h1 class="text-3xl fw-bold mb-0">
-                {% if school_identity %}{{ school_identity.school_name }}{% else %}Student Enrollment{% endif %}
-            </h1>
-            <p class="text-muted mt-2">Step 2 of 2: Fill in student details for **{{ user_first_name }} {{ user_last_name }}**</p>
+            <h4 class="text-3xl fw-bold mb-0">
+                {% if school_identity %}{{ school_identity.name }}{% else %}Student Enrollment{% endif %}
+            </h4>
+            <p class="text-muted mt-2">ENROL NEW STUDENT <br> Step 2 of 2: Fill in student details for **{{ user_first_name }} {{ user_last_name }}**</p>
         </div>
 
         {% if messages %}

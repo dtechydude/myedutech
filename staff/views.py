@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.urls import reverse, reverse_lazy
@@ -14,10 +15,9 @@ from django.template.loader import get_template
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from staff.models import Teacher
 from students.models import Student
-from curriculum.models import Standard, ClassGroup
-from staff.forms import TeacherUpdateForm, StaffRegisterForm, StaffUpdateForm
-# from attendance.models import AttendanceTotal, Attendance, AttendanceClass
-
+from curriculum.models import Standard, ClassGroup, SchoolIdentity
+from staff.forms import TeacherUpdateForm, TeacherForm, CustomUserCreationForm, StaffRegisterForm, StaffUpdateForm
+from django.contrib.auth.forms import UserCreationForm
 
 
 #Displays all teachers
@@ -284,3 +284,100 @@ def assign_form_teacher_to_classgroup_view(request):
         'title': 'Assign Form Teacher to Class Group',
     }
     return render(request, 'staff/assign_formteacher_to_classgroup.html', context)
+
+
+# Teachers Signup View
+# Get the custom User model if it exists, otherwise use the default
+User = get_user_model()
+
+@login_required
+def teacher_user_signup(request):
+    school_identity = SchoolIdentity.objects.first()
+    
+    if request.method == 'POST':
+        user_form = CustomUserCreationForm(request.POST)
+        if user_form.is_valid():
+            # Store validated user data in the session
+            request.session['teacher_user_data'] = {
+                'username': user_form.cleaned_data['username'],
+                'first_name': user_form.cleaned_data['first_name'],
+                'last_name': user_form.cleaned_data['last_name'],
+                'email': user_form.cleaned_data.get('email', ''), 
+                'password': user_form.cleaned_data['password2'],
+            }
+            messages.success(request, 'User account created successfully. Please fill in the rest of the details.')
+            return redirect('staff:teacher_details_signup')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        user_form = CustomUserCreationForm()
+        
+    context = {
+        'user_form': user_form,
+        'school_identity': school_identity,
+    }
+    return render(request, 'staff/teacher_user_signup.html', context)
+
+@login_required
+def teacher_details_signup(request):
+    school_identity = SchoolIdentity.objects.first()
+    
+    # Check if Step 1 was completed
+    teacher_user_data = request.session.get('teacher_user_data')
+    if not teacher_user_data:
+        messages.error(request, 'Please complete the user registration first.')
+        return redirect('staff:teacher_user_signup')
+
+    if request.method == 'POST':
+        teacher_form = TeacherForm(request.POST)
+        
+        if teacher_form.is_valid():
+            try:
+                user = User.objects.create_user(
+                    username=teacher_user_data['username'],
+                    email=teacher_user_data['email'],
+                    password=teacher_user_data['password'],
+                    first_name=teacher_user_data['first_name'],
+                    last_name=teacher_user_data['last_name'],
+                )
+            except Exception as e:
+                messages.error(request, f'Failed to create user account: {e}. Please try again.')
+                return redirect('staffteacher_user_signup')
+            
+            teacher = teacher_form.save(commit=False)
+            teacher.user = user
+            teacher.first_name = teacher_user_data['first_name']
+            teacher.last_name = teacher_user_data['last_name']
+            teacher.save()
+            teacher_form.save_m2m()
+            
+            del request.session['teacher_user_data']
+            
+            return redirect('staff:teacher_signup_success')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        teacher_form = TeacherForm()
+        
+    context = {
+        'teacher_form': teacher_form,
+        'school_identity': school_identity,
+        'first_name': teacher_user_data.get('first_name', ''), # Pass pre-filled values
+        'last_name': teacher_user_data.get('last_name', ''),
+        'middle_name': teacher_user_data.get('middle_name', '') # Middle name isn't in step 1, but we pass it anyway
+    }
+    return render(request, 'staff/teacher_details_signup.html', context)
+
+
+
+@login_required
+def teacher_signup_success(request):
+    """
+    Renders the success page after a teacher has been signed up.
+    Provides options to sign up another teacher or go back to the dashboard.
+    """
+    school_identity = SchoolIdentity.objects.first()
+    context = {
+        'school_identity': school_identity,
+    }
+    return render(request, 'staff/teacher_signup_success.html', context)
