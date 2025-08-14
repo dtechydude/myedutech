@@ -85,6 +85,21 @@ class Hostel(models.Model):
         self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
+#parent Model
+class Parent(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, help_text='The user account for this parent.')
+    guardian_name = models.CharField(max_length=60, blank=False, null=True)  
+    guardian_address = models.CharField(max_length=200, blank=True, null=True)  
+    guardian_phone = models.CharField(max_length=15, blank=True, null=True)
+    guardian_email = models.CharField(max_length=30, blank=True, null=True)
+    # You can add other parent-specific fields here if needed,
+    # e.g., address, phone_number, etc.
+    # The guardian_name, guardian_address, etc., from the Student model
+    # can be moved here to avoid redundancy.
+
+    def __str__(self):
+        return self.user.get_full_name()
+
 
 class Student(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, help_text='select user or add a new user')    
@@ -128,13 +143,14 @@ class Student(models.Model):
     date_admitted = models.DateField(default='2020-01-01')
     class_on_admission = models.ForeignKey(Standard, on_delete=models.CASCADE, blank=True, null=True, related_name='class_on_admission', verbose_name='class_on_admission')
      # Guardian details here..
-    guardian_name = models.CharField(max_length=60, blank=False)  
-    guardian_address = models.CharField(max_length=200, blank=True)  
-    guardian_phone = models.CharField(max_length=15, blank=True)
-    guardian_email = models.CharField(max_length=30, blank=True)
+    parent = models.ForeignKey(Parent, on_delete=models.SET_NULL, null=True, blank=True, related_name='children')
+    guardian_name = models.CharField(max_length=60, blank=False, null=True)  
+    guardian_address = models.CharField(max_length=200, blank=True, null=True)  
+    guardian_phone = models.CharField(max_length=15, blank=True, null=True)
+    guardian_email = models.CharField(max_length=30, blank=True, null=True)
 
     select = 'select'
-    parent = 'parent'
+    parent_relationship_choice = 'parent'
     father = 'father'   
     mother = 'mother'
     sister = 'sister'
@@ -146,7 +162,7 @@ class Student(models.Model):
 
     relationship = [
         (select, 'select'),
-        (parent, 'parent'),
+        (parent_relationship_choice, 'parent'), # Updated the relationship choices
         (father, 'father'),
         (mother, 'mother'),
         (sister, 'sister'),
@@ -203,24 +219,6 @@ class Student(models.Model):
         """
         Returns the form teacher from the assigned ClassGroup.
         """
-        return self.class_group.form_teacher if self.class_group else None
+        return self.form_teacher if self.current_class else None
     
    
-
-
-    
-# Student ID Card Generation
-class StudentId(models.Model):
-    id_card = models.BooleanField( default=False) 
-    student = models.ForeignKey(Student, related_name='idcardimage', on_delete=models.CASCADE, blank=True, null=True, default=None,)
-    f_1 = models.ImageField(default='school_id_header.jpg', upload_to='school_logo', help_text='Do not upload file')
-    f_2 = models.ImageField(default='qr_code.jpg', upload_to='school_logo', help_text='Do not upload file')
-    f_3 = models.ImageField(default='sign.jpg', upload_to='school_logo', help_text='Do not upload file')
-
-    def __str__(self):
-      return f"IdCard: {self.student}" 
-
-    class Meta:
-        verbose_name = 'Confirm to enable student generate ID Card'
-
-

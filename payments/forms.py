@@ -220,3 +220,27 @@ class PaymentForm(forms.ModelForm):
                 # If it IS an installment, any positive amount_received is valid here.
 
         return cleaned_data
+
+# Parent make payment for child's form
+class ParentPaymentForm(forms.ModelForm):
+    category_fee = forms.ModelChoiceField(
+        queryset=CategoryFee.objects.all().order_by('payment_category__name'),
+        label="Payment Item",
+        help_text="Select the fee you want to pay for."
+    )
+
+    class Meta:
+        model = Payment
+        fields = ['category_fee', 'amount_received']
+
+    def __init__(self, *args, **kwargs):
+        student = kwargs.pop('student', None)
+        super().__init__(*args, **kwargs)
+
+    def clean_amount_received(self):
+        amount_received = self.cleaned_data.get('amount_received')
+        category_fee = self.cleaned_data.get('category_fee')
+
+        if category_fee and amount_received and amount_received > category_fee.amount_due:
+            self.add_error('amount_received', 'The payment amount cannot exceed the fee amount.')
+        return amount_received

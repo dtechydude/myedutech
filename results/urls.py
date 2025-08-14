@@ -51,6 +51,14 @@ urlpatterns = [
     # path('enter-motor-ability/<int:student_id>/<int:term_id>/', views.MotorAbilityScoreCreateUpdateView.as_view(), name='enter_motor_ability_score'),
     path('student/<int:student_id>/term/<int:term_id>/motor-ability-score/', views.MotorAbilityScoreCreateUpdateView.as_view(), name='motor_ability_score_create_update'),
 
+    #parent to check results
+    # path('parent/report-cards/<int:student_id>/<int:term_id>/', views.ParentReportCardView.as_view(), name='parent_report_card_detail'),
+    path('parent/report-cards/<int:student_id>/<int:term_id>/', views.ParentReportCardView.as_view(), name='parent_report_card_detail'),
+    
+    # New URL for session report card
+    path('parent/session-report-cards/<int:student_id>/<int:session_id>/', views.ParentSessionReportCardView.as_view(), name='parent_session_report_card_detail'),
+    # ... other URL patterns
+
 
 ]
 

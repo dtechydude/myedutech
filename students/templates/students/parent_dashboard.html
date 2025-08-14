@@ -1,0 +1,93 @@
+{% load static %}
+{% load mathfilters %}
+{% block title %}Parent Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <h1>My Children's Dashboard</h1>
+                    {% if children_with_reports %}
+                        {% for child_data in children_with_reports %}
+                            <div class="child-card mb-4">
+                                <h2>{{ child_data.child.get_full_name }}</h2>
+                                <p><strong>Class:</strong> {{ child_data.child.current_class }}</p>
+                                <p><strong>Form Teacher:</strong> {{ child_data.child.get_form_teacher }}</p>
+
+                                <hr>
+                                <h3>Payment Summary</h3>
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Payment Item</th>
+                                            <th>Amount Due</th>
+                                            <th>Amount Paid</th>
+                                            <th>Balance</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for fee_id, summary in child_data.payment_summary.items %}
+                                        <tr>
+                                            <td>{{ summary.category_fee.payment_category.name }} ({{ summary.category_fee.term.name }} - {{ summary.category_fee.session.name }})</td>
+                                            <td>N{{ summary.category_fee.amount_due|floatformat:2 }}</td>
+                                            <td>N{{ summary.total_paid|floatformat:2 }}</td>
+                                            <td>N{{ summary.balance|floatformat:2 }}</td>
+                                            <td>
+                                                {% if summary.balance <= 0 %}
+                                                    <span class="badge badge-success">Paid</span>
+                                                {% else %}
+                                                    <span class="badge badge-danger">Outstanding</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                
+                                <a href="{% url 'payments:make-payment-for-child' student_id=child_data.child.id %}" class="btn btn-primary">Make a New Payment</a>
+                                
+                                <hr>
+
+                                <h3>Report Cards</h3>
+                                
+                                <h4>Termly Reports</h4>
+                                <ul>
+                                {% for term in child_data.termly_reports %}
+                                    <li>
+                                        <a href="{% url 'results:parent_report_card_detail' student_id=child_data.child.id term_id=term.id %}">
+                                            View {{ term.name }} Report
+                                        </a>
+                                    </li>
+                                {% empty %}
+                                    <li>No termly reports found for {{ child_data.child.first_name }}.</li>
+                                {% endfor %}
+                                </ul>
+                                
+                                <h4>Session Reports</h4>
+                                <ul>
+                                {% for session in child_data.session_reports %}
+                                    <li>
+                                        <a href="{% url 'results:parent_session_report_card_detail' student_id=child_data.child.id session_id=session.id %}">
+                                            View {{ session.name }} Report
+                                        </a>
+                                    </li>
+                                {% empty %}
+                                    <li>No session reports found for {{ child_data.child.first_name }}.</li>
+                                {% endfor %}
+                                </ul>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-info">
+                            <p>You do not have any children associated with your account. Please contact the school administration if you believe this is an error.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

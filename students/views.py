@@ -4,19 +4,19 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
-from django.db.models import Count
+from django.db.models import Count, Sum
 #converting html to pdf
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template.loader import get_template
 # from xhtml2pdf import pisa
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from students.models import Student, Hostel
+from students.models import Student, Hostel, Parent
 from staff.models import Teacher
 from students.forms import StudentUpdateForm
+from payments.models import Payment, CategoryFee # Import Payment and CategoryFee models
+
 from users.forms import UserRegisterForm
-from curriculum.models import SchoolIdentity
-from curriculum.models import Standard, ClassGroup
-# from results.models import ResultSheet
+from curriculum.models import Standard, ClassGroup, Term, Session, SchoolIdentity
 import io
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
@@ -208,15 +208,6 @@ class StudentDetailView(DetailView):
         id_ = self.kwargs.get("id")
         return get_object_or_404(Student, USN=id_)
     
-# # Specific to the login detail
-# class StudentSelfDetailView(LoginRequiredMixin, DetailView):
-#     template_name = 'students/student_self_detail.html'
-#     model = Student
-
-#     def get_object(self, queryset=None):
-#            if queryset is None:
-#                queryset = self.get_queryset()
-#            return queryset.filter(user=self.request.user).first()
 
 
 ## Specific to the login detail New Logic to handle student does not exist
@@ -582,3 +573,73 @@ def assign_classgroup_to_students_view(request):
         'title': 'Assign Class Group to Students',
     }
     return render(request, 'students/assign_classgroup.html', context)
+
+
+
+# Parent Logic
+@login_required
+def parent_dashboard(request):
+    try:
+        parent = Parent.objects.get(user=request.user)
+        children = Student.objects.filter(parent=parent).prefetch_related('scores__term')
+    except Parent.DoesNotExist:
+        children = []
+    
+    children_with_reports = []
+    all_terms = Term.objects.all().order_by('id')
+    all_sessions = Session.objects.all().order_by('id')
+    
+    for child in children:
+        child_data = {
+            'child': child,
+            'termly_reports': [],
+            'session_reports': [],
+            'payment_summary': {},
+        }
+        
+        # Check for available termly reports
+        for term in all_terms:
+            if child.scores.filter(term=term).exists():
+                child_data['termly_reports'].append(term)
+        
+        # Check for available session reports
+        for session in all_sessions:
+            if child.scores.filter(term__session=session).exists():
+                child_data['session_reports'].append(session)
+        
+        # Get all unique completed payments for the child
+        completed_payments = Payment.objects.filter(
+            student=child,
+            status='completed'
+        ).values(
+            'payment_category', 'term', 'session'
+        ).annotate(
+            total_paid=Sum('amount_received')
+        ).order_by('payment_category__name')
+
+        for payment_item in completed_payments:
+            try:
+                # Find the corresponding CategoryFee to get the total amount due
+                category_fee = CategoryFee.objects.get(
+                    payment_category__id=payment_item['payment_category'],
+                    term__id=payment_item['term'],
+                    session__id=payment_item['session']
+                )
+                amount_due = category_fee.amount_due
+                balance = amount_due - payment_item['total_paid']
+
+                child_data['payment_summary'][category_fee.id] = {
+                    'category_fee': category_fee,
+                    'total_paid': payment_item['total_paid'],
+                    'balance': balance,
+                }
+            except CategoryFee.DoesNotExist:
+                # Handle cases where a payment exists but the corresponding fee is deleted
+                pass
+
+        children_with_reports.append(child_data)
+    
+    context = {
+        'children_with_reports': children_with_reports,
+    }
+    return render(request, 'students/parent_dashboard.html', context)

@@ -8,7 +8,8 @@ from students.models import Student
 from staff.models import Teacher
 from payments.models import BankDetail
 from users.models import Profile
-from curriculum.models import Standard, SchoolIdentity
+from curriculum.models import Standard, SchoolIdentity, Term
+from students.models import Parent
 # from portal.models import Standard
 # from payments.models import PaymentDetail1
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -153,3 +154,4 @@ def bank_detail(request):
         'bank_detail': bank_detail,
     }
     return render(request, 'pages/bank_detail.html', context)
+

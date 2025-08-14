@@ -1,0 +1,51 @@
+<h1>Report Card for {{ student.get_full_name }}</h1>
+<h3>Term: {{ term.name }}</h3>
+
+<h2>Academic Scores</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Subject</th>
+            <th>CA1</th>
+            <th>CA2</th>
+            <th>CA3</th>
+            <th>Exam Score</th>
+            <th>Total Score</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for score in scores %}
+            <tr>
+                <td>{{ score.subject.name }}</td>
+                <td>{{ score.ca1|default:"N/A" }}</td>
+                <td>{{ score.ca2|default:"N/A" }}</td>
+                <td>{{ score.ca3|default:"N/A" }}</td>
+                <td>{{ score.exam_score|default:"N/A" }}</td>
+                <td>{{ score.total_score|default:"N/A" }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if motor_ability %}
+    <h2>Behavioral and Motor Skills</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Trait</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Honesty</td>
+                <td>{{ motor_ability.honesty|default:"N/A" }}</td>
+            </tr>
+            <tr>
+                <td>Politeness</td>
+                <td>{{ motor_ability.politeness|default:"N/A" }}</td>
+            </tr>
+            <tr>
+                </tbody>
+    </table>
+{% endif %}

@@ -9,6 +9,7 @@ app_name ='students'
 urlpatterns = [
 
     path('student_list/', students_views.student_list, name='student-list'),
+    path('parent-dashboard/', students_views.parent_dashboard, name='parent-dashboard'),
     path('boarder_list/', students_views.student_boarder_list, name='boarder-list'),
     path('student_in_class/', students_views.student_in_class, name='student-in-class'),
     path('my-classmates/', students_views.my_classmates_view, name='my_classmates'),
@@ -39,7 +40,9 @@ urlpatterns = [
     path('<str:id>/', MyTeacherDetailView.as_view(), name="my-teacher-detail"),
 
 
-    #  # Search student detail app
+    
+
+   #  # Search student detail app
     # path('student_search/', students_views.search_form, name='search_form'),
     # path('search-studen-result/', students_views.search_students, name='student-search-result'),
      

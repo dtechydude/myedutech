@@ -148,9 +148,15 @@
         <a href="/dashboard/" class="logo">
             <img src="{% static 'pages/images/schoolly_logo.png' %}" alt="Schoolly Logo" width="80">
         </a>
-        <a href="/dashboard/" class="btn btn-outline-primary">
-            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        {% if user.parent %}
+        <a href="{% url 'students:parent-dashboard' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboardddd
         </a>
+        {% else%}
+        <a href="/dashboard/" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboardddd
+        </a>
+        {% endif %}
     </header>
 
     <div class="container-fluid">
@@ -383,9 +389,15 @@
                 </div>
 
                 <div class="mt-5 text-center">
+                    {% if user.parent %}
+                    <a href="{% url 'students:parent-dashboard' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-tachometer-alt me-2"></i> Back to Dashboard
+                    </a>
+                    {% else%}
                     <a href="/dashboard/" class="btn btn-primary btn-lg">
                         <i class="fas fa-tachometer-alt me-2"></i> Back to Dashboard
                     </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

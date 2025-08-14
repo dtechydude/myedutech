@@ -9,8 +9,8 @@ from django.views import View
 from django.db.models import Sum, F,  ExpressionWrapper, DecimalField, Q, Max, Min, OuterRef, Subquery
 from .models import Payment, Receipt, PaymentCategory, StudentAccountLedger, CategoryFee
 from curriculum.models import Term, Session
-from .forms import PaymentForm
-from students.models import Student
+from .forms import PaymentForm, ParentPaymentForm
+from students.models import Student, Parent
 from datetime import datetime, timedelta
 from decimal import Decimal
 from django.http import JsonResponse, HttpResponse
@@ -223,10 +223,41 @@ def payment_history(request):
     return render(request, 'payments/test1_payment_history.html', context)
 
 
+# Olde receipt logic without parent permission
+# @login_required
+# def view_receipt(request, receipt_id):
+#     """
+#     View to display a specific receipt.
+#     """
+#     receipt = get_object_or_404(
+#         Receipt.objects.select_related(
+#             'payment__student', 'payment__term', 'payment__session',
+#             'payment__payment_category', 'generated_by'
+#         ),
+#         id=receipt_id
+#     )
+
+#     if not request.user.is_staff and (not hasattr(receipt.payment.student, 'user') or request.user != receipt.payment.student.user):
+#         messages.warning(request, "You are not authorized to view this receipt.")
+#         return redirect('payments:payment_history') # Ensure correct redirect name
+#       # ADDITION START
+#     try:
+#         school_identity = SchoolIdentity.objects.first()
+#     except SchoolIdentity.DoesNotExist:
+#         school_identity = None
+#         # ADDITION END
+#     context = {
+#         'receipt': receipt,
+#         'title': f'Receipt #{receipt.receipt_number}',
+#         'school_identity': school_identity
+#     }
+#     return render(request, 'payments/receipt_detail.html', context)
+
+# new receipt logic with parent, student and staff permission
 @login_required
 def view_receipt(request, receipt_id):
     """
-    View to display a specific receipt.
+    View to display a specific receipt, with proper authorization for staff, parents, and students.
     """
     receipt = get_object_or_404(
         Receipt.objects.select_related(
@@ -236,21 +267,44 @@ def view_receipt(request, receipt_id):
         id=receipt_id
     )
 
-    if not request.user.is_staff and (not hasattr(receipt.payment.student, 'user') or request.user != receipt.payment.student.user):
+    # Authorization logic
+    authorized = False
+    if request.user.is_staff:
+        # Staff can view any receipt.
+        authorized = True
+    elif hasattr(receipt.payment.student, 'parent'):
+        try:
+            parent = Parent.objects.get(user=request.user)
+            # Check if the payment's student is a child of the logged-in parent.
+            if receipt.payment.student.parent == parent:
+                authorized = True
+        except Parent.DoesNotExist:
+            pass
+    
+    # Check if the user is the student associated with the receipt.
+    # This assumes your Student model has a ForeignKey or OneToOneField to a User model.
+    if hasattr(receipt.payment.student, 'user') and request.user == receipt.payment.student.user:
+        authorized = True
+
+    if not authorized:
         messages.warning(request, "You are not authorized to view this receipt.")
-        return redirect('payments:payment_history') # Ensure correct redirect name
-      # ADDITION START
+        return redirect('payments:payment_history')
+
+    # Fetch school identity for the receipt.
     try:
         school_identity = SchoolIdentity.objects.first()
     except SchoolIdentity.DoesNotExist:
         school_identity = None
-        # ADDITION END
+
     context = {
         'receipt': receipt,
         'title': f'Receipt #{receipt.receipt_number}',
         'school_identity': school_identity
     }
     return render(request, 'payments/receipt_detail.html', context)
+
+
+
 
 
 # --- Modified View: PDF for Receipt ---
@@ -753,3 +807,89 @@ def finance_dashboard(request):
         'chart_debt_data': chart_debt_data,
     }
     return render(request, 'payments/test_finance_dashboard.html', context)
+
+
+# parent making payment for student
+@login_required
+def make_individual_payment(request):
+    if request.method == 'POST':
+        student_id = request.POST.get('student_id')
+        # Logic to process payment for a single student
+        # e.g., integrate with a payment gateway using student_id
+        # and redirect to a payment confirmation page.
+    return redirect('pages:parent-dashboard')
+
+@login_required
+def make_group_payment(request):
+    if request.method == 'POST':
+        # Logic to get all children for the current parent
+        parent = Parent.objects.get(user=request.user)
+        children = parent.children.all()
+        # Logic to process a single payment and distribute it equally among the children
+        # e.g., divide the total payment amount by the number of children
+        # and update each student's fee_balance.
+    return redirect('pages:parent-dashboard')
+
+
+
+# Parent Make Payment For Child View
+@login_required
+def make_payment_for_child(request, student_id):
+    """
+    Allows a parent to make a payment for a specific child.
+    """
+    try:
+        parent = Parent.objects.get(user=request.user)
+        student = get_object_or_404(Student, id=student_id, parent=parent)
+    except Parent.DoesNotExist:
+        messages.error(request, "You are not authorized to make payments for this student.")
+        return redirect('students:parent-dashboard')
+    
+    if request.method == 'POST':
+        form = ParentPaymentForm(request.POST)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    payment = form.save(commit=False)
+                    payment.student = student
+
+                    selected_category_fee = form.cleaned_data['category_fee']
+                    payment.original_amount = selected_category_fee.amount_due
+                    payment.term = selected_category_fee.term
+                    payment.session = selected_category_fee.session
+                    payment.payment_category = selected_category_fee.payment_category
+                    payment.discount_amount = Decimal('0.00')
+                    payment.discount_percentage = Decimal('0.00')
+                    payment.recorded_by = None
+                    payment.status = 'completed'
+
+                    total_paid_before = Payment.objects.filter(
+                        student=student,
+                        payment_category=payment.payment_category,
+                        term=payment.term,
+                        session=payment.session,
+                        status='completed'
+                    ).exclude(pk=payment.pk).aggregate(Sum('amount_received'))['amount_received__sum'] or Decimal('0.00')
+
+                    payment.balance_before_payment = payment.original_amount - total_paid_before
+                    payment.balance_before_payment = max(Decimal('0.00'), payment.balance_before_payment)
+
+                    payment.save()
+                    payment.balance_after_payment = payment.balance_before_payment - payment.amount_received
+                    payment.balance_after_payment = max(Decimal('0.00'), payment.balance_after_payment)
+                    payment.save(update_fields=['balance_after_payment'])
+
+                    receipt = Receipt.objects.create(
+                        payment=payment,
+                        generated_by=None
+                    )
+                    messages.success(request, f"Payment of N{payment.amount_received} recorded successfully for {payment.student.first_name}. Receipt #{receipt.receipt_number} generated.")
+                    return redirect('payments:view_receipt', receipt_id=receipt.id)
+
+            except Exception as e:
+                messages.error(request, f"An error occurred while recording payment: {e}")
+                return render(request, 'payments/parent_make_payment.html', {'form': form, 'student': student})
+    else:
+        form = ParentPaymentForm()
+
+    return render(request, 'payments/parent_make_payment.html', {'form': form, 'student': student})

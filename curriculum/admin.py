@@ -82,7 +82,7 @@ class LessonAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 class TermAdmin(admin.ModelAdmin):
        
     list_display=('name', 'start_date', 'end_date')
-    raw_id_fields = ['session',]
+    raw_id_fields = ('session')
     # raw_id_fields = ['session',]
 
 

@@ -41,5 +41,12 @@ urlpatterns = [
 
     # Example: If you have a base URL for your student management app
     # path('students/', include('student_management_app.urls')),
+
+    path('make-individual-payment/', payment_views.make_individual_payment, name='individual-payment'),
+    path('make-group-payment/', payment_views.make_group_payment, name='group-payment'),
+
+    # parent make payment for student
+    path('make-payment/<int:student_id>/', payment_views.make_payment_for_child, name='make-payment-for-child'),
+
 ]
 

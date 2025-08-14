@@ -8,6 +8,7 @@ from curriculum.models import Session, Term, Standard, Subject
 from attendance.models import Attendance
 from staff.models import Teacher
 from students.models import Student
+from students.models import Parent
 from django.contrib import messages # Import messages
 
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -784,167 +785,6 @@ class SessionReportCardListView(LoginRequiredMixin, TeacherRequiredMixin, View):
         return render(request, self.template_name, context)
 
 
-# # Old SessionReport Card View
-# class StudentSessionReportCardView(LoginRequiredMixin, View):
-#     """
-#     Generates and displays a single student's cumulative report card for a specific academic session.
-#     Accessible by teachers/admins (for any student) and by the student themselves.
-#     """
-#     template_name = 'results/session_report_card_detail.html'
-#     # template_name = 'results/test_result_template.html'
-#     pdf_template_name = 'results/session_report_card_pdf.html' # Dedicated PDF template (recommended)
-
-
-#     def get(self, request, student_id, session_id, *args, **kwargs):
-#         student = get_object_or_404(Student, id=student_id)
-#         session = get_object_or_404(Session, id=session_id)
-
-#         # Authorization Check: Teachers/Admins can view any, student can view their own.
-#         if not hasattr(request.user, 'teacher'): # If not a teacher
-#             if not (hasattr(request.user, 'student') and request.user.student == student):
-#                 messages.error(request, "You are not authorized to view this report card.")
-#                 return redirect('student_dashboard' if hasattr(request.user, 'student') else 'home')
-
-#         # Get all terms within this session, ordered chronologically for consistent display
-#         terms_in_session = session.terms.all().order_by('start_date')
-#         if not terms_in_session.exists():
-#             messages.warning(request, f"No terms defined for {session.name}. Cannot generate report card.")
-#             return redirect(request.META.get('HTTP_REFERER', 'session_report_card_list')) # Go back or to list
-
-#         # Aggregate scores for each subject across all terms in the session
-#         # This groups scores by subject and sums their total_score for the student within the session's terms.
-#         subject_cumulative_data = Score.objects.filter(
-#             student=student,
-#             term__in=terms_in_session # Filter by terms belonging to this session
-#         ).values('subject__name', 'subject__id').annotate(
-#             cumulative_total_score=Sum('total_score')
-#         ).order_by('subject__name')
-
-#         report_data = []
-#         overall_effective_average_sum = 0
-#         subjects_counted_for_overall_average = 0
-        
-#         # Determine maximum possible cumulative score per subject for all terms in the session
-#         # Assuming each term's total_score is out of 100 (adjust if your max score per term differs)
-#         max_possible_score_per_term = 100 # Change this if your total_score for a single term is not out of 100
-#         max_possible_cumulative_score_per_subject = max_possible_score_per_term * terms_in_session.count() 
-
-#         for item in subject_cumulative_data:
-#             subject_name = item['subject__name']
-#             cumulative_score_raw = item['cumulative_total_score']
-
-#             # Get individual term scores for this subject for display in the table
-#             term_scores_for_subject = {}
-#             for term in terms_in_session:
-#                 try:
-#                     score_instance = Score.objects.get(student=student, subject__id=item['subject__id'], term=term)
-#                     # Display total_score, or 'N/A' if score is None for that term
-#                     term_scores_for_subject[term.name] = score_instance.total_score if score_instance.total_score is not None else 'N/A'
-#                 except Score.DoesNotExist:
-#                     term_scores_for_subject[term.name] = 'N/A' # Mark as N/A if no score exists for that term/subject
-
-#             effective_subject_average = None
-#             if cumulative_score_raw is not None and max_possible_cumulative_score_per_subject > 0:
-#                 # Calculate the effective average out of 100
-#                 effective_subject_average = (cumulative_score_raw / max_possible_cumulative_score_per_subject) * 100
-                
-#                 # Only include subjects with a valid average in the overall average calculation
-#                 overall_effective_average_sum += effective_subject_average
-#                 subjects_counted_for_overall_average += 1
-
-#             report_data.append({
-#                 'subject': subject_name,
-#                 'term_scores': term_scores_for_subject, # Dictionary of {TermName: Score}
-#                 'cumulative_total_score': f"{cumulative_score_raw:.2f}" if cumulative_score_raw is not None else 'N/A',
-#                 'effective_subject_average': f"{effective_subject_average:.2f}" if effective_subject_average is not None else 'N/A',
-#                 'grade': get_grade(effective_subject_average),
-#                 'remark': get_subject_remark(effective_subject_average),
-#             })
-
-#         overall_session_average = None
-#         overall_remark = "No scores recorded for this session."
-
-#         if subjects_counted_for_overall_average > 0:
-#             overall_session_average = overall_effective_average_sum / subjects_counted_for_overall_average
-#             overall_remark = get_overall_remark(overall_session_average)
-
-#         # --- Aggregating Motor Ability Scores across all terms in the session ---
-#         # Get all MotorAbilityScore instances for this student within this session
-#         motor_ability_scores_for_session = MotorAbilityScore.objects.filter(
-#             student=student,
-#             term__session=session # Filter by terms belonging to this specific session
-#         )
-
-#         # Calculate the average score for each motor ability category across all relevant terms
-#         aggregated_motor_abilities = motor_ability_scores_for_session.aggregate(
-#             avg_honesty=Avg('honesty'),
-#             avg_politeness=Avg('politeness'),
-#             avg_neatness=Avg('neatness'),
-#             avg_cooperation=Avg('cooperation'),
-#             avg_obedience=Avg('obedience'),
-#             avg_attentiveness=Avg('attentiveness'),
-#             avg_punctuality=Avg('punctuality'),
-#             avg_perseverance=Avg('perseverance'),
-#             avg_emotional_stability=Avg('emotional_stability'),
-#             avg_attitude=Avg('attitude'),
-#             avg_leadership=Avg('leadership'),
-#             avg_physical_education=Avg('physical_education'),
-#             avg_games=Avg('games'),
-#             avg_musical=Avg('musical'),
-#             avg_handwriting=Avg('handwriting'),
-#             avg_reading=Avg('reading'),
-#             avg_verbal_fluency=Avg('verbal_fluency'),
-#             avg_handling_tools=Avg('handling_tools'),
-                      
-#             # Add any other 'avg_' aggregations for new fields in MotorAbilityScore
-#         )
-
-#         # Process aggregated values: round to nearest integer and cap at 5
-#         # Also ensure values are 0 if no scores were present (Avg returns None for no data)
-#         processed_aggregated_motor_abilities = {}
-#         for key, value in aggregated_motor_abilities.items():
-#             if value is not None:
-#                 # Round the average and cap it at the max score (5)
-#                 processed_aggregated_motor_abilities[key] = round(min(value, 5)) 
-#             else:
-#                 processed_aggregated_motor_abilities[key] = 0 # Default to 0 if no scores for that trait
-         
-#             # ADDITION START
-#             try:
-#                 school_identity = SchoolIdentity.objects.first()
-#             except SchoolIdentity.DoesNotExist:
-#                 school_identity = None
-#             # ADDITION END
-
-
-#         context = {
-#             'student': student,
-#             'session': session,
-#             'terms_in_session': terms_in_session, # Pass terms for dynamic table headers
-#             'report_data': report_data,
-#             'overall_session_average': f"{overall_session_average:.2f}" if overall_session_average is not None else 'N/A',
-#             'overall_remark': overall_remark,
-#             # 'academic_session_summary': academic_session_summary, # Example
-#             'aggregated_motor_abilities': processed_aggregated_motor_abilities, # Pass the processed aggregated data
-#             # Add any other overall session report card data here (e.g., overall comments)
-#             'school_identity':school_identity
-#         }
-
-#         # PDF Download Logic using xhtml2pdf
-#         if 'download' in request.GET and request.GET['download'] == 'pdf':
-#             filename = f"{student.first_name.replace(' ', '_')}_{session.name.replace(' ', '_')}_AnnualReportCard.pdf"
-            
-#             # Use the dedicated PDF template here
-#             pdf_response = render_to_pdf_xhtml2pdf(self.pdf_template_name, context)
-            
-#             if pdf_response:
-#                 pdf_response['Content-Disposition'] = f'attachment; filename="{filename}"'
-#                 return pdf_response
-#             else:
-#                 return HttpResponse("Error generating PDF.", status=500)
-
-#         # If not download=pdf, render the regular HTML page
-#         return render(request, self.template_name, context)
     
 # NEW SESSION REPORT CARD VIEW THAT CAPTURES ATTENDANCE 
 class StudentSessionReportCardView(LoginRequiredMixin, View):
@@ -1382,80 +1222,6 @@ class MotorAbilityScoreCreateUpdateView(LoginRequiredMixin, TeacherRequiredMixin
             return render(request, self.template_name, context)
 
 
-# # Logic For getting Student Ranking with the Subject Model having STANDARD as one of the fields
-# class ClassRankingView(LoginRequiredMixin, View):
-#     template_name = 'results/class_ranking.html'
-
-#     def get(self, request, standard_id, term_id, *args, **kwargs):
-#         standard = get_object_or_404(Standard, id=standard_id)
-#         term = get_object_or_404(Term, id=term_id)
-
-#         students_in_class = Student.objects.filter(current_class=standard)
-        
-#         # --- Overall Ranking Logic ---
-#         overall_ranking_data = []
-
-#         for student in students_in_class:
-#             scores = Score.objects.filter(student=student, term=term, total_score__isnull=False)
-            
-#             total_scores_sum = scores.aggregate(total=Sum('total_score'))['total'] or 0
-#             subjects_with_scores_count = scores.count()
-
-#             overall_average = total_scores_sum / subjects_with_scores_count if subjects_with_scores_count > 0 else 0
-            
-#             overall_ranking_data.append({
-#                 'student': student,
-#                 'overall_average': overall_average,
-#             })
-
-#         # Sort and assign ranks for the overall ranking
-#         overall_ranking_data.sort(key=lambda x: x['overall_average'], reverse=True)
-
-#         current_rank = 0
-#         last_average = -1
-#         for i, data in enumerate(overall_ranking_data):
-#             if data['overall_average'] != last_average:
-#                 current_rank = i + 1
-#             data['rank'] = current_rank
-#             last_average = data['overall_average']
-
-#         # --- Subject-Specific Ranking Logic ---
-#         subject_ranking_data = {}
-#         all_subjects = Subject.objects.filter(standard=standard).order_by('name')
-
-#         for subject in all_subjects:
-#             subject_scores = []
-            
-#             for student in students_in_class:
-#                 score = Score.objects.filter(student=student, term=term, subject=subject).first()
-                
-#                 if score and score.total_score is not None:
-#                     subject_scores.append({
-#                         'student': student,
-#                         'total_score': score.total_score,
-#                     })
-
-#             # Sort and assign ranks for the current subject
-#             subject_scores.sort(key=lambda x: x['total_score'], reverse=True)
-            
-#             current_rank_subject = 0
-#             last_score_subject = -1
-#             for i, data in enumerate(subject_scores):
-#                 if data['total_score'] != last_score_subject:
-#                     current_rank_subject = i + 1
-#                 data['rank'] = current_rank_subject
-#                 last_score_subject = data['total_score']
-            
-#             subject_ranking_data[subject.name] = subject_scores
-
-#         context = {
-#             'standard': standard,
-#             'term': term,
-#             'overall_ranking_data': overall_ranking_data,
-#             'subject_ranking_data': subject_ranking_data,
-#         }
-
-#         return render(request, self.template_name, context)
 
 
 class ClassRankingView(LoginRequiredMixin, View):
@@ -1561,4 +1327,61 @@ class StandardsAndTermsListView(LoginRequiredMixin, View):
             'all_terms': all_terms,
         }
 
+        return render(request, self.template_name, context)
+
+#Parent Access to Students Results
+class ParentReportCardView(LoginRequiredMixin, View):
+    def get(self, request, student_id, term_id, *args, **kwargs):
+        try:
+            parent = Parent.objects.get(user=request.user)
+        except Parent.DoesNotExist:
+            return redirect('pages:portal-home')
+
+        student = get_object_or_404(Student, id=student_id, parent=parent)
+        term = get_object_or_404(Term, id=term_id)
+
+        # Fetch all scores for the specific student and term
+        scores = Score.objects.filter(student=student, term=term).select_related('subject')
+        
+        # Fetch motor ability scores for the specific student and term
+        try:
+            motor_ability = MotorAbilityScore.objects.get(student=student, term=term)
+        except MotorAbilityScore.DoesNotExist:
+            motor_ability = None
+
+        context = {
+            'student': student,
+            'term': term,
+            'scores': scores,
+            'motor_ability': motor_ability,
+            # Add other data you need for the report card template
+        }
+        return render(request, 'results/parent_report_card_template.html', context)
+    
+
+# Parent view student results
+class ParentSessionReportCardView(LoginRequiredMixin, View):
+    template_name = 'results/parent_session_report_card.html'
+
+    def get(self, request, student_id, session_id):
+        try:
+            parent = Parent.objects.get(user=request.user)
+            student = get_object_or_404(Student, id=student_id, parent=parent)
+        except (Parent.DoesNotExist, Student.DoesNotExist):
+            # Unauthorized access attempt
+            return render(request, 'unauthorized_access.html', status=403)
+
+        session = get_object_or_404(Session, id=session_id)
+        
+        # Get all scores for the student within the specified session
+        scores_in_session = Score.objects.filter(
+            student=student,
+            term__session=session
+        ).order_by('subject__name')
+        
+        context = {
+            'student': student,
+            'session': session,
+            'scores': scores_in_session,
+        }
         return render(request, self.template_name, context)
