@@ -9,24 +9,18 @@ app_name ='staff'
 
 urlpatterns = [
 
-     path('teacher_list/', staff_views.teachers_list, name='teacher-list'),
-     path('assignments/', staff_views.teacher_subjects_standards_view, name='teacher_assignments'),
-     path('<int:teacher_id>/profile/', staff_views.teacher_profile_view, name='teacher_profile'),
-     path('my-assignments/', staff_views.my_assignments_view, name='my_assignments'),
-     path('assign-form-teacher/', staff_views.assign_form_teacher_view, name='assign_form_teacher'),
-     path('assign-form-teacher-to-classgroup/', staff_views.assign_form_teacher_to_classgroup_view, name='assign_form_teacher_to_classgroup'),
+    path('teacher_list/', staff_views.teachers_list, name='teacher-list'),
+    path('assignments/', staff_views.teacher_subjects_standards_view, name='teacher_assignments'),
+    path('<int:teacher_id>/profile/', staff_views.teacher_profile_view, name='teacher_profile'),
+    path('my-assignments/', staff_views.my_assignments_view, name='my_assignments'),
+    path('assign-form-teacher/', staff_views.assign_form_teacher_view, name='assign_form_teacher'),
+    path('assign-form-teacher-to-classgroup/', staff_views.assign_form_teacher_to_classgroup_view, name='assign_form_teacher_to_classgroup'),
 
-     path('teacher/signup/user/', staff_views.teacher_user_signup, name='teacher_user_signup'),
-     path('teacher/signup/details/', staff_views.teacher_details_signup, name='teacher_details_signup'),
-     path('teacher/signup/success/', staff_views.teacher_signup_success, name='teacher_signup_success'),
+    path('teacher/signup/user/', staff_views.teacher_user_signup, name='teacher_user_signup'),
+    path('teacher/signup/details/', staff_views.teacher_details_signup, name='teacher_details_signup'),
+    path('teacher/signup/success/', staff_views.teacher_signup_success, name='teacher_signup_success'),
 
-
-
-    #  path('staff_list/', staff_views.staff_list, name='staff-list'),
-    #  path('assign_list/', staff_views.assign_list, name='assign-list'),
-     path('my_teacher_view/', staff_views.my_teacher_view, name='my_teacher_view'),
-     #students in my class
-    #  path('my_student/', staff_views.student_in_a_class, name='my-students'),
+    path('my_teacher_view/', staff_views.my_teacher_view, name='my_teacher_view'),
     
     path('classroom/<str:class_id>/students/', staff_views.classroom_students, name='classroom_students'),
 
