@@ -638,8 +638,15 @@ def parent_dashboard(request):
                 pass
 
         children_with_reports.append(child_data)
+        
+    # Fetch SchoolIdentity
+    try:
+        school_identity = SchoolIdentity.objects.first()
+    except SchoolIdentity.DoesNotExist:
+        school_identity = None
     
     context = {
         'children_with_reports': children_with_reports,
+        'school_identity': school_identity,
     }
     return render(request, 'students/parent_dashboard.html', context)

@@ -1,24 +1,70 @@
 {% load static %}
 {% load crispy_forms_tags %}
-{% block title %}Make Payment for {{ student.get_full_name }}{% endblock %}
 
-{% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h2>Make Payment for {{ student.get_full_name }}</h2>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        {{ form|crispy }}
-                        <button type="submit" class="btn btn-primary mt-3">Submit Payment</button>
-                    </form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Make Payment</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card-header.bg-primary {
+            background-color: #007bff !important;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="card shadow-lg border-0 rounded-lg">
+                    {% if school_identity %}
+                    <div class="card-header bg-primary text-white text-center py-4">
+                        {% if school_identity.logo %}
+                            <img src="{{ school_identity.logo.url }}" alt="{{ school_identity.name }} Logo" class="img-fluid mb-3" style="max-height: 100px;">
+                        {% endif %}
+                        <h2 class="h4 font-weight-bold">{{ school_identity.name }}</h2>
+                        <p class="mb-0">{{ school_identity.address }}</p>
+                    </div>
+                    {% else %}
+                    <div class="card-header bg-primary text-white text-center py-4">
+                        <h2 class="h4 font-weight-bold">Make Payment</h2>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card-body p-4">
+                        <h3 class="text-center mb-4">Payment for <span class="text-info">{{ student.get_full_name }}</span></h3>
+                        <p class="text-center text-muted mb-4">Please fill in the details below to proceed with the payment.</p>
+                        
+                        <form method="post" class="needs-validation" novalidate>
+                            {% csrf_token %}
+                            {{ form|crispy }}
+                            <div class="form-group text-center mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-check-circle"></i> Submit Payment
+                                </button>
+                                <a href="{% url 'students:parent-dashboard' %}" class="btn btn-secondary btn-lg ml-2">
+                                    <i class="fas fa-arrow-left"></i> Cancel
+                                </a>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

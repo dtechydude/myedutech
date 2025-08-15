@@ -1,88 +1,178 @@
 {% load static %}
 {% load mathfilters %}
-{% block title %}Parent Dashboard{% endblock %}
 
-{% block content %}
-<div class="container-fluid">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent Dashboard</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card-header.bg-primary {
+            background-color: #007bff !important;
+        }
+        .text-info {
+            color: #17a2b8 !important;
+        }
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        .btn-info {
+            background-color: #17a2b8;
+            border-color: #17a2b8;
+        }
+        .badge-success {
+            background-color: #28a745;
+        }
+        .badge-danger {
+            background-color: #dc3545;
+        }
+        .navbar-brand img {
+            max-height: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container-fluid">
+        {% if school_identity %}
+            <a class="navbar-brand" href="#">
+                {% if school_identity.logo %}
+                    <img src="{{ school_identity.logo.url }}" alt="{{ school_identity.name }}">
+                {% else %}
+                    {{ school_identity.name }}
+                {% endif %}
+                 {{ school_identity.name }}
+            </a>
+        {% endif %}
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="{% url 'pages:portal-home' %}">Dashboard <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'payments:payment_history' %}">Payment History</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid py-4">
     <div class="row">
         <div class="col-lg-12">
-            <div class="card">
+            <div class="card shadow-sm mb-4">
                 <div class="card-body">
-                    <h1>My Children's Dashboard</h1>
+                   
+                    <h2 class="text-center mb-4">My Children's Dashboard</h2>
+                    
                     {% if children_with_reports %}
                         {% for child_data in children_with_reports %}
-                            <div class="child-card mb-4">
-                                <h2>{{ child_data.child.get_full_name }}</h2>
-                                <p><strong>Class:</strong> {{ child_data.child.current_class }}</p>
-                                <p><strong>Form Teacher:</strong> {{ child_data.child.get_form_teacher }}</p>
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header bg-primary text-white">
+                                    <h3 class="mb-0">{{ child_data.child.get_full_name }}</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <p class="font-weight-bold">Class: <span class="text-info">{{ child_data.child.current_class }}</span></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="font-weight-bold">Form Teacher: <span class="text-info">{{ child_data.child.get_form_teacher }}</span></p>
+                                        </div>
+                                    </div>
+                                    <hr>
 
-                                <hr>
-                                <h3>Payment Summary</h3>
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Payment Item</th>
-                                            <th>Amount Due</th>
-                                            <th>Amount Paid</th>
-                                            <th>Balance</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for fee_id, summary in child_data.payment_summary.items %}
-                                        <tr>
-                                            <td>{{ summary.category_fee.payment_category.name }} ({{ summary.category_fee.term.name }} - {{ summary.category_fee.session.name }})</td>
-                                            <td>N{{ summary.category_fee.amount_due|floatformat:2 }}</td>
-                                            <td>N{{ summary.total_paid|floatformat:2 }}</td>
-                                            <td>N{{ summary.balance|floatformat:2 }}</td>
-                                            <td>
-                                                {% if summary.balance <= 0 %}
-                                                    <span class="badge badge-success">Paid</span>
-                                                {% else %}
-                                                    <span class="badge badge-danger">Outstanding</span>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                                
-                                <a href="{% url 'payments:make-payment-for-child' student_id=child_data.child.id %}" class="btn btn-primary">Make a New Payment</a>
-                                
-                                <hr>
+                                    <h4 class="mb-3">Payment Summary</h4>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-hover">
+                                            <thead class="thead-dark">
+                                                <tr>
+                                                    <th>Payment Item</th>
+                                                    <th>Amount Due</th>
+                                                    <th>Amount Paid</th>
+                                                    <th>Balance</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for fee_id, summary in child_data.payment_summary.items %}
+                                                <tr>
+                                                    <td>{{ summary.category_fee.payment_category.name }} ({{ summary.category_fee.term.name }} - {{ summary.category_fee.session.name }})</td>
+                                                    <td>N{{ summary.category_fee.amount_due|floatformat:2 }}</td>
+                                                    <td>N{{ summary.total_paid|floatformat:2 }}</td>
+                                                    <td>N{{ summary.balance|floatformat:2 }}</td>
+                                                    <td>
+                                                        {% if summary.balance <= 0 %}
+                                                            <span class="badge badge-success">Paid</span>
+                                                        {% else %}
+                                                            <span class="badge badge-danger">Outstanding</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="text-right">
+                                        <a href="{% url 'payments:make-payment-for-child' student_id=child_data.child.id %}" class="btn btn-success mt-3">Make a New Payment</a>
+                                    </div>
+                                    
+                                    <hr>
 
-                                <h3>Report Cards</h3>
-                                
-                                <h4>Termly Reports</h4>
-                                <ul>
-                                {% for term in child_data.termly_reports %}
-                                    <li>
-                                        <a href="{% url 'results:parent_report_card_detail' student_id=child_data.child.id term_id=term.id %}">
-                                            View {{ term.name }} Report
-                                        </a>
-                                    </li>
-                                {% empty %}
-                                    <li>No termly reports found for {{ child_data.child.first_name }}.</li>
-                                {% endfor %}
-                                </ul>
-                                
-                                <h4>Session Reports</h4>
-                                <ul>
-                                {% for session in child_data.session_reports %}
-                                    <li>
-                                        <a href="{% url 'results:parent_session_report_card_detail' student_id=child_data.child.id session_id=session.id %}">
-                                            View {{ session.name }} Report
-                                        </a>
-                                    </li>
-                                {% empty %}
-                                    <li>No session reports found for {{ child_data.child.first_name }}.</li>
-                                {% endfor %}
-                                </ul>
+                                    <h4 class="mb-3" id="report-cards-section">Report Cards</h4>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h5 class="mb-0">Termly Reports</h5>
+                                                </div>
+                                                <ul class="list-group list-group-flush">
+                                                    {% for term in child_data.termly_reports %}
+                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                            {{ term.name }}
+                                                            <a href="{% url 'results:parent_report_card_detail' student_id=child_data.child.id term_id=term.id %}" class="btn btn-sm btn-info">View Report</a>
+                                                        </li>
+                                                    {% empty %}
+                                                        <li class="list-group-item text-muted">No termly reports found.</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h5 class="mb-0">Session Reports</h5>
+                                                </div>
+                                                <ul class="list-group list-group-flush">
+                                                    {% for session in child_data.session_reports %}
+                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                            {{ session.name }}
+                                                            <a href="{% url 'results:parent_session_report_card_detail' student_id=child_data.child.id session_id=session.id %}" class="btn btn-sm btn-info">View Report</a>
+                                                        </li>
+                                                    {% empty %}
+                                                        <li class="list-group-item text-muted">No session reports found.</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         {% endfor %}
                     {% else %}
-                        <div class="alert alert-info">
-                            <p>You do not have any children associated with your account. Please contact the school administration if you believe this is an error.</p>
+                        <div class="alert alert-info text-center mt-4" role="alert">
+                            <p class="mb-0"><i class="fa fa-info-circle"></i> You do not have any children associated with your account. Please contact the school administration if you believe this is an error.</p>
                         </div>
                     {% endif %}
                 </div>
@@ -90,4 +180,9 @@
         </div>
     </div>
 </div>
-{% endblock %}
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

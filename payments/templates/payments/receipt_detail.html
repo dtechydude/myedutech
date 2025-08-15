@@ -1,199 +1,221 @@
 {% load static %}
+{% load crispy_forms_tags %}
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }} - Payment Receipt</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>{{ title|default:"Payment Receipt" }}</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
     <style>
-        /* Optional: Add some print-specific styles */
+        body {
+            background-color: #f8f9fa;
+        }
+        .receipt-container {
+            max-width: 850px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+        .header-section {
+            display: flex;
+            align-items: center;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .school-logo {
+            max-height: 100px;
+            margin-right: 1rem;
+        }
+        .payment-status-confirmed {
+            color: #28a745; /* green */
+            font-weight: 600;
+        }
+        .payment-status-pending {
+            color: #ffc107; /* yellow */
+            font-weight: 600;
+        }
+        .payment-status-unconfirmed {
+            color: #dc3545; /* red */
+            font-weight: 600;
+        }
+        .bg-success-light {
+            background-color: #d4edda;
+        }
+        .amount-paid {
+            font-size: 2rem;
+            color: #28a745;
+            font-weight: bold;
+        }
         @media print {
             body {
-                -webkit-print-color-adjust: exact; /* For better color printing */
-                print-color-adjust: exact;
+                background-color: #fff;
+            }
+            .receipt-container {
+                box-shadow: none;
+                border: 1px solid #e2e8f0;
+                margin: 0;
             }
             .no-print {
                 display: none !important;
             }
-            .receipt-container {
-                box-shadow: none !important;
-                border: 1px solid #e2e8f0; /* Light border for print */
-                margin: 0 !important;
-                padding: 1rem !important;
-                width: 100%; /* Full width on print */
-                max-width: none;
-            }
-            h1, h2, h3, h4, p {
-                color: #000 !important; /* Ensure text is black on print */
-            }
-            .text-green-600, .text-blue-600 {
-                color: inherit !important; /* Keep colors for on-screen, but maybe black for print */
-            }
         }
     </style>
 </head>
-<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+<body>
 
-<div class="container mx-auto p-4 sm:p-6 lg:p-8">
-    <div class="bg-white shadow-lg rounded-lg p-6 md:p-8 max-w-3xl mx-auto receipt-container">
-
-        <div class="mb-8 border-b pb-6">
-    <div class="d-flex align-items-center">
-        {% if school_identity.logo %}
-            <img src="{{ school_identity.logo.url }}" alt="School Logo" width="80" height="auto" class="me-3">
-        {% else %}
-            <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo" class="me-3" width="80" height="auto">
-        {% endif %}
-        <div>
-            <p class="mb-0">
-                <span class="fw-bold fs-5">{% if school_identity.name %}{{ school_identity.name }}{% else %}St. George's School{% endif %}</span><br>
-                <span class="text-muted" style="font-size: 11px;">
-                    {% if school_identity.address_line_1 %}{{ school_identity.address_line_1 }}{% else %}123 School Lane{% endif %}
-                    {% if school_identity.address_line_2 %}{{ school_identity.address_line_2 }}{% endif %} - 
-                    {% if school_identity.phone1 %}{{ school_identity.phone1 }}{% endif %}
-                </span>
-            </p>
-        </div>
-    </div>
-</div>
-        <h2 class="text-3xl font-bold text-gray-800 mb-4 text-center">Payment Receipt</h2>
-        <h3 class="text-3xl font-bold text-gray-800 mb-0 text-center">
-            {% if receipt.payment.confirm_payment %} <span style="color:green; font-size: 15px;">"Payment Confirmed" </span>{% else %} <span style="color:red; font-size: 14px;">"Payment Not confirmed Yet"</span> {% endif %}</h3>
-
-        <div class="flex justify-between items-start mb-6 border-b pb-4">
-            <div>
-                <h3 class="text-xl font-semibold text-gray-700 mb-2">Receipt Details:</h3> 
-                <p class="text-gray-700"><strong>Receipt #:</strong> <span class="text-blue-700">{{ receipt.receipt_number }}</span></p>
-                <p class="text-gray-700"><strong>Date Issued:</strong> {{ receipt.issue_date|date:"M d, Y" }}</p>
-            </div>
-            <div class="text-right">
-                <h3 class="text-xl font-semibold text-gray-700 mb-2">Payment Date:</h3>
-                <p class="text-gray-700">{{ receipt.payment.payment_date|date:"M d, Y H:i" }}</p>
-            </div>
-        </div>
-
-        <div class="mb-8">
-            <h3 class="text-xl font-semibold text-gray-700 mb-4">Student Information:</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="container receipt-container">
+    <div class="card shadow-lg border-0 rounded-lg">
+        <div class="card-body p-5">
+            
+            <div class="header-section">
+                {% if school_identity.logo %}
+                    <img src="{{ school_identity.logo.url }}" alt="{{ school_identity.name }} Logo" class="img-fluid school-logo">
+                {% else %}
+                    <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo" class="img-fluid school-logo">
+                {% endif %}
                 <div>
-                    <p class="text-gray-700"><strong>Name:</strong> {{ receipt.payment.student.first_name }} {{ receipt.payment.student.last_name }}</p>
-                    <p class="text-gray-700"><strong>Student ID:</strong> {{ receipt.payment.student.user.username }}</p>
-                    <p class="text-gray-700"><strong>Class:</strong> {{ receipt.payment.student.current_class|default:"N/A" }}</p> {# Assuming 'student_class' exists on Student model #}
-                </div>
-                <div>
-                    <p class="text-gray-700"><strong>Email:</strong> {{ receipt.payment.student.user.email|default:"N/A" }}</p>
-                    <p class="text-gray-700"><strong>Phone:</strong> {{ receipt.payment.student.user.profile.phone|default:"N/A" }}</p>
+                    <h2 class="h4 font-weight-bold mb-0">{% if school_identity.name %}{{ school_identity.name }}{% else %}St. George's School{% endif %}</h2>
+                    <p class="text-muted mb-0" style="font-size: 0.9rem;">
+                        {% if school_identity.address_line_1 %}{{ school_identity.address_line_1 }}{% else %}123 School Lane{% endif %}
+                        {% if school_identity.address_line_2 %}, {{ school_identity.address_line_2 }}{% endif %}<br>
+                        Phone: {% if school_identity.phone1 %}{{ school_identity.phone1 }}{% else %}N/A{% endif %} | Email: {% if school_identity.email %}{{ school_identity.email }}{% else %}N/A{% endif %}
+                    </p>
                 </div>
             </div>
-        </div>
 
-        <div class="mb-8">
-            <h3 class="text-xl font-semibold text-gray-700 mb-4">Payment Breakdown:</h3>
-            <div class="overflow-x-auto">
-                <table class="min-w-full bg-white border border-gray-200 rounded-lg">
-                    <thead>
-                        <tr class="bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            <th class="py-3 px-4 border-b">Description</th>
-                            <th class="py-3 px-4 border-b text-right">Amount</th>
+            <div class="text-center mb-4">
+                <h1 class="h2 font-weight-bold text-primary">Payment Receipt</h1>
+                {% if receipt.payment.confirm_payment %}
+                    <p class="payment-status-confirmed">Payment Confirmed</p>
+                {% else %}
+                    <p class="payment-status-unconfirmed">Payment Not Confirmed Yet</p>
+                {% endif %}
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>Receipt #:</strong> <span class="text-info font-weight-bold">{{ receipt.receipt_number }}</span></p>
+                    <p class="mb-1"><strong>Date Issued:</strong> {{ receipt.issue_date|date:"M d, Y" }}</p>
+                </div>
+                <div class="col-md-6 text-md-right">
+                    <p class="mb-1"><strong>Payment Date:</strong> {{ receipt.payment.payment_date|date:"M d, Y H:i" }}</p>
+                    <p class="mb-1"><strong>Method:</strong> {{ receipt.payment.get_payment_method_display }}</p>
+                </div>
+            </div>
+
+            <hr class="mb-4">
+
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h3 class="h5 font-weight-bold mb-3" style="color: #dc3545;">Student Information</h3>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>Name:</strong> {{ receipt.payment.student.first_name }} {{ receipt.payment.student.last_name }}</p>
+                    <p class="mb-1"><strong>Class:</strong> {{ receipt.payment.student.current_class|default:"N/A" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>Student ID:</strong> {{ receipt.payment.student.user.username }}</p>
+                    <p class="mb-1"><strong>Email:</strong> {{ receipt.payment.student.user.email|default:"N/A" }}</p>
+                </div>
+            </div>
+
+            <h3 class="h5 font-weight-bold mb-3">Payment Breakdown</h3>
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered table-striped">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Description</th>
+                            <th class="text-right">Amount</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr class="border-b">
-                            <td class="py-3 px-4 text-gray-800">
+                        <tr>
+                            <td>
                                 {{ receipt.payment.payment_category.name|default:"General Payment" }}
-                                <p class="text-sm text-gray-500">
+                                <p class="text-muted mb-0" style="font-size: 0.9rem;">
                                     {% if receipt.payment.term %}Term: {{ receipt.payment.term.name }} - {% endif %}
                                     {% if receipt.payment.session %}Session: {{ receipt.payment.session.name }}{% endif %}
                                 </p>
                                 {% if receipt.payment.is_installment %}
-                                    <p class="text-sm text-gray-500">Installment {{ receipt.payment.installment_number|default:"-" }} of {{ receipt.payment.total_installments|default:"-" }}</p>
+                                    <p class="text-muted mb-0" style="font-size: 0.9rem;">Installment {{ receipt.payment.installment_number|default:"-" }} of {{ receipt.payment.total_installments|default:"-" }}</p>
                                 {% endif %}
                             </td>
-                            <td class="py-3 px-4 text-right text-gray-800">N{{ receipt.payment.original_amount|floatformat:2|default:"0.00" }}</td>
+                            <td class="text-right">N{{ receipt.payment.original_amount|floatformat:2|default:"0.00" }}</td>
                         </tr>
                         {% if receipt.payment.discount_amount > 0 or receipt.payment.discount_percentage > 0 %}
-                        <tr class="border-b">
-                            <td class="py-2 px-4 text-gray-600">Discount</td>
-                            <td class="py-2 px-4 text-right text-red-600">
+                        <tr class="table-warning">
+                            <td>Discount</td>
+                            <td class="text-right text-danger">
                                 - N{{ receipt.payment.discount_amount|floatformat:2|default:"0.00" }}
                                 {% if receipt.payment.discount_percentage > 0 %} ({{ receipt.payment.discount_percentage|floatformat:2 }}%){% endif %}
                             </td>
                         </tr>
                         {% endif %}
-                        <tr class="font-bold">
-                            <td class="py-3 px-4 text-gray-800">Net Amount Due</td>
-                            <td class="py-3 px-4 text-right text-blue-600">N{{ receipt.payment.net_amount_due|floatformat:2|default:"0.00" }}</td>
+                        <tr class="font-weight-bold">
+                            <td>Net Amount Due</td>
+                            <td class="text-right text-primary">N{{ receipt.payment.net_amount_due|floatformat:2|default:"0.00" }}</td>
                         </tr>
-                        <tr class="font-bold bg-green-50">
-                            <td class="py-4 px-4 text-xl text-gray-900">Amount Paid</td>
-                            <td class="py-4 px-4 text-right text-green-700 text-2xl">N{{ receipt.payment.amount_received|floatformat:2|default:"0.00" }}</td>
+                        <tr class="bg-success-light font-weight-bold">
+                            <td class="h5 text-dark pt-3">Amount Paid</td>
+                            <td class="text-right amount-paid pt-3">N{{ receipt.payment.amount_received|floatformat:2|default:"0.00" }}</td>
                         </tr>
-                        {% comment %}
-                        If you have a `StudentAccountLedger` and want to show current balance:
-                        {% if receipt.payment.student.studentaccountledger_set.first %}
-                        <tr class="font-bold">
-                            <td class="py-3 px-4 text-gray-800">Current Outstanding Balance</td>
-                            <td class="py-3 px-4 text-right text-red-600">N{{ receipt.payment.student.studentaccountledger_set.first.balance|floatformat:2|default:"0.00" }}</td>
-                        </tr>
-                        {% endif %}
-                        {% endcomment %}
                     </tbody>
                 </table>
             </div>
-        </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-            <div>
-                <p class="text-gray-700"><strong>Payment Method:</strong> {{ receipt.payment.get_payment_method_display }}</p>
-                {% if receipt.payment.transaction_id %}
-                    <p class="text-gray-700"><strong>Transaction ID:</strong> {{ receipt.payment.transaction_id }}</p>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>Payment Status:</strong>
+                        <span class="badge 
+                            {% if receipt.payment.status == 'completed' %}badge-success
+                            {% elif receipt.payment.status == 'pending' %}badge-warning
+                            {% elif receipt.payment.status == 'failed' %}badge-danger
+                            {% else %}badge-secondary{% endif %}">
+                            {{ receipt.payment.get_status_display }}
+                        </span>
+                    </p>
+                    {% if receipt.payment.transaction_id %}
+                        <p class="mb-1"><strong>Transaction ID:</strong> {{ receipt.payment.transaction_id }}</p>
+                    {% endif %}
+                </div>
+                {% if receipt.payment.notes %}
+                <div class="col-md-6 text-md-right">
+                    <p class="text-muted font-italic mb-1"><strong>Notes:</strong></p>
+                    <p class="text-muted font-italic">{{ receipt.payment.notes }}</p>
+                </div>
                 {% endif %}
             </div>
-            <div class="text-left sm:text-right">
-                <p class="text-gray-700"><strong>Payment Status:</strong>
-                    <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full
-                        {% if receipt.payment.status == 'completed' %}bg-green-100 text-green-800
-                        {% elif receipt.payment.status == 'pending' %}bg-yellow-100 text-yellow-800
-                        {% elif receipt.payment.status == 'failed' %}bg-red-100 text-red-800
-                        {% else %}bg-gray-100 text-gray-800{% endif %}">
-                        {{ receipt.payment.get_status_display }}
-                    </span>
+
+            <hr>
+            <div class="text-center text-muted mb-4">
+                <p>Receipt Generated By:
+                    {% if receipt.generated_by %}
+                        {{ receipt.generated_by.get_full_name|default:receipt.generated_by.username }}
+                    {% else %}
+                        System (Student Self-Service)
+                    {% endif %}
                 </p>
+                <p class="h5 text-dark font-weight-bold mt-3">THANK YOU FOR YOUR PAYMENT!</p>
+                <p class="text-sm mt-1">Please keep this receipt for your records.</p>
             </div>
-        </div>
 
-
-        {% if receipt.payment.notes %}
-        <div class="mb-8 p-4 bg-gray-50 rounded-md border border-gray-200">
-            <h4 class="text-lg font-semibold text-gray-700 mb-2">Notes:</h4>
-            <p class="text-gray-700 italic">{{ receipt.payment.notes }}</p>
-        </div>
-        {% endif %}
-
-        <div class="text-center text-gray-600 border-t pt-6 mt-6">
-            <p>Receipt Generated By:
-                {% if receipt.generated_by %}
-                    {{ receipt.generated_by.get_full_name|default:receipt.generated_by.username }}
-                {% else %}
-                    System (Student Self-Service)
-                {% endif %}
-            </p>
-            <p class="text-lg font-semibold text-gray-800 mt-4">THANK YOU FOR YOUR PAYMENT!</p>
-            <p class="text-sm mt-2">Please keep this receipt for your records.</p>
-        </div>
-
-        <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 mt-8 no-print">
-            <a href="{% url 'payments:payment_history' %}" class="w-full sm:w-auto px-6 py-3 bg-gray-200 text-gray-800 font-semibold rounded-md shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-300 ease-in-out text-center">
-                Back to Payment History
-            </a>
-            <button onclick="window.print()" class="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300 ease-in-out">
-                Print Receipt
-            </button>
+            <div class="d-flex justify-content-center flex-column flex-sm-row mt-4 no-print">
+                <a href="{% url 'payments:payment_history' %}" class="btn btn-secondary btn-lg mb-2 mb-sm-0 mr-sm-2">
+                    <i class="fas fa-arrow-left"></i> Back to Payment History
+                </a>
+                <button onclick="window.print()" class="btn btn-info btn-lg">
+                    <i class="fas fa-print"></i> Print Receipt
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

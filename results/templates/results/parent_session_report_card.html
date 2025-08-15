@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Report Card - {{ student.get_full_name }}</title>
+    <title>Session Report Card - {{ student.get_full_name }}</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
     <style>
@@ -31,7 +31,7 @@
 
 <div class="report-card-container">
     <div class="card shadow-lg">
-        <div class="card-body">Schoolly Edtech
+        <div class="card-body">
             {% if school_identity %}
                 <div class="text-center mb-4">
                     {% if school_identity.logo %}
@@ -45,10 +45,9 @@
             {% endif %}
 
             <div class="text-center mb-4">
-                <h2 class="card-title text-info">Report Card</h2>
+                <h2 class="card-title text-info">Session Report Card</h2>
                 <h4 class="card-subtitle mb-2 text-muted">For: {{ student.get_full_name }}</h4>
-                <p class="font-weight-bold">Term: {{ term.name }}</p>
-                <p class="font-weight-bold">Session: {{ term.session.name }}</p>
+                <p class="font-weight-bold">Session: {{ session.name }}</p>
             </div>
 
             <div class="card mb-4">
@@ -61,22 +60,23 @@
                             <thead class="thead-dark">
                                 <tr>
                                     <th scope="col">Subject</th>
-                                    <th scope="col">CA1 (20)</th>
-                                    <th scope="col">CA2 (20)</th>
-                                    <th scope="col">CA3 (20)</th>
-                                    <th scope="col">Exam (40)</th>
-                                    <th scope="col">Total (100)</th>
+                                    <th scope="col">Total Score</th>
+                                    <th scope="col">Grade</th>
+                                    <th scope="col">Remarks</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                <p>NOTE! Use Your Child's Student Login To Check The Annual Report</p>
                                 {% for score in scores %}
                                     <tr>
-                                        <th scope="row" class="text-left">{{ score.subject.name }}</th>
-                                        <td>{{ score.ca1|default:"-" }}</td>
-                                        <td>{{ score.ca2|default:"-" }}</td>
-                                        <td>{{ score.ca3|default:"-" }}</td>
-                                        <td>{{ score.exam_score|default:"-" }}</td>
-                                        <td>{{ score.total_score|default:"-" }}</td>
+                                        <th scope="row" class="text-left">{{ score.subject__name }}</th>
+                                        <td>{{ score.total_score__avg|floatformat:2 }}</td>
+                                        <td>{{ score.grade }}</td>
+                                        <td>{{ score.remarks }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4">No scores found for this session.</td>
                                     </tr>
                                 {% endfor %}
                             </tbody>

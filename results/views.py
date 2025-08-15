@@ -1385,3 +1385,132 @@ class ParentSessionReportCardView(LoginRequiredMixin, View):
             'scores': scores_in_session,
         }
         return render(request, self.template_name, context)
+    
+
+@login_required
+def parent_report_card_detail(request, student_id, term_id):
+    student = get_object_or_404(Student, id=student_id)
+    term = get_object_or_404(Term, id=term_id)
+
+    # Check for user authorization (parent or staff)
+    authorized = False
+    if request.user.is_staff:
+        authorized = True
+    elif hasattr(student, 'parent'):
+        try:
+            parent = Parent.objects.get(user=request.user)
+            if student.parent == parent:
+                authorized = True
+        except Parent.DoesNotExist:
+            pass
+    # Add a check for the student themselves
+    if hasattr(student, 'user') and request.user == student.user:
+        authorized = True
+
+    if not authorized:
+        messages.warning(request, "You are not authorized to view this report card.")
+        return redirect('students:parent-dashboard')
+
+    scores = Score.objects.filter(student=student, term=term).select_related('subject')
+    
+    motor_ability = None
+    try:
+        motor_ability = MotorAbilityScore.objects.get(student=student, term=term)
+    except MotorAbilityScore.DoesNotExist:
+        pass
+        
+    # Fetch SchoolIdentity
+    try:
+        school_identity = SchoolIdentity.objects.first()
+    except SchoolIdentity.DoesNotExist:
+        school_identity = None
+
+    context = {
+        'student': student,
+        'term': term,
+        'scores': scores,
+        'motor_ability': motor_ability,
+        'school_identity': school_identity, # Add school_identity to the context
+    }
+    return render(request, 'results/parent_report_card_detail.html', context)
+
+@login_required
+def parent_session_report_card_detail(request, student_id, session_id):
+    student = get_object_or_404(Student, id=student_id)
+    session = get_object_or_404(Session, id=session_id)
+
+    # Authorization logic
+    authorized = False
+    if request.user.is_staff:
+        authorized = True
+    elif hasattr(student, 'parent'):
+        try:
+            parent = Parent.objects.get(user=request.user)
+            if student.parent == parent:
+                authorized = True
+        except Parent.DoesNotExist:
+            pass
+    if hasattr(student, 'user') and request.user == student.user:
+        authorized = True
+
+    if not authorized:
+        messages.warning(request, "You are not authorized to view this report card.")
+        return redirect('students:parent-dashboard')
+    
+    # Get all terms for the given session
+    terms_in_session = Term.objects.filter(session=session)
+
+    # Aggregate scores for the student across all terms in the session
+    scores = Score.objects.filter(
+        student=student, 
+        term__in=terms_in_session
+    ).values(
+        'subject__name'
+    ).annotate(
+        total_score__avg=Avg('total_score')
+    ).order_by('subject__name')
+    
+    # Simple grading logic (you can customize this)
+    for score in scores:
+        avg_score = score['total_score__avg']
+        if avg_score >= 70:
+            score['grade'] = 'A'
+            score['remarks'] = 'Excellent'
+        elif avg_score >= 60:
+            score['grade'] = 'B'
+            score['remarks'] = 'Good'
+        elif avg_score >= 50:
+            score['grade'] = 'C'
+            score['remarks'] = 'Fair'
+        elif avg_score >= 40:
+            score['grade'] = 'D'
+            score['remarks'] = 'Pass'
+        else:
+            score['grade'] = 'F'
+            score['remarks'] = 'Fail'
+
+    # Fetch motor ability for the session (simple average or most recent)
+    motor_ability = MotorAbilityScore.objects.filter(
+        student=student, 
+        term__in=terms_in_session
+    ).aggregate(
+        honesty=Avg('honesty'),
+        politeness=Avg('politeness'),
+        punctuality=Avg('punctuality'),
+        attendance=Avg('attendance')
+    )
+
+    # Fetch SchoolIdentity
+    try:
+        school_identity = SchoolIdentity.objects.first()
+    except SchoolIdentity.DoesNotExist:
+        school_identity = None
+
+    context = {
+        'student': student,
+        'session': session,
+        'scores': scores,
+        'motor_ability': motor_ability,
+        'school_identity': school_identity,
+    }
+    return render(request, 'results/parent_session_report_card.html', context)
