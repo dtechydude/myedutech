@@ -6,6 +6,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ student.full_name }}'s Annual Report Card - {{ session.name }}</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     
     <style>
@@ -149,7 +151,7 @@
             {% if school_identity.logo %}
                 <img src="{{ school_identity.logo.url }}" alt="School Logo"> 
             {% else %}
-                <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo">
+                <img src="{% static 'images/kwikschool_logo.png' %}" alt="School Logo" width="100" height="auto">
             {% endif %}
             <br>
             <p>

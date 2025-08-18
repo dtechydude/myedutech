@@ -9,9 +9,9 @@
 	<meta name="author" content="" />
 	<meta name="robots" content="" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="SchoollyEdTech : SchoollyEdTech Management Software" />
-	<meta property="og:title" content="SchoollyEdTech : SchoollyEdTech Management Software" />
-	<meta property="og:description" content="SchoollyEdTech : SchoollyEdTech Management Software" />
+	<meta name="description" content="KwikSchools : KwikSchools Management Software" />
+	<meta property="og:title" content="KwikSchools : KwikSchools Software" />
+	<meta property="og:description" content="KwikSchools : KwikSchools Management Software" />
 	<!-- <meta property="og:image" content="https://travl.dexignlab.com/xhtml/social-image.png" /> -->
 	<meta name="format-detection" content="telephone=no">
 	{% endblock htmlhead %}
@@ -22,8 +22,9 @@
 	{% endblock title %}
 	
 	<!-- FAVICONS ICON -->
-	{% block favicon %}
+	
 	<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+	{% block favicon %}
 	<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
 	<link href="{% static 'pages/vendor/owl-carousel/owl.carousel.css' %}" rel="stylesheet">
 	<link href="{% static 'pages/vendor/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css' %}" rel="stylesheet">
@@ -749,6 +750,8 @@
 							<li><a href="{% url 'students:student_search_list' %}">Search Students</a></li>
 							<li><a href="{% url 'pages:email_list' %}">Email List</a></li>
 							<li><a href="{% url 'pages:phone_list' %}">Phone List</a></li>
+							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>	
+
 							{% endif %}						
 							{% if user.is_authenticated and user.student %}
 							<li><a href="{% url 'students:student-self-detail' %}">My Profile</a></li>							
@@ -776,7 +779,8 @@
 							
 							{% elif user.teacher %}							
 							<li><a href="{% url 'students:student-list' %}">My Students</a></li>
-							<li><a href="{% url 'staff:my_assignments' %}">My Assigned Classes</a></li>																
+							<li><a href="{% url 'staff:my_assignments' %}">My Assigned Classes</a></li>
+							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>																	
 							
 							{% elif user.student %}							
 							<a href="{% url 'students:student_id_card' student.id %}"> My ID Card</a>												
