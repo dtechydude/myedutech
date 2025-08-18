@@ -111,9 +111,9 @@ class Teacher(models.Model):
     
     def get_full_name(self):
         """
-        Returns the student's full name.
+        Returns the teachers's full name.
         """
-        return f"{self.first_name} {self.middle_name } {self.last_name}"
+        return f"{self.user.first_name} - {self.user.last_name}"
     
     class Meta:
         ordering = ['last_name']

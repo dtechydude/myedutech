@@ -16,6 +16,8 @@ urlpatterns = [
     path('hostel_list/', students_views.hostel_list, name='hostel_list'),
     path('graduated_students_list/', students_views.graduated_students_list, name='graduated_students_list'),
     path('graduate-students/', students_views.graduate_students_view, name='graduate_students'),
+    path('upcoming_birthdays/', students_views.upcoming_birthdays_view, name='upcoming_birthdays'),
+
 
 
     path('student/id-card/<int:student_id>/', students_views.StudentIDCardView.as_view(), name='student_id_card'),
@@ -40,18 +42,5 @@ urlpatterns = [
     path('<str:id>/', MyTeacherDetailView.as_view(), name="my-teacher-detail"),
 
 
-    
-
-   #  # Search student detail app
-    # path('student_search/', students_views.search_form, name='search_form'),
-    # path('search-studen-result/', students_views.search_students, name='student-search-result'),
-     
-
-    # #render id card as pdf
-    # path('idcard-pdf/<pk>/', students_views.id_render_pdf_view, name="idcard-pdf-view"),
-    # #path('idcard/', PDFTemplateView.as_view(template_name='students/student_id_card.html',
-    # #                                       filename='id_card.pdf'), name='id-card-pdf'),
-
-
-     
+         
 ]

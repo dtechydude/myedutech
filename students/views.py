@@ -4,7 +4,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Q
+import datetime
 #converting html to pdf
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template.loader import get_template
@@ -35,28 +36,54 @@ from django.views import View
 
 #Displays all students
 def student_list(request):
-    # Exclude graduated students from the list of all students
-    all_students = Student.objects.exclude(student_status='graduated').order_by('-date_admitted')
+    # Check for CSV export request first
+    if request.GET.get('export') == 'csv':
+        response = HttpResponse(content_type='text/csv')
+        
+        if request.user.is_superuser or request.user.is_staff:
+            students_to_export = Student.objects.exclude(student_status='graduated').order_by('-date_admitted')
+            filename = 'all_students.csv'
+            
+        else:
+            students_to_export = Student.objects.filter(
+                form_teacher__user=request.user
+            ).exclude(student_status='graduated').order_by('user')
+            filename = 'my_students.csv'
+
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        writer = csv.writer(response)
+        writer.writerow(['Full Name', 'DOB', 'Student Email', 'Student Phone', 'Guardian Phone', 'Guardian Email', 'Current Class', 'Student Status'])
+
+        for student in students_to_export:
+            writer.writerow([
+                student.get_full_name(),
+                student.DOB.strftime('%Y-%m-%d'),
+                student.user.email,
+                student.user.profile.phone,
+                student.guardian_phone,
+                student.guardian_email,
+                student.current_class.name if student.current_class else '',
+                student.student_status
+            ])
+        return response
     
-    # Exclude graduated students from the list of students for the logged-in teacher
+    # Existing rendering logic remains unchanged
+    all_students = Student.objects.exclude(student_status='graduated').order_by('-date_admitted')
     my_students = Student.objects.filter(
         form_teacher__user=request.user
     ).exclude(student_status='graduated').order_by('user')
 
-    # all_students = Student.objects.all().order_by('-date_admitted')
-    # my_students = Student.objects.filter(form_teacher__user=request.user).order_by('user')
-
-    
     context ={
         'all_students':all_students,
         'my_students':my_students
     }
+    
     if request.user.is_superuser or request.user.is_staff:
         return render(request, 'students/student_list.html', context) 
     elif my_students:
         return render(request, 'students/my_student_list.html', context) 
     else:
-         return render(request, 'pages/portal_home.html')
+        return render(request, 'pages/portal_home.html')
     
     
 # For Boading Students
@@ -650,3 +677,67 @@ def parent_dashboard(request):
         'school_identity': school_identity,
     }
     return render(request, 'students/parent_dashboard.html', context)
+
+# Student's Birthay
+@login_required
+def upcoming_birthdays_view(request):
+    """
+    Allows form teachers to view their own students' birthdays
+    and admins (is_staff) to view all students' birthdays.
+    """
+    today = datetime.date.today()
+    current_month = today.month
+    upcoming_month_1 = (today.month % 12) + 1
+    upcoming_month_2 = (upcoming_month_1 % 12) + 1
+    
+    # Check if the user is a staff member (admin)
+    if request.user.is_staff:
+        # Staff members see all students
+        birthday_students = Student.objects.select_related('user__profile').filter(
+            Q(DOB__month=current_month) | 
+            Q(DOB__month=upcoming_month_1) | 
+            Q(DOB__month=upcoming_month_2)
+        ).order_by('DOB__month', 'DOB__day')
+    else:
+        # Normal users (form teachers) see only their own students
+        try:
+            form_teacher = request.user.teacher # Assuming a one-to-one relationship
+            birthday_students = Student.objects.select_related('user__profile').filter(
+                form_teacher=form_teacher,
+                DOB__month__in=[current_month, upcoming_month_1, upcoming_month_2]
+            ).order_by('DOB__month', 'DOB__day')
+        except Teacher.DoesNotExist:
+            # Handle cases where the user is logged in but not a teacher
+            return redirect('some_other_view_name') # Change to a safe URL name
+
+    # Handle CSV export request
+    if request.GET.get('export') == 'csv':
+        response = HttpResponse(content_type='text/csv')
+        filename = "all_students_birthdays.csv" if request.user.is_staff else "my_students_birthdays.csv"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Full Name', 'DOB', 'Student Email', 'Student Phone', 'Guardian Phone', 'Guardian Email', 'Current Class'])
+
+        for student in birthday_students:
+            writer.writerow([
+                student.get_full_name(),
+                student.DOB.strftime('%B %d'),
+                student.user.email,
+                student.user.profile.phone,
+                student.guardian_phone,
+                student.guardian_email,
+                student.current_class
+            ])
+        return response
+
+    # Normal template rendering
+    current_birthdays = birthday_students.filter(DOB__month=current_month)
+    upcoming_birthdays = birthday_students.exclude(DOB__month=current_month)
+
+    context = {
+        'current_birthdays': current_birthdays,
+        'upcoming_birthdays': upcoming_birthdays,
+    }
+    
+    return render(request, 'students/upcoming_birthdays.html', context)

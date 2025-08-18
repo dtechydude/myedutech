@@ -10,12 +10,12 @@ from payments.models import BankDetail
 from users.models import Profile
 from curriculum.models import Standard, SchoolIdentity, Term
 from students.models import Parent
-# from portal.models import Standard
-# from payments.models import PaymentDetail1
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import  DetailView
+import csv
+from django.http import HttpResponse
 
 
 # Create your views here.
@@ -108,15 +108,6 @@ def lock_screen(request):
 def success_submission(request):
     return render(request, 'pages/success_submission.html')
 
-# phone list
-def phone_list(request):
-    users = User.objects.all()  
-    
-    context = {        
-        'users': users,
-      
-    }    
-    return render(request, 'pages/phone_list.html', context)
 
 # email list
 def email_list(request):
@@ -155,3 +146,122 @@ def bank_detail(request):
     }
     return render(request, 'pages/bank_detail.html', context)
 
+# students phone list
+login_required
+def student_phone_list_view(request):
+    """
+    A view to display a phone list of all students and allows for CSV export.
+    """
+    students = Student.objects.select_related('user__profile').all().order_by('last_name', 'first_name')
+
+    if request.GET.get('export') == 'csv':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="student_phone_list.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Student Name', 'Student Phone', 'Guardian Name', 'Guardian Phone'])
+
+        for student in students:
+            writer.writerow([
+                student.get_full_name(),
+                student.user.profile.phone,
+                student.guardian_name,
+                student.guardian_phone,
+            ])
+        return response
+
+    context = {
+        'students': students,
+    }
+
+    return render(request, 'pages/students_phone_list.html', context)
+
+# Students Email List
+@login_required
+def student_email_list_view(request):
+    """
+    A view to display a list of student and guardian emails and allows for CSV export.
+    """
+    students = Student.objects.all().order_by('last_name', 'first_name')
+
+    if request.GET.get('export') == 'csv':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="student_email_list.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Student Name', 'Student Email', 'Guardian Name', 'Guardian Email'])
+
+        for student in students:
+            writer.writerow([
+                student.get_full_name(),
+                student.user.email,
+                student.guardian_name,
+                student.guardian_email,
+            ])
+        return response
+
+    context = {
+        'students': students,
+    }
+
+    return render(request, 'pages/students_email_list.html', context)
+
+# Teachers/guarantors Phone List
+@login_required
+def teacher_guarantor_phone_list_view(request):
+    """
+    A view to display a list of teacher guarantor phone numbers and allows for CSV export.
+    """
+    teachers = Teacher.objects.all().order_by('last_name', 'first_name')
+
+    if request.GET.get('export') == 'csv':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="teacher_guarantor_phone_list.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Teacher Name', 'Profile Phone', 'Guarantor Name', 'Guarantor Phone'])
+
+        for teacher in teachers:
+            writer.writerow([
+                teacher.get_full_name(),
+                teacher.phone_home,
+                teacher.guarantor_name,
+                teacher.guarantor_phone,
+            ])
+        return response
+
+    context = {
+        'teachers': teachers,
+    }
+
+    return render(request, 'pages/teachers_phone_list.html', context)
+
+# Teachers Email List
+@login_required
+def teacher_guarantor_email_list_view(request):
+    """
+    A view to display a list of teacher guarantor emails and allows for CSV export.
+    """
+    teachers = Teacher.objects.all().order_by('last_name', 'first_name')
+
+    if request.GET.get('export') == 'csv':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="teacher_guarantor_email_list.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Teacher Name', 'Profile Email', 'Guarantor Name', 'Guarantor Email'])
+
+        for teacher in teachers:
+            writer.writerow([
+                teacher.get_full_name(),
+                teacher.user.email,
+                teacher.guarantor_name,
+                teacher.guarantor_email,
+            ])
+        return response
+
+    context = {
+        'teachers': teachers,
+    }
+
+    return render(request, 'pages/teachers_email_list.html', context)
