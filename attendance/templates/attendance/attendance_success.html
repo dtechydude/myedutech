@@ -1,25 +1,12 @@
-{% comment %}<!-- <!DOCTYPE html>
-<html>
-<head>
-    <title>Attendance Marked</title>
-</head>
-<body>
-    <h1>Attendance Successfully Marked!</h1>
-    <p>Attendance for {{ classroom.name }} on {{ today }} has been recorded.</p>
-    <p><a href="{% url 'attendance:teacher_dashboard' %}">Back to Dashboard</a></p>
-    <p><a href="{% url 'attendance:mark_attendance' classroom.id %}">Mark attendance for {{ classroom.name }} again</a></p>
-</body>
-</html> -->
-{% endcomment %}
-
-
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attendance Saved</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>

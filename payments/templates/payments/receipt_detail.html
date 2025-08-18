@@ -7,6 +7,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title|default:"Payment Receipt" }}</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
     <style>
@@ -74,7 +76,7 @@
                 {% if school_identity.logo %}
                     <img src="{{ school_identity.logo.url }}" alt="{{ school_identity.name }} Logo" class="img-fluid school-logo">
                 {% else %}
-                    <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo" class="img-fluid school-logo">
+                    <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="School Logo" class="img-fluid school-logo" style="width: auto; height: 100px;">
                 {% endif %}
                 <div>
                     <h2 class="h4 font-weight-bold mb-0">{% if school_identity.name %}{{ school_identity.name }}{% else %}St. George's School{% endif %}</h2>

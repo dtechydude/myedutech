@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment History</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-ieCDL2t5O4kO0B49t0aR0p6n/yXn7d3F/u3j5Zg91q2K+lO6XgP3t1h52B41H4c1c9pQ7E+lG/O7l3V8gA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -146,7 +147,7 @@
 <div class="main-content">
     <header class="header d-flex justify-content-between align-items-center mb-4">
         <a href="/dashboard/" class="logo">
-            <img src="{% static 'pages/images/schoolly_logo.png' %}" alt="Schoolly Logo" width="80">
+            <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="Schoolly Logo" width="80">
         </a>
         {% if user.parent %}
         <a href="{% url 'students:parent-dashboard' %}" class="btn btn-outline-primary">
@@ -406,7 +407,7 @@
 
 <footer class="footer">
     <div class="container">
-        <p class="mb-0">&copy; SchoollyEdTech. All rights reserved.</p>
+        <p class="mb-0">&copy; KwikSchools. All rights reserved.</p>
     </div>
 </footer>
 

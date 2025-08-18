@@ -1,5 +1,4 @@
-
-
+{% laod static %}
 <!DOCTYPE html>
 <html lang="en" class="h-100">
 
@@ -10,9 +9,9 @@
 	<meta name="author" content="" />
 	<meta name="robots" content="" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="Travl : Hotel Admin Dashboard Bootstrap 5 Template" />
-	<meta property="og:title" content="Travl : Hotel Admin Dashboard Bootstrap 5 Template" />
-	<meta property="og:description" content="Travl : Hotel Admin Dashboard Bootstrap 5 Template" />
+	<meta name="description" content="Kwikshools : School Management System " />
+	<meta property="og:title" content="Kwikshools : School Management System" />
+	<meta property="og:description" content="Kwikshools : School Management System" />
 	<meta property="og:image" content="https://travl.dexignlab.com/xhtml/social-image.png" />
 	<meta name="format-detection" content="telephone=no">
 	
@@ -20,8 +19,8 @@
 	<title>Travl Hotel Admin Dashboard</title>
 	
 	<!-- FAVICONS ICON -->
-	<link rel="shortcut icon" type="image/png" href="images/favicon.png" />
-    <link href="./css/style.css" rel="stylesheet">
+	<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
     
 </head>
 
@@ -35,7 +34,7 @@
                         <h4><i class="fa fa-exclamation-triangle text-warning"></i> The page you were looking for is not found!</h4>
                         <p>You may have mistyped the address or the page may have moved.</p>
 						<div>
-                            <a class="btn btn-primary" href="./index.html">Back to Home</a>
+                            <a class="btn btn-primary" href="/dashboard/">Back to Home</a>
                         </div>
                     </div>
                 </div>
@@ -47,9 +46,9 @@
 	Scripts
 ***********************************-->
 <!-- Required vendors -->
-<script src="./vendor/global/global.min.js"></script>
-<script src="./js/custom.min.js"></script>
-<script src="./js/dlabnav-init.js"></script>
-<script src="./js/styleSwitcher.js"></script>
+<script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+<script src="{% static 'pages/js/custom.min.js' %}"></script>
+<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+<script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
 </body>
 </html>
