@@ -6,7 +6,6 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Avg, Q # Import Q for complex queries if needed
 from curriculum.models import Session, Term, Standard, Subject
 from attendance.models import Attendance
-from staff.models import Teacher
 from students.models import Student
 from students.models import Parent
 from django.contrib import messages # Import messages
@@ -21,9 +20,6 @@ from .forms import ScoreEntryForm, ReportCardFilterForm, SessionReportCardFilter
 from .utils import get_grade, get_subject_remark, get_overall_remark # Import helper functions
 from django.template.loader import render_to_string # Import render_to_string
 from curriculum.models import SchoolIdentity
-
-# For PDF generation
-# from weasyprint import HTML, CSS # Import HTML and CSS from WeasyPrint
 
 # For PDF generation using django-wkhtmltopdf
 # from wkhtmltopdf.views import PDFTemplateResponse # Import this
