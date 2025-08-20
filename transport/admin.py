@@ -6,7 +6,7 @@ from import_export.admin import ImportExportModelAdmin
 
 class RouteAdmin(admin.ModelAdmin):
     list_display = ('name', 'route_id', 'bus_fee', 'direction', 'staff_in_charge', 'driver', 'driver_phone')
-    search_fields = ('name', 'staff_in_charge__full_name',)
+    search_fields = ('name', 'staff_in_charge__first_name',)
     ordering = ['name',]
     raw_id_fields = ['staff_in_charge']
     exclude = ('slug',)

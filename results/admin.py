@@ -29,7 +29,7 @@ class ExaminationAdmin(admin.ModelAdmin):
 class ScoreAdmin(admin.ModelAdmin):
        
     list_display=('student', 'subject', 'term', 'ca1', 'ca2', 'exam_score', 'total_score')
-    search_fields = ('student', 'subject')
+    search_fields = ('student__USN', 'subject__name')
     raw_id_fields = ['student', 'subject', 'term']
     list_filter  = ['term']
 

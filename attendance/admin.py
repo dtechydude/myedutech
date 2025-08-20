@@ -7,7 +7,7 @@ class AttendanceAdmin(admin.ModelAdmin):
  
     list_display = ('student', 'date',  'present')
     list_filter = ['student__current_class']
-    search_fields = ('student__first_name', 'student__last_name', 'user__username')
+    search_fields = ('student__first_name', 'student__last_name', 'student__user__username', 'student__USN')
     raw_id_fields = ['student',]
 
   
