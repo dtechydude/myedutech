@@ -11,14 +11,21 @@ class HostelAdmin(admin.ModelAdmin):
     exclude = ('slug',)
 
 
+
 class StudentAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    # inlines = [StudentIdInline] 
-    list_display=('user', 'first_name', 'last_name', 'current_class','date_admitted', 'guardian_phone', 'student_status')
-    list_filter = ['current_class', 'student_status']
-    search_fields = ('first_name', 'last_name', 'user__username', 'current_class')
+    list_display = ('user', 'USN', 'first_name', 'last_name', 'current_class','date_admitted', 'guardian_phone', 'student_status')
+    list_filter = ['current_class', 'student_status',]
+
+    # This is the corrected search_fields tuple
+    search_fields = ('first_name', 'last_name', 'user__username', 'current_class__name', 'USN')
+
     raw_id_fields = ['user', 'form_teacher', 'badge', 'class_on_admission', 'hostel_name', 'parent',]
     autocomplete_fields = ['current_class', 'class_on_admission']
     exclude=('fee_balance',)
+
+
+
+
 
 class BadgeAdmin(ImportExportModelAdmin, admin.ModelAdmin):
        

@@ -51,7 +51,7 @@ class UserProfileAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     raw_id_fields = ['user',]
 
 
-class DeptAdmin(admin.ModelAdmin):
+class DeptAdmin(ImportExportModelAdmin, admin.ModelAdmin):
        
     list_display=('id', 'name')
     list_filter  = ['name',]
