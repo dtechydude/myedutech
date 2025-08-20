@@ -89,7 +89,7 @@ class Profile(models.Model):
         
     ]
     state_of_origin = models.CharField(max_length=15, choices=states, default=select)
-    address = models.CharField(max_length=20, blank=True, null=True)
+    address = models.CharField(max_length=150, blank=True, null=True)
     bio = models.TextField(max_length=150, blank=True)
 
     select = 'select'

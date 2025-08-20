@@ -89,7 +89,7 @@
 					<div class="col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h4 class="card-title" style="color:green;">All Registered Users Datatable </h4>
+                                <h4 class="card-title" style="color:green;">All Registered Users </h4>
                                 <a href="{% url 'users:all_users' %}?export=csv" class="btn btn-success float-end">
                                         <i class="fas fa-file-download me-2"></i> Export to CSV
                                     </a>
@@ -113,7 +113,7 @@
                                             <tr>
                                                 <td>{{ forloop.counter }}</td>
                                                 <td><a href="">{{ u.username }}</a></td>
-                                                <td><a href=""><strong>{{ u.last_name }} </strong> {{ s.first_name }}</a></td>
+                                                <td><a href=""><strong>{{ u.last_name }} </strong> {{ u.first_name }}</a></td>
                                                 <td>{{ u.profile.user_type }}</td>
                                                 <td>{{ u.profile.state_of_origin}}</td>                                               
                                                 <td><strong>{{ u.profile.created }}</strong></a></td>
