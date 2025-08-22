@@ -53,6 +53,7 @@ class StandardAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 class ClassGroupAdmin(ImportExportModelAdmin, admin.ModelAdmin):
        
     list_display=('name', 'standard', 'form_teacher')
+    list_filter = ['standard']
     autocomplete_fields = ['form_teacher']
 
     # exclude = ['slug']
