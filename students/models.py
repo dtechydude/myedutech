@@ -110,7 +110,7 @@ class Student(models.Model):
     current_class = models.ForeignKey(Standard, on_delete=models.SET_NULL, null=True, blank=True, related_name='students')
     class_group = models.ForeignKey(ClassGroup, on_delete=models.SET_NULL, null=True, blank=True, related_name='classes')
     form_teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, blank=True, null=True, related_name='teacher', help_text='This field will be automatically updated when form teacher is set in the standard')
-    badge =  models.ForeignKey(Badge, on_delete=models.CASCADE, blank=True, null=True, verbose_name='Prefect')
+    badge =  models.ForeignKey(Badge, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Prefect')
     
     female = 'female'
     male = 'male'
@@ -139,9 +139,9 @@ class Student(models.Model):
     ]
 
     student_type = models.CharField(max_length=15, choices=student_types, default=day_student)
-    hostel_name = models.ForeignKey(Hostel, on_delete=models.CASCADE, blank=True, null=True, related_name='hostel_name', verbose_name='hostel')
+    hostel_name = models.ForeignKey(Hostel, on_delete=models.SET_NULL, blank=True, null=True, related_name='hostel_name', verbose_name='hostel')
     date_admitted = models.DateField(default='2020-01-01')
-    class_on_admission = models.ForeignKey(Standard, on_delete=models.CASCADE, blank=True, null=True, related_name='class_on_admission', verbose_name='class_on_admission')
+    class_on_admission = models.ForeignKey(Standard, on_delete=models.SET_NULL, blank=True, null=True, related_name='class_on_admission', verbose_name='class_on_admission')
      # Guardian details here..
     parent = models.ForeignKey(Parent, on_delete=models.SET_NULL, null=True, blank=True, related_name='children')
     guardian_name = models.CharField(max_length=60, blank=False, null=True)  
