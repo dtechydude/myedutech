@@ -944,7 +944,7 @@
 							{% elif user.is_authenticated and user.teacher %}
 							<li><a href="{% url 'curriculum:standard_list' %}">E-Class List</a></li>
 							
-							{% elif user.is_authenticated and user.is_superuser or user.staffprofile.staff_role == "admin_officer" %}
+							{% elif user.is_authenticated and user.is_superuser or user.is_staff %}
 							<li><a href="/admin/curriculum/elearningsubject/">Add Subjects & Lessons </a></li>
 							<li><a href="{% url 'curriculum:standard_list' %}">E-Class List</a></li>										
 																
@@ -1291,7 +1291,7 @@
 															
 															<div class="mb-5 mt-4 d-flex align-items-center">
 																<div>
-																	<h4 class="text-secondary">How To Use The Portal - <a href="https://kwikschools.com/documents/portal-manual.pdf;">PORTAL MANUAL</a></h4>
+																	<h4 class="text-secondary">How To Use The Portal - <a href="https://kwikschools.com/;">PORTAL MANUAL</a></h4>
 																</div>
 																<div><a href="https://kwikschools.com/documents/portal-manual.pdf;;" class="ms-5"><i class="fas fa-arrow-right fs-20"></i></a></div>
 															</div>

@@ -155,17 +155,17 @@
     <div class="report-card-wrapper">
       <div class="header-section">
          {% if school_identity.logo %}
-        <img src="{{ school_identity.logo.url }}" alt="School Logo"> 
+        <img src="{{ school_identity.logo.url }}" alt="School Logo" style="width: 100px; height: auto;"> 
       {% else %}
         <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo">
       {% endif %}
         <br>       
        <p>
-        <span>{% if school_identity.name %}{{ school_identity.name }}{% else %}St. George's School{% endif %}</span><br>
+        <span style="font-size: 18px;">{% if school_identity.name %}<strong>{{ school_identity.name }}</strong> {% else %}St. George's School{% endif %}</span><br>
       <span style="font-size: 11px;">
           {% if school_identity.address_line_1 %}{{ school_identity.address_line_1 }}{% else %}123 School Lane{% endif %}
-          {% if school_identity.address_line_2 %}{{ school_identity.address_line_2 }}{% endif %} - 
-          {% if school_identity.phone1 %}{{ school_identity.phone1 }}{% endif %} </span>
+          {% if school_identity.address_line_2 %}{{ school_identity.address_line_2 }}{% endif %} <br>
+          {% if school_identity.phone1 %}<strong>PHONE: </strong>{{ school_identity.phone1 }}{% endif %} </span>
           </p>      
       </div> 
       <div class="p-3">

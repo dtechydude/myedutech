@@ -29,7 +29,8 @@
         }
         .school-logo {
             max-height: 100px;
-            margin-right: 1rem;
+            width: auto;
+            margin-right: 0.5rem;
         }
         .payment-status-confirmed {
             color: #28a745; /* green */
@@ -78,12 +79,12 @@
                 {% else %}
                     <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="School Logo" class="img-fluid school-logo" style="width: auto; height: 100px;">
                 {% endif %}
-                <div>
-                    <h2 class="h4 font-weight-bold mb-0">{% if school_identity.name %}{{ school_identity.name }}{% else %}St. George's School{% endif %}</h2>
+                 <div>
+                    <h3 class="h4 font-weight-bold mb-0">{% if school_identity.name %}{{ school_identity.name }}{% else %}St. George's School{% endif %}</h3>
                     <p class="text-muted mb-0" style="font-size: 0.9rem;">
                         {% if school_identity.address_line_1 %}{{ school_identity.address_line_1 }}{% else %}123 School Lane{% endif %}
-                        {% if school_identity.address_line_2 %}, {{ school_identity.address_line_2 }}{% endif %}<br>
-                        Phone: {% if school_identity.phone1 %}{{ school_identity.phone1 }}{% else %}N/A{% endif %} | Email: {% if school_identity.email %}{{ school_identity.email }}{% else %}N/A{% endif %}
+                        {% comment %}{% if school_identity.address_line_2 %}, {{ school_identity.address_line_2 }}{% endif %}{% endcomment %}<br>
+                        Phone: {% if school_identity.phone1 %}{{ school_identity.phone1 }}{% else %}N/A{% endif %} {% comment %}|  Email: {% if school_identity.email %}{{ school_identity.email }}{% else %}N/A{% endif %} {% endcomment %}
                     </p>
                 </div>
             </div>
