@@ -34,25 +34,89 @@ from datetime import date
 from django.views import View
 
 
-#Displays all students
+# #Displays all students
+# def student_list(request):
+#     # Check for CSV export request first
+#     if request.GET.get('export') == 'csv':
+#         response = HttpResponse(content_type='text/csv')
+        
+#         if request.user.is_superuser or request.user.is_staff:
+#             students_to_export = Student.objects.exclude(student_status='graduated').order_by('-date_admitted')
+#             filename = 'all_students.csv'
+            
+#         else:
+#             students_to_export = Student.objects.filter(
+#                 form_teacher__user=request.user
+#             ).exclude(student_status='graduated').order_by('user')
+#             filename = 'my_students.csv'
+
+#         response['Content-Disposition'] = f'attachment; filename="{filename}"'
+#         writer = csv.writer(response)
+#         writer.writerow(['Full Name', 'DOB', 'Student Email', 'Student Phone', 'Guardian Phone', 'Guardian Email', 'Current Class', 'Student Status'])
+
+#         for student in students_to_export:
+#             writer.writerow([
+#                 student.get_full_name(),
+#                 student.DOB.strftime('%Y-%m-%d'),
+#                 student.user.email,
+#                 student.user.profile.phone,
+#                 student.guardian_phone,
+#                 student.guardian_email,
+#                 student.current_class.name if student.current_class else '',
+#                 student.student_status
+#             ])
+#         return response
+    
+#     # Existing rendering logic remains unchanged
+#     all_students = Student.objects.exclude(student_status='graduated').order_by('-date_admitted')
+#     my_students = Student.objects.filter(
+#         form_teacher__user=request.user
+#     ).exclude(student_status='graduated').order_by('user')
+
+#     context ={
+#         'all_students':all_students,
+#         'my_students':my_students
+#     }
+    
+#     if request.user.is_superuser or request.user.is_staff:
+#         return render(request, 'students/student_list.html', context) 
+#     elif my_students:
+#         return render(request, 'students/my_student_list.html', context) 
+#     else:
+#         return render(request, 'pages/portal_home.html')
+    
+
+# Displays all students
 def student_list(request):
+    # Check if the user is authenticated at the very beginning
+    if not request.user.is_authenticated:
+        # If not authenticated, redirect to login or show an error page
+        return render(request, 'pages/portal_home.html') # Or redirect('login')
+
+    # Now that we know the user is authenticated, we can safely access user properties.
+    
     # Check for CSV export request first
     if request.GET.get('export') == 'csv':
         response = HttpResponse(content_type='text/csv')
-        
+
+        # Determine which students to export based on user's role
         if request.user.is_superuser or request.user.is_staff:
             students_to_export = Student.objects.exclude(student_status='graduated').order_by('-date_admitted')
             filename = 'all_students.csv'
-            
-        else:
+        elif hasattr(request.user, 'teacher'):
             students_to_export = Student.objects.filter(
                 form_teacher__user=request.user
             ).exclude(student_status='graduated').order_by('user')
             filename = 'my_students.csv'
+        else:
+            return HttpResponse('You are not authorized to export student data.', status=403)
 
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         writer = csv.writer(response)
-        writer.writerow(['Full Name', 'DOB', 'Student Email', 'Student Phone', 'Guardian Phone', 'Guardian Email', 'Current Class', 'Student Status'])
+        writer.writerow([
+            'Full Name', 'DOB', 'Student Email', 'Student Phone', 
+            'Guardian Phone', 'Guardian Email', 'Current Class', 'Student Status'
+        ])
 
         for student in students_to_export:
             writer.writerow([
@@ -66,26 +130,30 @@ def student_list(request):
                 student.student_status
             ])
         return response
-    
-    # Existing rendering logic remains unchanged
-    all_students = Student.objects.exclude(student_status='graduated').order_by('-date_admitted')
-    my_students = Student.objects.filter(
-        form_teacher__user=request.user
-    ).exclude(student_status='graduated').order_by('user')
 
-    context ={
-        'all_students':all_students,
-        'my_students':my_students
+    # Rendering logic for the HTML page
+    my_students = []
+    all_students = Student.objects.exclude(student_status='graduated').order_by('-date_admitted')
+
+    if hasattr(request.user, 'teacher'):
+        my_students = Student.objects.filter(
+            form_teacher__user=request.user
+        ).exclude(student_status='graduated').order_by('user')
+
+    context = {
+        'all_students': all_students,
+        'my_students': my_students
     }
-    
+
     if request.user.is_superuser or request.user.is_staff:
-        return render(request, 'students/student_list.html', context) 
+        return render(request, 'students/student_list.html', context)
     elif my_students:
-        return render(request, 'students/my_student_list.html', context) 
+        return render(request, 'students/my_student_list.html', context)
     else:
         return render(request, 'pages/portal_home.html')
-    
-    
+
+
+
 # For Boading Students
 def student_boarder_list(request):
     # Filter for 'boarder' students and exclude any with a 'graduated' status

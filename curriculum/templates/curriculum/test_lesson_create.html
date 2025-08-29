@@ -1,0 +1,122 @@
+{% extends 'pages/portal_home.html'%}
+{% load static %}
+{% block title %}<title>KwikSchools Lesson Creation ✍️</title>{% endblock title %}
+
+{% block content_body%}
+{% if user.is_authenticated and user.is_superuser or user.teacher %}
+
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="javascript:void(0)">E-Learning</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">Create Lesson</a></li>
+            </ol>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-xl-10 col-lg-10">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="card-title mb-0">Create a New Lesson 📝</h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">
+                            Fill out the form below to create a new lesson. For videos, please use a valid link (e.g., from YouTube or Vimeo).
+                        </p>
+                        
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <div class="row">
+                                <div class="col-lg-6 mb-3">
+                                    <label class="form-label fw-bold">Lesson ID</label>
+                                    {{ form.lesson_id }}
+                                </div>
+                                <div class="col-lg-6 mb-3">
+                                    <label class="form-label fw-bold">Lesson Name</label>
+                                    {{ form.name }}
+                                </div>
+                                
+                                <div class="col-lg-6 mb-3">
+                                    <label class="form-label fw-bold">Chapter Number</label>
+                                    {{ form.position }}
+                                </div>
+                                <div class="col-lg-6 mb-3">
+                                    <label class="form-label fw-bold">Video Link</label>
+                                    {{ form.video }}
+                                </div>
+                                
+                                <div class="col-12 mb-3">
+                                    <label class="form-label fw-bold d-block">Teacher's Highlights</label>
+                                    {{ form.comment }}
+                                    <small class="form-text text-muted d-block mt-2">
+                                        Add your key takeaways and notes for the students, with support for formatting.
+                                    </small>
+                                </div>
+                                
+                                <div class="col-12 mb-4">
+                                    <label class="form-label fw-bold">Upload Lesson File</label>
+                                    <div class="input-group">
+                                        <input type="file" class="form-control" name="{{ form.ppt.name }}" id="{{ form.ppt.id_for_label }}">
+                                        <label class="input-group-text">Browse</label>
+                                    </div>
+                                    <small class="form-text text-muted d-block mt-2">e.g., PowerPoint, PDF, or Word document.</small>
+                                </div>
+                            </div>
+
+                            <div class="d-grid mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-plus-circle me-2"></i>Create New Lesson
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+{% endblock content_body %}
+
+{% block scripts %}
+{{ block.super }}
+<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
+
+<style>
+    /* This targets the main CKEditor container to force it to be responsive */
+    .ck.ck-editor {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Ensures the toolbar wraps correctly on all screens */
+    .ck-toolbar {
+        flex-wrap: wrap; 
+        width: 100%;
+    }
+
+    /* Ensures the actual editable content area is contained */
+    .ck-content {
+        max-width: 100%;
+        overflow-x: hidden;
+        word-break: break-word; /* Prevents long words/URLs from overflowing */
+        overflow-wrap: break-word; /* A modern alternative for word-break */
+    }
+</style>
+
+<script>
+    ClassicEditor
+        .create( document.querySelector( '#id_comment' ), {
+            // Optional: You can add extra configuration here
+        })
+        .catch( error => {
+            console.error( error );
+        });
+</script>
+{% endblock scripts %}
+
+{% block section%}
+{% endblock section %}

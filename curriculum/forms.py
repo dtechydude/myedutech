@@ -1,6 +1,7 @@
 # from xml.etree.ElementTree import Comment
 from django import forms
 from .models import Lesson, Comment, Reply
+# from ckeditor.widgets import CKEditorWidget
 
 
 
@@ -13,6 +14,14 @@ class LessonForm(forms.ModelForm):
         widgets = {
             'comment': forms.Textarea(attrs={'class':'form-control', 'rows':4, 'cols':70, 'placeholder':"Enter Your Comment"}),
         }
+
+# class LessonForm(forms.ModelForm):
+#     # Override the 'comment' field to use CKEditorWidget
+#     comment = forms.CharField(widget=CKEditorWidget())
+    
+#     class Meta:
+#         model = Lesson
+#         fields = ('lesson_id', 'name', 'position', 'video', 'comment')
 
 class CommentForm(forms.ModelForm):
     class Meta:

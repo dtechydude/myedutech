@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'embed_video',
     'djrichtextfield',
     'tinymce',
+
 ]
 
 MIDDLEWARE = [

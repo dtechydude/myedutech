@@ -18,7 +18,7 @@ class StandardSelfListView(LoginRequiredMixin, ListView):
     context_object_name = 'standards'
     model = Standard
     # template_name = 'curriculum/class_list.html'
-    template_name = 'curriculum/my_class.html'
+    template_name = 'curriculum/test_my_class.html'
  
     # Student can only view their class elearning
     def get_queryset(self):
@@ -29,26 +29,26 @@ class ClassListView(LoginRequiredMixin, ListView):
     context_object_name = 'class'
     model = Standard
     # template_name = 'curriculum/class_list.html'
-    template_name = 'curriculum/elearning_class.html'
+    template_name = 'curriculum/test_elearning_class.html'
     
 
     
 class SubjectListView(DetailView):
     context_object_name = 'standards'
     model = Standard
-    template_name = 'curriculum/class_subjects.html'
+    template_name = 'curriculum/test_class_subjects.html'
 
 
 class LessonListView(DetailView):
     context_object_name = 'subjects'
     model = ELearningSubject
-    template_name = 'curriculum/course_list.html'
+    template_name = 'curriculum/test_course_list.html'
 
 
 class LessonDetailView(DetailView, FormView):
     context_object_name = 'lessons'
     model = Lesson
-    template_name = 'curriculum/lesson-detail.html'
+    template_name = 'curriculum/test_lesson-detail.html'
     # for replies to lessons
     form_class = CommentForm
     second_form_class = ReplyForm
@@ -117,7 +117,7 @@ class LessonCreateView(CreateView):
     form_class = LessonForm
     context_object_name = 'subject'
     model = ELearningSubject
-    template_name = 'curriculum/lesson_create.html'
+    template_name = 'curriculum/test_lesson_create.html'
 
     def get_success_url(self):
         self.object = self.get_object()
@@ -136,7 +136,7 @@ class LessonCreateView(CreateView):
 class LessonUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     fields = ('name', 'position', 'video', 'comment')
     model = Lesson
-    template_name = 'curriculum/lesson_update_view.html'
+    template_name = 'curriculum/test_lesson_update_view.html'
     context_object_name = 'lessons'
     
     #function to check if user is the login user
@@ -155,7 +155,7 @@ class LessonUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 class LessonDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Lesson
     context_object_name = 'lessons'
-    template_name = 'curriculum/lesson_delete.html'
+    template_name = 'curriculum/test_lesson_delete.html'
 
     def get_success_url(self):
         standard = self.object.standard

@@ -1,0 +1,71 @@
+{% extends 'pages/portal_home.html'%}
+{% load static %}
+{% block title %}<title>KwikSchools - {{ standards.name }} Subjects</title>{% endblock title %}
+
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'curriculum:standard_list' %}">E-Learning</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">{{ standards.name }} Subjects</a></li>
+            </ol>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="card-title text-white mb-0">Subjects for {{ standards.name }}</h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">
+                            Click on any subject to view the list of lessons.
+                        </p>
+                        
+                        {% if standards.subjects.all %}
+                        <div class="row">
+                            {% for subject in standards.subjects.all %}
+                            <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+                                <a href="{% url 'curriculum:lesson_list' slug=subject.slug standard=standards.slug %}" class="card-link">
+                                    <div class="card h-100 border-0 shadow-hover">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-book-open fa-3x text-primary mb-3"></i>
+                                            <h5 class="fw-bold mb-1">{{ subject.name }}</h5>
+                                            <p class="card-text text-muted">{{ subject.description|default:"No description provided."|truncatechars:50 }}</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info text-center mt-3" role="alert">
+                            <h4 class="alert-heading">No Subjects Found!</h4>
+                            <p>There are no subjects available for this class yet. Please check back later.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content_body %}
+
+{% block section %}{% endblock section %}
+
+{% block scripts %}
+{{ block.super }}
+<style>
+    .shadow-hover:hover {
+        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+        transform: translateY(-5px);
+        transition: all 0.3s ease-in-out;
+    }
+    .card-link {
+        text-decoration: none;
+        color: inherit;
+    }
+</style>
+{% endblock scripts %}
