@@ -247,35 +247,7 @@ def payment_history(request):
 
     return render(request, 'payments/test1_payment_history.html', context)
 
-# Olde receipt logic without parent permission
-# @login_required
-# def view_receipt(request, receipt_id):
-#     """
-#     View to display a specific receipt.
-#     """
-#     receipt = get_object_or_404(
-#         Receipt.objects.select_related(
-#             'payment__student', 'payment__term', 'payment__session',
-#             'payment__payment_category', 'generated_by'
-#         ),
-#         id=receipt_id
-#     )
 
-#     if not request.user.is_staff and (not hasattr(receipt.payment.student, 'user') or request.user != receipt.payment.student.user):
-#         messages.warning(request, "You are not authorized to view this receipt.")
-#         return redirect('payments:payment_history') # Ensure correct redirect name
-#       # ADDITION START
-#     try:
-#         school_identity = SchoolIdentity.objects.first()
-#     except SchoolIdentity.DoesNotExist:
-#         school_identity = None
-#         # ADDITION END
-#     context = {
-#         'receipt': receipt,
-#         'title': f'Receipt #{receipt.receipt_number}',
-#         'school_identity': school_identity
-#     }
-#     return render(request, 'payments/receipt_detail.html', context)
 
 # new receipt logic with parent, student and staff permission
 @login_required
@@ -594,33 +566,8 @@ def debtors_report_pdf(request):
     ])
     return response
 
-# # --- New View: CSV for Debtors Report ---
-# @login_required
-# @user_passes_test(is_staff)
-# def debtors_report_csv(request):
-#     # --- ADD THESE TWO LINES ---
-#     term_id = request.GET.get('term')
-#     session_id = request.GET.get('session')
-#     # ---------------------------
 
-#     debtors = get_debtors_data(term_id, session_id)
-
-#     response = HttpResponse(content_type='text/csv')
-#     response['Content-Disposition'] = 'attachment; filename="debtors_report.csv"'
-
-#     writer = csv.writer(response)
-#     writer.writerow(['Student Name', 'Class', 'Total Amount Due', 'Amount Paid', 'Balance'])
-
-#     for debtor in debtors:
-#         writer.writerow([
-#             debtor['student_name'],
-#             debtor['student_class'],
-#             debtor['total_amount_due'],
-#             debtor['amount_paid'],
-#             debtor['balance']
-#         ])
-#     return response
-
+#DEbtors Report CSV
 @login_required
 @permission_required('payments.view_studentaccountledger', raise_exception=True)
 def debtors_report_csv(request):

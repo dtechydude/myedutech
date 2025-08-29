@@ -651,66 +651,6 @@ class StudentReportCardView(LoginRequiredMixin, View):
 
 
 
-# # --- VIEW FOR INDIVIDUAL TERMLY REPORT CARDS ---
-# class StudentReportCardView(LoginRequiredMixin, View):
-#     """
-#     Displays a student's termly report card (HTML or PDF).
-#     Includes academic scores and individual termly motor ability scores.
-#     """
-#     template_name = 'results/student_report_card_detail.html'
-#     pdf_template_name = 'results/student_report_card_pdf.html' # Dedicated template for PDF layout
-
-#     def get(self, request, student_id, term_id):
-#         student = get_object_or_404(Student, id=student_id)
-#         term = get_object_or_404(Term, id=term_id)
-
-#         # Fetch Academic Scores for the specific term
-#         academic_scores = Score.objects.filter(student=student, term=term).select_related('subject')
-        
-#         # --- Fetch Motor Ability Score for this specific term ---
-#         # .first() is used because unique_together ensures only one record,
-#         # but .get() would raise an error if no record exists.
-#         motor_ability_score = MotorAbilityScore.objects.filter(student=student, term=term).first()
-        
-#         # You might also fetch comments or other term-specific data here
-#         # comment = Comment.objects.filter(student=student, term=term).first()
-
-#         context = {
-#             'student': student,
-#             'term': term,
-#             'academic_scores': academic_scores,
-#             'motor_ability_score': motor_ability_score, # Pass the motor ability score object
-#             # 'comment': comment, # Example
-#             # Add any other data needed for the termly report card
-#         }
-
-#         # Handle PDF download request
-#         if 'download' in request.GET and request.GET['download'] == 'pdf':
-#             filename = f"{student.first_name.replace(' ', '_')}_{term.name.replace(' ', '_')}_TermlyReportCard.pdf"
-            
-#             # Use the dedicated PDF template and the render helper
-#             pdf_response = render_to_pdf_xhtml2pdf(self.pdf_template_name, context)
-            
-#             if pdf_response:
-#                 pdf_response['Content-Disposition'] = f'attachment; filename="{filename}"'
-#                 return pdf_response
-#             else:
-#                 return HttpResponse("Error generating PDF.", status=500)
-
-#         # Default: Render the regular HTML page
-#         return render(request, self.template_name, context)
-       
-
-
-# xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-# schools/views.py
-
-# Assume TeacherRequiredMixin is defined as in your previous setup:
-# class TeacherRequiredMixin(UserPassesTestMixin):
-#     def test_func(self):
-#         return hasattr(self.request.user, 'teacher') # Checks if user has an associated Teacher profile
-
-
 # Helper function for rendering PDF (optional, but good practice)
 def render_to_pdf_xhtml2pdf(template_src, context_dict={}):
     template = get_template(template_src)
