@@ -6,7 +6,8 @@ from students.models import Student # Assuming you have a Student model in a 'st
 from decimal import Decimal # Import Decimal for precise calculations
 from django.utils import timezone # Import timezone
 from django.db.models import Sum # Import Sum for aggregation
-from curriculum.models import Term, Session
+from curriculum.models import Term, Session, Standard
+from django.conf import settings
 
 # Assuming you have Term and Session models already defined.
 class BankDetail(models.Model):
@@ -45,6 +46,8 @@ class CategoryFee(models.Model):
     Defines the standard amount due for a specific payment category, term, and session.
     This will be used to automatically populate the 'original_amount' for student payments.
     """
+    student_class = models.ForeignKey(Standard, on_delete=models.CASCADE, related_name='fees', null=True, blank=True, 
+                                      help_text="The class level this fee applies to.")
     payment_category = models.ForeignKey(PaymentCategory, on_delete=models.CASCADE, related_name='fees',
                                          help_text="The payment category this fee applies to.")
     term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name='category_fees',
@@ -57,7 +60,7 @@ class CategoryFee(models.Model):
                                      help_text="The standard amount due for this category, term, and session.")
 
     class Meta:
-        unique_together = ('payment_category', 'term', 'session', 'fee_name') # Added fee_name to unique_together
+        unique_together = ('payment_category', 'term', 'session', 'student_class', 'fee_name') # Added fee_name to unique_together
         verbose_name = "Category Fee"
         verbose_name_plural = "Category Fees"
         ordering = ['session__name', 'term__name', 'payment_category__name', 'fee_name'] # Added fee_name to ordering
@@ -101,9 +104,6 @@ class StudentAccountLedger(models.Model):
 class Payment(models.Model):
     """
     Represents a payment made by or for a student.
-    Updated to include Term, Session, Payment Category, and Installment details,
-    and now includes fields for discount amount and percentage.
-    This payment will also affect the StudentAccountLedger.
     """
     PAYMENT_STATUS_CHOICES = [
         ('pending', 'Pending'),
@@ -121,12 +121,9 @@ class Payment(models.Model):
 
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='payments',
                                 help_text="The student associated with this payment.")
-    # 'original_amount' will store the amount before any discounts.
-    # It will be populated from CategoryFee for students, or manually for staff.
     original_amount = models.DecimalField(max_digits=10, decimal_places=2,
-                                          blank=True, null=True, # Make it optional at model level
+                                          blank=True, null=True,
                                           help_text="The original amount due for this payment (can be derived from Category Fee or manually set).")
-    # Renamed 'amount' to 'amount_received': the actual money paid in this transaction
     amount_received = models.DecimalField(max_digits=10, decimal_places=2,
                                           help_text="The actual amount received in this payment transaction.")
 
@@ -139,17 +136,17 @@ class Payment(models.Model):
     transaction_id = models.CharField(max_length=100, blank=True, null=True, unique=True,
                                       help_text="Unique ID from payment gateway or internal transaction ID.")
     notes = models.CharField(max_length=100, blank=True, null=True,
-                             help_text="Any additional notes or remarks about the payment.")
-    recorded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                              help_text="Any additional notes or remarks about the payment.")
+    recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
                                     help_text="The staff member who recorded this payment.")
 
     # Fields for categorization and installments
     term = models.ForeignKey(Term, on_delete=models.PROTECT, related_name='payments',
                              help_text="The academic term this payment is for.")
     session = models.ForeignKey(Session, on_delete=models.PROTECT, related_name='payments',
-                                help_text="The academic session this payment is for.")
+                                 help_text="The academic session this payment is for.")
     payment_category = models.ForeignKey(PaymentCategory, on_delete=models.PROTECT, related_name='payments',
-                                         help_text="The category of this payment (e.g., Tuition, Hostel).")
+                                          help_text="The category of this payment (e.g., Tuition, Hostel).")
 
     is_installment = models.BooleanField(default=False,
                                          help_text="Check if this payment is part of an installment plan.")
@@ -170,9 +167,7 @@ class Payment(models.Model):
     balance_after_payment = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
                                                 help_text="Balance remaining for this specific CategoryFee after this payment.")
     
-    confirm_payment = models.BooleanField(default=False, verbose_name='confirm the payment')   
-
-
+    confirm_payment = models.BooleanField(default=False, verbose_name='confirm the payment')
 
     class Meta:
         ordering = ['-payment_date']
@@ -180,13 +175,11 @@ class Payment(models.Model):
         verbose_name_plural = "Payments"
 
     def __str__(self):
-        # Updated to use amount_received
         return f"Payment of {self.amount_received} for {self.student.first_name} {self.student.last_name} ({self.payment_category}) for {self.term} - {self.session}"
 
     @property
     def net_amount_due(self):
         """Calculates the net amount due for this payment record after applying discounts."""
-        # Use original_amount if available, otherwise default to 0 for calculation
         base_amount = self.original_amount if self.original_amount is not None else Decimal('0.00')
 
         calculated_amount = base_amount
@@ -199,23 +192,37 @@ class Payment(models.Model):
     def save(self, *args, **kwargs):
         """
         Overrides the save method to:
-        1. Calculate balance_before_payment and balance_after_payment before saving.
-        2. Update the student's balance in the StudentAccountLedger based on total charges and total payments.
+        1. Populate original_amount from the related StudentFee record (on creation only).
+        2. Correctly calculate balances based on a single StudentFee record.
+        3. Automatically set the installment_number and total_installments.
         """
-        # Calculate balance_before_payment before the initial save
-        if self.pk: # If updating an existing payment
-            # Fetch the current state of the payment from the DB to get its original values
-            # This is important if original_amount or amount_received are being changed
-            old_payment = Payment.objects.get(pk=self.pk)
-            old_amount_received = old_payment.amount_received
-            old_original_amount = old_payment.original_amount
-        else: # If creating a new payment
-            old_amount_received = Decimal('0.00')
-            old_original_amount = Decimal('0.00')
+        # Step 1: Populate original_amount from the StudentFee model
+        # This should only happen for new records.
+        if not self.pk:
+            try:
+                student_fee = StudentFee.objects.get(
+                    student=self.student,
+                    category_fee__payment_category=self.payment_category,
+                    term=self.term,
+                    session=self.session
+                )
+                self.original_amount = student_fee.amount_due
+            except StudentFee.DoesNotExist:
+                self.original_amount = Decimal('0.00')
 
-        # Calculate balance_before_payment for the specific category/term/session
-        # This needs to be done before the current payment is saved to exclude its effect
-        total_paid_for_this_fee_before = Payment.objects.filter(
+        # Step 2: Calculate balances for the specific category/term/session
+        try:
+            student_fee_record = StudentFee.objects.get(
+                student=self.student,
+                category_fee__payment_category=self.payment_category,
+                term=self.term,
+                session=self.session
+            )
+            total_charges_for_category = student_fee_record.amount_due
+        except StudentFee.DoesNotExist:
+            total_charges_for_category = Decimal('0.00')
+
+        total_paid_for_category_before = Payment.objects.filter(
             student=self.student,
             payment_category=self.payment_category,
             term=self.term,
@@ -223,44 +230,65 @@ class Payment(models.Model):
             status='completed'
         ).exclude(pk=self.pk).aggregate(Sum('amount_received'))['amount_received__sum'] or Decimal('0.00')
 
-        self.balance_before_payment = (self.original_amount or Decimal('0.00')) - total_paid_for_this_fee_before
-        self.balance_before_payment = max(Decimal('0.00'), self.balance_before_payment) # Ensure not negative
+        self.balance_before_payment = total_charges_for_category - total_paid_for_category_before
+        self.balance_before_payment = max(Decimal('0.00'), self.balance_before_payment)
 
-        # Calculate balance_after_payment before the initial save
         self.balance_after_payment = self.balance_before_payment - self.amount_received
-        self.balance_after_payment = max(Decimal('0.00'), self.balance_after_payment) # Ensure not negative
+        self.balance_after_payment = max(Decimal('0.00'), self.balance_after_payment)
 
-        super().save(*args, **kwargs) # Save the payment instance with all calculated values
+        # Step 3: Automatically set the installment number and total_installments
+        if self.is_installment:
+            # Calculate the current installment number
+            if self.installment_number is None:
+                previous_installments = Payment.objects.filter(
+                    student=self.student,
+                    payment_category=self.payment_category,
+                    term=self.term,
+                    session=self.session,
+                    is_installment=True,
+                    status='completed'
+                ).count()
+                self.installment_number = previous_installments + 1
 
-        # Only update ledger if payment is completed and has associated term/session/student
+            # Get the total installments from a previous payment if it exists
+            if not self.total_installments:
+                last_installment = Payment.objects.filter(
+                    student=self.student,
+                    payment_category=self.payment_category,
+                    term=self.term,
+                    session=self.session,
+                    is_installment=True
+                ).order_by('-payment_date').first()
+                
+                if last_installment and last_installment.total_installments:
+                    self.total_installments = last_installment.total_installments
+
+        super().save(*args, **kwargs)
+
+        # Step 4: Update the StudentAccountLedger
         if self.status == 'completed' and self.student and self.term and self.session:
-            ledger_entry, created = StudentAccountLedger.objects.get_or_create(
+            total_charges_for_period = StudentFee.objects.filter(
                 student=self.student,
                 term=self.term,
-                session=self.session,
-                defaults={'balance': Decimal('0.00')}
-            )
+                session=self.session
+            ).aggregate(Sum('amount_due'))['amount_due__sum'] or Decimal('0.00')
 
-            # Recalculate total charges and total payments for this student, term, and session
-            # Sum all original_amounts from payments for this student/term/session
-            total_charges_for_period = Payment.objects.filter(
-                student=self.student,
-                term=self.term,
-                session=self.session,
-                status='completed'
-            ).aggregate(Sum('original_amount'))['original_amount__sum'] or Decimal('0.00')
-
-            # Sum all amount_received from payments for this student/term/session
             total_payments_for_period = Payment.objects.filter(
                 student=self.student,
                 term=self.term,
                 session=self.session,
                 status='completed'
             ).aggregate(Sum('amount_received'))['amount_received__sum'] or Decimal('0.00')
-
-            # The balance is total charges minus total payments
+            
+            ledger_entry, created = StudentAccountLedger.objects.get_or_create(
+                student=self.student,
+                term=self.term,
+                session=self.session,
+                defaults={'balance': Decimal('0.00')}
+            )
             ledger_entry.balance = total_charges_for_period - total_payments_for_period
             ledger_entry.save()
+
 
 
 class Receipt(models.Model):
@@ -312,3 +340,26 @@ class Receipt(models.Model):
             # Save again to update the receipt_number field.
             # Use update_fields to prevent infinite recursion and only update this specific field.
             super().save(update_fields=['receipt_number'])
+
+
+# helping to calculate the debtors accurately
+class StudentFee(models.Model):
+    """
+    Represents a fee specifically assigned to a student for a given term/session.
+    The amount can be different from the standard CategoryFee amount.
+    """
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='student_fees')
+    category_fee = models.ForeignKey(CategoryFee, on_delete=models.CASCADE, related_name='student_fees', 
+                                    help_text="The standard fee category this student's fee is based on.")
+    term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name='student_fees')
+    session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='student_fees')
+    amount_due = models.DecimalField(max_digits=10, decimal_places=2,
+                                     help_text="The actual amount this specific student owes.")
+    
+    class Meta:
+        unique_together = ('student', 'category_fee', 'term', 'session')
+        verbose_name = "Student Fee"
+        verbose_name_plural = "Student Fees"
+
+    def __str__(self):
+        return f"{self.student.get_full_name()} - {self.category_fee.payment_category.name} ({self.amount_due})"

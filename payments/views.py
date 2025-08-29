@@ -7,12 +7,13 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
 from django.db.models import Sum, F,  ExpressionWrapper, DecimalField, Q, Max, Min, OuterRef, Subquery
-from .models import Payment, Receipt, PaymentCategory, StudentAccountLedger, CategoryFee
+from .models import Payment, Receipt, PaymentCategory, StudentAccountLedger, CategoryFee, StudentFee
 from curriculum.models import Term, Session
 from .forms import PaymentForm, ParentPaymentForm
 from students.models import Student, Parent
 from datetime import datetime, timedelta
 from decimal import Decimal
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse, HttpResponse
 from django.template.loader import get_template
 from curriculum.models import SchoolIdentity
@@ -42,11 +43,8 @@ def make_payment(request):
     View for staff or students to record a new payment.
     Students can only make payments for themselves.
     """
-    is_student_user = False
-    student_instance = None
-    if hasattr(request.user, 'student'):
-        is_student_user = True
-        student_instance = request.user.student
+    is_student_user = hasattr(request.user, 'student')
+    student_instance = request.user.student if is_student_user else None
 
     if request.method == 'POST':
         form = PaymentForm(request.POST, user=request.user)
@@ -54,10 +52,11 @@ def make_payment(request):
             try:
                 with transaction.atomic():
                     payment = form.save(commit=False)
-
                     current_student = payment.student
 
                     if is_student_user:
+                        # CRITICAL FIX: The form has cleaned_data['category_fee']
+                        # which is an object. Use its attributes.
                         selected_category_fee = form.cleaned_data['category_fee']
                         payment.original_amount = selected_category_fee.amount_due
                         payment.term = selected_category_fee.term
@@ -65,7 +64,8 @@ def make_payment(request):
                         payment.payment_category = selected_category_fee.payment_category
                         payment.discount_amount = Decimal('0.00')
                         payment.discount_percentage = Decimal('0.00')
-                    else: # Staff user
+                    else:  # Staff user
+                        # Logic to find a matching CategoryFee is robust. Keep it.
                         selected_category_fee = CategoryFee.objects.filter(
                             payment_category=payment.payment_category,
                             term=payment.term,
@@ -74,7 +74,7 @@ def make_payment(request):
                         if payment.original_amount is None:
                             payment.original_amount = selected_category_fee.amount_due if selected_category_fee else Decimal('0.00')
 
-
+                    # Calculate balance before payment
                     total_paid_for_this_fee_before = Payment.objects.filter(
                         student=current_student,
                         payment_category=payment.payment_category,
@@ -86,27 +86,31 @@ def make_payment(request):
                     payment.balance_before_payment = payment.original_amount - total_paid_for_this_fee_before
                     payment.balance_before_payment = max(Decimal('0.00'), payment.balance_before_payment)
 
+                    # Set the recorded_by field correctly
                     payment.recorded_by = request.user if request.user.is_staff else None
                     payment.status = 'completed'
                     
                     payment.save()
 
+                    # Calculate balance after payment and update
                     payment.balance_after_payment = payment.balance_before_payment - payment.amount_received
                     payment.balance_after_payment = max(Decimal('0.00'), payment.balance_after_payment)
                     payment.save(update_fields=['balance_after_payment'])
 
                     receipt = Receipt.objects.create(
                         payment=payment,
-                        generated_by=request.user if request.user.is_staff else None
+                        # The `generated_by` user for a student payment should be the student's user.
+                        # This ensures receipts are linked to the user who made the payment.
+                        generated_by=request.user 
                     )
                     messages.success(request, f"Payment of N{payment.amount_received} recorded successfully for {payment.student.first_name}. Receipt #{receipt.receipt_number} generated.")
 
-                    if is_student_user:
-                        return redirect('payments:view_receipt', receipt_id=receipt.id)
-                    else:
-                        return redirect('payments:payment_history')
+                    # Use the correct URL name based on your urls.py file
+                    return redirect('payments:receipt', receipt_id=receipt.id)
+            
             except Exception as e:
-                messages.error(request, f"An error occurred while recording payment: {e}")
+                messages.error(request, f"An unexpected error occurred while recording payment. Please try again or contact support.")
+                # You should log the full traceback for debugging
                 import logging
                 logger = logging.getLogger(__name__)
                 logger.exception("Error recording payment:")
@@ -125,103 +129,123 @@ def make_payment(request):
     }
     return render(request, 'payments/test1_make_payment.html', context)
 
+
+
 @login_required
 def payment_history(request):
     """
-    View to display a list of all payments with filtering and aggregation options.
-    Students can only see their own payments. Staff can see all payments.
+    Renders the payment history page with filtering and pagination.
     """
-    payments = Payment.objects.all().select_related(
-        'student', 'recorded_by', 'term', 'session', 'payment_category'
+    is_staff_user = request.user.is_staff
+
+    # Get filter and pagination parameters
+    student_search_query = request.GET.get('student_search', '').strip()
+    selected_term_id = request.GET.get('term')
+    selected_session_id = request.GET.get('session')
+    selected_category_id = request.GET.get('category')
+    selected_is_installment = request.GET.get('is_installment')
+    page_number = request.GET.get('page') # Get the page number from the URL
+
+    # Start with a base queryset for payments, filtering by 'completed' status
+    payments_queryset = Payment.objects.filter(status='completed').select_related(
+        'student__user',
+        'payment_category',
+        'term',
+        'session',
+        'recorded_by'
     ).order_by('-payment_date')
-
-    # Initialize filter variables to None at the start of the function
-    student_id = None
-    term_id = None
-    session_id = None
-    category_id = None
-
-    if hasattr(request.user, 'student'):
-        payments = payments.filter(student=request.user.student)
-        students = []
-        terms = []
-        sessions = []
-        categories = []
-        selected_student_id = None
-        selected_term_id = None
-        selected_session_id = None
-        selected_category_id = None
+    
+    # Apply filters based on request parameters
+    if not is_staff_user:
+        payments_queryset = payments_queryset.filter(student=request.user.student)
     else:
-        student_id = request.GET.get('student')
-        term_id = request.GET.get('term')
-        session_id = request.GET.get('session')
-        category_id = request.GET.get('category')
+        if student_search_query:
+            payments_queryset = payments_queryset.filter(
+                Q(student__user__first_name__icontains=student_search_query) |
+                Q(student__user__last_name__icontains=student_search_query) |
+                Q(student__USN__icontains=student_search_query)
+            )
 
-        if student_id:
-            payments = payments.filter(student__id=student_id)
-        if term_id:
-            payments = payments.filter(term__id=term_id)
-        if session_id:
-            payments = payments.filter(session__id=session_id)
-        if category_id:
-            payments = payments.filter(payment_category__id=category_id)
+    if selected_term_id:
+        payments_queryset = payments_queryset.filter(term__id=selected_term_id)
+    if selected_session_id:
+        payments_queryset = payments_queryset.filter(session__id=selected_session_id)
+    if selected_category_id:
+        payments_queryset = payments_queryset.filter(payment_category__id=selected_category_id)
+    if selected_is_installment:
+        is_installment_bool = selected_is_installment.lower() == 'true'
+        payments_queryset = payments_queryset.filter(is_installment=is_installment_bool)
 
-        students = Student.objects.all().order_by('first_name', 'last_name')
-        terms = Term.objects.all().order_by('-start_date')
-        sessions = Session.objects.all().order_by('-start_date')
-        categories = PaymentCategory.objects.all().order_by('name')
-        selected_student_id = student_id
-        selected_term_id = term_id
-        selected_session_id = session_id
-        selected_category_id = category_id
+    # Paginate the payments queryset
+    paginator = Paginator(payments_queryset, 20) # Show 20 payments per page
+    page_obj = paginator.get_page(page_number)
+    payments = page_obj # Use the paginated object in the context
 
-    is_installment_filter = request.GET.get('is_installment')
-    if is_installment_filter:
-        payments = payments.filter(is_installment=(is_installment_filter == 'true'))
+    # Aggregate data for the combined summary
+    combined_payments_data = payments_queryset.values(
+        'student', 
+        'payment_category', 
+        'term', 
+        'session'
+    ).annotate(
+        total_amount_received=Sum('amount_received'),
+        total_discount_amount=Sum('discount_amount')
+    )
 
-    combined_payments = {}
-    for payment in payments:
-        key = (
-            payment.student.id,
-            payment.term.id if payment.term else None,
-            payment.session.id if payment.session else None,
-            payment.payment_category.id if payment.payment_category else None,
-        )
-        if key not in combined_payments:
-            combined_payments[key] = {
-                'student': payment.student,
-                'term': payment.term,
-                'session': payment.session,
-                'payment_category': payment.payment_category,
-                'total_original_amount': payment.original_amount if payment.original_amount is not None else Decimal('0.00'),
-                'total_amount_received': Decimal('0.00'),
-                'total_discount_amount': Decimal('0.00'),
-                'payments_list': []
-            }
-        combined_payments[key]['total_amount_received'] += payment.amount_received
-        combined_payments[key]['total_discount_amount'] += payment.discount_amount + \
-                                                             ((payment.original_amount or Decimal('0.00')) * (payment.discount_percentage / Decimal('100.00')))
-        combined_payments[key]['payments_list'].append(payment)
+    # Retrieve related objects for combined payments
+    student_ids = [item['student'] for item in combined_payments_data if item['student']]
+    category_ids = [item['payment_category'] for item in combined_payments_data if item['payment_category']]
+    term_ids = [item['term'] for item in combined_payments_data if item['term']]
+    session_ids = [item['session'] for item in combined_payments_data if item['session']]
 
-    combined_payments_list = sorted(list(combined_payments.values()), key=lambda x: x['student'].last_name)
+    students = {s.pk: s for s in Student.objects.filter(pk__in=student_ids).select_related('user')}
+    payment_categories = {c.pk: c for c in PaymentCategory.objects.filter(pk__in=category_ids)}
+    terms = {t.pk: t for t in Term.objects.filter(pk__in=term_ids)}
+    sessions = {s.pk: s for s in Session.objects.filter(pk__in=session_ids)}
 
+    # Attach the full objects and calculate balances
+    for item in combined_payments_data:
+        item['student_obj'] = students.get(item['student'])
+        item['payment_category_obj'] = payment_categories.get(item['payment_category'])
+        item['term_obj'] = terms.get(item['term'])
+        item['session_obj'] = sessions.get(item['session'])
+        
+        try:
+            student_fee = StudentFee.objects.get(
+                student=item['student_obj'],
+                term=item['term_obj'],
+                session=item['session_obj'],
+                category_fee__payment_category=item['payment_category_obj']
+            )
+            item['total_original_amount'] = student_fee.amount_due
+        except StudentFee.DoesNotExist:
+            item['total_original_amount'] = Decimal('0.00')
+
+        item['balance'] = max(item['total_original_amount'] - item['total_amount_received'], Decimal('0.00'))
+
+    # Build query string for pagination links to preserve filters
+    query_string = request.GET.copy()
+    if 'page' in query_string:
+        del query_string['page']
+    
     context = {
-        'payments': payments,
-        'combined_payments': combined_payments_list,
-        'students': students,
-        'terms': terms,
-        'sessions': sessions,
-        'categories': categories,
-        'selected_student_id': selected_student_id,
+        'payments': payments, # Use the paginated object here
+        'page_obj': page_obj, # Pass the paginator object
+        'combined_payments': combined_payments_data,
+        'is_staff_user': is_staff_user,
+        'terms': Term.objects.all(),
+        'sessions': Session.objects.all(),
+        'categories': PaymentCategory.objects.all(),
         'selected_term_id': selected_term_id,
         'selected_session_id': selected_session_id,
         'selected_category_id': selected_category_id,
-        'selected_is_installment': is_installment_filter,
-        'title': 'Payment History',
-        'is_staff_user': request.user.is_staff
+        'selected_is_installment': selected_is_installment,
+        'student_search_query': student_search_query,
+        'query_string': query_string.urlencode(), # URL-encoded query string
+        'title': 'Payment History'
     }
-    return render(request, 'payments/test1_payment_history.html', context)
 
+    return render(request, 'payments/test1_payment_history.html', context)
 
 # Olde receipt logic without parent permission
 # @login_required
@@ -340,32 +364,206 @@ def receipt_pdf(request, receipt_id):
     return redirect('payments:view_receipt', receipt_id=receipt.id) # Redirect back if PDF generation fails
 
 
+# # CURRENT WORKING BUT INCREASING THE TOTAL BALANCE INSTEAD OF REDUCING IT
+# @login_required
+# @user_passes_test(is_staff)
+# def debtors_report(request):
+#     """
+#     Generates a report of students who currently owe money (have a positive balance in the ledger).
+#     Allows filtering by term and session.
+#     """
+#     term_id = request.GET.get('term')
+#     session_id = request.GET.get('session')
 
+#     # Use the refactored helper function
+#     debtors = get_debtors_data(term_id, session_id)
+
+#     terms = Term.objects.all().order_by('-start_date')
+#     sessions = Session.objects.all().order_by('-start_date')
+
+#     context = {
+#         'debtors': debtors,
+#         'terms': terms,
+#         'sessions': sessions,
+#         'selected_term_id': term_id,
+#         'selected_session_id': session_id,
+#         'title': 'Debtors Report'
+#     }
+#     return render(request, 'payments/test_debtors_report.html', context)
+
+
+# A simple helper function to check if the user is a staff member.
+# def is_staff(user):
+#     return user.is_staff
+
+# def get_debtors_data(term_id, session_id, category_id):
+#     """
+#     Calculates and returns a list of debtors with outstanding balances
+#     broken down by payment category, with filtering for category.
+#     """
+#     debtors_list = []
+    
+#     student_fees = StudentFee.objects.all()
+#     if term_id:
+#         student_fees = student_fees.filter(term__id=term_id)
+#     if session_id:
+#         student_fees = student_fees.filter(session__id=session_id)
+#     if category_id:
+#         student_fees = student_fees.filter(category_fee__payment_category__id=category_id)  # Filter by category
+
+#     payments = Payment.objects.all()
+#     if term_id:
+#         payments = payments.filter(term__id=term_id)
+#     if session_id:
+#         payments = payments.filter(session__id=session_id)
+#     if category_id:
+#         payments = payments.filter(payment_category__id=category_id)  # Filter payments by category
+        
+#     student_payments_by_category = payments.values(
+#         'student',
+#         'payment_category'
+#     ).annotate(
+#         total_paid=Sum('amount_received')
+#     )
+    
+#     payments_dict = {
+#         (p['student'], p['payment_category']): p['total_paid']
+#         for p in student_payments_by_category
+#     }
+
+#     for student_fee in student_fees:
+#         student = student_fee.student
+#         term = student_fee.term
+#         session = student_fee.session
+#         category = student_fee.category_fee.payment_category
+        
+#         total_fees = student_fee.amount_due
+        
+#         total_payments = payments_dict.get((student.id, category.id), 0)
+        
+#         outstanding_balance = total_fees - total_payments
+        
+#         if outstanding_balance > 0:
+#             debtors_list.append({
+#                 'student': student,
+#                 'term': term,
+#                 'session': session,
+#                 'category_name': category.name,
+#                 'total_fees': total_fees,
+#                 'total_payments': total_payments,
+#                 'outstanding_balance': outstanding_balance
+#             })
+
+#     return debtors_list
+
+
+# payments/views.py
 @login_required
-@user_passes_test(is_staff)
+@permission_required('payments.view_studentaccountledger', raise_exception=True)
 def debtors_report(request):
     """
-    Generates a report of students who currently owe money (have a positive balance in the ledger).
-    Allows filtering by term and session.
+    Renders the debtors report page and handles filtering.
     """
-    term_id = request.GET.get('term')
-    session_id = request.GET.get('session')
+    
+    term_id = request.GET.get('term', '')
+    session_id = request.GET.get('session', '')
+    category_id = request.GET.get('category', '')
 
-    # Use the refactored helper function
-    debtors = get_debtors_data(term_id, session_id)
+    # Call the utility function to get the data
+    debtors_list = get_debtors_data(term_id, session_id, category_id)
 
-    terms = Term.objects.all().order_by('-start_date')
+    # --- Paginator logic is now for a list, which is less efficient but necessary ---
+    paginator = Paginator(debtors_list, 25) 
+    page_number = request.GET.get('page', 1)
+    try:
+        debtors = paginator.page(page_number)
+    except PageNotAnInteger:
+        debtors = paginator.page(1)
+    except EmptyPage:
+        debtors = paginator.page(paginator.num_pages)
+        
+    query_string = request.GET.copy()
+    if 'page' in query_string:
+        del query_string['page']
+    query_string = query_string.urlencode()
+    # --- Paginator Logic Ends Here ---
+    
     sessions = Session.objects.all().order_by('-start_date')
+    terms = Term.objects.all().order_by('name')
+    categories = PaymentCategory.objects.all().order_by('name')
 
     context = {
+        'title': 'Debtors Report',
         'debtors': debtors,
-        'terms': terms,
         'sessions': sessions,
-        'selected_term_id': term_id,
-        'selected_session_id': session_id,
-        'title': 'Debtors Report'
+        'terms': terms,
+        'categories': categories,
+        'selected_session': int(session_id) if session_id else None,
+        'selected_term': int(term_id) if term_id else None,
+        'selected_category': int(category_id) if category_id else None,
+        'query_string': query_string,
     }
+
     return render(request, 'payments/test_debtors_report.html', context)
+
+
+# A new view function to generate student fees (you can make this a management command)
+def generate_student_fees(request):
+    if request.method == 'POST':
+        session_id = request.POST.get('session_id')
+        term_id = request.POST.get('term_id')
+
+        try:
+            term = Term.objects.get(id=term_id)
+            session = Session.objects.get(id=session_id)
+        except (Term.DoesNotExist, Session.DoesNotExist):
+            messages.error(request, "Invalid term or session selected.")
+            return redirect('payments:generate_student_fees')
+
+        fees_generated_count = 0
+        classes_without_fees = set() # Use a set to store unique class names
+        
+        all_students = Student.objects.all().select_related('current_class') 
+
+        for student in all_students:
+            relevant_category_fees = CategoryFee.objects.filter(
+                student_class=student.current_class,
+                term=term,
+                session=session
+            )
+
+            if not relevant_category_fees.exists():
+                classes_without_fees.add(student.current_class.name) # Add class name to the set
+                continue 
+
+            for cat_fee in relevant_category_fees:
+                student_fee, created = StudentFee.objects.update_or_create(
+                    student=student,
+                    category_fee=cat_fee,
+                    term=term,
+                    session=session,
+                    defaults={'amount_due': cat_fee.amount_due}
+                )
+                if created:
+                    fees_generated_count += 1
+        
+        # Display a single, consolidated message for each class that had no fees
+        for class_name in classes_without_fees:
+            messages.warning(request, f"No Category Fees defined for class '{class_name}' in {term.name}, {session.name}.")
+
+        # Display the success message for fees generated
+        messages.success(request, f"{fees_generated_count} student fee records have been successfully generated or updated!")
+
+        return redirect('payments:debtors_report')
+
+    else: # GET request
+        sessions = Session.objects.all().order_by('-start_date')
+        terms = Term.objects.all().order_by('-start_date')
+        context = {
+            'sessions': sessions,
+            'terms': terms,
+        }
+        return render(request, 'payments/generate_fees.html', context)
 
 # --- New View: PDF for Debtors Report ---
 @login_required
@@ -427,36 +625,46 @@ def debtors_report_pdf(request):
 @permission_required('payments.view_studentaccountledger', raise_exception=True)
 def debtors_report_csv(request):
     """
-    Generates a CSV report of debtors based on current outstanding balances.
+    Generates a CSV report of debtors based on outstanding balances.
     """
     term_id = request.GET.get('term')
     session_id = request.GET.get('session')
+    category_id = request.GET.get('category')
+    
+    # The get_debtors_data function returns a list of dictionaries
+    debtors = get_debtors_data(term_id, session_id, category_id)
 
-    # Get the debtor data from your utility function
-    # This data now contains 'balance' directly, not 'total_amount_due' or 'amount_paid'
-    debtors = get_debtors_data(term_id, session_id)
+    # ❗ This is the critical line to prevent the error
+    if not debtors:
+        return HttpResponse("No debtors found for the selected criteria.", content_type="text/plain", status=200)
 
+    # The rest of the code only executes if debtors is not empty
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="debtors_report.csv"'
+    
+    filename = "debtors_report"
+    if term_id:
+        filename += f"_term_{term_id}"
+    if session_id:
+        filename += f"_session_{session_id}"
+    if category_id:
+        filename += f"_category_{category_id}"
+    filename += ".csv"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
     writer = csv.writer(response)
 
-    # Define the CSV header based on the keys available in 'debtors' list
-    # The header should now use 'Balance' instead of 'Total Amount Due' and 'Amount Paid'
     writer.writerow(['Student Name', 'Class', 'Term', 'Session', 'Balance'])
 
-    # Write the data rows
     for debtor in debtors:
         writer.writerow([
             debtor['student_name'],
             debtor['student_class'],
             debtor['term_name'],
             debtor['session_name'],
-            debtor['balance'], # Use 'balance' directly
+            debtor['balance'],
         ])
 
     return response
-
 
 
 @login_required
@@ -468,12 +676,34 @@ def payment_chart_list(request):
         current_session = None
 
     payment_chart_list = []
+    
     if current_session:
-        # Filter CategoryFee objects to display only those belonging to the current session
-        payment_chart_list = CategoryFee.objects.filter(session=current_session)
+        # Check if the user is a staff member or has a Teacher profile
+        if request.user.is_staff or hasattr(request.user, 'teacher'):
+            # Staff and teachers can see all payment fees for the current session
+            payment_chart_list = CategoryFee.objects.filter(session=current_session)
+        else:
+            # Students can only see fees for their current class
+            # Get the student instance linked to the user
+            try:
+                student = request.user.student
+                student_class = student.current_class 
+                
+                if student_class:
+                    # Filter fees based on the student's class and the current session
+                    # Using the correct field name: 'student_class'
+                    payment_chart_list = CategoryFee.objects.filter(
+                        session=current_session,
+                        student_class=student_class
+                    )
+                
+            except AttributeError:
+                # Handles cases where the user is not a student
+                payment_chart_list = []
 
     context = {
         'payment_chart_list': payment_chart_list,
+        'title': 'Fee Structure',
     }
     return render(request, 'payments/fees_table.html', context)
 
@@ -893,3 +1123,58 @@ def make_payment_for_child(request, student_id):
         form = ParentPaymentForm()
 
     return render(request, 'payments/parent_make_payment.html', {'form': form, 'student': student})
+
+
+def payment_details(request, pk, category_pk, term_pk, session_pk):
+    """
+    View to display details for a specific combined payment record.
+    """
+    # Retrieve the model instances using the passed primary keys
+    student = get_object_or_404(Student, pk=pk)
+    payment_category = get_object_or_404(PaymentCategory, pk=category_pk)
+    term = get_object_or_404(Term, pk=term_pk)
+    session = get_object_or_404(Session, pk=session_pk)
+
+    # Filter payments based on the retrieved details
+    payments_for_details = Payment.objects.filter(
+        student=student,
+        payment_category=payment_category,
+        term=term,
+        session=session
+    ).order_by('payment_date')
+
+    total_amount_received = payments_for_details.aggregate(Sum('amount_received'))['amount_received__sum'] or Decimal('0.00')
+
+    # You might want to get the original fee amount from the StudentFee model
+    try:
+        student_fee = StudentFee.objects.get(
+            student=student,
+            category_fee__payment_category=payment_category,
+            term=term,
+            session=session
+        )
+        total_due = student_fee.amount_due
+    except StudentFee.DoesNotExist:
+        total_due = Decimal('0.00')
+
+    # Calculate total discount and balance
+    total_discount_amount = sum(
+        (p.discount_amount or Decimal('0.00')) + 
+        ((p.original_amount or Decimal('0.00')) * (p.discount_percentage / Decimal('100.00')))
+        for p in payments_for_details
+    )
+    balance = total_due - total_amount_received - total_discount_amount
+
+    context = {
+        'student': student,
+        'payment_category': payment_category,
+        'term': term,
+        'session': session,
+        'payments': payments_for_details,
+        'total_due': total_due,
+        'total_amount_received': total_amount_received,
+        'total_discount_amount': total_discount_amount,
+        'balance': balance,
+        'title': 'Payment Details'
+    }
+    return render(request, 'payments/payment_details.html', context)

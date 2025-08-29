@@ -1,114 +1,155 @@
 {% extends 'pages/portal_home.html' %}
 {% load static %}
+{% load mathfilters %}
 
 {% block title %}
 <title>Debtors Report</title>
 {% endblock title %}
 
-{% block favicon %}
-<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+{% block extra_head %}
 <link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
 <link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
-<link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
 
 <style>
     body {
         background-color: #f8f9fa;
     }
-    .container-fluid {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
+    .page-title-box {
+        background-color: #ffffff;
+        border-bottom: 1px solid #e9ecef;
+        padding: 1.5rem 1rem;
+        margin-bottom: 2rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     }
     .card {
         border-radius: 0.75rem;
+        box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05);
+        border: none;
     }
     .card-header {
-        background-color: #f0f2f5;
+        background-color: #ffffff;
         border-bottom: 1px solid #e9ecef;
-        border-top-left-radius: 0.75rem;
-        border-top-right-radius: 0.75rem;
+        font-weight: 600;
+        padding: 1.25rem 1.5rem;
+    }
+    .form-control, .form-select {
+        border-radius: 0.5rem;
+    }
+    .btn {
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
     }
     .table thead th {
+        background-color: #f5f5f5;
         font-size: 0.75rem;
         text-transform: uppercase;
         color: #6c757d;
+        border-bottom: 2px solid #dee2e6;
     }
     .table tbody td {
         vertical-align: middle;
         font-size: 0.9rem;
     }
-    .text-red-600 { color: #dc3545 !important; }
-    .text-green-700 { color: #198754 !important; }
-    .text-yellow-700 { color: #ffc107 !important; }
-    .text-blue-700 { color: #0d6efd !important; }
+    .text-danger { color: #dc3545 !important; font-weight: bold; }
+    .export-section {
+        background-color: #f0f2f5;
+        border-top: 1px solid #e9ecef;
+        padding: 1.5rem;
+        border-bottom-left-radius: 0.75rem;
+        border-bottom-right-radius: 0.75rem;
+    }
+    /* Django Paginator Styling */
+    .pagination .page-item .page-link {
+        border-radius: 0.5rem !important;
+        margin: 0 3px;
+    }
 </style>
-{% endblock favicon %}
+{% endblock extra_head %}
 
 {% block content_body %}
 <div class="content-body">
     <div class="container-fluid">
-
-        {# School Logo Section #}
         
-
-        <h2 class="text-center mb-4">Debtors Report</h2>
-
-        {# Messages Display #}
-        {% if messages %}
-            <div class="mb-4">
-                {% for message in messages %}
-                    <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %}" role="alert">
-                        {{ message }}
-                    </div>
-                {% endfor %}
+        <div class="page-title-box d-flex align-items-center justify-content-between">
+            <div>
+                <h4 class="mb-0">Debtors Report</h4>
+                <p class="text-muted mb-0">View and filter outstanding student balances.</p>
             </div>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="#">Payments</a></li>
+                    <li class="breadcrumb-item active">Debtors Report</li>
+                </ol>
+            </div>
+        </div>
+
+        {% if messages %}
+        <div class="alert-container mb-4">
+            {% for message in messages %}
+            <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
         {% endif %}
 
-        {# Filter Debtors Form #}
         <div class="card shadow-sm mb-4">
             <div class="card-header">
-                <h3 class="card-title mb-0">Filter Debtors</h3>
+                <h5 class="card-title mb-0">Filter Report</h5>
             </div>
             <div class="card-body">
                 <form method="get" class="row g-3 align-items-end">
-                    <div class="col-md-4">
-                        <label for="term-filter" class="form-label">Term</label>
-                        <select name="term" id="term-filter" class="form-select">
-                            <option value="">-- All Terms --</option>
-                            {% for term in terms %}
-                                <option value="{{ term.id }}" {% if selected_term_id|stringformat:"s" == term.id|stringformat:"s" %}selected{% endif %}>
-                                    {{ term.name }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="session-filter" class="form-label">Session</label>
+                    <div class="col-md-4 col-lg-3">
+                        <label for="session-filter" class="form-label text-muted">Session</label>
                         <select name="session" id="session-filter" class="form-select">
                             <option value="">-- All Sessions --</option>
                             {% for session in sessions %}
-                                <option value="{{ session.id }}" {% if selected_session_id|stringformat:"s" == session.id|stringformat:"s" %}selected{% endif %}>
+                                <option value="{{ session.id }}" {% if selected_session == session.id %}selected{% endif %}>
                                     {{ session.name }}
                                 </option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-4 d-grid">
-                        <button type="submit" class="btn btn-primary mb-2">
-                            Apply Filter
+                    <div class="col-md-4 col-lg-3">
+                        <label for="term-filter" class="form-label text-muted">Term</label>
+                        <select name="term" id="term-filter" class="form-select">
+                            <option value="">-- All Terms --</option>
+                            {% for term in terms %}
+                                <option value="{{ term.id }}" {% if selected_term == term.id %}selected{% endif %}>
+                                    {{ term.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <label for="category-filter" class="form-label text-muted">Category</label>
+                        <select name="category" id="category-filter" class="form-select">
+                            <option value="">-- All Categories --</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}" {% if selected_category == category.id %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12 col-lg-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-fill">
+                            <i class="fas fa-filter me-2"></i>Apply Filter
                         </button>
-                        <a href="{% url 'payments:debtors_report' %}" class="btn btn-outline-secondary">
-                            Clear Filters
+                        <a href="{% url 'payments:debtors_report' %}" class="btn btn-outline-secondary flex-fill">
+                            <i class="fas fa-sync-alt me-2"></i>Clear
                         </a>
                     </div>
                 </form>
             </div>
         </div>
 
-        {# Debtors Table #}
         <div class="card shadow-lg">
             <div class="card-header">
-                <h3 class="card-title mb-0">Current Debtors Overview</h3>
+                <h5 class="card-title mb-0">Current Debtors</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -118,46 +159,83 @@
                                 <th>S/N</th>
                                 <th scope="col">Student Name</th>
                                 <th scope="col">Student Class</th>
+                                <th scope="col">Category</th>
                                 <th scope="col">Term</th>
                                 <th scope="col">Session</th>
                                 <th scope="col">Amount Owing</th>
-                                <th scope="col">Last Updated</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% if debtors %}
                                 {% for debtor in debtors %}
-                                    <tr>
-                                        <td>{{forloop.counter}}</td>
-                                        <td>{{ debtor.student_name }}</td>
-                                        <td>{{ debtor.student_class }}</td>
-                                        <td>{{ debtor.term_name }}</td>
-                                        <td>{{ debtor.session_name }}</td>
-                                        <td class="text-danger fw-bold">
-                                            ${{ debtor.balance|floatformat:2 }}
-                                        </td>
-                                        <td class="text-muted">
-                                            {{ debtor.last_updated|date:"M d, Y H:i" }}
-                                        </td>
-                                    </tr>
+                                <tr>
+                                    <td>{{ debtors.start_index|add:forloop.counter0 }}</td>
+                                    <td>{{ debtor.student_name }}</td>
+                                    <td>{{ debtor.student_class }}</td>
+                                    <td>{{ debtor.payment_category_name }}</td>
+                                    <td>{{ debtor.term_name }}</td>
+                                    <td>{{ debtor.session_name }}</td>
+                                    <td class="text-danger">
+                                        ₦{{ debtor.balance|floatformat:2 }}
+                                    </td>
+                                </tr>
                                 {% endfor %}
                             {% else %}
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted">
-                                        No students currently owing money for the selected criteria.
+                                    <td colspan="7" class="text-center text-muted py-5">
+                                        <div class="h5 my-3">No students with outstanding balances found.</div>
+                                        <p>Try adjusting your filters or check back later.</p>
                                     </td>
                                 </tr>
                             {% endif %}
                         </tbody>
                     </table>
                 </div>
+            </div>
+            
+            {% if debtors.has_other_pages %}
+            <nav class="mt-4 px-3" aria-label="Debtors navigation">
+                <ul class="pagination justify-content-center">
+                    {% if debtors.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{{ query_string }}&page={{ debtors.previous_page_number }}">&laquo; Previous</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&laquo; Previous</span>
+                        </li>
+                    {% endif %}
 
-                <div class="mb-3 d-flex justify-content-between align-items-center p-3">
-                    <h4>CSV Export</h4>
-                    <a href="{% url 'payments:debtors_report_csv' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn btn-success" target="_blank">
-                        <i class="fas fa-file-csv"></i> Export CSV
-                    </a>
-                </div>
+                    {% for i in debtors.paginator.page_range %}
+                        {% if debtors.number == i %}
+                            <li class="page-item active" aria-current="page">
+                                <span class="page-link">{{ i }}</span>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{{ query_string }}&page={{ i }}">{{ i }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if debtors.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{{ query_string }}&page={{ debtors.next_page_number }}">Next &raquo;</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Next &raquo;</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            <div class="export-section d-flex justify-content-between align-items-center">
+                <span class="text-muted">Export this report for record-keeping.</span>
+                <a href="{% url 'payments:debtors_report_csv' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn btn-success" target="_blank">
+                    <i class="fas fa-file-csv me-2"></i>Export CSV
+                </a>
             </div>
         </div>
     </div>
@@ -168,14 +246,17 @@
 <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
 <script src="{% static 'pages/vendor/chart.js/Chart.bundle.min.js' %}"></script>
 <script src="{% static 'pages/vendor/apexchart/apexchart.js' %}"></script>
-
-<script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
-<script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
-
 <script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
-
 <script src="{% static 'pages/js/custom.min.js' %}"></script>
 <script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
 <script src="{% static 'pages/js/demo.js' %}"></script>
 <script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
+
+<script>
+    $(document).ready(function() {
+        // Initialize Nice Select for dropdowns
+        $('select').niceSelect();
+        // DataTables initialization removed to prevent conflict with Django Paginator
+    });
+</script>
 {% endblock scripts %}

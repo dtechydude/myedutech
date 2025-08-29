@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.db.models import Sum, Max, F
 from students.models import Student
 from curriculum.models import Term, Session
-from payments.models import Payment, StudentAccountLedger # Assuming Fee is related to CategoryFee/StudentFee
+from payments.models import Payment, StudentAccountLedger, PaymentCategory, StudentFee# Assuming Fee is related to CategoryFee/StudentFee
 from datetime import datetime, timedelta
 import os
 from io import BytesIO
@@ -11,6 +11,8 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 from django.conf import settings
 from xhtml2pdf import pisa
+from django.db.models import Prefetch, Q
+
 
 # def get_debtors_data(term_id, session_id):
 #     """
@@ -130,50 +132,97 @@ from xhtml2pdf import pisa
 #     return debtors_list
 
 
-def get_debtors_data(term_id=None, session_id=None):
+def get_debtors_data(term_id=None, session_id=None, category_id=None):
     """
-    Retrieves debtor data based on the 'balance' field in StudentAccountLedger.
-    Returns a list of dictionaries, where each dictionary represents a debtor
-    with an outstanding balance.
+    Retrieves debtor data by querying the StudentAccountLedger model and aggregating.
+    This function returns a list of dictionaries.
     """
-    # Start with all StudentAccountLedger entries
-    # Filter for entries where the balance is greater than 0 (i.e., they owe money)
-    debtor_accounts = StudentAccountLedger.objects.filter(balance__gt=0).select_related(
-        'student__user',
-        'student__current_class', # Assuming student_class is a ForeignKey on Student
-        'term',
-        'session'
+    
+    # Start by filtering StudentAccountLedger for debtors
+    debtor_accounts = StudentAccountLedger.objects.filter(
+        balance__gt=0
     )
-
+    
+    # Apply filters from the GET request
     if term_id:
         debtor_accounts = debtor_accounts.filter(term_id=term_id)
     if session_id:
         debtor_accounts = debtor_accounts.filter(session_id=session_id)
-
-    # Order the results
-    debtor_accounts = debtor_accounts.order_by(
-        'student__user__last_name',
-        'student__user__first_name',
-        'session__name',
-        'term__name'
+        
+    # Use select_related for the direct foreign keys on the StudentAccountLedger model
+    debtor_accounts = debtor_accounts.select_related(
+        'student__user',
+        'student__current_class',
+        'term',
+        'session'
+    )
+    
+    # Prefetch the related payments from the Student model
+    payments_prefetch_queryset = Payment.objects.filter(status='completed')
+    if category_id:
+        # If a category is filtered, we need to filter payments by that category
+        payments_prefetch_queryset = payments_prefetch_queryset.filter(payment_category_id=category_id)
+        
+    # Now, prefetch the payments from the student object related to the ledger
+    debtor_accounts = debtor_accounts.prefetch_related(
+        Prefetch(
+            'student__payments', 
+            queryset=payments_prefetch_queryset.select_related('payment_category'),
+            to_attr='relevant_payments_for_student'
+        )
     )
 
+    # Convert the QuerySet to a list of dictionaries for easier template rendering
     debtors_list = []
-    for account_entry in debtor_accounts:
-        debtors_list.append({
-            'student_name': account_entry.student.get_full_name(),
-            'student_class': account_entry.student.current_class.name if account_entry.student.current_class else 'N/A',
-            'term_name': account_entry.term.name if account_entry.term else 'N/A',
-            'session_name': account_entry.session.name if account_entry.session else 'N/A',
-            'balance': account_entry.balance,
-            # If your StudentAccountLedger model only stores balance,
-            # you might not have 'total_amount_due' or 'amount_paid' readily available here.
-            # These would need to be calculated from a different model (e.g., individual Fee and Payment models)
-            # or pre-calculated and stored if your ledger is a summary.
-            # For now, we'll omit them if they aren't direct fields.
-        })
-    return debtors_list
+    
+    for account in debtor_accounts:
+        # It's better to calculate the balance for the specific category here if a category is filtered
+        if category_id:
+            # We need to get the specific student fee for this category, term, and session.
+            try:
+                # Use the 'student_fees' related_name you have on the model
+                student_fee_record = account.student.student_fees.get(
+                    category_fee__payment_category_id=category_id,
+                    term=account.term,
+                    session=account.session
+                )
+                total_charges_for_category = student_fee_record.amount_due
+            # CORRECTED: Catch the specific exception from the model
+            except StudentFee.DoesNotExist:
+                total_charges_for_category = Decimal('0.00')
 
+            # Now sum up payments for this category
+            total_paid_for_category = sum(
+                p.amount_received for p in account.student.relevant_payments_for_student
+                if p.payment_category_id == int(category_id) and p.term_id == account.term_id and p.session_id == account.session_id
+            )
+            
+            outstanding_balance = total_charges_for_category - total_paid_for_category
+            
+            # If the outstanding balance is zero or less, we don't want to show this record
+            if outstanding_balance <= 0:
+                continue
+            
+            # Get the category name for display
+            category_name = PaymentCategory.objects.get(pk=category_id).name
+        else:
+            # No category filter, use the balance from the ledger
+            outstanding_balance = account.balance
+            category_name = "All Categories"
+            
+        debtors_list.append({
+            'student_name': account.student.get_full_name(),
+            'student_class': account.student.current_class.name if account.student.current_class else 'N/A',
+            'term_name': account.term.name,
+            'session_name': account.session.name,
+            'balance': outstanding_balance,
+            'payment_category_name': category_name,
+        })
+        
+    # Sort the list of dictionaries
+    debtors_list.sort(key=lambda x: (x['student_name'], x['session_name'], x['term_name']))
+    
+    return debtors_list
 
 
 

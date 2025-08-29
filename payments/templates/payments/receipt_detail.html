@@ -140,7 +140,8 @@
                                 {{ receipt.payment.payment_category.name|default:"General Payment" }}
                                 <p class="text-muted mb-0" style="font-size: 0.9rem;">
                                     {% if receipt.payment.term %}Term: {{ receipt.payment.term.name }} - {% endif %}
-                                    {% if receipt.payment.session %}Session: {{ receipt.payment.session.name }}{% endif %}
+                                    {% if receipt.payment.session %}Session: {{ receipt.payment.session.name }}{% endif %} - 
+
                                 </p>
                                 {% if receipt.payment.is_installment %}
                                     <p class="text-muted mb-0" style="font-size: 0.9rem;">Installment {{ receipt.payment.installment_number|default:"-" }} of {{ receipt.payment.total_installments|default:"-" }}</p>

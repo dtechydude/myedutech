@@ -1,0 +1,148 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Custom CSS to define the orange color and other styles */
+        .text-orange {
+            color: #ff8c00; /* A vibrant orange shade */
+        }
+        .btn-outline-primary {
+            border-color: #0d6efd;
+            color: #0d6efd;
+        }
+        .btn-outline-primary:hover {
+            background-color: #0d6efd;
+            color: #fff;
+        }
+        .card-title.text-primary {
+            color: #0d6efd !important;
+        }
+        .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        .btn-primary:hover {
+            background-color: #0a58ca;
+            border-color: #0a58ca;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container text-center pt-4 pb-2">
+    <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="School Logo" class="img-fluid" style="max-height: 80px;">
+    </div>
+
+<div class="container mt-3">
+    <div class="row">
+        <div class="col-12 text-center mb-4">
+            <h1 class="display-4 fw-bold text-primary">{{ title }}</h1>
+            <p class="lead text-muted">A comprehensive overview of payment records.</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-lg mb-5 rounded-3 border-0">
+                <div class="card-body p-4 p-md-5">
+                    <h5 class="card-title text-center text-primary mb-4 fw-bold">Summary</h5>
+                    <ul class="list-group list-group-flush border rounded-3 overflow-hidden">
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-light">
+                            <span class="fw-bold text-dark">Student:</span> 
+                            <span class="text-orange">{{ student.first_name }} {{ student.last_name }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-dark">Category:</span> 
+                            <span class="text-orange">{{ payment_category.name }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-light">
+                            <span class="fw-bold text-dark">Term:</span> 
+                            <span class="text-orange">{{ term.name }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-dark">Session:</span> 
+                            <span class="text-orange">{{ session.name }}</span>
+                        </li>
+                    </ul>
+                    <hr class="my-4">
+                    <div class="row text-center text-dark fw-bold">
+                        <div class="col-6 mb-3">
+                            <div class="card bg-info bg-opacity-10 py-3 rounded-3 border-info">
+                                <small class="text-info">Total Due</small>
+                                <h4 class="text-orange fw-bolder mt-1">N{{ total_due|floatformat:2 }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="card bg-success bg-opacity-10 py-3 rounded-3 border-success">
+                                <small class="text-success">Total Amount Received</small>
+                                <h4 class="text-orange fw-bolder mt-1">N{{ total_amount_received|floatformat:2 }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="card bg-danger bg-opacity-10 py-3 rounded-3 border-danger">
+                                <small class="text-danger">Total Discount</small>
+                                <h4 class="text-orange fw-bolder mt-1">N{{ total_discount_amount|floatformat:2 }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="card bg-warning bg-opacity-10 py-3 rounded-3 border-warning">
+                                <small class="text-warning">Balance</small>
+                                <h4 class="text-orange fw-bolder mt-1">N{{ balance|floatformat:2 }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <h5 class="mt-4 mb-3 text-primary fw-bold">Individual Payments</h5>
+            <div class="table-responsive rounded-3 shadow-sm border">
+                <table class="table table-striped table-hover mb-0">
+                    <thead class="bg-primary text-white">
+                        <tr>
+                            <th>Date</th>
+                            <th>Amount Paid</th>
+                            <th>Payment Method</th>
+                            <th>Status</th>
+                            <th>Recorded By</th>
+                            <th>Receipt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td>{{ payment.payment_date|date:"F d, Y" }}</td>
+                            <td class="text-orange fw-bold">N{{ payment.amount_received|floatformat:2 }}</td>
+                            <td>{{ payment.get_payment_method_display }}</td>
+                            <td>{{ payment.get_status_display }}</td>
+                            <td>{{ payment.recorded_by.first_name }} {{ payment.recorded_by.last_name }}</td>
+                            <td>
+                                <a href="{% url 'payments:receipt' payment.pk %}" class="btn btn-sm btn-outline-primary">View Receipt</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No individual payment records found. 😞</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <a href="{% url 'payments:payment_history' %}" class="btn btn-primary mt-4 d-block d-md-inline-block">Back to History</a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
