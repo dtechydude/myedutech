@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CBT Exam Request</title>
+</head>
+<body>
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd;">
+        <h2 style="color: #007bff;">New CBT Exam Request Received</h2>
+        <p>A new CBT exam request has been submitted by a teacher. Here are the details:</p>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <tr style="background-color: #f2f2f2;">
+                <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Teacher Name:</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">{{ teacher_name }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Teacher Email:</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">{{ user_email }}</td>
+            </tr>
+            <tr style="background-color: #f2f2f2;">
+                <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Subject:</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">{{ subject }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Class/Level:</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">{{ class_level }}</td>
+            </tr>
+            <tr style="background-color: #f2f2f2;">
+                <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Proposed Date:</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">{{ proposed_date }}</td>
+            </tr>
+        </table>
+
+        {% if details %}
+        <h4 style="color: #333; margin-top: 20px;">Additional Details:</h4>
+        <p style="padding: 10px; border: 1px solid #ddd; background-color: #f9f9f9;">
+            {{ details|linebreaksbr }}
+        </p>
+        {% endif %}
+
+        <p style="margin-top: 30px;">
+            Thank you,<br>
+            The KwikSchools Team
+        </p>
+    </div>
+</body>
+</html>

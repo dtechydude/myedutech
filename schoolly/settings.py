@@ -173,6 +173,13 @@ LOGIN_REDIRECT_URL = 'pages:portal-home' # Redirect students to their dashboard 
 LOGOUT_REDIRECT_URL = '/' # Redirect to home page after logout (or login page)
 LOGIN_URL = '/users/login/' # URL name of your login page
 
+# Email settings for the CBT app
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'no-reply@yourdomain.com'
+ADMIN_EMAIL = 'admin@kwikschools.com'
+
+ADMIN_EMAIL = 'contact@kwikschools.com'
+DEFAULT_FROM_EMAIL = 'no-reply@yourdomain.com'
 
 # # Email Settings
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

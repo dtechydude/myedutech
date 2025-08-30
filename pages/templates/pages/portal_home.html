@@ -838,11 +838,26 @@
 					</ul>
 					</li>
 					
-					<li><a href="{% url 'cbt:cbt-home' %}" class="" aria-expanded="false">
-							<i class="flaticon-013-checkmark"></i>
-							<span class="nav-text">CBT </span>
-						</a>						
-					
+					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
+						<i class="flaticon-013-checkmark"></i>
+							<span class="nav-text">CBT</span>
+						</a>
+						<ul aria-expanded="false">							
+						
+							{% if user.is_authenticated and user.student %}
+							<li><a href="{% url 'cbt:cbt_student_home' %}"> Your CBT Exams</a></li>
+							
+							{% elif user.is_authenticated and user.teacher %}
+							<li><a href="{% url 'cbt:cbt-teacher_order' %}">Set CBT Exams</a></li>
+							
+							{% elif user.is_authenticated and user.is_superuser or user.is_staff %}
+							<li><a href="{% url 'cbt:cbt-home' %}"> Current CBT Subscription</a></li>
+							<li><a href="{% url 'cbt:cbt-order' %}">Order customized CBT Platform</a></li>									
+							<li><a href="{% url 'cbt:cbt_teacher_order' %}">Teacher CBT Page</a></li>
+							<li><a href="{% url 'cbt:cbt_student_home' %}"> Student CBT Page</a></li>
+									
+							{% endif %}
+						</ul>					
 					</li>
 					
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
