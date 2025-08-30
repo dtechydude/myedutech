@@ -31,7 +31,8 @@
         margin-bottom: 1.5rem; /* Reduced margin */
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        /* Updated: use grid for better control or just change flexbox justify property */
+        /* Updated: Removed justify-content: space-between */
     }
     .logo {
         font-size: 1.5rem; /* Slightly smaller on all screens */
@@ -123,6 +124,25 @@
         margin-top: auto;
     }
 
+    /* Custom Header Styles */
+    .custom-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .custom-header .back-btn {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .custom-header .logo-container {
+      display: flex;
+      justify-content: center;
+      flex-grow: 1; /* Allows the logo container to take up available space */
+    }
+    
     /* Media queries for larger screens */
     @media (min-width: 768px) {
         .header {
@@ -161,17 +181,43 @@
             padding: 1rem 2rem;
             font-size: 1rem;
         }
+
+        /* Updated: Responsive Header for medium and up screens */
+        .custom-header {
+          display: grid;
+          grid-template-columns: 1fr auto 1fr; /* Creates three columns */
+          align-items: center;
+          padding: 1.5rem 2rem;
+        }
+        .custom-header .back-btn {
+          position: static;
+          transform: none;
+          justify-self: start; /* Aligns the button to the start of its column */
+        }
+        .custom-header .logo-container {
+          grid-column: 2 / 3; /* Centers the logo in the middle column */
+        }
+        .custom-header .placeholder {
+          grid-column: 3 / 4; /* Placeholder to keep the logo centered */
+        }
     }
 </style>
 </head>
 <body>
 
 <div class="main-content">
-    <header class="header d-flex justify-content-between align-items-center">
-        <a href="/dashboard/" class="logo"><img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="" width="80"></a>
-        <a href="{% url 'payments:payment_history' %}" class="btn btn-outline-primary">
-            <i class="fas fa-arrow-left me-2"></i>Back to Payment History
-        </a>
+    <header class="header custom-header">
+        <div class="back-btn">
+          <a href="{% url 'payments:payment_history' %}" class="btn btn-outline-primary">
+              <i class="fas fa-arrow-left me-2"></i> Back To Payment History
+          </a>
+        </div>
+        <div class="logo-container">
+          <a href="/dashboard/" class="logo">
+            <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="KwikSchools Logo" width="100" height="auto">
+          </a>
+        </div>
+        <div class="placeholder d-none d-md-block"></div>
     </header>
 
     <div class="container dashboard-container mt-5">

@@ -8,7 +8,6 @@
     <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
 
     <script src="https://cdn.tailwindcss.com"></script>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-ieCDL2t5O4kO0B49t0aR0p6n/yXn7d3F/u3j5Zg91q2K+lO6XgP3t1h52B41H4c1c9pQ7E+lG/O7l3V8gA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -48,25 +47,32 @@
             padding: 0.5rem 0.75rem;
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
+        @media (max-width: 639px) {
+            header .flex-row {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased">
 
 <div class="min-h-screen py-8">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <header class="flex flex-col sm:flex-row justify-between items-center mb-6">
-            <div class="mb-4 sm:mb-0">
-                <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="KwikSchools Logo" class="h-10">
+        <header class="relative flex justify-center items-center mb-6">
+            <div class="absolute left-0">
+                <a href="/dashboard/" class="text-blue-600 hover:text-blue-800 transition-colors duration-300 font-semibold flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Dashboard
+                </a>
             </div>
-            <a href="/dashboard/" class="text-blue-600 hover:text-blue-800 transition-colors duration-300 font-semibold flex items-center">
-                <i class="fas fa-arrow-left mr-2"></i>
-                Back to Dashboard
-            </a>
+            <div>
+                <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="KwikSchools Logo" class="h-10" style="height: auto; width:100px;">
+            </div>
         </header>
 
-        <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800 text-center mb-8">
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-800 text-center mb-8">
             <i class="fas fa-chart-bar text-blue-500 mr-3"></i> Total Payments Reports
-        </h1>
+        </h2>
 
         {% if messages %}
             <div class="mb-6">
@@ -164,6 +170,7 @@
                         <tr>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 S/N
+                            </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Student Name (ID)
                             </th>
@@ -188,7 +195,7 @@
                         {% if payment_breakdown %}
                             {% for item in payment_breakdown %}
                                 <tr>
-                                    <td>{{ forloop.counter }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ forloop.counter }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         {{ item.student__first_name }} {{ item.student__last_name }} ({{ item.student__USN }})
                                     </td>
@@ -211,7 +218,7 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="6" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                                <td colspan="7" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
                                     No payment breakdown found for the selected filters.
                                 </td>
                             </tr>
@@ -239,13 +246,12 @@
 
         // Initialize DataTables on the main payments table
         $('#payments-table').DataTable({
-            // Use client-side features
             "paging": true,
             "searching": true,
             "ordering": true,
             "info": true,
             "responsive": true,
-            "pageLength": 10, // Set the default number of records per page
+            "pageLength": 10,
             "language": {
                 "search": "Search Payments:",
                 "emptyTable": "No payment records found.",
