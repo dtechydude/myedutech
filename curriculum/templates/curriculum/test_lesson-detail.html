@@ -40,7 +40,7 @@
                                         <h5 class="card-title mb-3">Lesson Creator 🧑‍🎓</h5>
                                         <div class="d-flex align-items-center">
                                             <div class="flex-shrink-0">
-                                                <img src="{% static 'pages/images/avatar/1.jpg' %}" alt="Avatar" class="rounded-circle" style="width: 50px; height: 50px;">
+                                                <img src="{% static 'pages/images/avatar/1.png' %}" alt="Avatar" class="rounded-circle" style="width: 50px; height: 50px;">
                                             </div>
                                             <div class="flex-grow-1 ms-3">
                                                 <h6 class="mb-0">{{ lessons.created_by.get_full_name }}</h6>
@@ -80,7 +80,7 @@
                                     
                                     <h5 class="mt-4 mb-3">Teacher's Highlights</h5>
                                     <div class="card p-3 mb-4 bg-light border-0">
-                                        <div class="text-break">{{ lessons.comment|safe|linebreaks }}</div>
+                                        <div class="text-break" style="color:black;">{{ lessons.comment|safe|linebreaks }}</div>
                                     </div>
 
                                     {% if lessons.ppt %}
@@ -114,7 +114,7 @@
                                         {% for comment in lessons.comments.all %}
                                             <div class="d-flex align-items-start mb-4">
                                                 <div class="flex-shrink-0 me-3">
-                                                    <img src="{% static 'pages/images/avatar/comment-avatar.png' %}" alt="Commenter Avatar" class="rounded-circle" style="width: 40px; height: 40px;">
+                                                    <img src="{% static 'pages/images/avatar/2.png' %}" alt="Commenter Avatar" class="rounded-circle" style="width: 40px; height: 40px;">
                                                 </div>
                                                 <div class="flex-grow-1">
                                                     <h6 class="mb-1">{{ comment.author }} <small class="text-muted fw-normal">on {{ comment.date_added|date:"F j, Y" }}</small></h6>
@@ -124,7 +124,7 @@
                                                         {% for reply in comment.replies.all %}
                                                             <div class="d-flex align-items-start mt-3">
                                                                 <div class="flex-shrink-0 me-3">
-                                                                    <img src="{% static 'pages/images/avatar/reply-avatar.png' %}" alt="Reply Avatar" class="rounded-circle" style="width: 30px; height: 30px;">
+                                                                    <img src="{% static 'pages/images/avatar/2.png' %}" alt="Reply Avatar" class="rounded-circle" style="width: 30px; height: 30px;">
                                                                 </div>
                                                                 <div class="flex-grow-1">
                                                                     <h6 class="mb-1 text-primary">{{ reply.author }} <small class="text-muted fw-normal">on {{ reply.date_added|date:"F j, Y" }}</small></h6>
