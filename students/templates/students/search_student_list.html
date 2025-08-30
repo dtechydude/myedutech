@@ -1,161 +1,121 @@
 {% extends 'pages/portal_home.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    {% block title %}
-	<title>Student Search</title>
-    {% endblock title %}
-    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
-	
-	<!-- FAVICONS ICON -->
-    {% block favicon %}
-	<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
-	<link href="{% static 'pages/vendor/lightgallery/css/lightgallery.min.css' %}" rel="stylesheet">
-    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
-    {% endblock %}
+{% block title %}
+<title>Student Search</title>
+{% endblock title %}
 
-</head>
-<body></body>
+{% block head %}
+<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+<link href="{% static 'pages/vendor/lightgallery/css/lightgallery.min.css' %}" rel="stylesheet">
+<link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+{% endblock %}
 
-    <!--*******************
-        Preloader start
-    ********************-->
-   <div id="preloader">
-		<div class="lds-ripple">
-			<div></div>
-			<div></div>
-		</div>
-    </div>
-    <!--*******************
-        Preloader end
-    ********************-->
-
-
-    <!--**********************************
-        Main wrapper start
-    ***********************************-->
-    <div id="main-wrapper">
-
-        <!--**********************************
-            Nav header start
-        ***********************************-->
-       
-        <!--**********************************
-            Nav header end
-        ***********************************-->
-		
-		<!--**********************************
-            Chat box start
-        ***********************************-->
-		
-		<!--**********************************
-            Chat box End
-        ***********************************-->
-				
-        <!--**********************************
-            Header start
-        ***********************************-->
-                            
-        <!--**********************************
-            Header end ti-comment-alt
-        ***********************************-->
-
-        <!--**********************************
-            Sidebar start
-        ***********************************-->
-       
-        <!--**********************************
-            Sidebar end
-        ***********************************-->
-
-        <!--**********************************
-            Content body start
-        ***********************************-->
-
-    {% block content_body %}
-    <div class="content-body">
-        <div class="container-fluid">
-            
-            
-            <div class="row page-titles">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item active"><a href="javascript:void(0)">Students Search</a></li>
-                </ol>
-            </div>
-            <!-- row -->
-            <div class="row">
-                <div class="col-lg-12">
-  
-    {% if user.is_authenticated and user.is_superuser or user.is_staff or user.teacher %}
-    <div class="container"><h1></h1></div>
-<div class="container">
-    <div class="card">
-        <div class="card-header">
-          <span><strong>Search Students </strong></span>- Use the search form to filter for students by : <em>first name, last name, teacher's name or current class.</em>
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">Students Search</a></li>
+            </ol>
         </div>
-        <div class="card-body">
- 
-    <form action="{% url 'students:search' %}" class="form-inline" method="get">
-       <div class="form-group mb-8">
-       
-            <h5>{% if first_name %}{{ standard.name }}{% else %} Search All Student Record {% endif %}</h5>
-       </div>
-       <div class="form-group mx-sm-3 mb-2">
-        <label for="" class="sr-only">search</label>
-        <input name="search" type="" class="form-control" id="" placeholder="Keyword">
-        </div>
-        <button type="submit" class="btn btn-success btn-md mb-2">Search</button>
-   </form>
-   </div>
-  {% endif %}
-<!-- Page Paginator start -->
-<div class="card-body">
-    
-        {% if student.has_other_pages %}
-        {% if student.has_previous %}
-        <a class="btn btn-outline-info mb-4" href="?page={{ studentlist.previous_page_number }}">&laquo;</a>
-        {% else %}
-        <a class="btn btn-outline-info mb-4" href="">&raquo;</a>
-
-        {% endif %}
-        {% for i in student.paginator.page_range %}
-        {% if student.number == i %}
-
-        <a class="btn btn-info mb-4" href="">{{ i }}</a>
-        {% else %}
-        <a class="btn btn-outline-info mb-4" href="?page={{ i }}">{{ i }}</a>
-        {% endif %}
-        {% endfor %}
-        {% if student.has_next %}
-        <a class="btn btn-outline-info mb-4" href="?page={{ studentlist.next_page_number }}">&raquo;</a>
-        {% else %}
-
-        <a class="btn btn-outline-info mb-4" href="">&raquo;</a>
-        {% endif %}
         
-    </div>
-        <!-- Page Paginator end -->
-
-
-</div>
-</div>
-{% endif %}
-
-
-											</div>
-										</div>
-									</div>
-                                </div>
+        <div class="row">
+            <div class="col-lg-12">
+                {% if user.is_authenticated and user.is_superuser or user.is_staff or user.teacher %}
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Search Students</h4>
+                        <p class="text-muted mb-0">Use the search form to filter for students by: <em>first name, last name, teacher's name or current class.</em></p>
+                    </div>
+                    <div class="card-body">
+                        <form action="{% url 'students:search' %}" class="form-inline d-flex align-items-center mb-4" method="get">
+                            <div class="form-group flex-grow-1 me-3">
+                                <label for="search-input" class="sr-only">Search</label>
+                                <input name="search" type="text" class="form-control" id="search-input" placeholder="Keyword" value="{{ request.GET.search }}">
                             </div>
-                        </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary btn-md">
+                                    <i class="fas fa-search me-2"></i>Search
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Search Results</h4>
+                    </div>
+                    <div class="card-body">
+                        {% if students %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>USN</th>
+                                        <th>Student Name</th>
+                                        <th>Class</th>
+                                        <th>Current Teacher</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in students %}
+                                    <tr>
+                                        <td>{{ student.USN }}</td>
+                                        <td>{{ student.first_name }} {{ student.last_name }}</td>
+                                        <td>{{ student.current_class|default:"N/A" }}</td>
+                                        <td>{{ student.teacher|default:"N/A" }}</td>
+                                        <td>
+                                            <a href="{% url 'students:student_detail' student.id %}" class="btn btn-sm btn-info">View</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-center text-muted">No students found matching your search criteria.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if students.has_other_pages %}
+                <div class="d-flex justify-content-center mt-4">
+                    <nav>
+                        <ul class="pagination">
+                            {% if students.has_previous %}
+                                <li class="page-item"><a class="page-link" href="?page={{ students.previous_page_number }}&search={{ request.GET.search }}">&laquo; Previous</a></li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">&laquo; Previous</span></li>
+                            {% endif %}
+                            
+                            {% for i in students.paginator.page_range %}
+                                {% if students.number == i %}
+                                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                                {% else %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ i }}&search={{ request.GET.search }}">{{ i }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if students.has_next %}
+                                <li class="page-item"><a class="page-link" href="?page={{ students.next_page_number }}&search={{ request.GET.search }}">Next &raquo;</a></li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+                
+                {% else %}
+                <div class="alert alert-warning">
+                    You do not have permission to view this page.
+                </div>
+                {% endif %}
             </div>
         </div>
+    </div>
+</div>
 {% endblock content_body %}
-
-</body>
-
-</html>
