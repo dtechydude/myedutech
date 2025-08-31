@@ -5,88 +5,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bus Pass - {{ enrollment.student.full_name }}</title>
+    <title>Bus Pass - {% if school_info %}{{ school_info.name }}{% else %}Your School Name{% endif %}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: Arial, sans-serif;
-            margin: 20px;
+        body { background-color: #f8f9fa; font-family: Arial, sans-serif; margin: 20px; }
+        .bus-pass-card { max-width: 600px; margin: 0 auto; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); background: linear-gradient(135deg, #007bff, #0056b3); color: white; position: relative; }
+        .pass-header { text-align: center; padding: 20px; background-color: rgba(0, 0, 0, 0.2); }
+        .pass-header h2 { font-weight: bold; margin-bottom: 5px; }
+        .pass-body { padding: 30px; background-color: white; color: #333; }
+        .pass-detail { border-bottom: 1px dashed #ccc; padding: 15px 0; }
+        .pass-detail:last-child { border-bottom: none; }
+        .pass-detail strong { display: block; color: #555; font-size: 0.9rem; }
+        .pass-detail span { font-size: 1.1rem; font-weight: bold; }
+        .pass-qr { text-align: center; margin-top: 20px; }
+        /* 🆕 Add this rule to style the QR code image */
+        .pass-qr img {
+            width: 100px; /* Adjust as desired, e.g., 80px, 120px */
+            height: 100px; /* Keep height same as width for square image */
+            display: block; /* Ensures it behaves like a block element for margin auto */
+            margin-left: auto;
+            margin-right: auto; /* Centers the image */
+            object-fit: contain; /* Ensures the whole image is visible without cropping */
         }
-        .bus-pass-card {
-            max-width: 600px;
-            margin: 0 auto;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            background: linear-gradient(135deg, #007bff, #0056b3);
-            color: white;
-            position: relative;
-        }
-        .pass-header {
-            text-align: center;
-            padding: 20px;
-            background-color: rgba(0, 0, 0, 0.2);
-        }
-        .pass-header h2 {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .pass-body {
-            padding: 30px;
-            background-color: white;
-            color: #333;
-        }
-        .pass-detail {
-            border-bottom: 1px dashed #ccc;
-            padding: 15px 0;
-        }
-        .pass-detail:last-child {
-            border-bottom: none;
-        }
-        .pass-detail strong {
-            display: block;
-            color: #555;
-            font-size: 0.9rem;
-        }
-        .pass-detail span {
-            font-size: 1.1rem;
-            font-weight: bold;
-        }
-        .pass-qr {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .pass-footer {
-            text-align: center;
-            padding: 15px;
-            font-size: 0.8rem;
-            color: #ccc;
-        }
-        .pass-stamp {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 2rem;
-            color: rgba(255, 255, 255, 0.5);
-            transform: rotate(15deg);
-        }
+        .pass-footer { text-align: center; padding: 15px; font-size: 0.8rem; color: #ccc; }
+        .pass-stamp { position: absolute; top: 20px; right: 20px; font-size: 2rem; color: rgba(255, 255, 255, 0.5); transform: rotate(15deg); }
+        .school-logo { max-width: 80px; height: auto; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div class="bus-pass-card">
     <div class="pass-header">
-        <i class="fas fa-bus fa-3x"></i>
-        <h2 class="mt-2">Student Bus Pass</h2>
-        <p>{{ enrollment.route.name }}</p>
+        {% if school_info %}
+            {% if school_info.logo %}
+                <img src="{{ school_info.logo.url }}" alt="{{ school_info.name }} Logo" class="school-logo">
+            {% endif %}
+            <h2 class="mt-2">{{ school_info.name }}</h2>
+            <p>Bus Pass</p>
+        {% else %}
+            <i class="fas fa-bus fa-3x"></i>
+            <h2 class="mt-2">Student Bus Pass</h2>
+            <p>Your School Name</p>
+        {% endif %}
+        
         <div class="pass-stamp">BUS PASS</div>
     </div>
     <div class="pass-body">
         <div class="pass-detail">
             <strong>Student Name</strong>
-            <span>{{ enrollment.student.full_name }}</span>
+            <span>{{ enrollment.student.get_full_name }}</span>
         </div>
         <div class="row">
             <div class="col-6">
@@ -98,7 +66,7 @@
             <div class="col-6">
                 <div class="pass-detail">
                     <strong>Bus Fee</strong>
-                    <span>${{ enrollment.route.bus_fee|floatformat:2 }}</span>
+                    <span>N{{ enrollment.route.bus_fee|floatformat:2 }}</span>
                 </div>
             </div>
         </div>
@@ -121,17 +89,25 @@
             {% if balance <= 0 %}
                 <span class="text-success">Paid in Full</span>
             {% else %}
-                <span class="text-danger">Balance: ${{ balance|floatformat:2 }}</span>
+                <span class="text-danger">Balance: N{{ balance|floatformat:2 }}</span>
             {% endif %}
         </div>
         <div class="pass-qr">
-            <img src="https://via.placeholder.com/150" alt="QR Code" class="img-fluid">
+            <img src="{% static 'pages/images/qr_code.jpg' %}" alt="QR Code" class="img-fluid">
             <p class="mt-2 text-muted" style="font-size:0.8rem;">Scan for verification</p>
         </div>
     </div>
     <div class="pass-footer">
         <p class="mb-0">This pass is valid for the specified session and term only.</p>
+        {% if school_info %}
+            <p>{{ school_info.address }} | {{ school_info.phone_number }} | {{ school_info.email }}</p>
+        {% endif %}
     </div>
+</div>
+<div class="text-center mt-4">
+    <button onclick="window.print()" class="btn btn-primary">
+        <i class="fas fa-print"></i> Print or Save as PDF
+    </button>
 </div>
 
 </body>

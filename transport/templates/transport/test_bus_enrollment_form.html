@@ -1,0 +1,50 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+<title>Bus Enrollment Form</title>
+{% endblock title %}
+
+{% block head %}
+<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock head %}
+
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="#">Transport</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">Bus Enrollment</a></li>
+            </ol>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white text-center">
+                        {% if student %}
+                            <h4 class="card-title text-white mb-0">🚌 Bus Enrollment for {{ student.name }}</h4>
+                        {% else %}
+                            <h4 class="card-title text-white mb-0">🚌 Enroll Student for Bus Service</h4>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {{ form|crispy }}
+                            <div class="d-grid mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-check-circle me-2"></i> Confirm Enrollment
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content_body %}

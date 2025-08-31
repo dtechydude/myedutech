@@ -99,9 +99,12 @@ class BusEnrollmentForm(forms.ModelForm):
         return cleaned_data
 
 class BusPaymentForm(forms.ModelForm):
-    """
-    Form to handle individual bus payments.
-    """
     class Meta:
         model = BusPayment
-        fields = ['amount_paid', 'payment_method']
+        fields = ('enrollment', 'amount_paid', 'payment_date', 'payment_method', 'short_note') 
+        labels = {
+            'short_note': 'Payment Notes',
+        }
+        widgets = {
+            'payment_date': forms.DateInput(attrs={'type': 'date'}),
+        }

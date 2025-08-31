@@ -110,7 +110,7 @@ class BusPayment(models.Model):
     """
     enrollment = models.ForeignKey(StudentOnRoute, on_delete=models.CASCADE, related_name='payments')
     amount_paid = models.DecimalField(max_digits=15, decimal_places=2, help_text='Amount paid for this transaction.')
-    payment_date = models.DateField(auto_now_add=True, verbose_name='Payment Date')
+    payment_date = models.DateField(verbose_name='Payment Date')  # The field is now editable
     is_approved = models.BooleanField(default=False, help_text="Check if this payment is confirmed.")
     
     PAYMENT_METHOD_CHOICES = [
@@ -121,6 +121,9 @@ class BusPayment(models.Model):
     ]
     payment_method = models.CharField(max_length=50, choices=PAYMENT_METHOD_CHOICES, blank=True, null=True,
                                       help_text="The method used for the payment.")
+    
+    short_note = models.CharField(max_length=255, blank=True, null=True, 
+                                  help_text="Any additional notes about the payment or payee.")
 
     def __str__(self):
         return f'Payment of {self.amount_paid} for {self.enrollment}'

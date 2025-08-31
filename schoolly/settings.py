@@ -91,6 +91,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'students.context_processors.student_context', # added by me after creating students/context_processor.py
+                'transport.context_processors.school_identity', # Add this line
+
             ],
         },
     },

@@ -1,98 +1,87 @@
+{% extends 'pages/portal_home.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
 
-<!DOCTYPE html>
-<html lang="en" class="h-100">
+{% block title %}
+<title>My Bus Route Details</title>
+{% endblock title %}
 
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    .card-body p {
+        font-size: 1.1em;
+        margin-bottom: 0.5em;
+    }
+    .card-body p strong {
+        font-size: 1.2em;
+        color: #007bff;
+        display: inline-block;
+        min-width: 150px; /* Aligns the data vertically */
+    }
+    .card-footer {
+        border-top: 1px solid #e9ecef;
+        padding-top: 1.5rem;
+    }
+</style>
+{% endblock head %}
 
-<head>
-    <meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="keywords" content="" />
-	<meta name="author" content="" />
-	<meta name="robots" content="" />
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="KwikSchools : KwikSchools Mgt System" />
-	<meta property="og:title" content="KwikSchools : KwikSchools Mgt System" />
-	<meta property="og:description" content="KwikSchools : KwikSchools Mgt System" />
-	<!-- <meta property="og:image" content="https://travl.dexignlab.com/xhtml/social-image.png" /> -->
-	<meta name="format-detection" content="telephone=no">
-	
-	<!-- PAGE TITLE HERE -->
-	<title>Create Payment</title>
-	
-	<!-- FAVICONS ICON -->
-	<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png'%} " />
-    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
-</head>
-
-{% block content %}
-<body class="vh-100">
-    <div class="authincation h-100">
-        <div class="container h-100">
-            <div class="row justify-content-center h-100 align-items-center">
-                <div class="col-md-6">
-                    <div class="authincation-content">
-                        <div class="row no-gutters">
-                            <div class="col-xl-12">
-                                <div class="auth-form">
-									<div class="text-center mb-3">
-                                        <a href=""><img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="" style="width: 100px; height: auto;"></a>
-									</div>
-                                    <!-- <h4 class="text-center mb-4">Welcome To Ermine App!</h4> -->
-                                    <div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h3 class="mb-0">🚌 My Bus Route Details</h3>
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="#">Transport</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">My Route</a></li>
+            </ol>
         </div>
-        <div class="card-body">
-            {% if student_signup %}
-                <p><strong>Student Name:</strong> {{ student_signup.student.first_name }} {{ student_signup.student.last_name }}</p>
-                <p><strong>Username:</strong> {{ student_signup.student.username }}</p>
-                <hr>
-                <p><strong>Assigned Route:</strong>
-                    {% if student_signup.route %}
-                        {{ student_signup.route.name }}
-                    {% else %}
-                        N/A (Route details unavailable)
-                    {% endif %}
-                </p>
-                <p><strong>Sign-up Date:</strong> {{ student_signup.signup_date|date:"F j, Y, P" }}</p>
-                {# Example: If your Route model has a 'description' or 'driver_name' field #}
-                {% comment %}
-                <p><strong>Route Description:</strong> {{ student_signup.route.description }}</p>
-                <p><strong>Driver Name:</strong> {{ student_signup.route.driver_name }}</p>
-                {% endcomment %}
-            {% else %}
-                <div class="alert alert-info" role="alert">
-                    You are not currently signed up for any bus route.
-                </div>
-            {% endif %}
-            <div class="mt-3">
-                <a href="{% url 'transport:bus_route_list' %}" class="btn btn-secondary">Back to Route List</a>
-            </div>
-        </div>
-    </div>
-</div>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">🚌 My Bus Route Details</h4>
+                    </div>
+                    <div class="card-body">
+                        {% if student_signup %}
+                            <p><strong>Student Name:</strong> {{ student_signup.student.get_full_name }}</p>
+                            <p><strong>STUDENT ID:</strong> {{ student_signup.student.user.username }}</p>
+                            <hr class="my-4">
+                            {% if student_signup.route %}
+                                <p><strong>Assigned Route:</strong> {{ student_signup.route.name }}</p>
+                                <p><strong>Bus Fee:</strong> N{{ student_signup.route.bus_fee }}</p>
+                                {% if student_signup.route.driver_name %}
+                                    <p><strong>Driver:</strong> {{ student_signup.route.driver_name }}</p>
+                                {% endif %}
+                                <p><strong>Session:</strong> {{ student_signup.session.name }}</p>
+                                <p><strong>Term:</strong> {{ student_signup.term.name }}</p>
+                                <p><strong>Signup Date:</strong> {{ student_signup.signup_date|date:"F j, Y, P" }}</p>
+                            {% else %}
+                                <div class="alert alert-warning" role="alert">
+                                    <h4 class="alert-heading">No Route Assigned!</h4>
+                                    <p>You are currently signed up for bus services, but no specific route has been assigned to you yet. Please check back later or contact the transport office for more information.</p>
                                 </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="alert alert-info" role="alert">
+                                <h4 class="alert-heading">Not Enrolled!</h4>
+                                <p>It looks like you are not currently signed up for any bus route. Please contact the school's administration to enroll in a bus service.</p>
                             </div>
-                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="{% url 'transport:bus_route_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to All Routes
+                        </a>
+                        {% if student_signup and student_signup.route %}
+                            <a href="{% url 'transport:payment_pass' enrollment_id=student_signup.id %}" class="btn btn-primary ms-2">
+                                <i class="fas fa-file-invoice"></i> View My Bus Pass
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    {% endblock content %}
-
-    <!--**********************************
-        Scripts
-    ***********************************-->
-    <!-- Required vendors -->
-    {% block script %}
-    <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
-    <script src="{% static 'pages/js/custom.min.js' %}"></script>
-    <script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
-	<script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
-    {% endblock script %}
-</body>
-</html>
+</div>
+{% endblock content_body %}

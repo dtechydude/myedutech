@@ -673,21 +673,7 @@
 							
 						</ul>
 					</li>
-						{% if user.is_superuser or user.is_staff %}
-						<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
-							<i class="flaticon-013-checkmark"></i>
-								<span class="nav-text">Info & Records</span>
-							</a>
-							<ul aria-expanded="false">
-							<li><a href="{% url 'students:upcoming_birthdays' %}">Students Birthday</a></li>
-							<li><a href="{% url 'pages:students_email_list' %}">Students Email List</a></li>
-							<li><a href="{% url 'pages:students_phone_list' %}">Students Phone List</a></li>
-							<li><a href="{% url 'pages:teachers_phone_list' %}">Teachers Phone List</a></li>
-							<li><a href="{% url 'pages:teachers_email_list' %}">Teachers Email List</a></li>
-
-							</ul>
-					</li>
-					{% endif %}			
+						
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
 							<span class="nav-text">Student Mgt.</span>
@@ -760,10 +746,8 @@
 							<li><a href="{% url 'results:report_card_list' %}">Termly Report Cards</a></li>
 							<li><a href="{% url 'results:session_report_card_list' %}">Annual Report Cards</a></li>
 							<li><a href="{% url 'results:ranking_list' %}">Student's Exam Ranking</a></li>
-
  					
-							{% endif %}
-						
+							{% endif %}						
 
 						</ul>
 					</li>
@@ -818,25 +802,7 @@
 							{% endif %}						
 							
 						</ul>
-					</li>
-					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
-						<i class="flaticon-013-checkmark"></i>
-						<span class="nav-text">School Bus</span>
-					</a>
-					<ul aria-expanded="false">
-						<li><a href="{% url 'transport:bus_route_list' %}">Bus Route/Fare</a></li>
-						{% if user.student %}						
-						<li><a href="{% url 'transport:create_bus_signup' %}">SignUp For Bus</a></li>
-						<li><a href="{% url 'transport:student_own_route_detail' %}">My Route Details</a></li>
-						{% endif %}
-						{% if user.is_superuser or user.is_staff %}
-						<li><a href="/admin/transport/route/">Add/Edit Route</a></li>
-						<li><a href="/admin/transport/studentonroute/">Add Student To Route</a></li>
-						<li><a href="{% url 'transport:bus_signup_list' %}">Students In Route</a></li>					
-						{% endif %}
-						
-					</ul>
-					</li>
+					</li>					
 					
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
@@ -879,6 +845,31 @@
 							{% endif %}
 						</ul>					
 					</li>
+					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
+						<i class="flaticon-013-checkmark"></i>
+						<span class="nav-text">School Bus</span>
+					</a>
+					<ul aria-expanded="false">
+						<li><a href="{% url 'transport:bus_route_list' %}">Bus Route/Fare</a></li>
+						{% if user.student %}						
+						{% comment %}<li><a href="{% url 'transport:create_bus_signup' %}">SignUp For Bus</a></li>{% endcomment %}
+						<li><a href="{% url 'transport:student_own_route_detail' %}">My Route Details</a></li>
+						
+						<li><a href="{% url 'transport:signup' %}">Signup For Bus</a></li>
+						<li><a href="{% url 'transport:my_pass' %}">My Bus Pass</a></li>
+
+						{% endif %}
+						{% if user.is_superuser or user.is_staff %}
+						<li><a href="/admin/transport/route/">Add/Edit Route</a></li>
+						<li><a href="/admin/transport/studentonroute/">Add Student To Route</a></li>
+						<li><a href="{% url 'transport:bus_signup_list' %}">Students In Route</a></li>
+						<li><a href="{% url 'transport:staff_signup' %}">Singup Student On Bus</a></li>		
+						<li><a href="{% url 'transport:enrollment_list' %}">Bus Enrollment List</a></li>
+						<li><a href="{% url 'transport:payment_report' %}">Bus Payment Report</a></li>					
+					
+						{% endif %}						
+					</ul>
+					</li>
 						
 						<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 							<i class="flaticon-013-checkmark"></i>
@@ -888,7 +879,23 @@
 								<li><a href="{% url 'pages:help-center' %}">FAQ</a></li>
 								<li><a href="{% url 'pages:support_info' %}">Support Center</a></li>
 							</ul>
-					</li>					
+					</li>		
+						{% if user.is_superuser or user.is_staff %}
+						<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
+							<i class="flaticon-013-checkmark"></i>
+								<span class="nav-text">Info & Records</span>
+							</a>
+							<ul aria-expanded="false">
+							<li><a href="{% url 'students:upcoming_birthdays' %}">Students Birthday</a></li>
+							<li><a href="{% url 'pages:students_email_list' %}">Students Email List</a></li>
+							<li><a href="{% url 'pages:students_phone_list' %}">Students Phone List</a></li>
+							<li><a href="{% url 'pages:teachers_phone_list' %}">Teachers Phone List</a></li>
+							<li><a href="{% url 'pages:teachers_email_list' %}">Teachers Email List</a></li>
+
+							</ul>
+					</li>
+					{% endif %}							
+
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
 							<span class="nav-text">Archives</span>

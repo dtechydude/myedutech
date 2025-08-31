@@ -1,0 +1,161 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+{% load mathfilters %}
+
+{% block title %}
+<title>Bus Payment Report</title>
+{% endblock title %}
+
+{% block head %}
+<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    /* Optional: A little style for the filter form to make it look clean */
+    .filter-form-container {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    .filter-form-container .form-select {
+        width: auto; /* Ensures the select input is not too wide */
+    }
+</style>
+{% endblock head %}
+
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="#">Home</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">Bus Report</a></li>
+            </ol>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-success text-white text-center">
+                        <h4 class="card-title text-white mb-0">📊 Bus Payment Report</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="filter-form-container">
+                            <form method="get" action="{% url 'transport:payment_report' %}" class="d-flex align-items-center">
+                                <label for="route-filter" class="form-label mb-0 me-2">Filter by Route:</label>
+                                <select class="form-select" id="route-filter" name="route" onchange="this.form.submit()">
+                                    <option value="">All Routes</option>
+                                    {% for route in all_routes %}
+                                        <option value="{{ route.id }}" {% if selected_route_id|slugify == route.id|slugify %}selected{% endif %}>
+                                            {{ route.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        </div>
+                        
+                        <div class="row mb-4 text-center">
+                            <div class="col-md-4">
+                                <div class="card p-3 shadow-sm border-success">
+                                    <p class="mb-0 text-muted">Total Income Collected</p>
+                                    <h4 class="text-success fw-bold">N{{ grand_total_income|floatformat:2 }}</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card p-3 shadow-sm border-info">
+                                    <p class="mb-0 text-muted">Total Potential Income</p>
+                                    <h4 class="text-info fw-bold">N{{ grand_total_potential_income|floatformat:2 }}</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card p-3 shadow-sm border-danger">
+                                    <p class="mb-0 text-muted">Grand Balance Due</p>
+                                    <h4 class="text-danger fw-bold">N{{ grand_total_balance|floatformat:2 }}</h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="mt-4 mb-3">Breakdown by Route</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-primary">
+                                    <tr>
+                                        <th>Route Name</th>
+                                        <th>Bus Fee</th>
+                                        <th>Students</th>
+                                        <th>Total Collected</th>
+                                        <th>Balance Due</th>
+                                        <th>% Paid</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for data in page_obj %}
+                                    <tr>
+                                        <td class="fw-bold">{{ data.route_name }}</td>
+                                        <td>N{{ data.bus_fee|floatformat:2 }}</td>
+                                        <td>{{ data.student_count }}</td>
+                                        <td><span class="text-success">N{{ data.total_income|floatformat:2 }}</span></td>
+                                        <td><span class="text-danger">N{{ data.total_balance|floatformat:2 }}</span></td>
+                                        <td>
+                                            {% if data.total_potential_income > 0 %}
+                                                {% with paid_percentage=data.total_income|div:data.total_potential_income|mul:100 %}
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ paid_percentage|floatformat:0 }}%;" aria-valuenow="{{ paid_percentage|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100">
+                                                        {{ paid_percentage|floatformat:0 }}%
+                                                    </div>
+                                                </div>
+                                                {% endwith %}
+                                            {% else %}
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar bg-secondary" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                                        0%
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">No bus routes or enrollments found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="d-flex justify-content-center mt-4">
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination">
+                                    {% if page_obj.has_previous %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_route_id %}&route={{ selected_route_id }}{% endif %}">Previous</a></li>
+                                    {% else %}
+                                    <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                                    {% endif %}
+        
+                                    {% for i in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == i %}
+                                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                                    {% else %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ i }}{% if selected_route_id %}&route={{ selected_route_id }}{% endif %}">{{ i }}</a></li>
+                                    {% endif %}
+                                    {% endfor %}
+        
+                                    {% if page_obj.has_next %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_route_id %}&route={{ selected_route_id }}{% endif %}">Next</a></li>
+                                    {% else %}
+                                    <li class="page-item disabled"><span class="page-link">Next</span></li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                        
+                    </div>
+                    <div class="card-footer bg-light text-center">
+                        <p class="text-muted mb-0">Report generated on **{{ now|date:"F j, Y, P" }}**</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content_body %}

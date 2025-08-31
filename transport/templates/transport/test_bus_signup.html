@@ -54,7 +54,7 @@
                             {% if request.user.is_staff %}
                                 <p class="text-muted">As a staff member, you can enroll a student in a bus route.</p>
                             {% else %}
-                                <p class="text-muted">Hello **{{ student.full_name|default:"Student" }}**, please select a bus route and academic period to enroll.</p>
+                                <p class="text-muted">Hello **{{ student.get_full_name|default:"Student" }}**, please select a bus route and academic period to enroll.</p>
                             {% endif %}
                         </div>
                         
