@@ -112,7 +112,7 @@
                                                 <td>{{ forloop.counter }}</td>
                                                 <td>{{ ts.name }}</td>
                                                 <td>{{ ts.promotion_order }}</td>
-                                               <td>{{ ts.form_teacher.first_name }} {{ ts.form_teacher.first_name }}</td>                                                
+                                               <td>{% if ts.form_teacher %}{{ ts.form_teacher.first_name }} {{ ts.form_teacher.last_name }} ({{ ts.form_teacher.user }}) {% else %} Not Assigned Yet {% endif %}</td>                                                
                                                 <td>{{ ts.form_teacher.phone_home }}</td>
                                                 {% endfor %}
                                             </tr>

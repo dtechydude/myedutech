@@ -1,415 +1,121 @@
 {% extends 'pages/portal_home.html' %}
 {% load static %}
-<!DOCTYPE html>
 
-<html lang="en">
+{% block head_extra %}
+    <title>Student Results Dashboard</title>
+    <link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+    <link href="{% static 'pages/vendor/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
+    <link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
+    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+{% endblock head_extra %}
 
-<head>
-    <meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="keywords" content="" />
-	<meta name="author" content="" />
-	<meta name="robots" content="" />
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="KwikSchools : KwikSchools" />
-	<meta property="og:title" content="KwikSchools : KwikSchools" />
-	<meta property="og:description" content="KwikSchools: KwikSchools" />
-	<meta name="format-detection" content="telephone=no">
+{% block content_body %}
+    <div class="content-body">
+        <div class="container-fluid">
+            <div class="row page-titles mx-0">
+                <div class="col-sm-6 p-md-0">
+                    <div class="welcome-text">
+                        <h4>Welcome, {{ student.first_name }}!</h4>
+                    </div>
+                </div>
+                <div class="col-sm-6 p-md-0 justify-content-sm-end mt-2 mt-sm-0 d-flex">
+                    <div class="me-3">
+                        <span class="btn btn-secondary btn-sm">STD ID: {{ student.user.username }}</span>
+                    </div>
+                    <div>
+                        <span class="btn btn-info btn-sm">CODE: {{ student.user.profile.code }}</span>
+                    </div>
+                </div>
+            </div>
 
-	<!-- PAGE TITLE HERE -->
-	<title>Student Results Dashboard</title>
-	
-	<!-- FAVICONS ICON -->
-	<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
-	<link href="{% static 'pages/vendor/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
-	<link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
-	
-	<!-- Style css -->
-	<link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
-	
-</head>
-<body>
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">My Report Cards</h4>
+                        </div>
+                        <div class="card-body">
+                            <ul class="nav nav-tabs style-2 d-inline-block d-sm-flex d-lg-inline-flex flex-wrap" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-bs-toggle="tab" href="#termly-reports">Termly Report Cards</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#annual-reports">Annual Report Cards</a>
+                                </li>
+                            </ul>
 
-	<!--*******************
-		Preloader start
-	********************-->
-	<div id="preloader">
-		<div class="lds-ripple">
-			<div></div>
-			<div></div>
-		</div>
-	</div>
-	<!--*******************
-		Preloader end
-	********************-->
+                            <div class="tab-content mt-4">
+                                <div class="tab-pane fade show active" id="termly-reports" role="tabpanel">
+                                    {% if terms %}
+                                        <div class="list-group list-group-flush">
+                                            {% for term in terms %}
+                                                <a href="{% url 'results:student_report_card_detail' student.id term.id %}" class="list-group-item list-group-item-action">
+                                                    <div class="d-flex w-100 justify-content-between">
+                                                        <h5 class="mb-1">{{ term.name }} - {{ term.session }}</h5>
+                                                        <small class="text-muted">
+                                                            <i class="fa fa-calendar me-1"></i>
+                                                            {{ term.start_date|date:"M d, Y" }} - {{ term.end_date|date:"M d, Y" }}
+                                                        </small>
+                                                    </div>
+                                                    <p class="mb-1 text-muted">Click to view your report card for this term.</p>
+                                                </a>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <div class="alert alert-info">
+                                            No termly report cards available yet.
+                                        </div>
+                                    {% endif %}
+                                </div>
 
-	<!--**********************************
-		Main wrapper start
-	***********************************-->
-	<div id="main-wrapper">
+                                <div class="tab-pane fade" id="annual-reports" role="tabpanel">
+                                    {% if sessions %}
+                                        <div class="list-group list-group-flush">
+                                            {% for session in sessions %}
+                                                <a href="{% url 'results:student_session_report_card_detail' student.id session.id %}" class="list-group-item list-group-item-action">
+                                                    <div class="d-flex w-100 justify-content-between">
+                                                        <h5 class="mb-1">{{ session.name }}</h5>
+                                                        <small class="text-muted">
+                                                            <i class="fa fa-calendar me-1"></i>
+                                                            {{ session.start_date|date:"M d, Y" }} - {{ session.end_date|date:"M d, Y" }}
+                                                        </small>
+                                                    </div>
+                                                    <p class="mb-1 text-muted">Click to view your annual report card for this session.</p>
+                                                </a>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <div class="alert alert-info">
+                                            No annual report cards available yet.
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content_body %}
 
-		<!--**********************************
-			Nav header start
-		***********************************-->
-		
-		<!--**********************************
-			Nav header end
-		***********************************-->
-		
-		<!--**********************************
-			Chat box start
-		***********************************-->
-		
-		<!--**********************************
-			Chat box End
-		***********************************-->
-		
-		<!--**********************************
-			Header start
-		***********************************-->
-		
-		<!--**********************************
-			Header end ti-comment-alt
-		***********************************-->
-
-		<!--**********************************
-			Sidebar start
-		***********************************-->
-		
-		<!--**********************************
-			Sidebar end
-		***********************************-->
-		
-		<!--**********************************
-			Content body start
-		***********************************-->
-        {% block content_body %}
-		<div class="content-body">
-			<!-- row -->
-			<div class="container-fluid">
-				<div class="mt-4 d-flex justify-content-between align-items-center flex-wrap">
-					<div class="card-action coin-tabs mb-2">
-						<ul class="nav nav-tabs" role="tablist">
-							<li class="nav-item">
-								<a class="nav-link active" data-bs-toggle="tab" href="#AllRooms"> Welcome {{ student.first_name }}!</a>
-							</li>
-							
-						</ul>
-					</div>
-					<div class="d-flex align-items-center mb-2"> 
-						<a href="javascript:void(0);" class="btn btn-secondary">STD ID: {{ student.user.username }}</a>
-						<div class="newest ms-3">
-							<select class="default-select">
-								<option>CODE: {{ student.user.profile.code }}</option>
-								<!-- <option>Oldest</option> -->
-							</select>
-						</div>	
-					</div>
-				</div>
-				<div class="row mt-4">
-					<div class="col-xl-12">
-						<div class="card">
-							<div class="card-body p-0">
-								<div class="tab-content">	
-									<div class="tab-pane fade active show" id="AllRooms">
-										<div class="table-responsive">
-											<table class="table card-table display mb-4 shadow-hover table-responsive-lg" id="guestTable-all3">
-												<thead>
-													<tr>
-														<th class="bg-none">
-															<div class="form-check style-1">
-															  <input class="form-check-input" type="checkbox" value="" id="checkAll3">
-															</div>
-														</th>
-														<th>Termly / Session Report Cards</th>
-														
-													</tr>
-												</thead>
-												<tbody>
-													<tr>
-														<td>
-															<div class="form-check style-1">
-															  <input class="form-check-input" type="checkbox" value="">
-															</div>
-														</td>
-                                                        <td>
-                                                             <div class="container">
-                                                     
-                                                            <div class="report-section">
-                                                                <h4 style="color: #721c24;">Termly Report Cards</h4>
-                                                                {% if terms %}
-                                                                    <p>Select a term to view your report card:</p>
-                                                                    <ul>
-                                                                        {% for term in terms %}
-                                                                            <li>
-                                                                                <span> <i class="fa fa-desktop" aria-hidden="true"></i> <strong>{{ term.name }} - {{ term.session }} </strong>({{ term.start_date|date:"M d, Y" }} - {{ term.end_date|date:"M d, Y" }})</span>
-                                                                                <a href="{% url 'results:student_report_card_detail' student.id term.id %}"><u>View Report Card</u></a>
-                                                                            </li>
-                                                                        {% endfor %}
-                                                                    </ul>
-                                                                {% else %}
-                                                                    <p>No termly report cards available yet. </p>
-                                                                {% endif %}
-                                                            </div>
-                                                            <hr>
-                                                            <div class="report-section">
-                                                                <h4 style="color: #721c24;">Annual Report Cards</h4>
-                                                                {% if sessions %}
-                                                                    <p>Select an academic session to view your annual report card:</p>
-                                                                    <ul>
-                                                                        {% for session in sessions %}
-                                                                            <li>
-                                                                                <span><i class="fa fa-desktop" aria-hidden="true"></i> <strong>{{ session.name }} </strong>({{ session.start_date|date:"M d, Y" }} - {{ session.end_date|date:"M d, Y" }})</span>
-                                                                                <a href="{% url 'results:student_session_report_card_detail' student.id session.id %}"><u>View Annual Report Card</u></a>
-                                                                            </li>
-                                                                        {% endfor %}
-                                                                    </ul>
-                                                                {% else %}
-                                                                    <p>No annual report cards available yet.</p>
-                                                                {% endif %}
-                                                            </div>
-
-                                                            {% comment %}<!-- <p><a href="{% url 'users:user_logout' %}">Logout</a></p> -->   {% endcomment %}
-                                                        </div>
-                                                        </td>
-														
-													</tr>
-												</tbody>
-											</table>
-										</div>	
-									</div>	
-									
-													</tr>
-												</tbody>
-											</table>
-										</div>	
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-        {% endblock content_body %}
-		<!--**********************************
-			Content body end
-		***********************************-->
-		
-		
-		
-		<!--**********************************
-			Footer start
-		***********************************-->
-		
-		<!--**********************************
-			Footer end
-		***********************************-->
-
-		<!--**********************************
-		   Support ticket button start
-		***********************************-->
-		
-		<!--**********************************
-		   Support ticket button end
-		***********************************-->
-
-
-	</div>
-	<!--**********************************
-		Main wrapper end
-	***********************************-->
-
-	<!--**********************************
-		Scripts
-	***********************************-->
-	<!-- Required vendors -->
-	<script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
-
-	<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
-	
-	<!-- Apex Chart -->
-			
-	<!-- Chart piety plugin files -->	
-	
-	<!-- Dashboard 1 -->
-	<!-- momment js is must -->
-    <script src="{% static 'pages/vendor/moment/moment.min.js' %}"></script>
+{% block scripts_extra %}
+    <script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
     <script src="{% static 'pages/vendor/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
-	
-
-	
-	<script src="{% static 'pages/js/custom.min.js' %}"></script>
-	<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
-	<script src="{% static 'pages/js/demo.js' %}"></script>
-	<script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
-	<script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
-	<script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
-	<script>
-		$(function() {
-
-			var start = moment().subtract(29, 'days');
-			var end = moment();
-
-			function cb(start, end) {
-				$('#reportrange span').html(start.format('D MMMM YYYY') + ' &nbsp - &nbsp ' + end.format('D MMMM YYYY'));
-    }
-
-    $('#reportrange').daterangepicker({
-        startDate: start,
-        endDate: end,
-        ranges: {
-           'Today': [moment(), moment()],
-           'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-           'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-           'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-           'This Month': [moment().startOf('month'), moment().endOf('month')],
-           'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-        }
-    }, cb);
-
-    cb(start, end);
+    <script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
     
-});
-</script>
-
-</body>
-</html>
-
-
-
-
-
-
-<!-- Working perfectly 002 -->
- {% comment %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ student.first_name }}'s Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
-        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); max-width: 800px; margin: 20px auto; }
-        h1, h2 { color: #333; }
-        ul { list-style-type: none; padding: 0; }
-        li { background-color: #f9f9f9; border: 1px solid #eee; margin-bottom: 8px; padding: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
-        li a { text-decoration: none; color: #007bff; font-weight: bold; }
-        li a:hover { text-decoration: underline; }
-        .alert { padding: 10px; border-radius: 4px; margin-bottom: 15px; }
-        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .alert-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .alert-info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Welcome, {{ student.first_name }}!</h1>
-
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-
-        <h2>Your Report Cards</h2>
-
-        {% if terms %}
-            <p>Select a term to view your report card:</p>
-            <ul>
-                {% for term in terms %}
-                    <li>
-                        <span>{{ term.name }} ({{ term.start_date|date:"M d, Y" }} - {{ term.end_date|date:"M d, Y" }})</span>
-                        <a href="{% url 'results:student_report_card_detail' student.id term.id %}">View Report Card</a>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No report cards available yet. Please check back later.</p>
-        {% endif %}
-
-        <p><a href="{% url 'users:user_logout' %}">Logout</a></p> {# Assuming you have a 'logout' URL defined #}
-        {# Add other student-specific links here if needed #}
-    </div>
-</body>
-</html>
-{% endcomment %}
-
-{% comment %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ student.full_name }}'s Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
-        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); max-width: 800px; margin: 20px auto; }
-        h1, h2 { color: #333; }
-        ul { list-style-type: none; padding: 0; }
-        li { background-color: #f9f9f9; border: 1px solid #eee; margin-bottom: 8px; padding: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
-        li a { text-decoration: none; color: #007bff; font-weight: bold; }
-        li a:hover { text-decoration: underline; }
-        .report-section { margin-top: 30px; }
-        /* Alerts */
-        .alert { padding: 10px; border-radius: 4px; margin-bottom: 15px; }
-        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .alert-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .alert-info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Welcome, {{ student.first_name }}!</h1>
-
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-
-        <div class="report-section">
-            <h2>Termly Report Cards</h2>
-            {% if terms %}
-                <p>Select a term to view your report card:</p>
-                <ul>
-                    {% for term in terms %}
-                        <li>
-                            <span>{{ term.name }} ({{ term.start_date|date:"M d, Y" }} - {{ term.end_date|date:"M d, Y" }})</span>
-                            <a href="{% url 'results:student_report_card_detail' student.id term.id %}">View Report Card</a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>No termly report cards available yet.</p>
-            {% endif %}
-        </div>
-
-        <div class="report-section">
-            <h2>Annual Report Cards</h2>
-            {% if sessions %}
-                <p>Select an academic session to view your annual report card:</p>
-                <ul>
-                    {% for session in sessions %}
-                        <li>
-                            <span>{{ session.name }} ({{ session.start_date|date:"M d, Y" }} - {{ session.end_date|date:"M d, Y" }})</span>
-                            <a href="{% url 'results:student_session_report_card_detail' student.id session.id %}">View Annual Report Card</a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>No annual report cards available yet.</p>
-            {% endif %}
-        </div>
-
-        <p><a href="{% url 'users:user_logout' %}">Logout</a></p>
-    </div>
-</body>
-</html>
-
-{% endcomment %}
+    <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+    <script src="{% static 'pages/vendor/moment/moment.min.js' %}"></script>
+    <script src="{% static 'pages/js/custom.min.js' %}"></script>
+    <script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+    <script src="{% static 'pages/js/demo.js' %}"></script>
+    <script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+            // Your custom scripts here
+            // This is where you would initialize things like daterangepicker if needed for this page
+            // The previous daterangepicker script is not directly used on this page
+        });
+    </script>
+{% endblock scripts_extra %}
