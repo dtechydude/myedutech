@@ -13,7 +13,7 @@ from django.template.loader import get_template
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from students.models import Student, Hostel, Parent
 from staff.models import Teacher
-from students.forms import StudentUpdateForm
+from students.forms import StudentUpdateForm, SuperUserStudentUpdateForm
 from payments.models import Payment, CategoryFee # Import Payment and CategoryFee models
 
 from users.forms import UserRegisterForm
@@ -321,19 +321,43 @@ class StudentSelfDetailView(LoginRequiredMixin, DetailView):
             return redirect('pages:portal-home') # Adjust this URL as needed
 
 
-class StudentUpdateView(LoginRequiredMixin, UpdateView):
-    form_class = StudentUpdateForm
-    template_name = 'students/student_update_form.html'
-    # queryset = StudentDetail.objects.all()
+# class StudentUpdateView(LoginRequiredMixin, UpdateView):
+#     form_class = StudentUpdateForm
+#     template_name = 'students/student_update_form.html'
+#     # queryset = StudentDetail.objects.all()
 
 
-    def get_object(self):
-        id_ = self.kwargs.get("id")
-        return get_object_or_404(Student, USN=id_)
+#     def get_object(self):
+#         id_ = self.kwargs.get("id")
+#         return get_object_or_404(Student, USN=id_)
 
-    def form_valid(self, form):
-        print(form.cleaned_data)
+#     def form_valid(self, form):
+#         print(form.cleaned_data)
         return super().form_valid(form)
+    
+# new student update form
+class StudentUpdateView(LoginRequiredMixin, UpdateView):
+    template_name = 'students/student_update_form.html'
+    
+    def get_object(self, queryset=None):
+        """
+        Retrieves the student object based on the URL parameter (usn).
+        """
+        usn = self.kwargs.get("usn")
+        return get_object_or_404(Student, USN=usn)
+
+    def get_form_class(self):
+        # ... (rest of your get_form_class method is correct)
+        if self.request.user.is_superuser or self.request.user.is_staff:
+            return SuperUserStudentUpdateForm
+        return StudentUpdateForm
+
+    def get_success_url(self):
+        """
+        Defines the URL to redirect to after a successful form submission.
+        """
+        # Make sure this also uses 'usn'
+        return reverse_lazy('students:student-detail', kwargs={'usn': self.object.USN})
 
      
 

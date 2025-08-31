@@ -38,7 +38,14 @@ class StudentUpdateForm(forms.ModelForm):
     class Meta:
         model = Student
         fields = '__all__'
-        exclude = ('user', 'USN', 'student_status', 'badge', 'form_teacher', 'date_admitted', 'last_name', 'first_name',  'standard', 'class_on_admission')
+        exclude = ('user', 'USN', 'student_status', 'badge', 'form_teacher', 'date_admitted', 'last_name', 'first_name',  'standard', 'class_on_admission', 'fee_balance')
+
+
+class SuperUserStudentUpdateForm(forms.ModelForm):
+
+    class Meta:
+        model = Student
+        fields = '__all__'
 
 
 

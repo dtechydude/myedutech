@@ -180,19 +180,23 @@ def my_assignments_view(request):
     """
     Displays the subjects and standards assigned to the currently logged-in teacher.
     """
-    # Get the Teacher object associated with the logged-in user.
-    # The get_object_or_404 is a good way to handle cases where a user account
-    # doesn't have a corresponding Teacher object.
-    teacher = get_object_or_404(
-        Teacher.objects.prefetch_related('subjects_taught', 'standards_assigned'),
-        user=request.user
-    )
+    try:
+        # Get the Teacher object associated with the logged-in user.
+        teacher = Teacher.objects.prefetch_related(
+            'subjects_taught', 
+            'standards_assigned'
+        ).get(user=request.user)
 
-    context = {
-        'teacher': teacher,
-        'title': 'My Assignments'
-    }
-    return render(request, 'staff/teacher_self_assignments.html', context)
+        context = {
+            'teacher': teacher,
+            'title': 'My Assignments'
+        }
+        return render(request, 'staff/teacher_self_assignments.html', context)
+        
+    except Teacher.DoesNotExist:
+        # This block handles the case where the current user is not a teacher.
+        messages.info(request, "Your profile is not linked to a teacher account. Please contact the administrator.")
+        return redirect('pages:portal-home') # Redirect to a safe page like the dashboard
 
 # View to Assign a Form Teacher to A Standard
 def is_superuser(user):

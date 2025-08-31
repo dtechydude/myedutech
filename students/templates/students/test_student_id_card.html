@@ -153,7 +153,7 @@
             {% else %}
                 <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo" class="school-logo">
             {% endif %}
-            <h5 class="text-uppercase">{{ school_identity.name|default:"St. George's School" }}</h5>
+            <h5 class="text-uppercase">{{ school_identity.name|default:"KwikSchools" }}</h5>
             <p>{{ school_identity.address_line_1|default:"123 School Lane" }}{% if school_identity.phone1 %} | Tel: {{ school_identity.phone1 }}{% endif %}</p>
         </div>
 

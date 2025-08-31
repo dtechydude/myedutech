@@ -37,7 +37,9 @@ urlpatterns = [
     path('my-detail/', StudentSelfDetailView.as_view(), name="student-self-detail"),
 
     path('<str:id>/', StudentDetailView.as_view(), name="student-detail"),
-    path('<str:id>/update/', StudentUpdateView.as_view(), name="student-update"),
+    path('students/<str:usn>/update/', StudentUpdateView.as_view(), name='student-update'),
+
+    # path('<str:id>/update/', StudentUpdateView.as_view(), name="student-update"),
     path('<str:id>/delete/', StudentDeleteView.as_view(), name="student-delete"), 
     path('<str:id>/', MyTeacherDetailView.as_view(), name="my-teacher-detail"),
 

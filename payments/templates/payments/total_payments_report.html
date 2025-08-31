@@ -47,9 +47,29 @@
             padding: 0.5rem 0.75rem;
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
+        /* New custom CSS for the button link */
+        .dashboard-link-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background-color: #e5e7eb;
+            color: #4b5563;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s ease;
+        }
+        .dashboard-link-button:hover {
+            background-color: #d1d5db;
+        }
+        
         @media (max-width: 639px) {
             header .flex-row {
                 flex-direction: column;
+            }
+            /* Refactored header layout for small screens */
+            .header-content {
+                flex-direction: column;
+                align-items: center;
             }
         }
     </style>
@@ -58,15 +78,15 @@
 
 <div class="min-h-screen py-8">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <header class="relative flex justify-center items-center mb-6">
-            <div class="absolute left-0">
-                <a href="/dashboard/" class="text-blue-600 hover:text-blue-800 transition-colors duration-300 font-semibold flex items-center">
+        <header class="flex flex-col sm:flex-row justify-center sm:justify-between items-center mb-6 space-y-4 sm:space-y-0">
+            <div class="order-2 sm:order-1 w-full sm:w-auto text-center sm:text-left">
+                <a href="{% url 'pages:portal-home' %}" class="dashboard-link-button">
                     <i class="fas fa-arrow-left mr-2"></i>
                     Back to Dashboard
                 </a>
             </div>
-            <div>
-                <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="KwikSchools Logo" class="h-10" style="height: auto; width:100px;">
+            <div class="order-1 sm:order-2 w-full sm:w-auto text-center sm:text-right">
+                <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="KwikSchools Logo" class="h-10 mx-auto" style="height: auto; width:100px;">
             </div>
         </header>
 
