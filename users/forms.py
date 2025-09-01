@@ -81,8 +81,24 @@ class UserRegistrationForm(forms.ModelForm):
             raise forms.ValidationError('Passwords don\'t match.')
         return cd['password2']
 
+# class StudentEnrollmentForm(forms.ModelForm):
+#     # Form fields for Student model
+#     class Meta:
+#         model = Student
+#         fields = [
+#             'USN', 'middle_name', 'current_class', 'class_group', 
+#             'gender', 'DOB', 'blood_group', 'genotype', 
+#             'health_remark', 'student_type', 'hostel_name',
+#             'date_admitted', 'class_on_admission', 
+#             'guardian_name', 'guardian_address', 'guardian_phone', 
+#             'guardian_email', 'relationship', 
+            
+#         ]
+#         widgets = {
+#             'USN': forms.TextInput(attrs={'readonly': 'readonly'}),
+#         }
+
 class StudentEnrollmentForm(forms.ModelForm):
-    # Form fields for Student model
     class Meta:
         model = Student
         fields = [
@@ -92,11 +108,22 @@ class StudentEnrollmentForm(forms.ModelForm):
             'date_admitted', 'class_on_admission', 
             'guardian_name', 'guardian_address', 'guardian_phone', 
             'guardian_email', 'relationship', 
-            
         ]
         widgets = {
             'USN': forms.TextInput(attrs={'readonly': 'readonly'}),
         }
-    
+
+    def __init__(self, *args, **kwargs):
+        super(StudentEnrollmentForm, self).__init__(*args, **kwargs)
+
+        # Add custom IDs to date fields for Tempus Dominus
+        self.fields['DOB'].widget.attrs.update({'id': 'id_DOB'})
+        self.fields['date_admitted'].widget.attrs.update({'id': 'id_date_admitted'})
+
+        # Add Bootstrap classes for styling
+        for visible in self.visible_fields():
+            if not isinstance(visible.field.widget, forms.HiddenInput):
+                visible.field.widget.attrs['class'] = 'form-control'
+ 
     # Guardian details are part of the Student model, so we don't need separate fields here.
     # The form automatically handles the fields defined in `Meta`.

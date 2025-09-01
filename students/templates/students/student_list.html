@@ -107,8 +107,8 @@
                                                 <th>Gender</th>
                                                 <th>Mobile</th>
                                                 <th>Adm.Date</th>
-                                                <th>Action</th>
-                                                <th>Bus Enrolment</th>
+                                                <th>View/Edit</th>
+                                                <th>Bus Enrollment</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -125,8 +125,8 @@
                                                 <td>{{ s.date_admitted }}</td>
                                                 <td>
 													<div class="d-flex">
-														<a href="{% url 'students:student-detail' s.USN %}" class="btn btn-primary shadow btn-xs sharp me-1"><i class="fas fa-eye"></i></a>
-														<a href="{% url 'students:student-update' s.USN %}" class="btn btn-danger shadow btn-xs sharp"><i class="fa fa-pencil-alt"></i></a>
+														<a href="{% url 'students:student-detail' s.USN %}" class="btn btn-primary shadow  sharp me-1"><i class="fas fa-eye"></i>View</a>
+														<a href="{% url 'students:student-update' s.USN %}" class="btn btn-danger shadow  sharp"><i class="fa fa-pencil-alt"></i>Edit</a>
 													</div>
 												</td> 
                                                 <td>

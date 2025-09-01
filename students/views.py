@@ -34,57 +34,6 @@ from datetime import date
 from django.views import View
 
 
-# #Displays all students
-# def student_list(request):
-#     # Check for CSV export request first
-#     if request.GET.get('export') == 'csv':
-#         response = HttpResponse(content_type='text/csv')
-        
-#         if request.user.is_superuser or request.user.is_staff:
-#             students_to_export = Student.objects.exclude(student_status='graduated').order_by('-date_admitted')
-#             filename = 'all_students.csv'
-            
-#         else:
-#             students_to_export = Student.objects.filter(
-#                 form_teacher__user=request.user
-#             ).exclude(student_status='graduated').order_by('user')
-#             filename = 'my_students.csv'
-
-#         response['Content-Disposition'] = f'attachment; filename="{filename}"'
-#         writer = csv.writer(response)
-#         writer.writerow(['Full Name', 'DOB', 'Student Email', 'Student Phone', 'Guardian Phone', 'Guardian Email', 'Current Class', 'Student Status'])
-
-#         for student in students_to_export:
-#             writer.writerow([
-#                 student.get_full_name(),
-#                 student.DOB.strftime('%Y-%m-%d'),
-#                 student.user.email,
-#                 student.user.profile.phone,
-#                 student.guardian_phone,
-#                 student.guardian_email,
-#                 student.current_class.name if student.current_class else '',
-#                 student.student_status
-#             ])
-#         return response
-    
-#     # Existing rendering logic remains unchanged
-#     all_students = Student.objects.exclude(student_status='graduated').order_by('-date_admitted')
-#     my_students = Student.objects.filter(
-#         form_teacher__user=request.user
-#     ).exclude(student_status='graduated').order_by('user')
-
-#     context ={
-#         'all_students':all_students,
-#         'my_students':my_students
-#     }
-    
-#     if request.user.is_superuser or request.user.is_staff:
-#         return render(request, 'students/student_list.html', context) 
-#     elif my_students:
-#         return render(request, 'students/my_student_list.html', context) 
-#     else:
-#         return render(request, 'pages/portal_home.html')
-    
 
 # Displays all students
 def student_list(request):

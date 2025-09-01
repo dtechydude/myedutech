@@ -1,69 +1,11 @@
-{% comment %}
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enrollment Successful!</title>
-     <!-- FAVICON -->
-    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %} " />
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .success-card {
-            max-width: 600px;
-            margin: 50px auto;
-            border-radius: 1rem;
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        }
-        .success-icon {
-            font-size: 4rem;
-            color: #28a745;
-        }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div class="card success-card text-center p-4 p-md-5">
-        <div class="card-body">
-            <div class="mb-4">
-                <i class="fas fa-check-circle success-icon"></i>
-            </div>
-            <h1 class="card-title text-success mb-3">Enrollment Successful!</h1>
-            <p class="card-text text-muted mb-4">
-                The student has been successfully enrolled and their user account has been created.
-            </p>
-            
-            <a href="{% url 'students:student-list' %}" class="btn btn-primary btn-lg me-2">
-                <i class="fas fa-home me-2"></i>Go to Dashboard
-            </a>
-            <hr>
-            <a href="{% url 'users:enroll_student' %}" class="btn btn-outline-secondary btn-lg">
-                <i class="fas fa-user-plus me-2"></i>Enroll Another Student
-            </a>
-            
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-</body>
-</html>
-{% endcomment %}
-
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Signup Success</title>
+    <title>Signup Success</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -86,7 +28,7 @@
             <img src="{{ school_identity.logo.url }}" alt="{{ school_identity.school_name }} Logo" class="mb-3 mx-auto" style="height: 60px;">
         {% endif %}
         <h4 class="text-3xl fw-bold mb-0">
-            {% if school_identity %}{{ school_identity.name }}{% else %}Teacher Signup{% endif %}
+            {% if school_identity %}{{ school_identity.name }}{% else %} Signup Successful! {% endif %}
         </h4>
         <hr class="my-4">
 

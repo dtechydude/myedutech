@@ -5,9 +5,6 @@ from django.contrib.auth.forms import UserCreationForm
 from .models import Student
 
 
-
-
-
 class StudentRegisterForm(forms.ModelForm):
 
     class Meta:
@@ -46,6 +43,7 @@ class SuperUserStudentUpdateForm(forms.ModelForm):
     class Meta:
         model = Student
         fields = '__all__'
+        exclude = ('fee_balance',)
 
 
 

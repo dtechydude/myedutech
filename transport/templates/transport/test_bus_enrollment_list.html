@@ -34,6 +34,7 @@
                             <table class="table table-hover table-striped">
                                 <thead class="table-dark">
                                     <tr>
+                                        <th>N/A</th>
                                         <th>Student</th>
                                         <th>Route</th>
                                         <th>Session</th>
@@ -48,17 +49,18 @@
                                 <tbody>
                                     {% for enrollment in enrollments %}
                                     <tr>
-                                        <td>{{ enrollment.student.first_name }}</td>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ enrollment.student.get_full_name }}</td>
                                         <td>{{ enrollment.route.name }}</td>
                                         <td>{{ enrollment.session.name }}</td>
                                         <td>{{ enrollment.term.name }}</td>
-                                        <td>${{ enrollment.route.bus_fee|floatformat:2 }}</td>
-                                        <td><span class="text-success">${{ enrollment.total_paid|floatformat:2 }}</span></td>
+                                        <td>N{{ enrollment.route.bus_fee|floatformat:2 }}</td>
+                                        <td><span class="text-success">N{{ enrollment.total_paid|floatformat:2 }}</span></td>
                                         <td>
                                             {% if enrollment.balance > 0 %}
-                                                <span class="text-danger">${{ enrollment.balance|floatformat:2 }}</span>
+                                                <span class="text-danger">N{{ enrollment.balance|floatformat:2 }}</span>
                                             {% else %}
-                                                <span class="text-success">${{ enrollment.balance|floatformat:2 }}</span>
+                                                <span class="text-success">N{{ enrollment.balance|floatformat:2 }}</span>
                                             {% endif %}
                                         </td>
                                         <td>
@@ -69,7 +71,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <a href="{% url 'bus:payment_pass' enrollment.id %}" class="btn btn-sm btn-info">
+                                            <a href="{% url 'transport:payment_pass' enrollment.id %}" class="btn btn-sm btn-info">
                                                 View Pass
                                             </a>
                                         </td>

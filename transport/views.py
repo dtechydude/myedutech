@@ -65,21 +65,19 @@ def submission_success(request):
 
 
 
-@login_required
 def bus_signup_list(request):
     """
-    Displays a list of all students signed up for bus routes.
+    Displays a list of all bus signups.
     """
-    # Fetch all StudentOnRoute objects.
-    # .select_related('student', 'route') efficiently fetches the related
-    # User (for student) and Route objects in the same database query,
-    # preventing N+1 query problems.
-    student_signups = StudentOnRoute.objects.all().select_related('student', 'route').order_by('signup_date')
-    
+    # 🆕 Corrected field name from 'signup_date' to 'created_at'
+    student_signups = StudentOnRoute.objects.all().select_related('student', 'route').order_by('created_at')
+
     context = {
-        'student_signups': student_signups
+        'student_signups': student_signups,
+        'page_title': "Bus Signups"
     }
     return render(request, 'transport/bus_signup_list.html', context)
+
 
 # students see their route details
 @login_required
@@ -222,22 +220,37 @@ def student_payment_pass_view(request, enrollment_id):
 def is_staff_or_superuser(user):
     return user.is_staff or user.is_superuser
 
-@user_passes_test(is_staff_or_superuser)
 def bus_enrollment_list_view(request):
     """
-    Displays a list of all students signed up for bus transport.
-    Accessible only to staff.
+    Displays a list of all bus enrollments, including payment status.
     """
-    enrollments = StudentOnRoute.objects.all().order_by('student__first_name')
+    enrollments = StudentOnRoute.objects.all().select_related('student', 'route')
 
-    # Add calculated fields for each enrollment
+    # Add payment details to each enrollment object
     for enrollment in enrollments:
-        total_paid = enrollment.payments.filter(is_approved=True).aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0.0
-        enrollment.total_paid = total_paid
+        # Get total paid by this student for this enrollment
+        total_paid_float = BusPayment.objects.filter(
+            enrollment=enrollment,
+            is_approved=True
+        ).aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0.0
+
+        # 🆕 Convert the float to a Decimal to prevent the TypeError
+        total_paid = Decimal(str(total_paid_float))
+
+        # 🆕 Now, perform the subtraction with both operands as Decimal
         enrollment.balance = enrollment.route.bus_fee - total_paid
+
+        # Calculate a more readable status
+        if enrollment.balance <= 0:
+            enrollment.payment_status = "Paid in Full"
+            enrollment.status_class = "text-success"
+        else:
+            enrollment.payment_status = f"Balance: ${enrollment.balance}"
+            enrollment.status_class = "text-danger"
 
     context = {
         'enrollments': enrollments,
+        'page_title': "Bus Enrollments"
     }
     return render(request, 'transport/test_bus_enrollment_list.html', context)
 
