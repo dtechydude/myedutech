@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'attendance.apps.AttendanceConfig',
     'transport.apps.TransportConfig',
     'cbt.apps.CbtConfig',
+    'tickets.apps.TicketsConfig',
 
 
     # Installed Apps
@@ -192,6 +193,17 @@ DEFAULT_FROM_EMAIL = 'no-reply@yourdomain.com'
 # EMAIL_HOST_USER = 'schoollyapp@gmail.com'
 # # EMAIL_HOST_PASSWORD = 'eawtvpskkrujiwgo'
 # EMAIL_HOST_PASSWORD = 'oert qkpu unec rpqq'
+
+
+#SENDGRID EMAIL SETTING
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.sendgrid.net' # Example for SendGrid
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your_sendgrid_username'
+EMAIL_HOST_PASSWORD = 'your_sendgrid_password'
+DEFAULT_FROM_EMAIL = 'noreply@your-school-app.com'
+ADMIN_EMAIL = 'admin@your-school-app.com' # Or a list of admin emails
 
 
 

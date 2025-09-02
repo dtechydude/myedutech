@@ -1,0 +1,134 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+<title>Admin - Ticket #{{ ticket.id|stringformat:"04d" }} Details</title>
+{% endblock title %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    /* ... (your existing styles) ... */
+    .status-badge {
+        /* ... (your existing styles) ... */
+    }
+    .status-badge-Open { background-color: #ffc107; color: #000; }
+    .status-badge-InProgress { background-color: #007bff; color: #fff; }
+    .status-badge-Resolved { background-color: #28a745; color: #fff; }
+    .status-badge-Closed { background-color: #6c757d; color: #fff; }
+
+    /* New styles for comments */
+    .comment-container {
+        border-left: 4px solid #f0f0f0;
+        padding-left: 15px;
+        margin-bottom: 20px;
+    }
+    .comment-admin {
+        border-left-color: #007bff;
+    }
+    .card-footer-buttons form {
+        display: inline-block;
+        margin-left: 10px;
+    }
+</style>
+{% endblock head %}
+
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">#{{ ticket.id|stringformat:"04d" }}: {{ ticket.title }} <span class="badge bg-light text-dark ms-2">{{ ticket.category }}</span></h4>
+                    </div>
+                    <div class="card-body">
+                        {% if ticket.status == 'Closed' %}
+                            <div class="alert alert-danger text-center" role="alert">
+                                <i class="fas fa-lock me-2"></i> This ticket is **closed**. No new responses can be added.
+                            </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-between mb-3 flex-wrap">
+                            <p class="mb-2"><strong>Status:</strong> <span class="status-badge status-badge-{{ ticket.status|slugify }}">{{ ticket.status }}</span></p>
+                            <p class="mb-2"><strong>Priority:</strong> <span class="badge bg-secondary">{{ ticket.priority }}</span></p>
+                            <p class="mb-2"><strong>Submitted By:</strong> {{ ticket.author.get_full_name|default:ticket.author.username }}</p>
+                            <p class="mb-2"><strong>Submitted On:</strong> {{ ticket.created_at|date:"F j, Y, P" }}</p>
+                            <p class="mb-2"><strong>Assigned To:</strong>
+                                {% if ticket.assigned_to %}
+                                    {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}
+                                {% else %}
+                                    <em>Unassigned</em>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <hr>
+                        <p><strong>Description:</strong></p>
+                        <p>{{ ticket.description|linebreaksbr }}</p>
+
+                        <h5 class="mt-5 mb-3">Conversation History</h5>
+                        {% for comment in comments %}
+                        <div class="comment-container {% if comment.author.is_staff %}comment-admin{% endif %}">
+                            <small class="text-muted">
+                                <strong>{{ comment.author.get_full_name|default:comment.author.username }}</strong>
+                                {% if comment.author.is_staff %}(Admin){% endif %}
+                                - {{ comment.created_at|date:"F j, Y, P" }}
+                            </small>
+                            <p class="my-2">{{ comment.text|linebreaksbr }}</p>
+                        </div>
+                        {% empty %}
+                            <div class="alert alert-info">No responses yet.</div>
+                        {% endfor %}
+
+                        {% if ticket.status != 'Closed' %}
+                            <hr class="my-4">
+                            <h5 class="mb-3">Add a Response</h5>
+                            <form method="post">
+                                {% csrf_token %}
+                                {{ form|crispy }}
+                                <div class="d-grid mt-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-reply"></i> Send Response
+                                    </button>
+                                </div>
+                            </form>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer d-flex justify-content-between flex-wrap card-footer-buttons">
+                        <a href="{% url 'tickets:admin_ticket_list' %}" class="btn btn-secondary mb-2 mb-md-0">
+                            <i class="fas fa-arrow-left"></i> Back to All Tickets
+                        </a>
+                        <div>
+                            {% if not ticket.assigned_to %}
+                                <form method="post" class="d-inline-block">
+                                    {% csrf_token %}
+                                    <button type="submit" name="assign_ticket" class="btn btn-primary me-2">
+                                        <i class="fas fa-user-tag"></i> Assign to Me
+                                    </button>
+                                </form>
+                            {% endif %}
+                            {% if ticket.status != 'Resolved' %}
+                                <form method="post" class="d-inline-block">
+                                    {% csrf_token %}
+                                    <button type="submit" name="resolve_ticket" class="btn btn-success me-2">
+                                        <i class="fas fa-check-circle"></i> Mark as Resolved
+                                    </button>
+                                </form>
+                            {% endif %}
+                            {% if ticket.status != 'Closed' %}
+                                <form method="post" class="d-inline-block">
+                                    {% csrf_token %}
+                                    <button type="submit" name="close_ticket" class="btn btn-danger">
+                                        <i class="fas fa-lock"></i> Close Ticket
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content_body %}
