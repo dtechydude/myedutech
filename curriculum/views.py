@@ -184,6 +184,7 @@ def class_list(request):
 
 
 #Displays all teachers
+@login_required
 def classgroup_form_teachers_list(request):
     all_teachers = ClassGroup.objects.all()   
 
@@ -194,6 +195,7 @@ def classgroup_form_teachers_list(request):
 
 
 #Displays all teachers
+@login_required
 def form_teachers_head_list(request):
     all_teachers = Standard.objects.all()   
 

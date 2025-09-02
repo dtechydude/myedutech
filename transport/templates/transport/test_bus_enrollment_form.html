@@ -26,7 +26,7 @@
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-primary text-white text-center">
                         {% if student %}
-                            <h4 class="card-title text-white mb-0">🚌 Bus Enrollment for {{ student.name }}</h4>
+                            <h4 class="card-title text-white mb-0">🚌 Bus Enrollment for: {{ student.get_full_name }}</h4>
                         {% else %}
                             <h4 class="card-title text-white mb-0">🚌 Enroll Student for Bus Service</h4>
                         {% endif %}

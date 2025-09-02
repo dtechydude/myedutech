@@ -35,54 +35,6 @@ class Route(models.Model):
         super().save(*args, **kwargs)
 
 
-# class StudentOnRoute(models.Model):
-#     student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='studentonroute',
-#                                 help_text="The student associated with this route.")
-#     route = models.ForeignKey(Route, on_delete=models.CASCADE, default= None, related_name='routes')
-#     session = models.ForeignKey(Session, on_delete=models.CASCADE, default=None, null=True, related_name='official_staff')
-#     term = models.ForeignKey(Term, on_delete=models.CASCADE, default=None, null=True, related_name='official_staff')
-#     amount_paid = models.DecimalField(max_digits=15, decimal_places=2, default=0.0, null=True, help_text='Amount Paid For Bus')
-#     PAYMENT_METHOD_CHOICES = [
-#         ('cash', 'Cash'),
-#         ('bank_transfer', 'Bank Transfer'),
-#         ('card', 'Card Payment'),
-#         ('online_gateway', 'Online Gateway'),
-#     ]  
-#     payment_method = models.CharField(max_length=50, choices=PAYMENT_METHOD_CHOICES, blank=True, null=True,
-#                                       help_text="The method used for the payment.")
-#     payment_date = models.DateField(verbose_name='Payment Date', blank=True, null=True)
-         
-#     signup_date = models.DateTimeField(auto_now_add=True)
-#     is_approved = models.BooleanField(default=False,  help_text="Check if payment is confirmed.")
-#     is_active_on_bus = models.BooleanField(default=False, help_text="Check if student is ACTIVE on bus Uncheck If Student in INACTIVE")
-#     updated = models.DateTimeField(auto_now=True)
-
-#     class Meta:
-#         unique_together = (('student', 'route'),)
-#         verbose_name = "Student on Route"
-#         verbose_name_plural = "Students on Routes"
-
-#     def __str__(self):
-#         # If student is a User, then access username directly
-#         return f"{self.student.username} - {self.route.name}" 
-   
-
-#     class Meta:
-#         ordering = ['student' ]
-#         unique_together = ['student', 'route']
-#         verbose_name = 'Students On Bus Route'
-#         verbose_name_plural = 'Students On Bus Route'
-    
-
-#     def __str__ (self):
-#        return f'{self.student}'
-    
-    
-#     @property
-#     def balance_payment (self):
-#        return self.route.bus_fee - (self.amount_paid)
-    
-
 
 class StudentOnRoute(models.Model):
     """

@@ -94,22 +94,26 @@ def dashboard(request):
         
     return render(request, 'pages/portal_home.html', context )    
 
-        
+@login_required        
 def help_center(request):
     return render(request, 'pages/help_center.html')
 
+@login_required
 def support_info(request):
     school_contact = SchoolIdentity.objects.all()
     return render(request, 'pages/support_info.html', {'school_contact':school_contact})
 
+@login_required
 def lock_screen(request):
     return render(request, 'pages/lockscreen.html')
 
+@login_required
 def success_submission(request):
     return render(request, 'pages/success_submission.html')
 
 
 # email list
+@login_required
 def email_list(request):
     users = User.objects.all()
 
@@ -120,6 +124,7 @@ def email_list(request):
     return render(request, 'pages/email_list.html', context )
 
 # birthday list
+@login_required
 def birthday_list(request):
     user_birthday = Profile.objects.all()
     teacher_birthday = Teacher.objects.all()
@@ -131,14 +136,17 @@ def birthday_list(request):
     }
     return render(request, 'pages/birthday_list.html', context)
 
+@login_required
 def payment_instruction(request):
     return render(request, 'pages/payment_instruction.html')
 
+@login_required
 def payment_chart(request):
     return render(request, 'pages/payment_chart.html')
 
 
 # birthday list
+@login_required
 def bank_detail(request):
     bank_detail = BankDetail.objects.all()   
     context = {        
@@ -147,7 +155,7 @@ def bank_detail(request):
     return render(request, 'pages/bank_detail.html', context)
 
 # students phone list
-login_required
+@login_required
 def student_phone_list_view(request):
     """
     A view to display a phone list of all students and allows for CSV export.

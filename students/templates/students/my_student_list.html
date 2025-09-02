@@ -130,8 +130,8 @@
                                                 <td>{{ s.date_admitted }}</td>
                                                 <td>
 													<div class="d-flex">
-														<a href="{% url 'students:student-detail' s.USN %}" class="btn btn-primary shadow btn-xs sharp me-1"><i class="fas fa-eye"></i></a>
-														<a href="{% url 'students:student-update' s.USN %}" class="btn btn-danger shadow btn-xs sharp"><i class="fa fa-pencil-alt"></i></a>
+														<a href="{% url 'students:student-detail' s.USN %}" class="btn btn-success me-1">View</a>
+														<a href="{% url 'students:student-update' s.USN %}" class="btn btn-warning">Edit</a>
 													</div>
 												</td>
                                                 {% endfor %}

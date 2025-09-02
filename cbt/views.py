@@ -13,13 +13,14 @@ from django.conf import settings
 
 
 # Create your views here.
-
+@login_required
 def cbt_home(request):
     return render(request, 'cbt/cbt_home.html')
-
+@login_required
 def cbt_order(request):
     return render(request, 'cbt/cbt_order_form.html')
 
+@login_required
 def cbt_teacher_order(request):
     return render(request, 'cbt/cbt_teacher_request.html')
 

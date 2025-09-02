@@ -23,6 +23,8 @@ urlpatterns = [
     path('profile/', user_views.profile_edit, name="profile"),
     path('employment_profile/', user_views.employment_edit, name="employment_profile"),
     path('logout/', user_views.user_logout, name='user_logout'),
+    path('logout-success/', user_views.logout_success, name='logout_success'),
+
     
     # path('password-reset/', auth_views.PasswordResetView.as_view(template_name='users/password_reset.html'), name="password_reset"),
     path('password-reset/', auth_views.PasswordResetView.as_view(template_name='users/password_reset.html', success_url = reverse_lazy('users:password_reset_done')), name="password_reset"),

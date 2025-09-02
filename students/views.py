@@ -36,6 +36,7 @@ from django.views import View
 
 
 # Displays all students
+@login_required
 def student_list(request):
     # Check if the user is authenticated at the very beginning
     if not request.user.is_authenticated:
@@ -104,6 +105,7 @@ def student_list(request):
 
 
 # For Boading Students
+@login_required
 def student_boarder_list(request):
     # Filter for 'boarder' students and exclude any with a 'graduated' status
     boarder_student = Student.objects.filter(
@@ -122,6 +124,7 @@ def student_boarder_list(request):
         return render(request, 'pages/portal_home.html')
 
 # GRADUATED Students List
+@login_required
 def graduated_students_list(request):
     """
     Displays a list of all students who have a status of 'graduated'.
@@ -188,6 +191,7 @@ def graduate_students_view(request):
     
 
  # Hostel List
+@login_required
 def hostel_list(request):
     hostel_list = Hostel.objects.all()
     # boarder_student = Student.objects.all().order_by('-date_admitted')
@@ -232,6 +236,7 @@ def search(request):
     return render(request, 'students/search.html', {'query': query, 'results': results})
 
 #count students in each class
+@login_required
 def student_in_class(request):
     students = Student.objects.all()
     student_no = Student.objects.filter().order_by('current_class').values('current_class__name').annotate(count=Count('current_class__name'))

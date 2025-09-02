@@ -480,6 +480,7 @@ def debtors_report(request):
 
 
 # A new view function to generate student fees (you can make this a management command)
+@login_required
 def generate_student_fees(request):
     if request.method == 'POST':
         session_id = request.POST.get('session_id')

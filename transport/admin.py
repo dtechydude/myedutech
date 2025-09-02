@@ -82,20 +82,22 @@ class StudentOnRouteAdmin(ImportExportModelAdmin):
         'total_paid_display',
         'balance_display',
     )
+    raw_id_fields = ['student',]
+
     inlines = [BusPaymentInline]
     actions = ['mark_as_active', 'mark_as_inactive']
 
     def total_paid_display(self, obj):
         total = obj.payments.filter(is_approved=True).aggregate(sum_amount=Sum('amount_paid'))['sum_amount']
-        return f'${total:,.2f}' if total is not None else '$0.00'
+        return f'N{total:,.2f}' if total is not None else 'N0.00'
     total_paid_display.short_description = 'Amount Paid'
 
     def balance_display(self, obj):
         total_paid = obj.payments.filter(is_approved=True).aggregate(sum_amount=Sum('amount_paid'))['sum_amount'] or 0
         balance = obj.route.bus_fee - total_paid
         if balance > 0:
-            return f'${balance:,.2f}'
-        return f'-${abs(balance):,.2f}' if balance < 0 else '$0.00'
+            return f'N{balance:,.2f}'
+        return f'-N{abs(balance):,.2f}' if balance < 0 else 'N0.00'
     balance_display.short_description = 'Balance'
     
     @admin.action(description="Mark selected students as active on bus")
@@ -131,6 +133,7 @@ class BusPaymentAdmin(ImportExportModelAdmin):
     list_editable = (
         'is_approved',
     )
+
     actions = ['approve_payments']
 
     @admin.action(description="Approve selected payments")

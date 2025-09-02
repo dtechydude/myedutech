@@ -60,11 +60,12 @@ def sign_up_bus(request):
     return render(request, 'transport/signup_for_bus.html', {'form': form})
 
 
+@login_required
 def submission_success(request):
     return render(request, 'transport/bus_signup_success.html')
 
 
-
+@login_required
 def bus_signup_list(request):
     """
     Displays a list of all bus signups.

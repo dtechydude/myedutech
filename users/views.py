@@ -137,11 +137,17 @@ def user_login(request):
     return render(request, 'users/login.html', {'form': form})
 
 
-@login_required
 def user_logout(request):
     logout(request)
-    # return HttpResponseRedirect(reverse('users:user_logout'))
-    return render(request, 'users/logout.html')
+    # Redirect to a new URL. You have a few options:
+    
+    # Option 1: Redirect to the homepage
+    return redirect('users:logout_success')  # Assumes you have a URL named 'home'
+
+
+def logout_success(request):
+    return render (request, 'users/logout.html')
+
 
 @login_required
 def users_home(request):
@@ -149,6 +155,7 @@ def users_home(request):
 
 
 # all users
+@login_required
 def all_users(request):
     """
     A view to display all users and export them to a CSV,
@@ -180,6 +187,7 @@ def all_users(request):
 
 
 # Enroll students view
+@login_required
 def enroll_student(request):
     user_form = UserRegistrationForm(request.POST or None)
     student_form = StudentEnrollmentForm(request.POST or None)
@@ -240,6 +248,7 @@ def enroll_student(request):
         'school_identity': school_identity, # Add school_identity to the context
     })
 
+@login_required
 def enroll_student_details(request):
     if 'temp_user_id' not in request.session:
         messages.error(request, 'Invalid session. Please start the enrollment process from the beginning.')
@@ -282,7 +291,7 @@ def enroll_student_details(request):
     })
 
 
-
+@login_required
 def enroll_success(request):
     return render(request, 'users/enroll_success.html')
 

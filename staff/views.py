@@ -21,6 +21,7 @@ from django.contrib.auth.forms import UserCreationForm
 
 
 #Displays all teachers
+@login_required
 def teachers_list(request):
     all_teachers = Teacher.objects.all().order_by('-date_employed')    
 
