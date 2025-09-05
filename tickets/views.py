@@ -1,12 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from .models import Ticket, Comment
-from .forms import TicketForm, CommentForm
+from .models import Ticket, Comment, TicketReadStatus
+from .forms import TicketForm, CommentForm, BroadcastTicketForm
 from django.core.paginator import Paginator, EmptyPage
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 
 User = get_user_model()
 
@@ -44,10 +45,28 @@ def create_ticket(request):
     
     return render(request, 'tickets/create_ticket.html', {'form': form})
 
+
+
 @login_required
 def ticket_list(request):
-    # Filter tickets by the current logged-in user
-    all_tickets = request.user.tickets_submitted.all().order_by('-created_at')
+    user = request.user
+    user_tickets = Ticket.objects.filter(author=user)
+    
+    # Determine the user's audience based on their role
+    if hasattr(user, 'student'):
+        role = 'students'
+    elif hasattr(user, 'teacher'):
+        role = 'teachers'
+    else:
+        role = None
+
+    # Use a single query with Q objects to get all relevant tickets
+    # This is more efficient than .union()
+    all_tickets = Ticket.objects.filter(
+        Q(author=user) | 
+        Q(is_broadcast=True, audience='all') | 
+        Q(is_broadcast=True, audience=role)
+    ).order_by('-created_at')
 
     # Add pagination logic
     paginator = Paginator(all_tickets, 10)  # Show 10 tickets per page
@@ -55,33 +74,49 @@ def ticket_list(request):
     try:
         tickets = paginator.page(page_number)
     except EmptyPage:
-        # If the page is out of range, deliver the last page of results
+        # If the page is out of range, deliver the last page
         tickets = paginator.page(paginator.num_pages)
     except:
         # If page number is not an integer, deliver first page
         tickets = paginator.page(1)
-
+        
     return render(request, 'tickets/ticket_list.html', {'tickets': tickets})
+
+
+
+
 
 
 @login_required
 def ticket_detail(request, pk):
-    # CORRECT THE QUERY:
-    # This view also needs the change from 'student' to 'author'.
-    ticket = get_object_or_404(Ticket, pk=pk, author=request.user)
-    comments = ticket.comments.all().order_by('created_at')
+    ticket = get_object_or_404(Ticket, pk=pk)
+    comments = Comment.objects.filter(ticket=ticket).order_by('created_at')
+
+    # Mark the ticket as read for the current user
+    # This logic is correct and should be kept.
+    if not ticket.is_broadcast or request.user.is_staff:
+        TicketReadStatus.objects.update_or_create(
+            user=request.user,
+            ticket=ticket
+        )
+
     if request.method == 'POST':
         form = CommentForm(request.POST)
         if form.is_valid():
             comment = form.save(commit=False)
-            comment.ticket = ticket
             comment.author = request.user
+            comment.ticket = ticket
             comment.save()
-            return redirect('tickets:ticket_detail', pk=pk)
+            return redirect('tickets:ticket_detail', pk=ticket.pk)
     else:
         form = CommentForm()
-    return render(request, 'tickets/ticket_detail.html', {'ticket': ticket, 'comments': comments, 'form': form})
 
+    context = {
+        'ticket': ticket,
+        'comments': comments,
+        'form': form,
+    }
+    return render(request, 'tickets/ticket_detail.html', context)
 # ... (the rest of your views) ...
 
 # Admin Views
@@ -134,7 +169,7 @@ def admin_ticket_detail(request, pk):
                 ticket.status = 'Closed'
                 ticket.save()
                 messages.success(request, 'Ticket has been successfully closed.')
-                return redirect('admin_ticket_detail', pk=pk)
+                return redirect('tickets:admin_ticket_detail', pk=pk)
             
         form = CommentForm(request.POST)
         if form.is_valid():
@@ -145,7 +180,7 @@ def admin_ticket_detail(request, pk):
             comment.save()
             # Add a success message for the admin who sent the reply
             messages.success(request, 'Your response has been sent to the ticket author.')
-            return redirect('admin_ticket_detail', pk=pk)
+            return redirect('tickets:admin_ticket_detail', pk=pk)
     else:
         form = CommentForm()
 
@@ -154,3 +189,26 @@ def admin_ticket_detail(request, pk):
         'comments': comments,
         'form': form
     })
+
+
+# Helper function to check if the user is a staff member
+def is_admin(user):
+    return user.is_staff
+
+@login_required
+@user_passes_test(is_admin)
+def broadcast_ticket_create(request):
+    if request.method == 'POST':
+        form = BroadcastTicketForm(request.POST)
+        if form.is_valid():
+            broadcast_ticket = form.save(commit=False)
+            broadcast_ticket.is_broadcast = True
+            broadcast_ticket.author = request.user
+            broadcast_ticket.save()
+            
+            messages.success(request, "Broadcast ticket created and sent successfully! ✅")
+            return redirect('tickets:admin_ticket_list')
+    else:
+        form = BroadcastTicketForm()
+    
+    return render(request, 'tickets/broadcast_ticket_form.html', {'form': form})

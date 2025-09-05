@@ -66,34 +66,41 @@
                     </div>
                     <div class="card-body">
                         {% if tickets %}
-                            <div class="table-responsive">
-                                <table class="table table-hover table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Ticket ID</th>
-                                            <th>Subject</th>
-                                            <th>Status</th>
-                                            <th>Priority</th>
-                                            <th>Submitted On</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for ticket in tickets %}
-                                        <tr>
-                                            <td>#{{ ticket.id|stringformat:"04d" }}</td>
-                                            <td><a href="{% url 'tickets:ticket_detail' ticket.pk %}">{{ ticket.title }}</a></td>
-                                            <td><span class="status-badge status-badge-{{ ticket.status|slugify }}">{{ ticket.status }}</span></td>
-                                            <td>{{ ticket.priority }}</td>
-                                            <td>{{ ticket.created_at|date:"M j, Y" }}</td>
-                                            <td>
-                                                <a href="{% url 'tickets:ticket_detail' ticket.pk %}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i> View</a>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
+                           <div class="table-responsive">
+    <table class="table table-hover table-striped">
+        <thead>
+            <tr>
+                <th>Ticket ID</th>
+                <th>Subject</th>
+                <th>Type</th> <th>Status</th>
+                <th>Priority</th>
+                <th>Submitted On</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ticket in tickets %}
+            <tr>
+                <td>#{{ ticket.id|stringformat:"04d" }}</td>
+                <td><a href="{% url 'tickets:ticket_detail' ticket.pk %}">{{ ticket.title }}</a></td>
+                <td>
+                    {% if ticket.is_broadcast %}
+                        <span class="badge bg-primary">Broadcast</span>
+                    {% else %}
+                        <span class="badge bg-secondary">My Ticket</span>
+                    {% endif %}
+                </td>
+                <td><span class="status-badge status-badge-{{ ticket.status|slugify }}">{{ ticket.status }}</span></td>
+                <td>{{ ticket.priority }}</td>
+                <td>{{ ticket.created_at|date:"M j, Y" }}</td>
+                <td>
+                    <a href="{% url 'tickets:ticket_detail' ticket.pk %}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i> View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
                         {% else %}
                             <div class="alert alert-info" role="alert">
                                 You have not submitted any tickets yet.

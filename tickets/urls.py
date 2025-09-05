@@ -12,4 +12,6 @@ urlpatterns = [
     # Admin views
     path('admin/', views.admin_ticket_list, name='admin_ticket_list'),
     path('admin/<int:pk>/', views.admin_ticket_detail, name='admin_ticket_detail'),
+    path('admin/broadcast/create/', views.broadcast_ticket_create, name='broadcast_ticket_create'),
+
 ]

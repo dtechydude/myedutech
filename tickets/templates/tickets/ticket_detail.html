@@ -18,7 +18,6 @@
     .comment-admin {
         border-left-color: #007bff;
     }
-
     /* ... (your existing styles for the user's ticket detail page) ... */
     .status-badge {
         /* ... (your existing styles) ... */
@@ -34,19 +33,37 @@
 {% block content_body %}
 <div class="content-body">
     <div class="container-fluid">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        
         <div class="row justify-content-center">
             <div class="col-lg-10">
                 <div class="card shadow-lg">
-                    <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0">#{{ ticket.id|stringformat:"04d" }}: {{ ticket.title }} <span class="badge bg-light text-dark ms-2">{{ ticket.category }}</span></h4>
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            {% if ticket.is_broadcast %}
+                            <i class="fas fa-bullhorn me-2"></i> Broadcast Announcement
+                            {% else %}
+                            <i class="fas fa-ticket-alt me-2"></i> Ticket Details
+                            {% endif %}
+                        </h4>
+                        {% if not ticket.is_broadcast %}
+                            <span class="status-badge status-badge-{{ ticket.status|slugify }}">{{ ticket.status }}</span>
+                        {% endif %}
                     </div>
                     <div class="card-body">
-                        {% if ticket.status == 'Closed' %}
-                            <div class="alert alert-danger text-center" role="alert">
-                                <i class="fas fa-lock me-2"></i> This ticket is **closed**. No new responses can be added.
-                            </div>
-                        {% endif %}
+                        <h5><strong>Subject:</strong> {{ ticket.title }}</h5>
+                        <hr>
+                        <p><strong>Description:</strong></p>
+                        <p>{{ ticket.description|linebreaksbr }}</p>
 
+                        {% if not ticket.is_broadcast %}
                         <div class="d-flex justify-content-between mb-3 flex-wrap">
                             <p class="mb-2"><strong>Status:</strong> <span class="status-badge status-badge-{{ ticket.status|slugify }}">{{ ticket.status }}</span></p>
                             <p class="mb-2"><strong>Priority:</strong> <span class="badge bg-secondary">{{ ticket.priority }}</span></p>
@@ -60,26 +77,43 @@
                                 {% endif %}
                             </p>
                         </div>
-                        <hr>
-                        <p><strong>Description:</strong></p>
-                        <p>{{ ticket.description|linebreaksbr }}</p>
-
-                        <h5 class="mt-5 mb-3">Conversation History</h5>
-                        {% for comment in comments %}
-                        <div class="comment-container {% if comment.author.is_staff %}comment-admin{% endif %}">
-                            <small class="text-muted">
-                                <strong>{% if comment.author == request.user %}You{% else %}An Admin{% endif %}</strong>
-                                {% if comment.author.is_staff %}(Admin){% endif %}
-                                - {{ comment.created_at|date:"F j, Y, P" }}
-                            </small>
-                            <p class="my-2">{{ comment.text|linebreaksbr }}</p>
+                        <p><strong>Category:</strong> {{ ticket.category }}</p>
+                        {% else %}
+                        <div class="d-flex justify-content-between mb-3 flex-wrap">
+                            <p class="mb-2"><strong>Audience:</strong> <span class="badge bg-info text-white">{{ ticket.get_audience_display }}</span></p>
+                            <p class="mb-2"><strong>Submitted On:</strong> {{ ticket.created_at|date:"F j, Y, P" }}</p>
                         </div>
-                        {% empty %}
-                            <div class="alert alert-info">No responses yet.</div>
-                        {% endfor %}
+                        <div class="text-center mt-4">
+                            <a href="{% url 'tickets:ticket_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to My Tickets
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
 
-                        {% if ticket.status != 'Closed' %}
-                            <hr class="my-4">
+                {% if not ticket.is_broadcast %}
+                    <h5 class="mt-5 mb-3">Conversation History</h5>
+                    <div class="card shadow-lg">
+                        <div class="card-body">
+                            {% for comment in comments %}
+                                <div class="comment-container {% if comment.author.is_staff %}comment-admin{% endif %}">
+                                    <small class="text-muted">
+                                        <strong>{% if comment.author == request.user %}You{% else %}An Admin{% endif %}</strong>
+                                        {% if comment.author.is_staff %}(Admin){% endif %}
+                                        - {{ comment.created_at|date:"F j, Y, P" }}
+                                    </small>
+                                    <p class="my-2">{{ comment.text|linebreaksbr }}</p>
+                                </div>
+                            {% empty %}
+                                <div class="alert alert-info">No responses yet.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    {% if ticket.status != 'Closed' %}
+                    <div class="card shadow-lg mt-4">
+                        <div class="card-body">
                             <h5 class="mb-3">Add a Response</h5>
                             <form method="post">
                                 {% csrf_token %}
@@ -90,14 +124,19 @@
                                     </button>
                                 </div>
                             </form>
-                        {% endif %}
+                        </div>
                     </div>
-                    <div class="card-footer text-center">
-                        <a href="{% url 'tickets:ticket_list' %}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Back to My Tickets
-                        </a>
+                    {% endif %}
+
+                    <div class="card shadow-lg mt-4">
+                        <div class="card-body text-center">
+                            <a href="{% url 'tickets:ticket_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to My Tickets
+                            </a>
+                        </div>
                     </div>
-                </div>
+                {% endif %}
+
             </div>
         </div>
     </div>

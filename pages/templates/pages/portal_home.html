@@ -87,331 +87,83 @@
 			Chat box start
 		***********************************-->
 		{% block chatbox %}
-		<div class="chatbox">
-			<div class="chatbox-close"></div>
-			<div class="custom-tab-1">
-				<ul class="nav nav-tabs">
-					<li class="nav-item">
-						<a class="nav-link" data-bs-toggle="tab" href="#notes">Notes</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" data-bs-toggle="tab" href="#alerts">Alerts</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link active" data-bs-toggle="tab" href="#chat">Chat</a>
-					</li>
-				</ul>
-				<div class="tab-content">
-					<div class="tab-pane fade active show" id="chat" role="tabpanel">
-						<div class="card mb-sm-3 mb-md-0 contacts_card dlab-chat-user-box">
-							<div class="card-header chat-list-header text-center">
-								<a href="javascript:void(0);"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="18px" height="18px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect fill="#000000" x="4" y="11" width="16" height="2" rx="1"/><rect fill="#000000" opacity="0.3" transform="translate(12.000000, 12.000000) rotate(-270.000000) translate(-12.000000, -12.000000) " x="4" y="11" width="16" height="2" rx="1"/></g></svg></a>
-								<div>
-									<h6 class="mb-1">Chat List</h6>
-									<p class="mb-0">Show All</p>
-								</div>
-								<a href="javascript:void(0);"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="18px" height="18px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"/><circle fill="#000000" cx="5" cy="12" r="2"/><circle fill="#000000" cx="12" cy="12" r="2"/><circle fill="#000000" cx="19" cy="12" r="2"/></g></svg></a>
-							</div>
-							<div class="card-body contacts_body p-0 dlab-scroll  " id="DLAB_W_Contacts_Body">
-								<ul class="contacts">
-									<li class="name-first-letter">Schools</li>
-									
-									<li class="dlab-chat-user">
-										<div class="d-flex bd-highlight">
-											<div class="img_cont">
-											<img src="{% static 'pages/images/avatar/4.jpg'%}" class="rounded-circle user_img" alt=""/>
-												<span class="online_icon"></span>
-											</div>
-											<div class="user_info">
-												<span>Maranatha Sch.</span>
-												<p>BNSS is online</p>
-											</div>
-										</div>
-									</li>
-									<li class="dlab-chat-user">
-										<div class="d-flex bd-highlight">
-											<div class="img_cont">
-											<img src="{% static 'pages/images/avatar/4.jpg'%}" class="rounded-circle user_img" alt=""/>
-												<span class="online_icon online"></span>
-											</div>
-											<div class="user_info">
-												<span>St.George Schools</span>
-												<p>NCIC left 30 mins ago</p>
-											</div>
-										</div>
-									</li>
-									
-									<li class="name-first-letter">Schools</li>
-									<li class="dlab-chat-user">
-										<div class="d-flex bd-highlight">
-											<div class="img_cont">												
-												<img src="{% static 'pages/images/avatar/4.jpg'%}" class="rounded-circle user_img" alt=""/>
-												<span class="online_icon offline"></span>										
-											</div>
-											<div class="user_info">
-												<span>ECWA Sch.</span>
-												<p>MIHS is online</p>
-											</div>
-										</div>
-									</li>
-									<li class="dlab-chat-user">
-										<div class="d-flex bd-highlight">
-											<div class="img_cont">
-												<img src="{% static 'pages/images/avatar/4.jpg'%}" class="rounded-circle user_img" alt=""/>
-												<span class="online_icon offline"></span>
-											</div>
-											<div class="user_info">
-												<span>Fountain Int'l</span>
-												<p>JISS left 10 mins ago</p>
-											</div>
-										</div>
-									</li>
-									
-								</ul>
-							</div>
-						</div>
-						<div class="card chat dlab-chat-history-box d-none">
-							<div class="card-header chat-list-header text-center">
-								<a href="javascript:void(0);" class="dlab-chat-history-back">
-									<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="18px" height="18px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><polygon points="0 0 24 0 24 24 0 24"/><rect fill="#000000" opacity="0.3" transform="translate(15.000000, 12.000000) scale(-1, 1) rotate(-90.000000) translate(-15.000000, -12.000000) " x="14" y="7" width="2" height="10" rx="1"/><path d="M3.7071045,15.7071045 C3.3165802,16.0976288 2.68341522,16.0976288 2.29289093,15.7071045 C1.90236664,15.3165802 1.90236664,14.6834152 2.29289093,14.2928909 L8.29289093,8.29289093 C8.67146987,7.914312 9.28105631,7.90106637 9.67572234,8.26284357 L15.6757223,13.7628436 C16.0828413,14.136036 16.1103443,14.7686034 15.7371519,15.1757223 C15.3639594,15.5828413 14.7313921,15.6103443 14.3242731,15.2371519 L9.03007346,10.3841355 L3.7071045,15.7071045 Z" fill="#000000" fill-rule="nonzero" transform="translate(9.000001, 11.999997) scale(-1, -1) rotate(90.000000) translate(-9.000001, -11.999997) "/></g></svg>
-								</a>
-								<div>
-									<h6 class="mb-1">Chat with KwikSchools</h6>
-									<p class="mb-0 text-success">Online</p>
-								</div>							
-								<div class="dropdown">
-									<a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="18px" height="18px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"/><circle fill="#000000" cx="5" cy="12" r="2"/><circle fill="#000000" cx="12" cy="12" r="2"/><circle fill="#000000" cx="19" cy="12" r="2"/></g></svg></a>
-									
-								</div>
-							</div>
-							<div class="card-body msg_card_body dlab-scroll" id="DLAB_W_Contacts_Body3">
-								<div class="d-flex justify-content-start mb-4">
-									<div class="img_cont_msg">
-									</div>
-									<div class="msg_cotainer">
-										Welcome To KwikSchools!
-										<span class="msg_time">8:40 AM, Today</span>
-									</div>
-								</div>
-								<div class="d-flex justify-content-end mb-4">
-									<div class="msg_cotainer_send">
-										Hi, I need more info
-										<span class="msg_time_send">8:55 AM, Today</span>
-									</div>
-									<div class="img_cont_msg">
-									</div>
-								</div>
-								<div class="d-flex justify-content-start mb-4">
-									
-									<div class="msg_cotainer">
-										Check Our Website https://kwikschools.com
-										<span class="msg_time">9:00 AM, Today</span>
-									</div>
-								</div>
-								<div class="d-flex justify-content-end mb-4">
-									<div class="msg_cotainer_send">
-										Okay, Thank You.
-										<span class="msg_time_send">9:05 AM, Today</span>
-									</div>									
-								</div>
-								<div class="d-flex justify-content-start mb-4">
-									
-									<div class="msg_cotainer">
-										Our services also include FREE Digital Training For Schools
-										<span class="msg_time">9:15 AM, Today</span>
-									</div>
-								</div>
-								<div class="d-flex justify-content-end mb-4">
-									<div class="msg_cotainer_send">
-										Wow! Can I get my students and teachers trained? 
-										<span class="msg_time_send">9:16 AM, Today</span>
-									</div>
-									
-								</div>
-								<div class="d-flex justify-content-start mb-4">
-									
-									<div class="msg_cotainer">
-										Yes! Check the "Contact Us" page to submit inquiry
-										<span class="msg_time">9:17 AM, Today</span>
-									</div>
-								</div>							
-								<div class="d-flex justify-content-end mb-4">
-									<div class="msg_cotainer_send">
-										I just submitted training inquiry, what next?
-										<span class="msg_time_send">9:30 AM, Today</span>
-									</div>
-									<div class="img_cont_msg">
-									</div>
-								</div>
-								<div class="d-flex justify-content-start mb-4">
-									
-									<div class="msg_cotainer">
-										Our team will contact you with the info you provided
-										<span class="msg_time">9:31 AM, Today</span>
-									</div>
-								</div>
-								<div class="d-flex justify-content-end mb-4">
-									<div class="msg_cotainer_send">
-										Okay, Thank you.
-										<span class="msg_time_send">9:32 AM, Today</span>
-									</div>
-									<div class="img_cont_msg">
-									</div>
-								</div>
-								<div class="d-flex justify-content-start mb-4">
-									<div class="img_cont_msg">
-									</div>
-									<div class="msg_cotainer">
-										You're welcome. Feel free to call or message us
-										<span class="msg_time">9:33 AM, Today</span>
-									</div>
-								</div>
-								<div class="d-flex justify-content-end mb-4">
-									<div class="msg_cotainer_send">
-										Ok, thank you have a good day
-										<span class="msg_time_send">9:34 AM, Today</span>
-									</div>									
-								</div>
-								<div class="d-flex justify-content-start mb-4">									
-									<div class="msg_cotainer">
-										Bye, thanks for your time
-										<span class="msg_time">9:35 AM, Today</span>
-									</div>
-								</div>
-							</div>
-							<div class="card-footer type_msg">
-								<div class="input-group">
-									<textarea class="form-control" placeholder="Type your message..."></textarea>
-									<div class="input-group-append">
-										<button type="button" class="btn btn-primary"><i class="fa fa-location-arrow"></i></button>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="tab-pane fade" id="alerts" role="tabpanel">
-						<div class="card mb-sm-3 mb-md-0 contacts_card">
-							<div class="card-header chat-list-header text-center">
-								<a href="javascript:void(0);"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="18px" height="18px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"/><circle fill="#000000" cx="5" cy="12" r="2"/><circle fill="#000000" cx="12" cy="12" r="2"/><circle fill="#000000" cx="19" cy="12" r="2"/></g></svg></a>
-								<div>
-									<h6 class="mb-1">Notications</h6>
-									<p class="mb-0">Show All</p>
-								</div>
-								<a href="javascript:void(0);"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="18px" height="18px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"/><path d="M14.2928932,16.7071068 C13.9023689,16.3165825 13.9023689,15.6834175 14.2928932,15.2928932 C14.6834175,14.9023689 15.3165825,14.9023689 15.7071068,15.2928932 L19.7071068,19.2928932 C20.0976311,19.6834175 20.0976311,20.3165825 19.7071068,20.7071068 C19.3165825,21.0976311 18.6834175,21.0976311 18.2928932,20.7071068 L14.2928932,16.7071068 Z" fill="#000000" fill-rule="nonzero" opacity="0.3"/><path d="M11,16 C13.7614237,16 16,13.7614237 16,11 C16,8.23857625 13.7614237,6 11,6 C8.23857625,6 6,8.23857625 6,11 C6,13.7614237 8.23857625,16 11,16 Z M11,18 C7.13400675,18 4,14.8659932 4,11 C4,7.13400675 7.13400675,4 11,4 C14.8659932,4 18,7.13400675 18,11 C18,14.8659932 14.8659932,18 11,18 Z" fill="#000000" fill-rule="nonzero"/></g></svg></a>
-							</div>
-							<div class="card-body contacts_body p-0 dlab-scroll" id="DLAB_W_Contacts_Body1">
-								<ul class="contacts">
-									<li class="name-first-letter">EVENTS</li>
-									<li class="active">
-										<div class="d-flex bd-highlight">
-											<div class="img_cont primary">KK</div>
-											<div class="user_info">
-												<span>YISS Testimonials</span>
-												<p class="text-primary">Today</p>
-											</div>
-										</div>
-									</li>
-									<li class="name-first-letter">SOCIAL</li>
-									<li>
-										<div class="d-flex bd-highlight">
-											<div class="img_cont success">RU</div>
-											<div class="user_info">
-												<span>EdTech Simplified</span>
-												<p>Dr. Agnes commented on your status</p>
-											</div>
-										</div>
-									</li>
-									<li class="name-first-letter">OTHERS</li>
-									<li>
-										<div class="d-flex bd-highlight">
-											<div class="img_cont primary">AU</div>
-											<div class="user_info">
-												<span>Brilliant Academy</span>
-												<p>Director is online</p>
-											</div>
-										</div>
-									</li>
-									<li>
-										<div class="d-flex bd-highlight">
-											<div class="img_cont info">MO</div>
-											<div class="user_info">
-												<span>Blossom College</span>
-												<p>Amaka Young left 30 mins ago</p>
-											</div>
-										</div>
-									</li>
-								</ul>
-							</div>
-							<div class="card-footer"></div>
-						</div>
-					</div>
-					<div class="tab-pane fade" id="notes">
-						<div class="card mb-sm-3 mb-md-0 note_card">
-							<div class="card-header chat-list-header text-center">
-								<a href="javascript:void(0);"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="18px" height="18px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect fill="#000000" x="4" y="11" width="16" height="2" rx="1"/><rect fill="#000000" opacity="0.3" transform="translate(12.000000, 12.000000) rotate(-270.000000) translate(-12.000000, -12.000000) " x="4" y="11" width="16" height="2" rx="1"/></g></svg></a>
-								<div>
-									<h6 class="mb-1">Notes</h6>
-									<p class="mb-0">Add New Nots</p>
-								</div>
-								<a href="javascript:void(0);"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="18px" height="18px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><rect x="0" y="0" width="24" height="24"/><path d="M14.2928932,16.7071068 C13.9023689,16.3165825 13.9023689,15.6834175 14.2928932,15.2928932 C14.6834175,14.9023689 15.3165825,14.9023689 15.7071068,15.2928932 L19.7071068,19.2928932 C20.0976311,19.6834175 20.0976311,20.3165825 19.7071068,20.7071068 C19.3165825,21.0976311 18.6834175,21.0976311 18.2928932,20.7071068 L14.2928932,16.7071068 Z" fill="#000000" fill-rule="nonzero" opacity="0.3"/><path d="M11,16 C13.7614237,16 16,13.7614237 16,11 C16,8.23857625 13.7614237,6 11,6 C8.23857625,6 6,8.23857625 6,11 C6,13.7614237 8.23857625,16 11,16 Z M11,18 C7.13400675,18 4,14.8659932 4,11 C4,7.13400675 7.13400675,4 11,4 C14.8659932,4 18,7.13400675 18,11 C18,14.8659932 14.8659932,18 11,18 Z" fill="#000000" fill-rule="nonzero"/></g></svg></a>
-							</div>
-							<div class="card-body contacts_body p-0 dlab-scroll" id="DLAB_W_Contacts_Body2">
-								<ul class="contacts">
-									<li class="active">
-										<div class="d-flex bd-highlight">
-											<div class="user_info">
-												<span>New request placed..</span>
-												<p>30 Aug 2025</p>
-											</div>
-											<div class="ms-auto">
-												<a href="javascript:void(0);" class="btn btn-primary btn-xs sharp me-1"><i class="fas fa-pencil-alt"></i></a>
-												<a href="javascript:void(0);" class="btn btn-danger btn-xs sharp"><i class="fa fa-trash"></i></a>
-											</div>
-										</div>
-									</li>
-									<li>
-										<div class="d-flex bd-highlight">
-											<div class="user_info">
-												<span>Onboarding Schools...</span>
-												<p>17 Sept 2025</p>
-											</div>
-											<div class="ms-auto">
-												<a href="javascript:void(0);" class="btn btn-primary btn-xs sharp me-1"><i class="fas fa-pencil-alt"></i></a>
-												<a href="javascript:void(0);" class="btn btn-danger btn-xs sharp"><i class="fa fa-trash"></i></a>
-											</div>
-										</div>
-									</li>
-									<li>
-										<div class="d-flex bd-highlight">
-											<div class="user_info">
-												<span>DMISS just got onboarded..</span>
-												<p>31 Aug 2025</p>
-											</div>
-											<div class="ms-auto">
-												<a href="javascript:void(0);" class="btn btn-primary btn-xs sharp me-1"><i class="fas fa-pencil-alt"></i></a>
-												<a href="javascript:void(0);" class="btn btn-danger btn-xs sharp"><i class="fa fa-trash"></i></a>
-											</div>
-										</div>
-									</li>
-									<li>
-										<div class="d-flex bd-highlight">
-											<div class="user_info">
-												<span>EdTech News</span>
-												<p>31 Aug 2025</p>
-											</div>
-											<div class="ms-auto">
-												<a href="javascript:void(0);" class="btn btn-primary btn-xs sharp me-1"><i class="fas fa-pencil-alt"></i></a>
-												<a href="javascript:void(0);" class="btn btn-danger btn-xs sharp"><i class="fa fa-trash"></i></a>
-											</div>
-										</div>
-									</li>
-								</ul>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+<div class="chatbox">
+    <div class="chatbox-close"></div>
+    <div class="custom-tab-1">
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#alerts">Alerts</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#others">Others</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade active show" id="alerts" role="tabpanel">
+                <div class="card mb-sm-3 mb-md-0 contacts_card">
+                    <div class="card-header chat-list-header text-center">
+                        <a href="javascript:void(0);">
+                            <i class="fas fa-bell"></i>
+                        </a>
+                        <div>
+                            <h6 class="mb-1">Notifications</h6>
+                            <p class="mb-0">
+                                {% if unread_count > 0 %}
+                                    You have **{{ unread_count }}** new ticket(s) 🚀
+                                {% else %}
+                                    No new tickets.
+                                {% endif %}
+                            </p>
+                        </div>
+                        <a href="{% url 'tickets:ticket_list' %}">
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="card-body contacts_body p-0 dlab-scroll" id="DLAB_W_Contacts_Body1">
+                        <ul class="contacts">
+                            <li class="name-first-letter">NEW TICKETS</li>
+                            <li>
+                                <div class="d-flex bd-highlight">
+                                    <div class="img_cont primary">
+                                        <i class="fas fa-ticket-alt"></i>
+                                    </div>
+                                    <div class="user_info">
+                                        <span>New Ticket Submissions</span>
+                                        <p>
+                                            <a href="{% url 'tickets:ticket_list' %}" class="text-primary">View All Tickets</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-footer"></div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="others" role="tabpanel">
+                <div class="card mb-sm-3 mb-md-0 contacts_card">
+                    <div class="card-header chat-list-header text-center">
+                        <div>
+                            <h6 class="mb-1">Other Alerts</h6>
+                            <p class="mb-0">You're all caught up!</p>
+                        </div>
+                    </div>
+                    <div class="card-body contacts_body p-0 dlab-scroll" id="DLAB_W_Contacts_Body2">
+                        <ul class="contacts">
+                            <li>
+                                <div class="d-flex bd-highlight justify-content-center">
+                                    <p class="mt-3">No new notifications.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-footer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 		{% endblock chatbox %}
 		<!--**********************************
 			Chat box End
@@ -450,13 +202,22 @@
 							</div>
 						</div>
 						<ul class="navbar-nav header-right">
-							<li class="nav-item dropdown notification_dropdown">
+							<!-- <li class="nav-item dropdown notification_dropdown">
 								<a class="nav-link" href="javascript:void(0);">
 								<svg xmlns="http://www.w3.org/2000/svg" width="26.309" height="23.678" viewBox="0 0 26.309 23.678">
 								  <path id="Path_1955" data-name="Path 1955" d="M163.217,78.043a7.409,7.409,0,0,1,10.5-10.454l.506.506.507-.506a7.409,7.409,0,0,1,10.5,10.454L175.181,88.686a1.316,1.316,0,0,1-1.912,0Zm11.008,7.823,9.1-9.632.027-.027a4.779,4.779,0,1,0-6.759-6.757l-1.435,1.437a1.317,1.317,0,0,1-1.861,0l-1.437-1.437a4.778,4.778,0,0,0-6.758,6.757l.026.027Z" transform="translate(-161.07 -65.42)" fill="#135846" fill-rule="evenodd"/>
 								</svg>
 								</a>
-							</li>	
+							</li> -->
+								
+							<li class="nav-item dropdown notification_dropdown">
+							<a class="nav-link" href="{% url 'tickets:ticket_list' %}">
+								<i class="fas fa-bell"></i>
+								{% if unread_count > 0 %}
+								<span class="badge badge-warning navbar-badge" id="unread-count">{{ unread_count }}</span>
+								{% endif %}
+							</a>
+						</li>	
 							<li class="nav-item dropdown notification_dropdown">
 								<a class="nav-link bell-link " href="javascript:void(0);">
 								<svg xmlns="http://www.w3.org/2000/svg" width="26.667" height="24" viewBox="0 0 26.667 24">
@@ -464,19 +225,9 @@
 									<path id="Path_1962" data-name="Path 1962" d="M26.373,26.526A6.667,6.667,0,0,0,20,21.833H6.667A6.667,6.667,0,0,0,.293,26.526,6.931,6.931,0,0,0,0,28.5V39.166a6.669,6.669,0,0,0,6.667,6.667H20a6.669,6.669,0,0,0,6.667-6.667V28.5A6.928,6.928,0,0,0,26.373,26.526ZM6.667,24.5H20a4.011,4.011,0,0,1,3.947,3.36L13.333,33.646,2.72,27.86A4.011,4.011,0,0,1,6.667,24.5ZM24,39.166a4.012,4.012,0,0,1-4,4H6.667a4.012,4.012,0,0,1-4-4V30.873L12.693,36.34a1.357,1.357,0,0,0,1.28,0L24,30.873Z" transform="translate(0 0)" fill="#135846"/>
 								  </g>
 								</svg>
-									<span class="badge light text-white bg-primary rounded-circle">6</span>
+									<span class="badge light text-white bg-primary rounded-circle">2</span>
 								</a>
 							</li>	
-							<li class="nav-item dropdown notification_dropdown">
-								<a class="nav-link" href="javascript:void(0);" role="button" data-bs-toggle="dropdown">
-									<svg xmlns="http://www.w3.org/2000/svg" width="19.375" height="24" viewBox="0 0 19.375 24">
-									  <g id="_006-notification" data-name="006-notification" transform="translate(-341.252 -61.547)">
-										<path id="Path_1954" data-name="Path 1954" d="M349.741,65.233V62.747a1.2,1.2,0,1,1,2.4,0v2.486a8.4,8.4,0,0,1,7.2,8.314v4.517l.971,1.942a3,3,0,0,1-2.683,4.342h-5.488a1.2,1.2,0,1,1-2.4,0h-5.488a3,3,0,0,1-2.683-4.342l.971-1.942V73.547a8.4,8.4,0,0,1,7.2-8.314Zm1.2,2.314a6,6,0,0,0-6,6v4.8a1.208,1.208,0,0,1-.127.536l-1.1,2.195a.6.6,0,0,0,.538.869h13.375a.6.6,0,0,0,.536-.869l-1.1-2.195a1.206,1.206,0,0,1-.126-.536v-4.8a6,6,0,0,0-6-6Z" transform="translate(0 0)" fill="#135846" fill-rule="evenodd"/>
-									  </g>
-									</svg>
-
-									<span class="badge light text-white bg-primary rounded-circle">4</span>
-								</a>
 								<div class="dropdown-menu dropdown-menu-end">
 									<div id="DZ_W_Notification1" class="widget-media dlab-scroll p-3" style="height:380px;">
 										<ul class="timeline">
@@ -548,7 +299,7 @@
 										<path id="Path_1956" data-name="Path 1956" d="M274.4,67.347a4.8,4.8,0,0,0-4.8-4.8H255.2a4.8,4.8,0,0,0-4.8,4.8v15.6a1.2,1.2,0,0,0,2.048.848l3.746-3.745a2.4,2.4,0,0,1,1.7-.7H269.6a4.8,4.8,0,0,0,4.8-4.8Zm-2.4,0a2.4,2.4,0,0,0-2.4-2.4H255.2a2.4,2.4,0,0,0-2.4,2.4v12.7l1.7-1.7a4.8,4.8,0,0,1,3.395-1.406H269.6a2.4,2.4,0,0,0,2.4-2.4Zm-15.6,7.2H266a1.2,1.2,0,1,0,0-2.4h-9.6a1.2,1.2,0,0,0,0,2.4Zm0-4.8h12a1.2,1.2,0,1,0,0-2.4h-12a1.2,1.2,0,0,0,0,2.4Z" fill="#135846" fill-rule="evenodd"/>
 									  </g>
 									</svg>
-									<span class="badge light text-white bg-primary rounded-circle">5</span>
+									<span class="badge light text-white bg-primary rounded-circle"></span>
 								</a>
 								<div class="dropdown-menu dropdown-menu-end">
 									<div id="DZ_W_TimeLine02" class="widget-timeline dlab-scroll style-1 ps ps--active-y p-3 height370">
@@ -655,7 +406,9 @@
 							<span class="nav-text">Dashboard</span>
 						</a>
 						<ul aria-expanded="false">
+
 							<li><a href="{% url 'pages:portal-home' %}">Dashboard HOME</a></li>
+							
 							{% if user.is_superuser or user.is_staff %}
 							<li><a href="/admin/">Main Settings</a></li>							
 							<li><a href="/admin/curriculum/schoolidentity/">Add/Edit School Info</a></li>
@@ -675,6 +428,7 @@
 						</ul>
 					</li>
 						
+					
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
 							<span class="nav-text">Student Mgt.</span>
@@ -904,12 +658,23 @@
 							</a>
 							
 							<ul aria-expanded="false">
-								{% if user.is_superuser or user.is_staff %}
+								<li class="nav-item dropdown notification_dropdown">
+								<li class="nav-item dropdown notification_dropdown">
+							<a class="nav-link" href="{% url 'tickets:ticket_list' %}">
+								<i class="fas fa-bell"></i>
+								{% if unread_count > 0 %}
+								<span class="badge badge-warning navbar-badge" id="unread-count">{{ unread_count }}</span>
+								{% endif %}
+							</a>
+       
+							{% if user.is_superuser or user.is_staff %}
 							<li><a href="{% url 'tickets:admin_ticket_list' %}">Ticket List</a></li>
+							<li><a href="{% url 'tickets:broadcast_ticket_create' %}">Send A Broadcast</a></li>
+
 							
 							{% else %}
-							<li><a href="{% url 'tickets:ticket_list' %}">Ticket List</a></li>
-							<li><a href="{% url 'tickets:create_ticket' %}">Submit Ticket</a></li>
+							<li><a href="{% url 'tickets:ticket_list' %}">My Tickets</a></li>
+							<li><a href="{% url 'tickets:create_ticket' %}">Submit New Ticket</a></li>
 								{% endif %}
 							</ul>							
 					</li>					

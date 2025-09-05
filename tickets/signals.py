@@ -23,10 +23,10 @@ def notify_author_on_response(sender, instance, created, **kwargs):
                 f"Response: {instance.text}\n"
                 f"Link: http://your-school-app.com/tickets/{ticket.pk}/" # Change this to your actual student/teacher URL
             )
-            send_mail(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,
-                [author_email],
-                fail_silently=False,
-            )
+            # send_mail(
+            #     subject,
+            #     message,
+            #     settings.DEFAULT_FROM_EMAIL,
+            #     [author_email],
+            #     fail_silently=False,
+            # )

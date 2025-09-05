@@ -494,11 +494,17 @@ def generate_student_fees(request):
             return redirect('payments:generate_student_fees')
 
         fees_generated_count = 0
-        classes_without_fees = set() # Use a set to store unique class names
-        
+        classes_without_fees = set()
+        students_without_class = set()
+
         all_students = Student.objects.all().select_related('current_class') 
 
         for student in all_students:
+            # Check if the student has a current class before proceeding
+            if student.current_class is None:
+                students_without_class.add(student.USN) # Use a unique student identifier
+                continue
+
             relevant_category_fees = CategoryFee.objects.filter(
                 student_class=student.current_class,
                 term=term,
@@ -506,7 +512,7 @@ def generate_student_fees(request):
             )
 
             if not relevant_category_fees.exists():
-                classes_without_fees.add(student.current_class.name) # Add class name to the set
+                classes_without_fees.add(student.current_class.name)
                 continue 
 
             for cat_fee in relevant_category_fees:
@@ -520,16 +526,18 @@ def generate_student_fees(request):
                 if created:
                     fees_generated_count += 1
         
-        # Display a single, consolidated message for each class that had no fees
+        # Display consolidated messages
         for class_name in classes_without_fees:
             messages.warning(request, f"No Category Fees defined for class '{class_name}' in {term.name}, {session.name}.")
 
-        # Display the success message for fees generated
+        for student_usn in students_without_class:
+            messages.warning(request, f"Student with USN '{student_usn}' has no assigned class and was skipped.")
+
         messages.success(request, f"{fees_generated_count} student fee records have been successfully generated or updated!")
 
         return redirect('payments:debtors_report')
 
-    else: # GET request
+    else:
         sessions = Session.objects.all().order_by('-start_date')
         terms = Term.objects.all().order_by('-start_date')
         context = {
@@ -537,7 +545,8 @@ def generate_student_fees(request):
             'terms': terms,
         }
         return render(request, 'payments/generate_fees.html', context)
-
+ 
+    
 # --- New View: PDF for Debtors Report ---
 @login_required
 @user_passes_test(is_staff)

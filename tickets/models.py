@@ -34,6 +34,25 @@ class Ticket(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Open')
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='Medium')
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='General Inquiry')
+    # Add choices for the audience field
+    AUDIENCE_CHOICES = [
+        ('all', 'All Users'),
+        ('teachers', 'Teachers'),
+        ('students', 'Students'),
+    ]
+
+    is_broadcast = models.BooleanField(default=False)
+    audience = models.CharField(
+        max_length=20, 
+        choices=AUDIENCE_CHOICES, 
+        default='all', 
+        blank=True
+    )
+    
+    # This assumes the 'author' is a ForeignKey to the User model.
+    # If a ticket is a broadcast, the author will be an admin.
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tickets_submitted')
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -53,3 +72,16 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"Comment by {self.author} on {self.ticket}"
+    
+
+class TicketReadStatus(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)
+    read_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = 'Ticket Read Statuses'
+        unique_together = ('user', 'ticket') # Ensures one entry per user-ticket pair
+
+    def __str__(self):
+        return f"{self.user.username} read {self.ticket.title}"
