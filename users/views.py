@@ -34,20 +34,52 @@ def user_registration(request):
     
 
 
-#Student Enrollment
+# #Student Enrollment
+# @login_required
+# def student_enrollment(request):
+#     if request.method == 'POST':
+#         u_form = UserRegisterForm(request.POST)
+#         p_form = StudentEnrollmentForm(request.POST, request.FILES)
+#         if u_form.is_valid() and p_form.is_valid():
+#             u_form.save()
+#             p_form.save()
+#             messages.success(request, f'Your profile has been updated successfully')
+#             return redirect('profile')
+#     else:
+#         u_form = UserRegisterForm(instance=request.user)
+#         p_form = StudentEnrollmentForm(instance=request.user.profile)
+
+#     context = {
+#         'u_form': u_form,
+#         'p_form': p_form,
+#     }
+
+#     return render(request, 'users/student_enrollment.html', context)
+
 @login_required
 def student_enrollment(request):
     if request.method == 'POST':
         u_form = UserRegisterForm(request.POST)
         p_form = StudentEnrollmentForm(request.POST, request.FILES)
+
         if u_form.is_valid() and p_form.is_valid():
-            u_form.save()
-            p_form.save()
-            messages.success(request, f'Your profile has been updated successfully')
-            return redirect('profile')
+            # Get the cleaned data from the forms
+            user_data = u_form.cleaned_data
+            student_data = p_form.cleaned_data
+
+            # Create the Student object, setting first_name and last_name from the user form
+            student = Student(
+                first_name=user_data.get('first_name'),
+                last_name=user_data.get('last_name'),
+                **student_data
+            )
+            student.save()
+
+            messages.success(request, 'Student has been enrolled successfully')
+            return redirect('some_success_url')  # Replace with a valid URL name
     else:
-        u_form = UserRegisterForm(instance=request.user)
-        p_form = StudentEnrollmentForm(instance=request.user.profile)
+        u_form = UserRegisterForm()
+        p_form = StudentEnrollmentForm()
 
     context = {
         'u_form': u_form,
@@ -55,7 +87,6 @@ def student_enrollment(request):
     }
 
     return render(request, 'users/student_enrollment.html', context)
-
 
 
 def register(request):
