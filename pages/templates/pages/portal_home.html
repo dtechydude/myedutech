@@ -191,7 +191,7 @@
 								{% elif user.is_authenticated and user.student %}
 								Student Dashboard								
 								{% else %}
-								User Type is not "Profiled"
+								User Dashboard
 								{% endif%}
 							</div>
 						</div>
@@ -678,7 +678,7 @@
 								{% endif %}
 							</ul>							
 					</li>					
-
+					{% if user.is_authenticated and user.is_superuser or user.is_staff %}
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
 							<span class="nav-text">Archives</span>
@@ -690,7 +690,8 @@
 									
 						</ul>
 
-						</li>					
+						</li>
+						{% endif %}					
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
 							<span class="nav-text">Settings</span>
@@ -782,7 +783,7 @@
 														<h5 class="mb-0 font-w600">{{ user.student.student_status }}</h5>
 														<p class="mb-0 text-nowrap ">Status</p>
 														{% else %}
-														<h3 class="mb-0 font-w600">xxxxx</h3>
+														<h4 class="mb-0 font-w600">N/A</h4>
 														<p class="mb-0 text-nowrap ">No Info</p>
 														{% endif %}
 													</div>
@@ -811,7 +812,7 @@
 														<h5 class="mb-0 font-w600">{{ user.student.current_class }}</h5>
 														<p class="mb-0 text-nowrap ">Current Class</p>
 														{% else %}
-														<h3 class="mb-0 font-w600">xxxxx</h3>
+														<h4 class="mb-0 font-w600">N/A</h4>
 														<p class="mb-0 text-nowrap ">No Info</p>
 														{% endif %}
 													</div>
@@ -841,7 +842,7 @@
 														<h5 class="mb-0 font-w600">{{ user.student.date_admitted }}</h5>
 														<p class="mb-0 text-nowrap ">Admission Date</p>
 														{% else %}
-														<h3 class="mb-0 font-w600">xxxxx</h3>
+														<h4 class="mb-0 font-w600">N/A</h4>
 														<p class="mb-0 text-nowrap ">No Info</p>
 														{% endif %}
 													</div>
