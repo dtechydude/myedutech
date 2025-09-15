@@ -63,16 +63,16 @@
                         <div class="accordion-body">
                             <div class="row g-4">
                                 <div class="col-md-4">
-                                    <label for="id_first_name" class="form-label">First name <span class="text-danger">*</span></label>
-                                    <input type="text" name="first_name" id="id_first_name" class="form-control" required>
+                                    <label for="{{ teacher_form.first_name.id_for_label }}" class="form-label">{{ teacher_form.first_name.label }} <span class="text-danger">*</span></label>
+                                    {{ teacher_form.first_name }}
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="id_middle_name" class="form-label">Middle name</label>
-                                    <input type="text" name="middle_name" id="id_middle_name" class="form-control">
+                                    <label for="{{ teacher_form.middle_name.id_for_label }}" class="form-label">{{ teacher_form.middle_name.label }}</label>
+                                    {{ teacher_form.middle_name }}
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="id_last_name" class="form-label">Last name <span class="text-danger">*</span></label>
-                                    <input type="text" name="last_name" id="id_last_name" class="form-control" required>
+                                    <label for="{{ teacher_form.last_name.id_for_label }}" class="form-label">{{ teacher_form.last_name.label }} <span class="text-danger">*</span></label>
+                                    {{ teacher_form.last_name }}
                                 </div>
                                 <div class="col-md-4">
                                     <label for="{{ teacher_form.gender.id_for_label }}" class="form-label">{{ teacher_form.gender.label }} <span class="text-danger">*</span></label>
@@ -237,13 +237,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tempus-dominus/6.7.13/js/tempus-dominus.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Automatically add 'form-control' class to all form fields
         document.querySelectorAll('input, select, textarea').forEach(field => {
             if (field.type !== 'submit' && field.type !== 'hidden' && field.type !== 'checkbox') {
                 field.classList.add('form-control');
             }
         });
 
-        const dobPickerElement = document.getElementById('dob-picker-container');
+        // Initialize date pickers
+        const dobPickerElement = document.getElementById('id_DOB');
         if (dobPickerElement) {
             new tempusDominus.TempusDominus(dobPickerElement, {
                 localization: {
@@ -253,7 +255,7 @@
             });
         }
         
-        const dateEmployedPickerElement = document.getElementById('date-employed-picker-container');
+        const dateEmployedPickerElement = document.getElementById('id_date_employed');
         if (dateEmployedPickerElement) {
             new tempusDominus.TempusDominus(dateEmployedPickerElement, {
                 localization: {
@@ -263,6 +265,7 @@
             });
         }
         
+        // Form validation logic
         const form = document.getElementById('teacherForm');
         form.addEventListener('submit', function(event) {
             let hasError = false;
@@ -282,18 +285,9 @@
                 }
             });
 
-            const standardsCheckboxes = document.querySelectorAll('input[name="standards_assigned"]');
-            const subjectsCheckboxes = document.querySelectorAll('input[name="subjects_taught"]');
-
-            const validateCheckboxes = (checkboxes) => {
-                const isChecked = Array.from(checkboxes).some(checkbox => checkbox.checked);
-                if (!isChecked) {
-                    // You can add a validation message here if needed
-                }
-            };
-            
-            validateCheckboxes(standardsCheckboxes);
-            validateCheckboxes(subjectsCheckboxes);
+            // Note: Validation for checkboxes is not implemented here, but can be added.
+            // const standardsCheckboxes = document.querySelectorAll('input[name="standards_assigned"]');
+            // const subjectsCheckboxes = document.querySelectorAll('input[name="subjects_taught"]');
 
             if (hasError) {
                 event.preventDefault();

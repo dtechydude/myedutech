@@ -62,26 +62,65 @@ class CustomUserCreationForm(UserCreationForm):
             raise ValidationError("This username is already taken. Please choose another.")
         return username
 
+# class TeacherForm(forms.ModelForm):
+#     # This form no longer needs first/last name as they are now in step 1.
+#     subjects_taught = forms.ModelMultipleChoiceField(
+#         queryset=Subject.objects.all(),
+#         widget=forms.CheckboxSelectMultiple,
+#         required=False,
+#         label='Subjects Taught'
+#     )
+#     standards_assigned = forms.ModelMultipleChoiceField(
+#         queryset=Standard.objects.all(),
+#         widget=forms.CheckboxSelectMultiple,
+#         required=False,
+#         label='Standards Assigned'
+#     )
+
+#     class Meta:
+#         model = Teacher
+#         exclude = ['user', 'updated', 'created', 'active', 'first_name', 'last_name', 'middle_name']
+#         widgets = {
+#             'DOB': forms.DateInput(attrs={'type': 'date'}),
+#             'date_employed': forms.DateInput(attrs={'type': 'date'}),
+#             'year': forms.DateInput(attrs={'type': 'date'}),
+#         }
+
 class TeacherForm(forms.ModelForm):
-    # This form no longer needs first/last name as they are now in step 1.
-    subjects_taught = forms.ModelMultipleChoiceField(
-        queryset=Subject.objects.all(),
-        widget=forms.CheckboxSelectMultiple,
-        required=False,
-        label='Subjects Taught'
-    )
+    # Add first_name and last_name fields to the form
+    first_name = forms.CharField(max_length=150, required=True, label='First Name',
+        widget=forms.TextInput(attrs={'placeholder': 'Enter First Name'}))
+    last_name = forms.CharField(max_length=150, required=True, label='Last Name',
+        widget=forms.TextInput(attrs={'placeholder': 'Enter Last Name'}))
+    middle_name = forms.CharField(max_length=150, required=False, label='Middle Name',
+        widget=forms.TextInput(attrs={'placeholder': 'Enter Middle Name'}))
+
     standards_assigned = forms.ModelMultipleChoiceField(
-        queryset=Standard.objects.all(),
+        queryset=Standard.objects.all().order_by('name'),
         widget=forms.CheckboxSelectMultiple,
         required=False,
-        label='Standards Assigned'
     )
 
+    subjects_taught = forms.ModelMultipleChoiceField(
+        queryset=Subject.objects.all().order_by('name'),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+    )
+    
     class Meta:
         model = Teacher
-        exclude = ['user', 'updated', 'created', 'active', 'first_name', 'last_name', 'middle_name']
+        fields = [
+            'first_name', 'middle_name', 'last_name', 'gender', 'marital_status', 
+            'phone_home', 'DOB', 'date_employed', 'staff_role', 'dept', 
+            'standards_assigned', 'subjects_taught', 'qualification', 'year', 
+            'institution', 'professional_body', 'guarantor_name', 'guarantor_phone', 
+            'guarantor_address', 'guarantor_email', 'next_of_kin_name', 
+            'next_of_kin_address', 'next_of_kin_phone',
+        ]
+        
         widgets = {
             'DOB': forms.DateInput(attrs={'type': 'date'}),
             'date_employed': forms.DateInput(attrs={'type': 'date'}),
-            'year': forms.DateInput(attrs={'type': 'date'}),
+            'guarantor_address': forms.Textarea(attrs={'rows': 2}),
+            'next_of_kin_address': forms.Textarea(attrs={'rows': 2}),
         }

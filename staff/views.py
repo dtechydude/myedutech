@@ -323,53 +323,62 @@ def teacher_user_signup(request):
     }
     return render(request, 'staff/teacher_user_signup.html', context)
 
+# Get the active User model
+User = get_user_model()
+
 @login_required
 def teacher_details_signup(request):
-    school_identity = SchoolIdentity.objects.first()
-    
-    # Check if Step 1 was completed
-    teacher_user_data = request.session.get('teacher_user_data')
-    if not teacher_user_data:
-        messages.error(request, 'Please complete the user registration first.')
+    user_data = request.session.get('teacher_user_data')
+    if not user_data:
+        messages.error(request, 'Session expired. Please start the signup process again.')
         return redirect('staff:teacher_user_signup')
 
+    school_identity = SchoolIdentity.objects.first()
+
     if request.method == 'POST':
-        teacher_form = TeacherForm(request.POST)
-        
+        teacher_form = TeacherForm(request.POST, request.FILES)
         if teacher_form.is_valid():
             try:
-                user = User.objects.create_user(
-                    username=teacher_user_data['username'],
-                    email=teacher_user_data['email'],
-                    password=teacher_user_data['password'],
-                    first_name=teacher_user_data['first_name'],
-                    last_name=teacher_user_data['last_name'],
-                )
+                with transaction.atomic():
+                    # Create the User instance using data from the *form*
+                    user = User.objects.create_user(
+                        username=user_data['username'],
+                        password=user_data['password'],
+                        email=user_data.get('email'),
+                        # Get first_name and last_name from the validated form data
+                        first_name=teacher_form.cleaned_data['first_name'],
+                        last_name=teacher_form.cleaned_data['last_name'],
+                    )
+
+                    # Save the Teacher instance linked to the new user
+                    teacher = teacher_form.save(commit=False)
+                    teacher.user = user
+                    teacher.save()
+                    teacher_form.save_m2m() 
+            
+                if 'teacher_user_data' in request.session:
+                    del request.session['teacher_user_data']
+
+                messages.success(request, f'Teacher account for {user.first_name} {user.last_name} created successfully.')
+                return redirect('staff:teacher_signup_success')
             except Exception as e:
-                messages.error(request, f'Failed to create user account: {e}. Please try again.')
-                return redirect('staffteacher_user_signup')
-            
-            teacher = teacher_form.save(commit=False)
-            teacher.user = user
-            teacher.first_name = teacher_user_data['first_name']
-            teacher.last_name = teacher_user_data['last_name']
-            teacher.save()
-            teacher_form.save_m2m()
-            
-            del request.session['teacher_user_data']
-            
-            return redirect('staff:teacher_signup_success')
+                # Catch the specific KeyError and handle it gracefully
+                # If the form is valid, this part should not be hit.
+                messages.error(request, f'An error occurred: {e}')
+                return redirect('staff:teacher_details_signup')
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        teacher_form = TeacherForm()
-        
+        # On GET, populate the form with initial data from the session
+        initial_data = {
+            'first_name': user_data.get('first_name', ''),
+            'last_name': user_data.get('last_name', ''),
+        }
+        teacher_form = TeacherForm(initial=initial_data)
+
     context = {
         'teacher_form': teacher_form,
         'school_identity': school_identity,
-        'first_name': teacher_user_data.get('first_name', ''), # Pass pre-filled values
-        'last_name': teacher_user_data.get('last_name', ''),
-        'middle_name': teacher_user_data.get('middle_name', '') # Middle name isn't in step 1, but we pass it anyway
     }
     return render(request, 'staff/teacher_details_signup.html', context)
 

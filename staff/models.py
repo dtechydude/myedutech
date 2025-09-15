@@ -37,7 +37,7 @@ class Teacher(models.Model):
     first_name = models.CharField(max_length=20)
     middle_name = models.CharField(max_length=20, blank=True, null=True)
     last_name = models.CharField(max_length=20)   
-    dept = models.ForeignKey(Dept, on_delete=models.CASCADE, default=1, related_name='my_dept')
+    dept = models.ForeignKey(Dept, on_delete=models.CASCADE, default=1, related_name='my_dept', blank=True, null=True)
     # class_in_charge = models.ForeignKey(Standard, on_delete=models.CASCADE, blank=True, null=True, related_name='myclasses')
     subjects_taught = models.ManyToManyField(Subject, related_name='teachers')
     standards_assigned = models.ManyToManyField(Standard, blank=True, related_name='teachers')
