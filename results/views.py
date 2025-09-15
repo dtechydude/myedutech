@@ -20,6 +20,8 @@ from .forms import ScoreEntryForm, ReportCardFilterForm, SessionReportCardFilter
 from .utils import get_grade, get_subject_remark, get_overall_remark # Import helper functions
 from django.template.loader import render_to_string # Import render_to_string
 from curriculum.models import SchoolIdentity
+from transport.context_processors import school_identity as school_identity_processor
+
 
 # For PDF generation using django-wkhtmltopdf
 # from wkhtmltopdf.views import PDFTemplateResponse # Import this
@@ -1134,7 +1136,37 @@ class StandardsAndTermsListView(LoginRequiredMixin, View):
 
         return render(request, self.template_name, context)
 
-#Parent Access to Students Results
+# #Parent Access to Students Results
+# class ParentReportCardView(LoginRequiredMixin, View):
+#     def get(self, request, student_id, term_id, *args, **kwargs):
+#         try:
+#             parent = Parent.objects.get(user=request.user)
+#         except Parent.DoesNotExist:
+#             return redirect('pages:portal-home')
+
+#         student = get_object_or_404(Student, id=student_id, parent=parent)
+#         term = get_object_or_404(Term, id=term_id)
+
+#         # Fetch all scores for the specific student and term
+#         scores = Score.objects.filter(student=student, term=term).select_related('subject')
+        
+#         # Fetch motor ability scores for the specific student and term
+#         try:
+#             motor_ability = MotorAbilityScore.objects.get(student=student, term=term)
+#         except MotorAbilityScore.DoesNotExist:
+#             motor_ability = None
+
+#         context = {
+#             'student': student,
+#             'term': term,
+#             'scores': scores,
+#             'motor_ability': motor_ability,
+#             # Add other data you need for the report card template
+#         }
+#         return render(request, 'results/parent_report_card_template.html', context)
+
+# Parent Dashboard Termly REport Card View
+
 class ParentReportCardView(LoginRequiredMixin, View):
     def get(self, request, student_id, term_id, *args, **kwargs):
         try:
@@ -1145,12 +1177,17 @@ class ParentReportCardView(LoginRequiredMixin, View):
         student = get_object_or_404(Student, id=student_id, parent=parent)
         term = get_object_or_404(Term, id=term_id)
 
-        # Fetch all scores for the specific student and term
         scores = Score.objects.filter(student=student, term=term).select_related('subject')
-        
-        # Fetch motor ability scores for the specific student and term
+
+        motor_ability_fields = {}
         try:
             motor_ability = MotorAbilityScore.objects.get(student=student, term=term)
+
+            for field in MotorAbilityScore._meta.fields:
+                if field.name not in ['id', 'student', 'term']:
+                    label = field.verbose_name.replace('_', ' ').title()
+                    motor_ability_fields[label] = getattr(motor_ability, field.name)
+
         except MotorAbilityScore.DoesNotExist:
             motor_ability = None
 
@@ -1159,9 +1196,12 @@ class ParentReportCardView(LoginRequiredMixin, View):
             'term': term,
             'scores': scores,
             'motor_ability': motor_ability,
-            # Add other data you need for the report card template
+            'motor_ability_fields': motor_ability_fields,
+            # Use the imported function to get the school identity data
+            'school_identity': school_identity_processor(request).get('school_identity'),
         }
         return render(request, 'results/parent_report_card_template.html', context)
+
     
 
 # Parent view student results
