@@ -62,30 +62,6 @@ class CustomUserCreationForm(UserCreationForm):
             raise ValidationError("This username is already taken. Please choose another.")
         return username
 
-# class TeacherForm(forms.ModelForm):
-#     # This form no longer needs first/last name as they are now in step 1.
-#     subjects_taught = forms.ModelMultipleChoiceField(
-#         queryset=Subject.objects.all(),
-#         widget=forms.CheckboxSelectMultiple,
-#         required=False,
-#         label='Subjects Taught'
-#     )
-#     standards_assigned = forms.ModelMultipleChoiceField(
-#         queryset=Standard.objects.all(),
-#         widget=forms.CheckboxSelectMultiple,
-#         required=False,
-#         label='Standards Assigned'
-#     )
-
-#     class Meta:
-#         model = Teacher
-#         exclude = ['user', 'updated', 'created', 'active', 'first_name', 'last_name', 'middle_name']
-#         widgets = {
-#             'DOB': forms.DateInput(attrs={'type': 'date'}),
-#             'date_employed': forms.DateInput(attrs={'type': 'date'}),
-#             'year': forms.DateInput(attrs={'type': 'date'}),
-#         }
-
 class TeacherForm(forms.ModelForm):
     # Add first_name and last_name fields to the form
     first_name = forms.CharField(max_length=150, required=True, label='First Name',
