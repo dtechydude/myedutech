@@ -32,6 +32,8 @@ from xhtml2pdf import pisa
 from django.db import IntegrityError, transaction
 from datetime import date
 from django.views import View
+from django.contrib.admin.views.decorators import staff_member_required
+
 
 
 
@@ -723,6 +725,110 @@ def parent_dashboard(request):
         'school_identity': school_identity,
     }
     return render(request, 'students/parent_dashboard.html', context)
+
+@staff_member_required
+def parent_list_view(request):
+    query = request.GET.get('q', '')
+    
+    parents_list = Parent.objects.all().prefetch_related('children')
+    
+    if query:
+        parents_list = parents_list.filter(
+            Q(guardian_name__icontains=query) |
+            Q(guardian_email__icontains=query) |
+            Q(user__username__icontains=query) |
+            Q(children__first_name__icontains=query) |
+            Q(children__last_name__icontains=query)
+        ).distinct()
+
+    paginator = Paginator(parents_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    try:
+        school_identity = SchoolIdentity.objects.first()
+    except SchoolIdentity.DoesNotExist:
+        school_identity = None
+    
+    context = {
+        'page_obj': page_obj,
+        'query': query,
+        'school_identity': school_identity,
+    }
+    return render(request, 'students/parent_list.html', context)
+
+# New view to export data as CSV
+@staff_member_required
+def export_parents_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="parents.csv"'
+
+    writer = csv.writer(response)
+    
+    # Write the header row
+    writer.writerow(['Guardian Name', 'Guardian Email', 'Guardian Phone', 'Student Name', 'Student USN'])
+    
+    # Get all parents and related children
+    parents = Parent.objects.all().prefetch_related('children')
+    
+    for parent in parents:
+        # Check if the parent has children
+        if parent.children.exists():
+            for child in parent.children.all():
+                writer.writerow([
+                    parent.guardian_name, 
+                    parent.guardian_email, 
+                    parent.guardian_phone,
+                    child.get_full_name(),
+                    child.USN
+                ])
+        else:
+            # Handle parents without children
+            writer.writerow([
+                parent.guardian_name, 
+                parent.guardian_email, 
+                parent.guardian_phone,
+                'N/A',
+                'N/A'
+            ])
+
+    return response
+
+
+
+# # Parent List
+# @staff_member_required
+# def parent_list_view(request):
+#     query = request.GET.get('q', '')
+    
+#     parents_list = Parent.objects.all().prefetch_related('children')
+    
+#     if query:
+#         parents_list = parents_list.filter(
+#             Q(guardian_name__icontains=query) |
+#             Q(guardian_email__icontains=query) |
+#             Q(user__username__icontains=query) |
+#             Q(children__first_name__icontains=query) |
+#             Q(children__last_name__icontains=query)
+#         ).distinct()
+
+#     paginator = Paginator(parents_list, 10)
+#     page_number = request.GET.get('page')
+#     page_obj = paginator.get_page(page_number)
+
+#     # Get the school identity to pass to the template
+#     try:
+#         school_identity = SchoolIdentity.objects.first()
+#     except SchoolIdentity.DoesNotExist:
+#         school_identity = None
+    
+#     context = {
+#         'page_obj': page_obj,
+#         'query': query,
+#         'school_identity': school_identity  # Pass the school identity to the context
+#     }
+#     return render(request, 'students/parent_list.html', context)
+
 
 # Student's Birthay
 @login_required

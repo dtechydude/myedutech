@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Parents and Children</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --dark-blue: #0A2647;
+            --orange: #FF6700;
+            --light-bg: #EAEAEA;
+        }
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background-color: var(--dark-blue);
+        }
+        .navbar-brand .logo {
+            height: 40px;
+            margin-right: 10px;
+        }
+        .navbar-nav .nav-link {
+            color: white !important;
+        }
+        .navbar-nav .nav-link:hover {
+            color: var(--orange) !important;
+        }
+        .container {
+            max-width: 900px;
+            margin-top: 3rem;
+            margin-bottom: 3rem;
+        }
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .main-heading {
+            color: var(--dark-blue);
+            text-align: center;
+            flex-grow: 1;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card-header {
+            background-color: var(--dark-blue);
+            color: white;
+            border-radius: 12px 12px 0 0;
+            padding: 1rem 1.5rem;
+        }
+        .card-body h6 {
+            color: var(--dark-blue);
+        }
+        .child-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .child-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .child-list li:last-child {
+            border-bottom: none;
+        }
+        .search-form {
+            margin-bottom: 2rem;
+        }
+        .btn-primary {
+            background-color: var(--orange);
+            border-color: var(--orange);
+        }
+        .btn-primary:hover {
+            background-color: #e55e00;
+            border-color: #e55e00;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            border-color: #5a6268;
+        }
+        .btn-back {
+            background-color: var(--dark-blue);
+            border-color: var(--dark-blue);
+            color: white;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .btn-back:hover {
+            background-color: var(--orange);
+            border-color: var(--orange);
+        }
+        .pagination .page-link {
+            color: var(--dark-blue);
+        }
+        .pagination .page-item.active .page-link {
+            background-color: var(--dark-blue);
+            border-color: var(--dark-blue);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                {% if school_identity.school_logo %}
+                    <img src="{{ school_identity.school_logo.url }}" alt="{{ school_identity.school_name }} Logo" class="logo">
+                {% endif %}
+                {% if school_identity %}
+                    {{ school_identity.name }} |PORTAL
+                {% else %}
+                    Schoolly
+                {% endif %}
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'pages:portal-home' %}">Back to Dashboard</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="main-heading">All Parents and Children</h1>
+            <a href="{% url 'students:export_parents_csv' %}" class="btn btn-primary">
+                <i class="fas fa-file-export me-2"></i>Export to CSV
+            </a>
+        </div>
+
+        <form class="d-flex search-form" role="search" method="get">
+            <input class="form-control me-2" type="search" name="q" placeholder="Search by name, email, or student ID..." value="{{ query }}">
+            <button class="btn btn-primary" type="submit">Search</button>
+            {% if query %}
+                <a href="{% url 'students:parent_list' %}" class="btn btn-secondary ms-2">Clear Search</a>
+            {% endif %}
+        </form>
+
+        {% if page_obj %}
+            {% for parent in page_obj %}
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            {{ parent.guardian_name }} 
+                            <small class="text-white-50">({{ parent.user.username }})</small>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            <span class="fw-bold">Contact:</span> {{ parent.guardian_email }} | {{ parent.guardian_phone }}
+                        </p>
+                        
+                        {% if parent.children.all %}
+                            <hr>
+                            <h6>Children:</h6>
+                            <ul class="child-list">
+                                {% for student in parent.children.all %}
+                                    <li>
+                                        <strong>{{ student.get_full_name }}</strong> - ID: {{ student.USN }}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted fst-italic">No children linked to this parent.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">Previous</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Previous</span>
+                        </li>
+                    {% endif %}
+
+                    {% for i in paginator.page_range %}
+                        {% if page_obj.number == i %}
+                            <li class="page-item active" aria-current="page">
+                                <span class="page-link">{{ i }}</span>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ i }}{% if query %}&q={{ query }}{% endif %}">{{ i }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">Next</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Next</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% else %}
+            <div class="alert alert-warning text-center" role="alert">
+                No parents found for this search.
+                <a href="{% url 'students:parent_list' %}" class="btn btn-secondary ms-3">Return to All Parents</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

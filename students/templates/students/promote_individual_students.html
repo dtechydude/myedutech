@@ -10,40 +10,115 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --dark-blue: #0A2647;
+            --orange: #FF6700;
+            --light-bg: #EAEAEA;
+        }
         body {
-            background-color: #f8f9fa;
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         .header {
-            background-color: #ffffff;
-            padding: 1.5rem 2rem;
-            border-bottom: 1px solid #e9ecef;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            margin-bottom: 2rem;
+            background-color: var(--dark-blue);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .logo {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: #0d6efd;
-            text-decoration: none;
+        .header .logo-container {
+            width: 50px; /* Diameter of the circle */
+            height: 50px; /* Diameter of the circle */
+            border-radius: 50%; /* Makes it a circle */
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Ensures the image is clipped to the circle */
+            flex-shrink: 0; /* Prevent it from shrinking */
+            margin-right: 15px; /* Space between logo and other header content */
+        }
+        .header .logo-container img {
+            width: 80%; /* Adjust to fit inside the circle with some padding */
+            height: 80%; /* Adjust to fit inside the circle with some padding */
+            object-fit: contain; /* Ensures the entire logo is visible within the circle */
+            max-width: 100%;
+            max-height: 100%;
+        }
+        .header .btn-outline-secondary {
+            color: white;
+            border-color: white;
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+        }
+        .header .btn-outline-secondary:hover {
+            background-color: var(--orange);
+            color: white;
+            border-color: var(--orange);
         }
         .container {
-            max-width: 800px;
-            margin-top: 50px;
+            max-width: 900px;
+            margin-top: 3rem;
+            margin-bottom: 3rem;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: var(--dark-blue);
+            color: white;
+            border-radius: 12px 12px 0 0;
+        }
+        .btn-primary {
+            background-color: var(--orange);
+            border-color: var(--orange);
+            transition: background-color 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: #e55e00;
+            border-color: #e55e00;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        .btn-success {
+            background-color: var(--dark-blue);
+            border-color: var(--dark-blue);
+            transition: background-color 0.2s;
+        }
+        .btn-success:hover {
+            background-color: #081b30;
+            border-color: #081b30;
+        }
+        .list-group-item {
+            font-size: 0.95rem;
+        }
+        .form-select, .form-control {
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
 
-<header class="header d-flex justify-content-between align-items-center">
-    <a href="/dashboard/" class="logo"><img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="" width="100; height=auto"></a>
-    <a href="/dashboard" class="btn btn-outline-primary">
+<header class="header">
+    <div class="d-flex align-items-center">
+        <a href="/dashboard/" class="logo-link d-flex align-items-center text-decoration-none">
+            <div class="logo-container">
+                <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="Kwikschool Logo">
+            </div>
+            </a>
+    </div>
+    <a href="/dashboard" class="btn btn-outline-secondary">
         <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
     </a>
 </header>
 
 <div class="container">
     <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
+        <div class="card-header text-white">
             <h4 class="mb-0">Individual Student Promotion</h4>
         </div>
         <div class="card-body">
@@ -57,7 +132,7 @@
             {% endif %}
 
             <div class="mb-4">
-                <h5 class="card-title">1. Select Class to View Students</h5>
+                <h5 class="card-title text-muted">1. Select Class to View Students</h5>
                 <form method="get" action="{% url 'students:promote_individual_students' %}" class="d-flex align-items-end">
                     <div class="me-3 flex-grow-1">
                         <label for="class-select" class="form-label">From Class:</label>
@@ -68,14 +143,14 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-secondary">Load Students</button>
+                    <button type="submit" class="btn btn-primary">Load Students</button>
                 </form>
             </div>
 
             {% if from_class %}
             <hr>
             <div class="mt-4">
-                <h5 class="card-title">2. Select Students to Promote from {{ from_class.name }}</h5>
+                <h5 class="card-title text-muted">2. Select Students to Promote from {{ from_class.name }}</h5>
                 <form method="post" action="{% url 'students:promote_individual_students' %}">
                     {% csrf_token %}
                     <input type="hidden" name="from_class_id" value="{{ from_class.id }}">
@@ -100,7 +175,7 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="to_class" class="form-label fw-bold">3. Select Destination Class</label>
+                        <label for="to_class" class="form-label fw-bold text-muted">3. Select Destination Class</label>
                         <select class="form-select" id="to_class" name="to_class" required>
                             <option value="">-- Choose a class --</option>
                             {% for class in next_class_options %}

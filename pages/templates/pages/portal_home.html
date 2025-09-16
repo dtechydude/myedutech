@@ -414,7 +414,6 @@
 							<li><a href="/admin/curriculum/schoolidentity/">Add/Edit School Info</a></li>
 							<li><a href="{% url 'users:all_users' %}">All Registered Users</a></li>
 							<li><a href="{% url 'students:student_search_list' %}">Search Students</a></li>
-							<li><a href="{% url 'students:parent-dashboard' %}">Parents Dashboard</a></li>						
 							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>	
 
 							{% endif %}						
@@ -426,8 +425,7 @@
 							{% endif %}
 							
 						</ul>
-					</li>
-						
+					</li>						
 					
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
@@ -440,6 +438,8 @@
 							<li><a href="{% url 'students:boarder-list' %}">All Boarders</a></li>
 							<li><a href="{% url 'students:student-in-class' %}">No. In Class</a></li>
 							<li><a href="{% url 'students:assign_classgroup_to_students' %}">Assign Students To ClassGroup</a></li>
+							<li><a href="{% url 'students:parent_list' %}">PARENTS LIST</a></li>	
+							<li><a href="{% url 'students:parent-dashboard' %}">PARENTS DASHBOARD</a></li>
 							<li><a href="{% url 'students:graduate_students' %}">Move Students To Alumni</a></li>
 							<li><a href="{% url 'students:graduated_students_list' %}">GRADUATE/ALUMNI List</a></li>
 
