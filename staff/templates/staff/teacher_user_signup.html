@@ -19,25 +19,33 @@
             top: 50%;
             transform: translateY(-50%);
         }
+        /* New class to vertically center and stack the button and header */
+        .header-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 2rem; /* Adds space between the header and the form */
+        }
     </style>
 </head>
 <body>
 
 <div class="container d-flex align-items-center justify-content-center min-vh-100">
     <div class="card form-card p-4 p-md-5 w-100">
-        <div class="mb-4">
-            <a href="/dashboard/" class="btn btn-outline-secondary">
+        <div class="header-section">
+            <a href="/dashboard/" class="btn btn-outline-secondary mb-3">
                 <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
             </a>
-        </div>
-        <div class="text-center mb-4">
-            {% if school_identity and school_identity.logo %}
-                <img src="{{ school_identity.logo.url }}" alt="{{ school_identity.school_name }} Logo" class="mb-3" style="height: 60px;">
-            {% endif %}
-            <h4 class="text-3xl fw-bold mb-0">
-                {% if school_identity %}{{ school_identity.name }}{% else %}Teacher Signup{% endif %}
-            </h4>
-            <p class="text-muted mt-2">SIGNUP NEW TEACHER <br> Step 1 of 2: Create a user account</p>
+            <div class="text-center">
+                {% if school_identity and school_identity.logo %}
+                    <img src="{{ school_identity.logo.url }}" alt="{{ school_identity.school_name }} Logo" class="mb-3" style="height: 60px;">
+                {% endif %}
+                <h4 class="text-3xl fw-bold mb-0">
+                    {% if school_identity %}{{ school_identity.name }}{% else %}Teacher Signup{% endif %}
+                </h4>
+                <p class="text-muted mt-2">SIGNUP NEW TEACHER <br> Step 1 of 2: Create a user account</p>
+            </div>
         </div>
         
         {% if messages %}

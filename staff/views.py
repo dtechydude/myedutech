@@ -323,6 +323,8 @@ def teacher_user_signup(request):
     }
     return render(request, 'staff/teacher_user_signup.html', context)
 
+
+
 # Get the active User model
 User = get_user_model()
 

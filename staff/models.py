@@ -34,9 +34,9 @@ class StaffPosition(models.Model):
 # Teacher Module
 class Teacher(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
-    first_name = models.CharField(max_length=20)
+    first_name = models.CharField(max_length=20, blank=True, null=True)
     middle_name = models.CharField(max_length=20, blank=True, null=True)
-    last_name = models.CharField(max_length=20)   
+    last_name = models.CharField(max_length=20, blank=True, null=True)   
     dept = models.ForeignKey(Dept, on_delete=models.CASCADE, default=1, related_name='my_dept', blank=True, null=True)
     # class_in_charge = models.ForeignKey(Standard, on_delete=models.CASCADE, blank=True, null=True, related_name='myclasses')
     subjects_taught = models.ManyToManyField(Subject, related_name='teachers')
