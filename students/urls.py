@@ -26,7 +26,6 @@ urlpatterns = [
     path('assign-classgroup-to-students/', students_views.assign_classgroup_to_students_view, name='assign_classgroup_to_students'),
 
     # path('create-student-profile/', views.create_student_profile, name='create_student_profile'), # Example
-
     # Search student detail app
     path('search/', students_views.search, name='search'),
     path('student_search_list/', students_views.student_search_list, name='student_search_list'),
@@ -39,7 +38,6 @@ urlpatterns = [
     # path('<str:id>/update/', StudentUpdateView.as_view(), name="student-update"),
     path('<str:id>/delete/', StudentDeleteView.as_view(), name="student-delete"), 
     path('<str:id>/', MyTeacherDetailView.as_view(), name="my-teacher-detail"),
-
 
          
 ]
