@@ -20,15 +20,10 @@ urlpatterns = [
     path('graduate-students/', students_views.graduate_students_view, name='graduate_students'),
     path('upcoming_birthdays/', students_views.upcoming_birthdays_view, name='upcoming_birthdays'),
 
-
-
     path('student/id-card/<int:student_id>/', students_views.StudentIDCardView.as_view(), name='student_id_card'),
     path('promote-students/', students_views.promote_students_view, name='promote_students'),
     path('promote-individual-students/', students_views.promote_individual_students_view, name='promote_individual_students'),
     path('assign-classgroup-to-students/', students_views.assign_classgroup_to_students_view, name='assign_classgroup_to_students'),
-
-
-
 
     # path('create-student-profile/', views.create_student_profile, name='create_student_profile'), # Example
 
