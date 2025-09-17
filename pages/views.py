@@ -22,6 +22,9 @@ from django.http import HttpResponse
 def schoolly_home(request):
     return render(request, 'pages/schoollyedtech.html')
 
+def landing_page(request):
+    return render(request, 'pages/landingpage.html')
+
 # def dashboard(request):
 #     return render(request, 'pages/portal_home.html')
 
@@ -144,9 +147,6 @@ def payment_instruction(request):
 def payment_chart(request):
     return render(request, 'pages/payment_chart.html')
 
-
-def landing_page(request):
-    return render(request, 'pages/landingpage.html')
 
 
 # birthday list
