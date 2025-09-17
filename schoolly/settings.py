@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'transport.apps.TransportConfig',
     'cbt.apps.CbtConfig',
     'tickets.apps.TicketsConfig',
+    'events.apps.EventsConfig',
 
 
     # Installed Apps

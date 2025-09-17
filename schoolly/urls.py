@@ -22,6 +22,8 @@ urlpatterns = [
     path('cbt/', include('cbt.urls', namespace='cbt')),
     path('curriculum/', include('curriculum.urls', namespace='curriculum')),
     path('tickets/', include('tickets.urls', namespace='tickets')),
+    path('events/', include('events.urls', namespace='events')),
+
        
        
 
