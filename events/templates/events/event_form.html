@@ -1,6 +1,6 @@
 {% load crispy_forms_tags %}
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,43 +8,46 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #0d1a26; /* Dark slate blue background */
-            color: #f8f9fa; /* Light text color */
+            background-color: #f8f9fa; /* Light grey background */
+            color: #212529; /* Dark text color */
         }
         .card {
-            background-color: #1a293a; /* Dark blue card background */
+            background-color: #ffffff; /* White card background */
             border: none;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         .form-control {
-            background-color: #2c3e50; /* Darker input fields */
-            color: #fff;
-            border: 1px solid #3d4a5c;
+            background-color: #f8f9fa; /* Light grey input fields */
+            color: #212529;
+            border: 1px solid #dee2e6;
         }
         .form-control:focus {
-            background-color: #2c3e50;
-            color: #fff;
-            border-color: #ff5e00; /* Orange focus outline */
-            box-shadow: 0 0 0 0.25rem rgba(255, 94, 0, 0.25);
+            background-color: #f8f9fa;
+            color: #212529;
+            border-color: #dc3545; /* Red focus outline */
+            box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
         }
-        .btn-primary-orange {
-            background-color: #ff5e00; /* Vibrant orange button */
-            border-color: #ff5e00;
+        .btn-primary-red {
+            background-color: #dc3545; /* Red button */
+            border-color: #dc3545;
             color: #fff;
             transition: background-color 0.2s ease-in-out;
         }
-        .btn-primary-orange:hover {
-            background-color: #e65300; /* Darker orange on hover */
-            border-color: #e65300;
+        .btn-primary-red:hover {
+            background-color: #c82333; /* Darker red on hover */
+            border-color: #c82333;
         }
-        .btn-secondary-dark {
-            background-color: #2c3e50; /* Darker secondary button */
-            border-color: #2c3e50;
-            color: #fff;
+        .btn-secondary-light {
+            background-color: #e9ecef; /* Light grey secondary button */
+            border-color: #e9ecef;
+            color: #212529;
         }
-        .btn-secondary-dark:hover {
-            background-color: #233140; /* Slightly darker on hover */
-            border-color: #233140;
+        .btn-secondary-light:hover {
+            background-color: #dee2e6; /* Slightly darker on hover */
+            border-color: #dee2e6;
+        }
+        .text-red {
+            color: #dc3545 !important;
         }
     </style>
 </head>
@@ -54,17 +57,17 @@
             <div class="col-md-8 col-lg-6">
                 <div class="card p-4">
                     <div class="card-body">
-                        <h2 class="card-title text-center text-primary-orange mb-4">
-                            {% if form.instance.pk %}Edit Event{% else %}Add Event{% endif %}
+                        <h2 class="card-title text-center text-red mb-4">
+                            {% if form.instance.pk %}Edit Event{% else %}Add New Event{% endif %}
                         </h2>
                         <form method="post">
                             {% csrf_token %}
                             {{ form|crispy }}
                             <div class="d-grid gap-2 mt-4">
-                                <button type="submit" class="btn btn-primary-orange">
+                                <button type="submit" class="btn btn-primary-red">
                                     Save
                                 </button>
-                                <a href="{% url 'events:calendar' %}" class="btn btn-secondary-dark">
+                                <a href="{% url 'events:calendar' %}" class="btn btn-secondary-light">
                                     Cancel
                                 </a>
                             </div>

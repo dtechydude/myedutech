@@ -1,21 +1,22 @@
 {% load mathfilters %}
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>School Calendar</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #0d1a26; /* Dark slate blue background */
-            color: #f8f9fa; /* Light text color */
+            background-color: #f8f9fa; /* Light grey background */
+            color: #212529; /* Dark text color for contrast */
         }
         .calendar-container {
-            background-color: #1a293a; /* Dark blue container background */
+            background-color: #ffffff; /* White container background */
             border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         .calendar {
             width: 100%;
@@ -25,23 +26,23 @@
         .calendar th, .calendar td {
             text-align: center;
             padding: 10px;
-            border: 1px solid #3d4a5c; /* Slightly lighter border color for contrast */
+            border: 1px solid #dee2e6; /* Light grey border color */
             vertical-align: top;
             height: 120px;
             position: relative;
         }
         .calendar th {
-            background-color: #112030; /* Darker header background */
-            color: #fff;
+            background-color: #e9ecef; /* Lighter header background */
+            color: #212529;
         }
         .calendar td {
-            background-color: #1a293a; /* Match container background */
+            background-color: #ffffff; /* Match container background */
         }
         .calendar td .date {
             position: absolute;
             top: 5px;
             right: 5px;
-            color: #8c9bb0; /* Faded blue for day number */
+            color: #6c757d; /* Muted grey for day number */
             font-weight: bold;
         }
         .calendar ul {
@@ -56,30 +57,36 @@
         .calendar a.event-link {
             font-size: 0.9em;
             word-wrap: break-word;
-            color: #ff914d; /* Bright orange for event links */
+            color: #dc3545; /* Red for event links */
             transition: color 0.2s ease-in-out;
         }
         .calendar a.event-link:hover {
-            color: #ffa566; /* Lighter orange on hover */
+            color: #c82333; /* Darker red on hover */
         }
-        .btn-primary-orange {
-            background-color: #ff5e00; /* Vibrant orange button */
-            border-color: #ff5e00;
+        .btn-primary-red {
+            background-color: #dc3545; /* Red button */
+            border-color: #dc3545;
             color: #fff;
             transition: background-color 0.2s ease-in-out;
         }
-        .btn-primary-orange:hover {
-            background-color: #e65300; /* Darker orange on hover */
-            border-color: #e65300;
+        .btn-primary-red:hover {
+            background-color: #c82333; /* Darker red on hover */
+            border-color: #c82333;
         }
-        .btn-secondary-dark {
-            background-color: #2c3e50; /* Darker secondary button */
-            border-color: #2c3e50;
-            color: #fff;
+        .btn-secondary-light {
+            background-color: #e9ecef; /* Light grey secondary button */
+            border-color: #e9ecef;
+            color: #212529;
         }
-        .btn-secondary-dark:hover {
-            background-color: #233140; /* Slightly darker on hover */
-            border-color: #233140;
+        .btn-secondary-light:hover {
+            background-color: #dee2e6; /* Slightly darker on hover */
+            border-color: #dee2e6;
+        }
+        .calendar-heading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
     </style>
 </head>
@@ -87,16 +94,19 @@
     <div class="container mt-5">
         <div class="row">
             <div class="col-12 calendar-container">
-                <h2 class="text-center text-primary-orange">School Calendar</h2>
+                <div class="calendar-heading">
+                    <i class="bi bi-calendar-check-fill fs-2 text-danger"></i>
+                    <h2 class="text-center text-danger">School Events Calendar</h2>
+                </div>
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <a href="?{{ prev_month }}" class="btn btn-secondary-dark">Previous Month</a>
-                    <span class="fs-4 text-white">{{ month_name }} {{ month_year }}</span>
-                    <a href="?{{ next_month }}" class="btn btn-secondary-dark">Next Month</a>
+                    <a href="?{{ prev_month }}" class="btn btn-secondary-light">Previous Month</a>
+                    <span class="fs-4 text-dark">{{ month_name }} {{ month_year }}</span>
+                    <a href="?{{ next_month }}" class="btn btn-secondary-light">Next Month</a>
                 </div>
                 <div class="d-flex justify-content-center my-4 gap-2">
-                    <a class="btn btn-secondary-dark" href="/dashboard">Back to Dashboard</a>
+                    <a class="btn btn-secondary-light" href="/dashboard/">Back to Dashboard</a>
                     {% if user.is_authenticated and user.is_staff %}
-                    <a class="btn btn-primary-orange" href="{% url 'events:event_new' %}">Add Event</a>
+                    <a class="btn btn-primary-red" href="{% url 'events:event_new' %}">Add Event</a>
                     {% endif %}
                 </div>
                 {{ calendar|safe }}

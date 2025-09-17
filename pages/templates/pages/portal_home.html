@@ -408,6 +408,7 @@
 						<ul aria-expanded="false">
 
 							<li><a href="{% url 'pages:portal-home' %}">Dashboard HOME</a></li>
+							<li><a href="{% url 'events:calendar' %}">School Events Calendar</a></li>
 							
 							{% if user.is_superuser or user.is_staff %}
 							<li><a href="/admin/">Main Settings</a></li>							
@@ -442,7 +443,6 @@
 							<li><a href="{% url 'students:parent-dashboard' %}">PARENTS DASHBOARD</a></li>
 							<li><a href="{% url 'students:graduate_students' %}">Move Students To Alumni</a></li>
 							<li><a href="{% url 'students:graduated_students_list' %}">GRADUATE/ALUMNI List</a></li>
-
 							
 							{% elif user.teacher %}							
 							<li><a href="{% url 'students:student-list' %}">My Students</a></li>
@@ -452,13 +452,13 @@
 							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>																	
 							
 							{% elif user.student %}							
-							<a href="{% url 'students:student_id_card' student.id %}"> My ID Card</a>												
+							<li><a href="{% url 'students:student_id_card' student.id %}"> My ID Card</a></li>												
 							<li><a href="{% url 'staff:my_teacher_view' %}">My Teacher</a></li>
 							<li><a href="{% url 'students:my_classmates' %}">My Class Mates</a></li>
 							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>	
 
 							{% else %}
-							<li>No Access</a></li>
+							<li>No Access</li>
 							{% endif %}					
 						</ul>
 					</li>
@@ -857,8 +857,12 @@
 								<div class="row">
 									<div class="col-xl-6">
 										<div class="card">
-											<div class="card-header border-0 pb-0">
+											<!-- <div class="card-header border-0 pb-0">
 												<h4 class="fs-20">School Schedule</h4>
+											</div> -->
+											<div class="card-header border-0 pb-0">
+												<h4 class="fs-20">School Events Schedule</h4>
+												<a href="{% url 'events:calendar' %}" class="btn btn-primary btn-sm">View Calendar</a>
 											</div>
 											<div class="card-body pb-2 loadmore-content" id="BookingContent">
 												<div class="text-center event-calender border-bottom booking-calender">
@@ -871,7 +875,7 @@
 															<h4>My Profile Details</h4>
 															<div class="users d-flex align-items-center">																
 																<div>
-																	<span class="fs-16 font-w500 me-3">NAME: {{ user.first_name }}  <strong>{{ user.last_name}}</strong></span><br>
+																	<!-- <span class="fs-16 font-w500 me-3">NAME: {{ user.first_name }}  <strong>{{ user.last_name}}</strong></span><br>
 																	<span style="color: brown;">Updated: {{ user.profile.updated }}</span> <br>
 																	<span><strong>E-MAIL:</strong> {{ user.email }}</span> <br>
 																	<span><strong>PROFILE PHONE: </strong> {{ user.profile.phone }}</span><br>
@@ -885,7 +889,26 @@
 																		NON-ACADEMIC STAFF
 																		{% else %}
 																		ADMIN 
-																		{% endif %}</span> <br>
+																		{% endif %}</span> <br> -->
+																		   <ul class="list-unstyled">
+                    <li class="mb-1"><span class="font-w500 me-2">NAME:</span> <strong>{{ user.first_name }} {{ user.last_name}}</strong></li>
+                    <li class="mb-1"><span class="font-w500 me-2">EMAIL:</span> <span>{{ user.email }}</span></li>
+                    <li class="mb-1"><span class="font-w500 me-2">PHONE:</span> <span>{{ user.profile.phone }}</span></li>
+                    <li class="mb-1"><span class="font-w500 me-2">ROLE:</span>
+                        {% if user.is_superuser %}
+                        <span class="badge bg-primary">SUPERUSER</span>
+                        {% elif user.student %}
+                        <span class="badge bg-success">STUDENT</span>
+                        {% elif user.teacher %}
+                        <span class="badge bg-info">TEACHER</span>
+                        {% elif user.staff %}
+                        <span class="badge bg-warning">NON-ACADEMIC STAFF</span>
+                        {% else %}
+                        <span class="badge bg-secondary">ADMIN</span>
+                        {% endif %}
+                    </li>
+                    <li class="mb-1"><span class="font-w500 me-2">UPDATED:</span> <span class="text-muted">{{ user.profile.updated|date:"F j, Y" }}</span></li>
+                </ul>
 
 																</div>
 															</div>
@@ -894,13 +917,14 @@
 													<span class="date bg-secondary mb-3"><i class="fas fa-user"></i></span>
 												</div>
 											
-												<div class="rooms mt-3 d-flex align-items-center justify-content-between flex-wrap">
+												<!-- <div class="rooms mt-3 d-flex align-items-center justify-content-between flex-wrap">
 													
-												</div>
+												</div> -->
 											</div>
 											
 										</div>
 									</div>
+									
 									<div class="col-xl-6">
 										<div class="row">
 											<div class="col-xl-12">
@@ -1011,36 +1035,74 @@
 															
 															<div class="mb-5 mt-4 d-flex align-items-center">
 																<div>
-																	<h4 class="text-secondary">How To Use The Portal - <a href="https://kwikschools.com/;">PORTAL MANUAL</a></h4>
+																	<h4 class="text-secondary">How To Use The Portal - <a href="{% url 'pages:video-guides' %}">PORTAL MANUAL</a></h4>
 																</div>
-																<div><a href="https://kwikschools.com/documents/portal-manual.pdf;;" class="ms-5"><i class="fas fa-arrow-right fs-20"></i></a></div>
+																<div><a href="#" class="ms-5"><i class="fas fa-arrow-right fs-20"></i></a></div>
 															</div>
 														</div>
 														{% else %}
-														<div class="mb-5 mt-4 d-flex align-items-center">
-															<div>
-																<h4><a href="javascript:void(0);" class="text-secondary">About This Portal</a></h4>
-																<p><strong>STUDENTS: </strong> <br> <span><strong>Acess Academic Records and Progress:</strong></span>
-																Students can log in to view their grades, transcipts, attendance records, andacademic standing in real-time.<br> 
-															<span><strong>E-Learning & CBT:</strong> - The e-learning center allows the student to access materials and make contributions in the class'
-																The portal allows you to access CBT directly from the portal </span><br>
-																<strong>Payments/Bills: </strong> - You can make your all your payments and access the necessary payments Chart
-																Check to make sure you use the right school account to make your payments.
-															</p>
-																	 <p><strong>TEACHERS:</strong> <br>
-																		<span><strong>Attendance: </strong></span> Mark daily attendance by using the attendance tools/menu. <br> 
-																		<strong>Access Your Students:</strong>The portal allows you to access personal details of all the students in your class. <br>
-																		<span><strong>Upload E-Learning Materials:</strong></span> Use the E-Learning menu to upload your e-learing materials accordingly
-																	</p>
-																			 <p> <strong>ALL Users:</strong> <br>
-																				<span><strong>Your Profile:</strong></span> You can update your profile by accessing your profile through the profile links <br>
-																				<span><strong>Reset Password:</strong></span> A default password is given at registration, user can change their password for more secure access. <br>
-																				<span><strong>Help Center:</strong></span> For any assistance about the portal, please use the help center menu tool or contact the portal administrator.
-																				</p>																
-															</div>
-															<div><a href="javascript:void(0);" class="ms-5"><i class="fas fa-arrow-right fs-20"></i></a></div>
+													
+
+													<div class="mb-5 mt-4 d-flex align-items-center">
+													<div>
+														<h4 class="mb-3"><a href="javascript:void(0);" class="text-secondary">About This Portal</a></h4>
+														<div class="user-info">
+															<p><strong>STUDENTS:</strong></p>
+															<ul class="list-unstyled">
+																<li>
+																	<span><strong>Access Academic Records and Progress:</strong></span>
+																	Students can log in to view their grades, transcripts, attendance records, and academic standing in real-time.
+																</li>
+																<li>
+																	<span><strong>E-Learning & CBT:</strong></span>
+																	The e-learning center allows students to access materials and make contributions in the class. The portal also allows you to access CBT directly.
+																</li>
+																<li>
+																	<span><strong>Payments/Bills:</strong></span>
+																	You can make all your payments and access the necessary payments chart. Please ensure you use the correct school account for payments.
+																</li>
+															</ul>
+
+															<p class="mt-4"><strong>TEACHERS:</strong></p>
+															<ul class="list-unstyled">
+																<li>
+																	<span><strong>Attendance:</strong></span>
+																	Mark daily attendance using the attendance tools/menu.
+																</li>
+																<li>
+																	<span><strong>Access Your Students:</strong></span>
+																	The portal allows you to access personal details of all the students in your class.
+																</li>
+																<li>
+																	<span><strong>Upload E-Learning Materials:</strong></span>
+																	Use the E-Learning menu to upload your e-learning materials accordingly.
+																</li>
+															</ul>
+
+															<p class="mt-4"><strong>ALL Users:</strong></p>
+															<ul class="list-unstyled">
+																<li>
+																	<span><strong>Your Profile:</strong></span>
+																	You can update your profile by accessing it through the profile links.
+																</li>
+																<li>
+																	<span><strong>Reset Password:</strong></span>
+																	A default password is given at registration; users can change their password for more secure access.
+																</li>
+																<li>
+																	<span><strong>Help Center:</strong></span>
+																	For any assistance, please use the help center menu tool or contact the portal administrator.
+																</li>
+															</ul>
 														</div>
+														<a href="{% url 'pages:video-guides' %}" class="btn btn-primary mt-4">
+															<i class="fas fa-book me-2"></i> View Portal Manual
+														</a>
 													</div>
+													<div>
+														<a href="javascript:void(0);" class="ms-5"><i class="fas fa-arrow-right fs-20"></i></a>
+													</div>
+												</div>
 														{% endif %}
 													</div>
 												</div>
