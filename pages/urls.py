@@ -8,9 +8,9 @@ urlpatterns = [
 
      # Use Them interchangeably either the first or the second
      #the FIRST "requires separate file on kwikschools domain"
-     path('', page_views.schoolly_home, name='schoolly-home'), 
+     # path('', page_views.schoolly_home, name='schoolly-home'), 
      # The SECOND "doesnt require separate file on kwikschools domain"   
-     # path('', page_views.landing_page, name='schoolly-home'), 
+     path('', page_views.landing_page, name='schoolly-home'), 
 
      path('dashboard/', page_views.dashboard, name="portal-home"),     
      path('help-center/', page_views.help_center, name='help-center'),
