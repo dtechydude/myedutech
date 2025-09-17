@@ -145,6 +145,10 @@ def payment_chart(request):
     return render(request, 'pages/payment_chart.html')
 
 
+def landing_page(request):
+    return render(request, 'pages/landingpage.html')
+
+
 # birthday list
 @login_required
 def bank_detail(request):

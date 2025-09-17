@@ -8,6 +8,7 @@ urlpatterns = [
 
      path('', page_views.schoolly_home, name='schoolly-home'), 
      path('dashboard/', page_views.dashboard, name="portal-home"),
+     path('home/', page_views.landing_page, name='landing-page'),
      path('help-center/', page_views.help_center, name='help-center'),
      path('support-info/', page_views.support_info, name='support_info'),
      path('lock-screen/', page_views.lock_screen, name='lock-screen'),
