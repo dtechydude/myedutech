@@ -279,34 +279,34 @@ def teacher_guarantor_email_list_view(request):
     return render(request, 'pages/teachers_email_list.html', context)
 
 
-# Video Guides
-@login_required
-def video_guides_view(request):
-    # A placeholder list of video data
-    video_list = [
-        {
-            'title': 'A KwikSchools Quick Guide',
-            'youtube_url': 'https://www.youtube.com/embed/KwjiFOwDOl4',
-            'description': 'A walk-through video on how to the features.'
-        },
-        {
-            'title': 'Kwikschool - School Set-Up (Admin)',
-            'youtube_url': 'https://www.youtube.com/embed/dGpsPRIlkH4&t=605s',
-            'description': 'Set Up - Initial portal set up'
-        },
-         {
-            'title': 'Smart Intro - KwikSchools',
-            'youtube_url': 'https://www.youtube.com/embed/lMgWQgFQrrY',
-            'description': 'A Smart Intro To KwikSchools.'
-        },
-        # Add more videos here
-    ]
+# # Video Guides
+# @login_required
+# def video_guides_view(request):
+#     # A placeholder list of video data
+#     video_list = [
+#         {
+#             'title': 'A KwikSchools Quick Guide',
+#             'youtube_url': 'https://www.youtube.com/embed/KwjiFOwDOl4',
+#             'description': 'A walk-through video on how to the features.'
+#         },
+#         {
+#             'title': 'Kwikschool - School Set-Up (Admin)',
+#             'youtube_url': 'https://www.youtube.com/embed/dGpsPRIlkH4&t=605s',
+#             'description': 'Set Up - Initial portal set up'
+#         },
+#          {
+#             'title': 'Smart Intro - KwikSchools',
+#             'youtube_url': 'https://www.youtube.com/embed/lMgWQgFQrrY',
+#             'description': 'A Smart Intro To KwikSchools.'
+#         },
+#         # Add more videos here
+#     ]
 
-    context = {
-        'title': 'MyEduTech Video Guides',
-        'videos': video_list,
-    }
-    return render(request, 'pages/video_guides.html', context)
+#     context = {
+#         'title': 'MyEduTech Video Guides',
+#         'videos': video_list,
+#     }
+#     return render(request, 'pages/video_guides.html', context)
 
 
 @login_required
