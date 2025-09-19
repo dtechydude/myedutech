@@ -307,3 +307,43 @@ def video_guides_view(request):
         'videos': video_list,
     }
     return render(request, 'pages/video_guides.html', context)
+
+
+@login_required
+def video_guides_view(request):
+    # A placeholder list of video data with an 'is_staff_only' flag
+    video_list = [
+        {
+            'title': 'A KwikSchools Quick Guide',
+            'youtube_url': 'https://www.youtube.com/embed/KwjiFOwDOl4',
+            'description': 'A walk-through video on how to use the features.',
+            'is_staff_only': False
+        },
+        {
+            'title': 'Kwikschool - School Set-Up (Admin)',
+            'youtube_url': 'https://www.youtube.com/embed/dGpsPRIlkH4',
+            'description': 'Set Up - Initial portal set up',
+            'is_staff_only': True  # This video is for staff only
+        },
+        {
+            'title': 'Smart Intro - KwikSchools',
+            'youtube_url': 'https://www.youtube.com/embed/lMgWQgFQrrY',
+            'description': 'A Smart Intro To KwikSchools.',
+            'is_staff_only': False
+        },
+        # Add more videos here
+    ]
+
+    # Filter videos based on the user's staff status
+    if request.user.is_staff:
+        # Staff users see all videos
+        visible_videos = video_list
+    else:
+        # Non-staff users only see videos that are NOT staff only
+        visible_videos = [video for video in video_list if not video['is_staff_only']]
+
+    context = {
+        'title': 'MyEduTech Video Guides',
+        'videos': visible_videos,
+    }
+    return render(request, 'pages/video_guides.html', context)
