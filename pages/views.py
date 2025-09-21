@@ -320,8 +320,14 @@ def video_guides_view(request):
             'is_staff_only': False
         },
         {
-            'title': 'Kwikschool - School Set-Up (Admin)',
+            'title': 'Kwikschools - School Set-Up (Admin)',
             'youtube_url': 'https://www.youtube.com/embed/dGpsPRIlkH4',
+            'description': 'Set Up - Initial portal set up',
+            'is_staff_only': True  # This video is for staff only
+        },
+         {
+            'title': 'Kwikschools - Student Enrolment & Teachers Signup',
+            'youtube_url': 'https://www.youtube.com/embed/EHOePJXKWp0',
             'description': 'Set Up - Initial portal set up',
             'is_staff_only': True  # This video is for staff only
         },
