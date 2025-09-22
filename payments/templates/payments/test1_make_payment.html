@@ -2,7 +2,7 @@
 {% load crispy_forms_tags %}
 
 <!DOCTYPE html>
-<html lang="en" class="h-100">
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -13,7 +13,7 @@
     <meta name="description" content="KwikSchools: School Mgt System" />
     <meta name="format-detection" content="telephone=no">
 
-    <title>Create Bus Payment</title>
+    <title>Create New Payment</title>
 
     <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
 
@@ -29,20 +29,20 @@
     </style>
 </head>
 
-<body class="h-100 d-flex align-items-center justify-content-center">
-    <div class="container-fluid">
+<body class="min-vh-100 d-flex flex-column align-items-center justify-content-center">
+    <main role="main" class="container my-5">
         <div class="row justify-content-center">
-            <div class="col-12 col-md-8 col-lg-6">
-                <div class="card shadow-lg p-4 rounded-4">
-                    <div class="card-body auth-form">
+            <div class="col-12 col-sm-10 col-md-8 col-lg-6">
+                <div class="card shadow-lg border-0 p-4 rounded-4">
+                    <div class="card-body">
                         <div class="text-center mb-4">
-                            <a href="#"><img src="{% static 'pages/images/kwikschool_logo.png' %}" width="80px" height="80px" alt="Logo"></a>
+                            <a href="{% url 'pages:portal-home' %}"><img src="{% static 'pages/images/kwikschool_logo.png' %}" width="80" height="80" alt="KwikSchools Logo"></a>
                         </div>
-                        <h3 class="text-center fw-bold mb-4">Create Bus Payment</h3>
+                        <h3 class="text-center fw-bold mb-4">Create New Payment</h3>
 
                         {# Messages Display #}
                         {% if messages %}
-                            <div class="mb-4">
+                            <div class="mb-4" aria-live="polite" aria-atomic="true">
                                 {% for message in messages %}
                                     <div class="alert alert-dismissible fade show {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %}" role="alert">
                                         {{ message }}
@@ -52,12 +52,12 @@
                             </div>
                         {% endif %}
 
-                        <form method="post">
+                        <form method="post" novalidate>
                             {% csrf_token %}
 
                             {# Non-field errors #}
                             {% if form.non_field_errors %}
-                                <div class="alert alert-danger">
+                                <div class="alert alert-danger" role="alert">
                                     <h4 class="alert-heading">Form Errors:</h4>
                                     <ul>
                                         {% for error in form.non_field_errors %}
@@ -69,31 +69,29 @@
 
                             {# Student Name for self-service users #}
                             {% if request.user.is_authenticated and request.user.student %}
-                                <div class="alert alert-info" role="alert">
-                                    Making payment for: **{{ request.user.student.first_name }} {{ request.user.student.last_name }}**
+                                <div class="alert alert-info text-center" role="alert">
+                                    Making payment for: <strong>{{ request.user.student.first_name }} {{ request.user.student.last_name }}</strong>
                                 </div>
                             {% endif %}
 
-                            {# Render the form fields with crispy forms #}
+                            {# Render the form fields #}
                             {% for field in form %}
                                 {% if field.field.widget.input_type == 'hidden' %}
                                     {{ field }}
                                 {% elif field.name == 'is_installment' %}
-                                    <div id="div_id_{{ field.name }}" class="mb-3">
-                                        <div class="form-check">
-                                            {{ field }}
-                                            <label class="form-check-label fw-bold" for="{{ field.id_for_label }}">
-                                                {{ field.label }}
-                                            </label>
-                                            {% if field.help_text %}
-                                                <small class="form-text text-muted">{{ field.help_text }}</small>
-                                            {% endif %}
-                                            {% if field.errors %}
-                                                {% for error in field.errors %}
-                                                    <div class="invalid-feedback d-block">{{ error }}</div>
-                                                {% endfor %}
-                                            {% endif %}
-                                        </div>
+                                    <div id="div_id_{{ field.name }}" class="mb-3 form-check">
+                                        {{ field }}
+                                        <label class="form-check-label fw-bold" for="{{ field.id_for_label }}">
+                                            {{ field.label }}
+                                        </label>
+                                        {% if field.help_text %}
+                                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                                        {% endif %}
+                                        {% if field.errors %}
+                                            {% for error in field.errors %}
+                                                <div class="invalid-feedback d-block">{{ error }}</div>
+                                            {% endfor %}
+                                        {% endif %}
                                     </div>
                                 {% else %}
                                     <div id="div_id_{{ field.name }}" class="mb-3">
@@ -102,7 +100,7 @@
                                 {% endif %}
                             {% endfor %}
                             
-                            <div id="additional-info-section">
+                            <div id="additional-info-section" class="mb-3">
                                 {# These paragraphs will be populated by the JS #}
                             </div>
                             
@@ -119,8 +117,8 @@
                 </div>
             </div>
         </div>
-    </div>
-
+    </main>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
     <script>
@@ -167,9 +165,9 @@
                         })
                         .then(data => {
                             if (data.amount_due) {
-                                originalAmountDisplay.innerHTML = `**Expected Amount:** N${data.amount_due}`;
+                                originalAmountDisplay.innerHTML = `<strong>Expected Amount:</strong> N${data.amount_due}`;
                                 if (data.balance_remaining !== undefined) {
-                                    remainingBalanceDisplay.innerHTML = `**Remaining Balance:** N${data.balance_remaining}`;
+                                    remainingBalanceDisplay.innerHTML = `<strong>Remaining Balance:</strong> N${data.balance_remaining}`;
                                 } else {
                                     remainingBalanceDisplay.innerHTML = '';
                                 }
