@@ -1,0 +1,72 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+
+{% block title %}
+<title>Payment Chart</title>
+{% endblock title %}
+
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title" style="color:green;">
+                            <i class="fas fa-file-invoice-dollar me-2"></i> Fees Schedule for: {{ current_term.name }} - {{ current_session }}
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        {% if fee_data %}
+                            <div class="d-flex justify-content-center mb-4">
+                                <ul class="nav nav-pills" id="classTabs" role="tablist">
+                                    {% for standard, fees in fee_data.items %}
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link {% if forloop.first %}active{% endif %}" id="tab-{{ standard.id }}" data-bs-toggle="tab" data-bs-target="#content-{{ standard.id }}" type="button" role="tab" aria-controls="content-{{ standard.id }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+                                                {{ standard.name }}
+                                            </button>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            
+                            <div class="tab-content" id="classTabsContent">
+                                {% for standard, fees in fee_data.items %}
+                                    <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="content-{{ standard.id }}" role="tabpanel" aria-labelledby="tab-{{ standard.id }}">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover table-striped mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th>S/N</th>
+                                                        <th>Payment Name</th>
+                                                        <th>Category Description</th>
+                                                        <th>Amount Due</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for fee in fees %}
+                                                        <tr>
+                                                            <td>{{ forloop.counter }}</td>
+                                                            <td><strong>{{ fee.payment_category.name }}</strong></td>
+                                                            <td>{{ fee.payment_category.description }}</td>
+                                                            <td><strong>N{{ fee.amount_due|floatformat:2 }}</strong></td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info text-center" role="alert">
+                                No fee schedules found for the current term and session.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content_body %}

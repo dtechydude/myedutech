@@ -4,115 +4,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
+    <title>Move Students To Alumni</title>
     <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        body { background-color: #f8f9fa; }
-        .header {
+        body { 
+            background-color: #f0f2f5; 
+            min-height: 100vh; /* Ensures body takes full viewport height */
+            display: flex;
+            flex-direction: column;
+        }
+        .main-content {
+            flex-grow: 1; /* Allows content area to push the footer down */
+        }
+        .header-central {
             background-color: #ffffff;
-            padding: 1.5rem 2rem;
+            padding: 1.5rem 1rem;
             border-bottom: 1px solid #e9ecef;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            margin-bottom: 2rem;
+            margin-bottom: 3rem; 
         }
-        .logo { font-size: 1.75rem; font-weight: 700; color: #0d6efd; text-decoration: none; }
-        .container { max-width: 800px; margin-top: 50px; }
+        .header-content {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .container-form {
+            max-width: 800px;
+        }
+        .logo-link {
+            display: block;
+            margin: 0 auto;
+            text-align: center;
+        }
+        /* Color Overrides (Dark Orange/Red Theme) */
+        .bg-custom-danger {
+            background-color: #dc3545 !important; /* Red */
+        }
+        .text-dark-orange {
+            color: #ff8c00 !important; /* Dark orange */
+        }
+        .btn-custom-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            color: white;
+        }
+        .btn-custom-danger:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
+        }
+        /* Footer Style */
+        .footer {
+            padding: 1rem 0;
+            background-color: #ffffff;
+            border-top: 1px solid #e9ecef;
+            margin-top: 3rem; /* Space above the footer */
+        }
+        /* Mobile adjustment for back button */
+        @media (max-width: 576px) {
+            .header-content { flex-direction: column; }
+            .logo-link { margin-bottom: 1rem; }
+            .header-content > * { width: 100%; text-align: center; }
+        }
     </style>
 </head>
 <body>
 
-<header class="header d-flex justify-content-between align-items-center">
-    <a href="/dashboard/" class="logo"><img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="" width="100" height="auto"></a>
-    <a href="{% url 'students:graduated_students_list' %}" class="btn btn-outline-primary">
-        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-    </a>
+<header class="header-central">
+    <div class="header-content">
+        <a href="{% url 'students:graduated_students_list' %}" class="btn btn-sm btn-outline-secondary d-none d-sm-inline-flex align-items-center">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+        
+        <a href="/dashboard/" class="logo-link flex-grow-1">
+            <img src="{{ school_info.logo.url }}" alt="School Logo" width="100" height="auto" class="img-fluid">
+        </a>
+
+        <a href="{% url 'students:graduated_students_list' %}" class="btn btn-sm btn-outline-secondary d-sm-none w-100">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+        <div class="d-none d-sm-inline-block" style="width: 150px;"></div>
+    </div>
 </header>
 
-<div class="container">
-    <div class="card shadow-sm">
-        <div class="card-header bg-success text-white">
-            <h4 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>{{ title }}</h4>
-        </div>
-        <div class="card-body">
-            {% if messages %}
-            {% for message in messages %}
-            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div class="main-content">
+    <div class="container container-form">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-custom-danger text-white text-center py-3 rounded-top">
+                <h3 class="mb-0"><i class="fas fa-user-graduate me-2"></i> {{ title|default:"Move Students to Alumni" }}</h3>
+                <p class="mb-0 small opacity-75">A two-step process to graduate students to the Alumni list.</p>
             </div>
-            {% endfor %}
-            {% endif %}
+            <div class="card-body p-4">
+                
+                {% if messages %}
+                <div class="mb-4">
+                {% for message in messages %}
+                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+                </div>
+                {% endif %}
 
-            <div class="mb-4">
-                <h5 class="card-title">1. Select a Class</h5>
-                <form method="get" action="{% url 'students:graduate_students' %}" class="d-flex align-items-end">
-                    <div class="me-3 flex-grow-1">
-                        <label for="standard-select" class="form-label">Class:</label>
-                        <select class="form-select" id="standard-select" name="standard" required>
-                            <option value="">-- Choose a Class --</option>
-                            {% for standard in standards %}
-                            <option value="{{ standard.id }}" {% if selected_standard and selected_standard.id == standard.id %}selected{% endif %}>
-                                {{ standard.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-secondary">Load Students</button>
-                </form>
-            </div>
-
-            {% if selected_standard %}
-            <hr>
-            <div class="mt-4">
-                <h5 class="card-title">2. Select Students to Graduate</h5>
-                <form method="post" action="{% url 'students:graduate_students' %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="standard_id" value="{{ selected_standard.id }}">
-                    
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="select-all-students">
-                            <label class="form-check-label fw-bold" for="select-all-students">Select All Students</label>
+                <div class="step-section mb-5 p-3 border rounded">
+                    <h5 class="card-title text-dark-orange mb-3">1. Select a Class to Graduate</h5>
+                    <form method="get" action="{% url 'students:graduate_students' %}" class="row g-3 align-items-end">
+                        <div class="col-sm-8 col-lg-9">
+                            <label for="standard-select" class="form-label fw-bold">Class:</label>
+                            <select class="form-select form-select-lg" id="standard-select" name="standard" required>
+                                <option value="">-- Choose a Class --</option>
+                                {% for standard in standards %}
+                                <option value="{{ standard.id }}" {% if selected_standard and selected_standard.id == standard.id %}selected{% endif %}>
+                                    {{ standard.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
                         </div>
-                        <ul class="list-group list-group-flush border rounded mt-2" style="max-height: 250px; overflow-y: auto;">
-                            {% for student in students %}
-                            <li class="list-group-item d-flex align-items-center">
-                                <input class="form-check-input me-2 student-checkbox" type="checkbox" name="selected_students" value="{{ student.id }}" id="student-{{ student.id }}">
-                                <label class="form-check-label flex-grow-1" for="student-{{ student.id }}">
-                                    {{ student.get_full_name }}
-                                </label>
-                            </li>
-                            {% empty %}
-                            <li class="list-group-item text-center text-muted">No active students found in this class.</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-success mt-3 w-100">
-                        <i class="fas fa-graduation-cap me-2"></i> Graduate Selected Students
-                    </button>
-                </form>
+                        <div class="col-sm-4 col-lg-3">
+                            <button type="submit" class="btn btn-custom-danger w-100 btn-lg">Load Students</button>
+                        </div>
+                    </form>
+                </div>
+
+                {% if selected_standard %}
+                <div class="step-section mt-4 p-3 border rounded bg-light">
+                    <h5 class="card-title text-success mb-3">2. Confirm Students for Graduation ({{ selected_standard.name }})</h5>
+                    <form method="post" action="{% url 'students:graduate_students' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="standard_id" value="{{ selected_standard.id }}">
+                        
+                        <div class="mb-3">
+                            <div class="form-check pb-2 border-bottom">
+                                <input class="form-check-input" type="checkbox" id="select-all-students">
+                                <label class="form-check-label fw-bold text-dark" for="select-all-students">Select/Deselect All Students</label>
+                            </div>
+
+                            <ul class="list-group list-group-flush mt-3" style="max-height: 300px; overflow-y: auto;">
+                                {% for student in students %}
+                                <li class="list-group-item d-flex align-items-center py-2">
+                                    <input class="form-check-input me-3 student-checkbox" type="checkbox" name="selected_students" value="{{ student.id }}" id="student-{{ student.id }}" checked>
+                                    <label class="form-check-label flex-grow-1" for="student-{{ student.id }}">
+                                        <i class="fas fa-user-circle me-1 text-muted"></i> {{ student.get_full_name }}
+                                    </label>
+                                </li>
+                                {% empty %}
+                                <li class="list-group-item text-center text-danger py-4">
+                                    <i class="fas fa-exclamation-triangle me-2"></i> No active students found in the class to graduate.
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success mt-4 w-100 btn-lg shadow">
+                            <i class="fas fa-check-circle me-2"></i> CONFIRM & GRADUATE ({{ students|length|default:"0" }} Selected)
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
         </div>
     </div>
 </div>
 
+<footer class="footer">
+    <div class="container container-form text-center">
+        <span class="text-muted small">
+            &copy; {% now "Y" %} {{ school_info.name|default:"KwikSchools" }}. All Rights Reserved. 
+            <span class="d-none d-sm-inline">| Powered by KwikSchools EdTech.</span>
+        </span>
+    </div>
+</footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const selectAllCheckbox = document.getElementById('select-all-students');
         const studentCheckboxes = document.querySelectorAll('.student-checkbox');
-        
+        const graduateButton = document.querySelector('.btn-success.shadow');
+
+        function updateGraduateButtonText() {
+            const selectedCount = document.querySelectorAll('.student-checkbox:checked').length;
+            graduateButton.innerHTML = `<i class="fas fa-check-circle me-2"></i> CONFIRM & GRADUATE (${selectedCount} Selected)`;
+            graduateButton.disabled = (selectedCount === 0);
+        }
+
         if (selectAllCheckbox) {
+            selectAllCheckbox.checked = studentCheckboxes.length > 0 && 
+                                        Array.from(studentCheckboxes).every(checkbox => checkbox.checked);
+
             selectAllCheckbox.addEventListener('change', function() {
                 studentCheckboxes.forEach(checkbox => {
                     checkbox.checked = this.checked;
                 });
+                updateGraduateButtonText();
             });
+        }
+        
+        studentCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const allChecked = Array.from(studentCheckboxes).every(cb => cb.checked);
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = allChecked;
+                }
+                updateGraduateButtonText();
+            });
+        });
+
+        if (graduateButton) {
+            updateGraduateButtonText();
         }
     });
 </script>

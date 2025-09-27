@@ -4,16 +4,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Calendar</title>
+    <title>School Calendar - {{ school_info.name }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
+        /* Existing styles */
         body {
-            background-color: #f8f9fa; /* Light grey background */
-            color: #212529; /* Dark text color for contrast */
+            background-color: #f8f9fa;
+            color: #212529;
+            display: flex; /* Enable flexbox for sticky footer */
+            flex-direction: column;
+            min-height: 100vh; /* Ensure body takes full viewport height */
+        }
+        .main-content {
+            flex-grow: 1; /* Allow content to push footer down */
         }
         .calendar-container {
-            background-color: #ffffff; /* White container background */
+            background-color: #ffffff;
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -26,23 +33,23 @@
         .calendar th, .calendar td {
             text-align: center;
             padding: 10px;
-            border: 1px solid #dee2e6; /* Light grey border color */
+            border: 1px solid #dee2e6;
             vertical-align: top;
             height: 120px;
             position: relative;
         }
         .calendar th {
-            background-color: #e9ecef; /* Lighter header background */
+            background-color: #e9ecef;
             color: #212529;
         }
         .calendar td {
-            background-color: #ffffff; /* Match container background */
+            background-color: #ffffff;
         }
         .calendar td .date {
             position: absolute;
             top: 5px;
             right: 5px;
-            color: #6c757d; /* Muted grey for day number */
+            color: #6c757d;
             font-weight: bold;
         }
         .calendar ul {
@@ -57,29 +64,30 @@
         .calendar a.event-link {
             font-size: 0.9em;
             word-wrap: break-word;
-            color: #dc3545; /* Red for event links */
+            color: #dc3545;
             transition: color 0.2s ease-in-out;
         }
         .calendar a.event-link:hover {
-            color: #c82333; /* Darker red on hover */
+            color: #c82333;
         }
+        /* Buttons and Heading styles remain */
         .btn-primary-red {
-            background-color: #dc3545; /* Red button */
+            background-color: #dc3545;
             border-color: #dc3545;
             color: #fff;
             transition: background-color 0.2s ease-in-out;
         }
         .btn-primary-red:hover {
-            background-color: #c82333; /* Darker red on hover */
+            background-color: #c82333;
             border-color: #c82333;
         }
         .btn-secondary-light {
-            background-color: #e9ecef; /* Light grey secondary button */
+            background-color: #e9ecef;
             border-color: #e9ecef;
             color: #212529;
         }
         .btn-secondary-light:hover {
-            background-color: #dee2e6; /* Slightly darker on hover */
+            background-color: #dee2e6;
             border-color: #dee2e6;
         }
         .calendar-heading {
@@ -88,31 +96,74 @@
             justify-content: center;
             gap: 10px;
         }
+
+        /* NEW: Header and Footer Styles */
+        .school-header {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+        .page-footer {
+            background-color: #343a40; /* Dark background for footer */
+            color: #f8f9fa; /* Light text */
+            padding: 15px 0;
+            margin-top: 40px;
+        }
     </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-12 calendar-container">
-                <div class="calendar-heading">
-                    <i class="bi bi-calendar-check-fill fs-2 text-danger"></i>
-                    <h2 class="text-center text-danger">School Events Calendar</h2>
+    
+    <header class="school-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-start">
+                    <h3 class="mb-0 text-danger fw-bold">{{ school_info.name|default:"KwikSchools" }}</h3>
+                    <p class="mb-0 text-muted small">{{ school_info.address_line_1|default:"123 School Lane, City, Country" }}</p>
                 </div>
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <a href="?{{ prev_month }}" class="btn btn-secondary-light">Previous Month</a>
-                    <span class="fs-4 text-dark">{{ month_name }} {{ month_year }}</span>
-                    <a href="?{{ next_month }}" class="btn btn-secondary-light">Next Month</a>
+                <div class="text-end">
+                    <span class="badge bg-danger">KwikSchools Portal</span>
                 </div>
-                <div class="d-flex justify-content-center my-4 gap-2">
-                    <a class="btn btn-secondary-light" href="/dashboard/">Back to Dashboard</a>
-                    {% if user.is_authenticated and user.is_staff %}
-                    <a class="btn btn-primary-red" href="{% url 'events:event_new' %}">Add Event</a>
-                    {% endif %}
+            </div>
+        </div>
+    </header>
+    <div class="main-content">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 calendar-container">
+                    
+                    <div class="calendar-heading">
+                        <i class="bi bi-calendar-check-fill fs-2 text-danger"></i>
+                        <h2 class="text-center text-danger">School Events Calendar</h2>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <a href="?{{ prev_month }}" class="btn btn-secondary-light">Previous Month</a>
+                        <span class="fs-4 text-dark">{{ month_name }} {{ month_year }}</span>
+                        <a href="?{{ next_month }}" class="btn btn-secondary-light">Next Month</a>
+                    </div>
+                    
+                    <div class="d-flex justify-content-center my-4 gap-2">
+                        <a class="btn btn-secondary-light" href="/dashboard/">Back to Dashboard</a>
+                        {% if user.is_authenticated and user.is_staff %}
+                        <a class="btn btn-primary-red" href="{% url 'events:event_new' %}">Add Event</a>
+                        {% endif %}
+                    </div>
+                    
+                    {{ calendar|safe }}
                 </div>
-                {{ calendar|safe }}
             </div>
         </div>
     </div>
+    
+    <!-- <footer class="page-footer">
+        <div class="container text-center">
+            <p class="mb-0 small">
+                &copy; {% now "Y" %} {{ school_info.name|default:"KwikSchools" }}. All rights reserved.
+                <span class="d-block d-md-inline-block">| Contact: <a href="mailto:{{ school_info.email|default:'info@school.com' }}" class="text-light text-decoration-none">{{ school_info.email|default:'info@school.com' }}</a></span>
+            </p>
+        </div>
+    </footer> -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

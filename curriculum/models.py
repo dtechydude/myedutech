@@ -85,23 +85,6 @@ class Term(models.Model):
         return f"{self.name} ({self.session.name})"    
 
 
-# OLD CLASS GROUP MODEL
-# class ClassGroup(models.Model):
-#     name = models.CharField(max_length=50, blank=True, unique=True)
-#     description = models.CharField(max_length=120, blank=True)
-#     slug = models.SlugField(null=True, blank=True)
-    
-#     def __str__ (self):
-#         return f'{self.name}'
-    
-#     class Meta:
-#         verbose_name_plural = 'Class Group'
-#         verbose_name_plural = "Class Group"
-        
-#     def save(self, *args, **kwargs):
-#         self.slug = slugify(self.name)
-#         super().save(*args, **kwargs)
-
 
 def save_subject_image(instance, filename):
     upload_to = 'Images/'

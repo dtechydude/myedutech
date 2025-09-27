@@ -37,9 +37,13 @@
                             <div class="col-xl-12">
                                 <div class="auth-form">
 									<div class="text-center mb-3">
+                                        {% if school_info.logo %}
+                                        <a href="https://kwikschools.com"><img src="{{ school_info.logo.url }}" alt="" style="width: auto; height: 80px;"></a>
+                                        {% else %}
                                         <a href="https://kwikschools.com"><img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="" style="width: auto; height: 100px;"></a>
+                                        {% endif %}
 									</div>
-                                    <h4 class="text-center mb-4">Login To Your Account</h4>
+                                    <h4 class="text-center mb-4"> <a href="https://kwikschools.com"><small>By: kwikSchools EdTech</small> </a><br>LOGIN TO YOUR ACCOUNT </h4>
                                     <form  action ="" method="POST">
                                         {% csrf_token %}
                                         <div class="mb-3">

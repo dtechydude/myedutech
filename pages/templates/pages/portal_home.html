@@ -86,10 +86,10 @@
 		<!--**********************************
 			Chat box start
 		***********************************-->
-		{% block chatbox %}
+		{% block chatbox %}		
 <div class="chatbox">
     <div class="chatbox-close"></div>
-    <div class="custom-tab-1">
+    <div class="custom-tab-1">	
         <ul class="nav nav-tabs">
             <li class="nav-item">
                 <a class="nav-link active" data-bs-toggle="tab" href="#alerts">Alerts</a>
@@ -189,7 +189,9 @@
 								{% elif user.is_authenticated and user.teacher %}
 								Teacher Dashboard
 								{% elif user.is_authenticated and user.student %}
-								Student Dashboard								
+								Student Dashboard
+								{% elif user.is_authenticated and user.parent %}
+								PARENTS DASHBOARD								
 								{% else %}
 								User Dashboard
 								{% endif%}
@@ -201,15 +203,9 @@
 								<span class="input-group-text"><a href="javascript:void(0)"><i class="flaticon-381-search-2"></i></a></span>
 							</div>
 						</div>
-						<ul class="navbar-nav header-right">
-							<!-- <li class="nav-item dropdown notification_dropdown">
-								<a class="nav-link" href="javascript:void(0);">
-								<svg xmlns="http://www.w3.org/2000/svg" width="26.309" height="23.678" viewBox="0 0 26.309 23.678">
-								  <path id="Path_1955" data-name="Path 1955" d="M163.217,78.043a7.409,7.409,0,0,1,10.5-10.454l.506.506.507-.506a7.409,7.409,0,0,1,10.5,10.454L175.181,88.686a1.316,1.316,0,0,1-1.912,0Zm11.008,7.823,9.1-9.632.027-.027a4.779,4.779,0,1,0-6.759-6.757l-1.435,1.437a1.317,1.317,0,0,1-1.861,0l-1.437-1.437a4.778,4.778,0,0,0-6.758,6.757l.026.027Z" transform="translate(-161.07 -65.42)" fill="#135846" fill-rule="evenodd"/>
-								</svg>
-								</a>
-							</li> -->
-								
+						
+						<ul class="navbar-nav header-right">				
+															
 							<li class="nav-item dropdown notification_dropdown">
 							<a class="nav-link" href="{% url 'tickets:ticket_list' %}">
 								<i class="fas fa-bell"></i>
@@ -374,9 +370,7 @@
 										{% else %}
 										<a href="#" class="dropdown-item ai-icon">								
 										{% endif %}
-										<svg id="icon-inbox1" xmlns="http://www.w3.org/2000/svg" class="text-success" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-										<span class="ms-2">My Profile </span>
-									</a>
+										<i class="fas fa-user text-danger" width="18" height="18"></i><span class="ms-2">My Profile </span></a>
 									<a href="{% url 'users:user_logout' %}" class="dropdown-item ai-icon">
 										<svg  xmlns="http://www.w3.org/2000/svg" class="text-danger" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
 										<span class="ms-2">Logout </span>
@@ -400,9 +394,10 @@
 
 		<div class="dlabnav">
 			<div class="dlabnav-scroll">
-				<ul class="metismenu" id="menu">
+				<ul class="metismenu" id="menu">					
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 							<i class="flaticon-025-dashboard"></i>
+									
 							<span class="nav-text">Dashboard</span>
 						</a>
 						<ul aria-expanded="false">
@@ -411,8 +406,8 @@
 							<li><a href="{% url 'events:calendar' %}">School Events Calendar</a></li>
 							
 							{% if user.is_superuser or user.is_staff %}
-							<li><a href="/admin/">Main Settings</a></li>							
-							<li><a href="/admin/curriculum/schoolidentity/">Add/Edit School Info</a></li>
+							<li><a href="/admin/" target="_blank">Main Settings</a></li>							
+							<li><a href="/admin/curriculum/schoolidentity/" target="_blank">Add/Edit School Info</a></li>
 							<li><a href="{% url 'users:all_users' %}">All Registered Users</a></li>
 							<li><a href="{% url 'students:student_search_list' %}">Search Students</a></li>
 							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>	
@@ -427,7 +422,7 @@
 							
 						</ul>
 					</li>						
-					
+					{% if user.is_authenticated and not user.parent %}
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
 							<span class="nav-text">Student Mgt.</span>
@@ -462,6 +457,9 @@
 							{% endif %}					
 						</ul>
 					</li>
+
+					{% endif %}
+					{% if user.is_authenticated and not user.parent %}
 					{% if user.is_superuser or user.is_staff or user.teacher%}
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 							<i class="flaticon-013-checkmark"></i>
@@ -469,7 +467,7 @@
 						</a>
 						<ul aria-expanded="false">
 							{% if user.is_superuser or user.is_staff %}
-							<li><a href="/admin/attendance/attendance/">Mark Attendance</a></li>
+							<li><a href="/admin/attendance/attendance/" target="_blank">Mark Attendance</a></li>
 							{% elif user.teacher %}
 							<li><a href="{% url 'attendance:take_daily_attendance' %}">Mark Attendance</a></li>
 							{% endif %}
@@ -478,14 +476,17 @@
 							</ul>
 						{% endif %}
 					</li>
+					{% endif %}
+
+					{% if user.is_authenticated and not user.parent %}
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
 							<span class="nav-text">Exams & Results</span>
 						</a>
 						<ul aria-expanded="false">
 							{% if user.is_superuser or user.is_staff %}
-							<li><a href="/admin/results/examination/">Add Exams</a></li>
-							<li><a href="/admin/results/score/">Enter CA & Exam Scores</a></li>
+							<li><a href="/admin/results/examination/" target="_blank">Add Exams</a></li>
+							<li><a href="/admin/results/score/" target="_blank">Enter CA & Exam Scores</a></li>
 							<li><a href="{% url 'results:report_card_list' %}">Termly Report Card</a></li>
 							<li><a href="{% url 'results:session_report_card_list' %}">Annual Report Card</a></li>
 							<li><a href="{% url 'results:ranking_list' %}">Student's Exam Ranking</a></li>
@@ -506,6 +507,8 @@
 
 						</ul>
 					</li>
+					{% endif %}
+
 					{% if user.is_superuser or user.is_staff %}
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
@@ -524,6 +527,8 @@
 						</ul>
 					</li>
 					{% endif %}
+					{% if user.is_authenticated and not user.parent %}
+
 					{% if user.is_authenticated and user.is_superuser or user.is_staff or user.student %}
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
@@ -531,34 +536,36 @@
 						</a>{% endif %}						
 						<ul aria-expanded="false"> 
 							
-							{% if user.is_superuser or user.is_staff %}							
-							<li><a href="/admin/payments/bankdetail/">Add/Edit BANK INFO</a></li>
-							<li><a href="/admin/payments/paymentcategory/">Add/Edit PAYMENT TYPE</a></li>							
-							<li><a href="/admin/payments/categoryfee/">Add/Edit ALL FEES </a></li>
-							<li><a href="{% url 'payments:generate_student_fees' %}">Generate Fee For Students </a></li>
-							<li><a href="/admin/payments/payment/">Make Payment For Students</a></li>
+							{% if user.is_superuser or user.is_staff %}		
+							<li><a href="{% url 'payments:finance_dashboard' %}">Finance Dashboard</a></li>								
+							<li><a href="{% url 'payments:notification-list' %}">Payments Notifications </a></li>
 							<li><a href="{% url 'payments:payment_history' %}">Payments History</a></li>
-							<li><a href="{% url 'payments:total_payments_report' %}">Payment Summary</a></li>
+							<li><a href="{% url 'payments:total_payments_report' %}">Payments Summary</a></li>
 							<li><a href="{% url 'payments:debtors_report' %}">Debtors List</a></li>	
-							<li><a href="{% url 'payments:finance_dashboard_chartview' %}">Finance Dashboard</a></li>	
+							<li><a href="/admin/payments/payment/" target="_blank">Make Payment For Students</a></li>
+							<li><a href="/admin/payments/bankdetail/" target="_blank">Add/Edit BANK INFO</a></li>
+							<li><a href="/admin/payments/paymentcategory/" target="_blank">Add/Edit PAYMENT TYPE</a></li>
 									
 							
 							{% endif %}							
-							{% if user.student or user.is_superuser or user.is_staff %}							
+							{% if user.student or user.is_superuser or user.is_staff %}	
+							<li><a href="{% url 'payments:payment_chart_list' %}">Fees Chart List</a></li>						
 							<li><a href="{% url 'pages:help-center' %}">Payment Instruction</a></li>
-							<li><a href="{% url 'pages:bank-detail' %}">Bank Details</a></li>
-							<li><a href="{% url 'payments:payment_chart_list' %}">Payment Chart List</a></li>
+							<li><a href="{% url 'pages:bank-detail' %}">School Account Details</a></li>
 							
 							{% endif %}
-							{% if user.student %}		
-							<li><a href="{% url 'payments:make_payment' %}">Make New Payment</a></li>
-							<li><a href="{% url 'payments:payment_history' %}">My Payment History</a></li>						
+							{% if user.student %}
+							<li><a href="{% url 'payments:student_invoice' %}">My Invoice</a></li>
+							<li><a href="{% url 'payments:payment_history' %}">My Payment History</a></li>	
+							<li><a href="{% url 'payments:notify_payment' %}">Make New Payment</a></li>												
 							</li>		
 							{% endif %}						
 							
 						</ul>
-					</li>					
+					</li>	
+					{% endif %}		
 					
+					{% if user.is_authenticated and not user.parent %}					
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
 							<span class="nav-text">CBT</span>
@@ -594,7 +601,7 @@
 							<li><a href="{% url 'curriculum:standard_list' %}">E-Class List</a></li>
 							
 							{% elif user.is_authenticated and user.is_superuser or user.is_staff %}
-							<li><a href="/admin/curriculum/elearningsubject/">Add Subjects & Lessons </a></li>
+							<li><a href="/admin/curriculum/elearningsubject/" target="_blank">Add Subjects & Lessons </a></li>
 							<li><a href="{% url 'curriculum:standard_list' %}">E-Class List</a></li>										
 																
 							{% endif %}
@@ -608,15 +615,15 @@
 						<li><a href="{% url 'transport:bus_route_list' %}">Bus Route/Fare</a></li>
 						{% if user.student %}						
 						{% comment %}<li><a href="{% url 'transport:create_bus_signup' %}">SignUp For Bus</a></li>{% endcomment %}
-						<li><a href="{% url 'transport:student_own_route_detail' %}">My Route Details</a></li>
-						
+						<li><a href="{% url 'transport:student_own_route_detail' %}">My Route Details</a></li>						
 						<li><a href="{% url 'transport:signup' %}">Signup For Bus</a></li>
 						<li><a href="{% url 'transport:my_pass' %}">My Bus Pass</a></li>
+						
 
 						{% endif %}
 						{% if user.is_superuser or user.is_staff %}
-						<li><a href="/admin/transport/route/">Set/Edit Route</a></li>
-						<li><a href="/admin/transport/studentonroute/">Add Student To Route</a></li>
+						<li><a href="/admin/transport/route/" target="_blank">Set/Edit Route</a></li>
+						<li><a href="/admin/transport/studentonroute/" target="_blank">Add Student To Route</a></li>
 						<li><a href="{% url 'transport:staff_signup' %}">Singup Student On Bus</a></li>	
 						<li><a href="{% url 'transport:bus_signup_list' %}">Students In Route</a></li>
 						<li><a href="{% url 'transport:enrollment_list' %}">Bus Enrollment List</a></li>
@@ -625,7 +632,7 @@
 						{% endif %}						
 					</ul>
 					</li>
-						
+						{% endif %}
 						<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 							<i class="flaticon-013-checkmark"></i>
 								<span class="nav-text">Help Center</span>
@@ -642,6 +649,7 @@
 								<span class="nav-text">Info & Records</span>
 							</a>
 							<ul aria-expanded="false">
+							<li><a href="{% url 'events:calendar' %}">School Events Calendar</a></li>
 							<li><a href="{% url 'students:upcoming_birthdays' %}">Students Birthday</a></li>
 							<li><a href="{% url 'pages:students_email_list' %}">Students Email List</a></li>
 							<li><a href="{% url 'pages:students_phone_list' %}">Students Phone List</a></li>
@@ -687,7 +695,7 @@
 						<ul aria-expanded="false">	
 												
 							<li><a href="{% url 'students:graduated_students_list' %}">Old Students</a></li>							
-							<li><a href="{% url 'payments:archive_payment_chart_list' %}">Archived Payment Chart</a></li>							
+							{% comment %} <li><a href="{% url 'payments:archive_payment_chart_list' %}">Archived Fees Chart</a></li>	{% endcomment %}						
 									
 						</ul>
 
@@ -725,8 +733,8 @@
 					</div>
 				</div>
 				<div class="copyright">
-					<p class="text-center"><strong>KwikSchools</strong> © 2025 All Rights Reserved</p>
-					<p class="fs-12 text-center">By: Fizcos Infotech</p>
+					<p class="text-center"><strong>KwikSchools</strong> &copy; {% now "Y" %} All Rights Reserved <br>
+					<span class="fs-12 text-center">By: <a href="https://fizcos.com">Fizcos Infotech Solutions</a></span></p>
 				</div>
 			</div>
 		</div>
@@ -783,6 +791,10 @@
 														{% elif user.is_authenticated and user.student %}
 														<h5 class="mb-0 font-w600">{{ user.student.student_status }}</h5>
 														<p class="mb-0 text-nowrap ">Status</p>
+														{% elif user.is_authenticated and user.parent %}
+														<h5 class="mb-0 font-w600"> <a href="{% url 'students:parent-dashboard' %}">My Chidren</a></h5>
+    													<i class="fas fa-hand-point-up" style="font-size: 2rem; color: red; cursor: pointer;"></i>
+
 														{% else %}
 														<h4 class="mb-0 font-w600">N/A</h4>
 														<p class="mb-0 text-nowrap ">No Info</p>
@@ -812,6 +824,11 @@
 														{% elif user.is_authenticated and user.student %}
 														<h5 class="mb-0 font-w600">{{ user.student.current_class }}</h5>
 														<p class="mb-0 text-nowrap ">Current Class</p>
+														{% elif user.is_authenticated and user.parent %}
+														<a href="{% url 'pages:help-center' %}">
+														<h5 class="mb-0 font-w600">FAQ</h5>
+														<p class="mb-0 text-nowrap ">Help Center</p>
+														</a>
 														{% else %}
 														<h4 class="mb-0 font-w600">N/A</h4>
 														<p class="mb-0 text-nowrap ">No Info</p>
@@ -842,6 +859,11 @@
 														{% elif user.is_authenticated and user.student %}
 														<h5 class="mb-0 font-w600">{{ user.student.date_admitted }}</h5>
 														<p class="mb-0 text-nowrap ">Admission Date</p>
+														{% elif user.is_authenticated and user.parent %}
+														<a href="{% url 'tickets:create_ticket' %}">
+														<h5 class="mb-0 font-w600">Ticket</h5>
+														<p class="mb-0 text-nowrap ">Submit Ticket</p>
+														</a>
 														{% else %}
 														<h4 class="mb-0 font-w600">N/A</h4>
 														<p class="mb-0 text-nowrap ">No Info</p>
@@ -861,7 +883,7 @@
 												<h4 class="fs-20">School Schedule</h4>
 											</div> -->
 											<div class="card-header border-0 pb-0">
-												<h4 class="fs-20">School Events Schedule</h4>
+												<h6 class="fs-6">{% if school_info %}<i class="fas fa-school"></i> - {{ school_info.name }}{% endif %} - Events</h6>
 												<a href="{% url 'events:calendar' %}" class="btn btn-primary btn-sm">View Calendar</a>
 											</div>
 											<div class="card-body pb-2 loadmore-content" id="BookingContent">
@@ -901,8 +923,8 @@
                         <span class="badge bg-success">STUDENT</span>
                         {% elif user.teacher %}
                         <span class="badge bg-info">TEACHER</span>
-                        {% elif user.staff %}
-                        <span class="badge bg-warning">NON-ACADEMIC STAFF</span>
+                        {% elif user.parent %}
+                        <span class="badge bg-secondary">GUARDIAN/PARENT</span>
                         {% else %}
                         <span class="badge bg-secondary">ADMIN</span>
                         {% endif %}
@@ -931,11 +953,11 @@
 												<div class="card">
 													<div class="card-header border-0 flex-wrap">
 														{% if user.is_authenticated and user.is_superuser or user.is_staff %}
-														<h4 class="fs-20">Report & Stats</h4>
+														<h4 class="fs-20">{% if school_info %}<i class="fas fa-school"></i> - {{ school_info.name }}{% endif %}</h4>
 														<div class="card-action coin-tabs">
 															<ul class="nav nav-tabs" role="tablist">
 																<li class="nav-item">
-																	<a class="nav-link " data-bs-toggle="tab" href="#Daily1" role="tab">School Detail Statistics</a>
+																	<a class="nav-link " data-bs-toggle="tab" href="#Daily1" role="tab"> Report Stat.</a>
 																</li>															
 															</ul>
 														</div>
@@ -1059,7 +1081,7 @@
 																</li>
 																<li>
 																	<span><strong>Payments/Bills:</strong></span>
-																	You can make all your payments and access the necessary payments chart. Please ensure you use the correct school account for payments.
+																	You can make all your payments and access the necessary fees chart. Please ensure you use the correct school account for payments.
 																</li>
 															</ul>
 
@@ -1179,7 +1201,7 @@
 		{% block footer %}
 		<div class="footer">
 			<div class="copyright">
-				<p>Copyright © Developed by <a href="https://kwikschools.com/" target="_blank">KwikSchools</a> 2025</p>
+				<p>Developed by:  <a href="https://kwikschools.com/" target="_blank">KwikSchools</a> &copy; {% now "Y" %} All Rights Reserved</p>
 			</div>
 		</div>
 		{% endblock footer %}

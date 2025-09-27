@@ -107,30 +107,38 @@
 
 <div class="landing-container">
     <div class="logo-container">
-        <img src="{% static 'pages/images/the_school_logo.png' %}" alt="Kwikschool Logo">
+        {% if school_info.logo %}
+        <img src="{{ school_info.logo.url }}" alt="School Logo">
+        {% else %}
+        <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="Kwikschool Logo">
+        {% endif %}
     </div>
-    <h3 class="brand-name">Kwikschools</h3>
-    <p class="tagline">(SMART SCHOOL) <br>
+     {% if school_info.name %}
+     <h3 class="brand-name">{{ school_info.name }}</h3>
+     {% else%}
+    <h3 class="brand-name">KwikSchools Portal</h3>
+    {% endif %}
+    <p class="tagline">(KWIKSCHOOLS) <br>
     <span><small>Login To Your Account Or Contact The Admin For A New Account Registration.</small></span></p>
 
     <div class="d-grid gap-3 col-10 mx-auto">
         <a href="/admin/" class="btn btn-theme btn-lg">
-            <i class="fas fa-user-shield me-2"></i> Login (Admin) 
+            <i class="fas fa-user-shield me-2"></i> SCH. ADMIN
         </a>
         <a href="/dashboard/" class="btn btn-outline-theme btn-lg">
-            <i class="fas fa-user me-2"></i> Login (Others)
+            <i class="fas fa-user me-2"></i> Login Here..
         </a>
     </div>
 
     <div class="contact-info">
         <p>
-            <i class="fas fa-map-marker-alt me-2"></i> 123 Education Blvd, New City, CA 90210
+            <i class="fas fa-map-marker-alt me-2"></i> {{ school_info.address_line_1 }} {{ school_info.address_line_2}}
         </p>
         <p>
-            <i class="fas fa-phone-alt me-2"></i> <a href="tel:+15551234567">(555) 123-4567</a>
+            <i class="fas fa-phone-alt me-2"></i> <a href="tel:{{school_info.phone_1}}">{{school_info.phone1}}</a>
         </p>
         <p>
-            <i class="fas fa-envelope me-2"></i> <a href="mailto:info@kwikschool.com">info@kwikschool.com</a>
+            <i class="fas fa-envelope me-2"></i> <a href="mailto:info@kwikschool.com">{{ school_info.email }}</a>
         </p>
     </div>
 </div>

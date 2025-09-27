@@ -1,94 +1,91 @@
-from django.contrib import admin
-from django.contrib import messages
+# your_app/admin.py
+
+from django.contrib import admin, messages
 from decimal import Decimal
-from .models import Payment, PaymentCategory, BankDetail, StudentAccountLedger, CategoryFee, Receipt
-from import_export.admin import ImportExportModelAdmin
+from django.db.models import Sum
+from .models import Payment, PaymentNotification, StudentFeeAssignment, PaymentCategory, Receipt, BankDetail, StudentAccountLedger
 
 
 @admin.register(Payment)
-class PaymentAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    # Fields to display in the list view of the admin
+class PaymentAdmin(admin.ModelAdmin):
     list_display = (
         'student', 'payment_category', 'term', 'session',
         'original_amount', 'amount_received', 'balance_after_payment',
-        'payment_date', 'status', 'recorded_by'
+        'status', 'payment_date', 'recorded_by'
     )
-    # Fields that can be filtered in the right sidebar of the admin list view
     list_filter = (
-        'status', 'payment_category', 'term', 'session', 'payment_method', 'payment_date', 'student__current_class',
+        'status', 'payment_date', 'payment_category', 'term', 'session', 'payment_method', 'student__current_class',
     )
-    # Fields that can be searched using the search bar in the admin list view
     search_fields = (
-        'student__first_name', 'student__last_name', 'student__student_id',
-        'transaction_id', 'notes'
+        'student__user__first_name', 'student__user__last_name', 'transaction_id', 'student__USN'
     )
     raw_id_fields = ['student', 'payment_category', 'session', 'term']
-    # Fields to make read-only in the add/change form.
-    # original_amount is made read-only because its value will be derived automatically.
-    readonly_fields = ('balance_before_payment', 'balance_after_payment', 'original_amount', 'payment_date')
+    
+    # These fields will be automatically calculated and are read-only to prevent manual changes.
+    readonly_fields = ('original_amount', 'balance_before_payment', 'balance_after_payment')
 
-    # Define the layout and fields shown in the add/change form
     fieldsets = (
         (None, {
-            'fields': ('student', ('payment_category', 'term', 'session'), 'original_amount')
+            'fields': ('student', ('payment_category', 'term', 'session'))
         }),
         ('Payment Details', {
-            'fields': ('amount_received', 'payment_method', 'transaction_id', 'status', 'notes')
-        }),
-        ('Discount Information', {
-            'fields': ('discount_amount', 'discount_percentage')
-        }),
-        ('Installment Details', {
-            'fields': ('is_installment', ('installment_number', 'total_installments'))
-        }),
-        ('Balance Information (Auto-calculated)', {
-            'description': 'These fields are automatically calculated and cannot be edited directly.',
-            'fields': ('balance_before_payment', 'balance_after_payment')
+            # Add 'payment_date' to the list of fields here
+            'fields': ('amount_received', 'payment_date', 'payment_method', 'transaction_id', 'status', 'notes',
+                       'original_amount', 'balance_before_payment', 'balance_after_payment')
         }),
         ('Audit Information', {
-            'fields': ('recorded_by', 'confirm_payment') # payment_date is auto_now_add, so it's set on creation
+            'fields': ('recorded_by', 'confirm_payment')
         }),
     )
 
-    # Override the save_model method to set original_amount and recorded_by automatically
     def save_model(self, request, obj, form, change):
-        # Set 'recorded_by' to the current logged-in staff user if it's not already set
-        if not obj.recorded_by and request.user.is_staff:
+        # Set recorded_by if it's a new object
+        if not obj.pk and not obj.recorded_by:
             obj.recorded_by = request.user
 
-        # Fetch the CategoryFee based on the selected payment_category, term, and session
-        payment_category = obj.payment_category
-        term = obj.term
-        session = obj.session
+        # Fetch the total amount due for the student's fees.
+        total_due_aggr = StudentFeeAssignment.objects.filter(
+            student=obj.student,
+            term=obj.term,
+            session=obj.session
+        ).aggregate(total_due=Sum('amount_due'))
+        
+        total_due = total_due_aggr['total_due'] or Decimal('0.00')
+        obj.original_amount = total_due
 
-        if payment_category and term and session:
-            # Try to find a matching CategoryFee
-            category_fee = CategoryFee.objects.filter(
-                payment_category=payment_category,
-                term=term,
-                session=session
-            ).first()
-            
-            if category_fee:
-                # If a matching CategoryFee is found, set original_amount from its amount_due
-                obj.original_amount = category_fee.amount_due
-            else:
-                # If no matching CategoryFee, set original_amount to 0 and show a warning.
-                # This ensures original_amount is always a Decimal for calculations.
-                obj.original_amount = Decimal('0.00')
-                messages.warning(request, "No matching Category Fee found for the selected Category, Term, and Session. Original Amount has been set to 0.00. Please define a Category Fee for this combination if it's an error.")
-        else:
-            # If essential related fields are missing, ensure original_amount is also 0
-            obj.original_amount = Decimal('0.00')
-            messages.warning(request, "Payment Category, Term, or Session not fully selected. Original Amount has been set to 0.00.")
+        # Calculate total payments made by the student before this one.
+        total_paid_aggr = Payment.objects.filter(
+            student=obj.student,
+            term=obj.term,
+            session=obj.session,
+            status='completed'
+        ).exclude(pk=obj.pk).aggregate(total_paid=Sum('amount_received'))
+        
+        total_previously_paid = total_paid_aggr['total_paid'] or Decimal('0.00')
 
-        # Call the original save_model method to save the object with the updated original_amount
+        # Calculate the balance before and after this new payment.
+        balance_before = total_due - total_previously_paid
+        obj.balance_before_payment = balance_before
+        
+        balance_after = balance_before - obj.amount_received
+        obj.balance_after_payment = balance_after
+        
+        # Check if the payment status is not completed, then set it to completed to ensure it's recorded
+        if obj.status != 'completed':
+            obj.status = 'completed'
+
+        # Now, save the object with all the calculated values.
         super().save_model(request, obj, form, change)
+
+# @admin.register(PaymentCategory)
+# class PaymentCategoryAdmin(admin.ModelAdmin):
+#     list_display = ('name',)
+#     search_fields = ('name',)
 
 @admin.register(PaymentCategory)
 class PaymentCategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
-    search_fields = ('name',)    
+    search_fields = ('name',)      
 
 @admin.register(BankDetail)
 class BankDetailAdmin(admin.ModelAdmin):
@@ -96,29 +93,116 @@ class BankDetailAdmin(admin.ModelAdmin):
     search_fields = ('acc_name','acc_number', 'bank_name')
     list_filter = ('bank_name',)
 
-# @admin.register(Session)
-# class SessionAdmin(admin.ModelAdmin):
-#     list_display = ('name', 'start_date', 'end_date')
-#     search_fields = ('name',)
-#     list_filter = ('start_date', 'end_date')
-
-@admin.register(CategoryFee)
-class CategoryFeeAdmin(admin.ModelAdmin):
-    list_display = ('fee_name', 'payment_category', 'term', 'session', 'amount_due')
-    list_filter = ('payment_category', 'term', 'session')
-    search_fields = ('fee_name', 'payment_category__name', 'term__name', 'session__name')
-    raw_id_fields = ['payment_category', 'term', 'session']
+# @admin.register(CategoryFee)
+# class CategoryFeeAdmin(admin.ModelAdmin):
+#     list_display = ('fee_name', 'payment_category', 'term', 'session', 'amount_due')
+#     list_filter = ('payment_category', 'term', 'session')
+#     search_fields = ('fee_name', 'payment_category__name', 'term__name', 'session__name')
+#     raw_id_fields = ['payment_category', 'term', 'session']
 
 @admin.register(StudentAccountLedger)
 class StudentAccountLedgerAdmin(admin.ModelAdmin):
     list_display = ('student', 'term', 'session', 'balance', 'last_updated')
     list_filter = ('term', 'session', 'last_updated')
     search_fields = ('student__first_name', 'student__last_name', 'student__student_id')
-    readonly_fields = ('balance', 'last_updated') # Balance is auto-calculated
+    readonly_fields = ('balance', 'last_updated') 
 
 @admin.register(Receipt)
 class ReceiptAdmin(admin.ModelAdmin):
     list_display = ('receipt_number', 'payment', 'issue_date', 'generated_by')
     list_filter = ('issue_date', 'generated_by')
     search_fields = ('receipt_number', 'payment__student__first_name', 'payment__student__last_name')
-    readonly_fields = ('receipt_number', 'issue_date', 'generated_by', 'payment') # Receipt details are generated, not manually edited
+    readonly_fields = ('receipt_number', 'issue_date', 'generated_by', 'payment')
+
+@admin.register(StudentFeeAssignment)
+class StudentFeeAssignmentAdmin(admin.ModelAdmin):
+    list_display = ('student', 'payment_category', 'term', 'session', 'amount_due')
+    list_filter = ('term', 'session', 'payment_category')
+    search_fields = ('student__USN', 'student__first_name', 'student__last_name', 'payment_category__name')
+    raw_id_fields = ('student', 'payment_category', 'term', 'session')
+
+# @admin.register(ClassFeeTemplate)
+# class ClassFeeTemplateAdmin(admin.ModelAdmin):
+#     # ... your existing admin configuration ...
+#     autocomplete_fields = ['payment_category'] # This now works
+
+
+
+# Payment Notification Admin
+@admin.register(PaymentNotification)
+class PaymentNotificationAdmin(admin.ModelAdmin):
+    # Fields displayed in the list view
+    list_display = (
+        'student_name', 
+        'amount_paid', 
+        'payment_method', 
+        'bank_account',      # ADDED
+        'payment_date', 
+        'transaction_id', 
+        'notified_by', 
+        'status', 
+        'submission_date', 
+    )
+    
+    # Fields that can be filtered
+    list_filter = (
+        'payment_method', 
+        'bank_account',      # ADDED
+        'status', 
+        'session', 
+        'term', 
+        'submission_date'
+    )
+    
+    # Fields that can be searched
+    search_fields = (
+        'student__user__first_name', 
+        'student__user__last_name', 
+        'transaction_id', 
+        'notes',
+        'bank_account__bank_name',  # CORRECTED to use 'bank_name'
+        'bank_account__acc_number', # CORRECTED to use 'acc_number'
+    )
+    
+    # Grouping fields in the detail view
+    fieldsets = (
+        ('Status', {
+            'fields': ('status',),
+        }),
+        ('Student and Amount', {
+            'fields': ('student', 'amount_paid')
+        }),
+        ('Payment Details', {
+            'fields': (
+                'payment_method', 
+                'bank_account',      # ADDED
+                'transaction_id', 
+                'payment_date', 
+                'notes'
+            )
+        }),
+        ('Academic Period', {
+            'fields': ('session', 'term')
+        }),
+        ('Audit Trail', {
+            'fields': ('notified_by', 'submission_date')
+        }),
+    )
+
+    # Make system info fields read-only
+    readonly_fields = ('notified_by', 'submission_date', 'bank_account')
+    
+    # Custom method to display student's full name in list view
+    def student_name(self, obj):
+        return obj.student.user.get_full_name()
+    student_name.admin_order_field = 'student__user__last_name'
+    student_name.short_description = 'Student'
+    
+    # Retained formatted_status method 
+    def formatted_status(self, obj):
+        if obj.status == 'PENDING':
+            return format_html('<span style="color:orange; font-weight:bold;">{}</span>', obj.get_status_display())
+        elif obj.status == 'PROCESSED':
+            return format_html('<span style="color:green; font-weight:bold;">{}</span>', obj.get_status_display())
+        else:
+            return obj.get_status_display()

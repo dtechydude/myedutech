@@ -1,0 +1,30 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div id="content-main">
+    <h1>Apply Class Fee Template</h1>
+    <p>Select a fee template to apply to the following classes:</p>
+    <ul>
+        {% for class in classes %}
+            <li>{{ class.name }}</li>
+        {% endfor %}
+    </ul>
+    
+    <form action="" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        
+        {% for obj in classes %}
+            <input type="hidden" name="_selected_action" value="{{ obj.pk }}">
+        {% endfor %}
+        
+        <input type="hidden" name="action" value="apply_class_fee_template">
+        <input type="hidden" name="apply" value="1">
+        
+        <p class="submit-row">
+            <input type="submit" value="Apply Template">
+        </p>
+    </form>
+</div>
+{% endblock %}

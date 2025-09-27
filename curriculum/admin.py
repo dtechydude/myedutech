@@ -1,109 +1,140 @@
-from django.contrib import admin
+# curriculum/admin.py
+
 from curriculum.models import SchoolIdentity, Lesson, Subject, ELearningSubject, Session, Standard, ClassGroup, Term
 from embed_video.admin import AdminVideoMixin
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
-from django.contrib.auth import get_user_model
-from django.http import HttpResponse
-import csv, datetime
+from django.shortcuts import render, redirect
+from django import forms
+from django.db import transaction
 from import_export.admin import ImportExportModelAdmin
+from payments.models import StudentFeeAssignment, ClassFeeTemplate, PaymentCategory 
 
+class ClassFeeTemplateForm(forms.Form):
+    fee_template = forms.ModelChoiceField(
+        queryset=ClassFeeTemplate.objects.all(),
+        label="Select Fee Template to Apply"
+    )
 
 class SchoolIdentityAdmin(admin.ModelAdmin):
-    # This will prevent the "Add School Identity" button from showing
-    # if a SchoolIdentity instance already exists.
     def has_add_permission(self, request):
         if self.model.objects.exists():
             return False
         return super().has_add_permission(request)
 
-    # This method is called before saving the model instance.
     def save_model(self, request, obj, form, change):
         if not change and self.model.objects.exists():
-            # If the user is trying to add a new instance and one already exists,
-            # display a user-friendly message and prevent saving.
             messages.error(request, "There can be only one school identity instance. Please edit the existing one.")
-            # Do not call obj.save() here
         else:
             try:
-                # Call the original save method on the object.
-                # This will trigger the model's clean method and save logic.
                 obj.save()
             except ValidationError as e:
-                # Catch the ValidationError and add it to the messages framework.
                 for error_msg in e.messages:
                     messages.error(request, error_msg)
-           
-    list_display=('name', 'phone1', 'email')
+    
+    list_display = ('name', 'phone1', 'email')
     exclude = ['slug',]
-  
-class SessionAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-   
-    list_display=('name', 'start_date', 'end_date')
-    exclude = ['slug']
 
+class SessionAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = ('name', 'start_date', 'end_date')
+    exclude = ['slug']
+    # ADDED: This fixes the autocomplete error.
+    search_fields = ['name',]
+
+@admin.register(Standard)
 class StandardAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-   
-    list_display=('name', 'promotion_order', 'form_teacher', 'desc')
+    list_display = ('name', 'promotion_order', 'form_teacher', 'desc')
     exclude = ['slug']
     search_fields = ['name',]
     autocomplete_fields = ['form_teacher']
+    actions = ['apply_class_fee_template']
 
+    def apply_class_fee_template(self, request, queryset):
+        if 'apply' in request.POST:
+            form = ClassFeeTemplateForm(request.POST)
+            if form.is_valid():
+                fee_template = form.cleaned_data['fee_template']
+                students_count = 0
+                fees_generated_count = 0
+                
+                with transaction.atomic():
+                    for standard in queryset:
+                        students = standard.students.all()  
+                        students_count += students.count()
+                        for student in students:
+                            StudentFeeAssignment.objects.update_or_create(
+                                student=student,
+                                term=fee_template.term,
+                                session=fee_template.session,
+                                payment_category=fee_template.payment_category,
+                                defaults={'amount_due': fee_template.amount_due}
+                            )
+                            fees_generated_count += 1
+                
+                messages.success(request, f"Successfully applied fee template to {students_count} students ({fees_generated_count} fee assignments created/updated).")
+                return redirect(request.get_full_path())
+            else:
+                messages.error(request, "Please correct the form errors.")
+
+        form = ClassFeeTemplateForm()
+        context = {
+            'form': form,
+            'title': 'Apply Class Fee Template',
+            'classes': queryset, 
+            'request': request,
+        }
+        return render(request, 'admin/apply_class_fee_template.html', context)
+    
+    apply_class_fee_template.short_description = "Apply a class fee template to selected classes"
 
 class ClassGroupAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-       
-    list_display=('name', 'standard', 'form_teacher')
-    list_filter = ['standard']
+    list_display = ('name', 'standard', 'form_teacher')
     list_filter = ['standard__name']
     search_fields = ('standard__name', 'name')
     autocomplete_fields = ['form_teacher']
 
-    # exclude = ['slug']
-
 class SubjectAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-       
-    list_display=('subject_id', 'name', 'description')
-    # list_filter = ['standard']
+    list_display = ('subject_id', 'name', 'description')
     search_fields = ('subject_id', 'name')
     exclude = ['slug']
 
 class ELearningSubjectAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-
-    list_display=('subject_id', 'name', 'standard', 'description')
+    list_display = ('subject_id', 'name', 'standard', 'description')
     list_filter = ['standard__name']
     search_fields = ('standard__name', 'subject_id')
     exclude = ['slug']
 
 class LessonAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-       
-    list_display=(  'standard', 'subject', 'lesson_id', 'name' )
+    list_display = ('standard', 'subject', 'lesson_id', 'name')
     list_filter = ['standard',]
     search_fields = ('standard__name', 'subject__name')
     raw_id_fields = ['created_by',]
     exclude = ['slug']
 
 class TermAdmin(admin.ModelAdmin):
-       
-    list_display=('name', 'start_date', 'end_date')
-    raw_id_fields = ('session')
-    # raw_id_fields = ['session',]
+    list_display = ('name', 'start_date', 'end_date')
+    raw_id_fields = ('session',)
+    # ADDED: This also needs search_fields for autocomplete
+    search_fields = ['name', 'session__name']
 
-
-
+@admin.register(ClassFeeTemplate)
+class ClassFeeTemplateAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+    list_display = ('student_class', 'payment_category', 'amount_due', 'term', 'session')
+    list_filter = ('student_class', 'payment_category', 'term', 'session')
+    search_fields = ('student_class__name', 'payment_category__name')
+    autocomplete_fields = ['student_class', 'payment_category', 'term', 'session']
+    actions = ['delete_selected']
 
 admin.site.register(Session, SessionAdmin)
-admin.site.register(Standard, StandardAdmin)
 admin.site.register(ClassGroup, ClassGroupAdmin)
 admin.site.register(Subject, SubjectAdmin)
 admin.site.register(ELearningSubject, ELearningSubjectAdmin)
 admin.site.register(Lesson, LessonAdmin)
 admin.site.register(SchoolIdentity, SchoolIdentityAdmin)
 admin.site.register(Term, TermAdmin)
+# The decorator @admin.register(ClassFeeTemplate) already handles this registration
+# admin.site.register(ClassFeeTemplate, ClassFeeTemplateAdmin)
 
-
-
-
-
-
-class MyModelAdmin(AdminVideoMixin, admin.ModelAdmin):
-    pass
+# This class is not being used or registered, so it can be safely removed.
+# class MyModelAdmin(AdminVideoMixin, admin.ModelAdmin):
+#     pass

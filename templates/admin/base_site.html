@@ -1,4 +1,34 @@
-{% extends 'admin/base.html'%}
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block branding %}
+<div id="site-name">
+    <a href="{% url 'pages:portal-home' %}" target="_blank", style="text-decoration: none; display: flex; align-items: center;">
+<!--         
+        <img src="{% static 'pages/images/kwikschool_logo.png' %}" 
+             alt="Logo" 
+             style="height: 24px; margin-right: 8px; border-radius: 4px;">  -->
+        
+        <h2 style="color:white; font-size: 1.2em; margin: 0;"> 
+            By: KwikSchools EdTech |<small> -> <u>Go To Dashboard</u></small>
+        </h2>
+    </a>
+</div>
+{% endblock branding %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <link rel="shortcut icon" href="{% static 'pages/images/favicon.png' %}" />
+{% endblock extrahead %}
+
+{% block userlinks %}
+{{ block.super }}
+{% include "admin/color_theme_toggle.html" %}
+{% endblock %}
+
+
+{% comment %}
+<!-- {% extends 'admin/base.html'%}
 {% load static %}
 
 {% block branding %}
@@ -11,4 +41,5 @@
 {% block userlinks %}
 {{ block.super }}
 {% include "admin/color_theme_toggle.html" %}
-{% endblock %}
+{% endblock %} -->
+{% endcomment %}

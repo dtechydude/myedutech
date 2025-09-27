@@ -32,30 +32,7 @@ def user_registration(request):
        
 
     
-
-
-# #Student Enrollment
-# @login_required
-# def student_enrollment(request):
-#     if request.method == 'POST':
-#         u_form = UserRegisterForm(request.POST)
-#         p_form = StudentEnrollmentForm(request.POST, request.FILES)
-#         if u_form.is_valid() and p_form.is_valid():
-#             u_form.save()
-#             p_form.save()
-#             messages.success(request, f'Your profile has been updated successfully')
-#             return redirect('profile')
-#     else:
-#         u_form = UserRegisterForm(instance=request.user)
-#         p_form = StudentEnrollmentForm(instance=request.user.profile)
-
-#     context = {
-#         'u_form': u_form,
-#         'p_form': p_form,
-#     }
-
-#     return render(request, 'users/student_enrollment.html', context)
-
+# STUDENTS ENROLLMENT
 @login_required
 def student_enrollment(request):
     if request.method == 'POST':

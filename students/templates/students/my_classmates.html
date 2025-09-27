@@ -104,34 +104,34 @@
                                         </thead>
                                 
                                         <tbody>
-                                             <div class="container">
-        <h3>My Classmates in classroom: <span style="color: brown;"> <small>{{ student.current_class.name }}</small></span></h3>
+                                                                    <div class="container">
+                                <h3><i class="fas fa-users"></i> My Classmates in: <span style="color: brown;"> <small>{{ student.current_class.name }}</small></span></h3>
 
-        {% if student %}
-            {% if standard %}               
-                {% if classmates %}
-                    <!-- <h4>Classmates:</h4> -->
-                    <tr>
-                        {% for classmate in classmates %}
-                        <td> {{ forloop.counter }}  </td>
-                            <td> {{ classmate.last_name }}  </td>
-                            <td>{{ classmate.first_name }}</td>
-                            <td>{{ classmate.gender }}</td>
-                            <td>{{ classmate.guardian_phone }}</td>
-                            {% endfor %}
-                    </tr>
-                {% else %}
-                    <p class="no-classmates">No other classmates found in your classroom.</p>
-                {% endif %}
-            {% else %}
-                <p class="no-classmates">You are not currently assigned to a classroom.</p>
-            {% endif %}
-        {% else %}
-            <p>No student profile found for your account. Please contact support.</p>
-            <p><a href="{% url 'create_student_profile' %}">Create Student Profile</a></p> {# Example link to create profile #}
-        {% endif %}
-    </div>
-               
+                                {% if student %}
+                                    {% if standard %}               
+                                        {% if classmates %}
+                                            <!-- <h4>Classmates:</h4> -->
+                                            <tr>
+                                                {% for classmate in classmates %}
+                                                <td> {{ forloop.counter }}  </td>
+                                                    <td> {{ classmate.last_name }}  </td>
+                                                    <td>{{ classmate.first_name }}</td>
+                                                    <td>{{ classmate.gender }}</td>
+                                                    <td>{{ classmate.guardian_phone }}</td>
+                                                    {% endfor %}
+                                            </tr>
+                                        {% else %}
+                                            <p class="no-classmates">No other classmates found in your classroom.</p>
+                                        {% endif %}
+                                    {% else %}
+                                        <p class="no-classmates">You are not currently assigned to a classroom.</p>
+                                    {% endif %}
+                                {% else %}
+                                    <p>No student profile found for your account. Please contact support.</p>
+                                    <p><a href="{% url 'create_student_profile' %}">Create Student Profile</a></p> {# Example link to create profile #}
+                                {% endif %}
+                            </div>
+                                    
                     </tbody>
                 </table>
             </div>

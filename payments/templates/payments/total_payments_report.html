@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Total Payments Report</title>
+    <title>Payments Report</title>
     <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,66 +18,25 @@
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
     
     <style>
-        .select2-container .select2-selection--single {
-            height: 42px !important;
-            display: flex !important;
-            align-items: center !important;
-            border-radius: 0.375rem !important;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 40px !important;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__rendered {
-            line-height: 40px !important;
-        }
-        .dataTables_wrapper .dataTables_paginate .paginate_button {
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            margin: 0 0.25rem;
-            border: 1px solid #e5e7eb;
-        }
-        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-            background-color: #3b82f6;
-            color: white !important;
-            border-color: #3b82f6;
-        }
-        .dataTables_wrapper .dataTables_filter input {
-            border-radius: 0.375rem;
-            border: 1px solid #d1d5db;
-            padding: 0.5rem 0.75rem;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        }
-        /* New custom CSS for the button link */
-        .dashboard-link-button {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.5rem 1rem;
-            background-color: #e5e7eb;
-            color: #4b5563;
-            font-weight: 600;
-            border-radius: 0.5rem;
-            transition: background-color 0.3s ease;
-        }
-        .dashboard-link-button:hover {
-            background-color: #d1d5db;
-        }
-        
-        @media (max-width: 639px) {
-            header .flex-row {
-                flex-direction: column;
-            }
-            /* Refactored header layout for small screens */
-            .header-content {
-                flex-direction: column;
-                align-items: center;
-            }
-        }
+        /* General Select2 and DataTables styling for consistency */
+        .select2-container .select2-selection--single { height: 42px !important; display: flex !important; align-items: center !important; border-radius: 0.375rem !important; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 40px !important; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 40px !important; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button { padding: 0.5rem 1rem; border-radius: 0.5rem; margin: 0 0.25rem; border: 1px solid #e5e7eb; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current { background-color: #3b82f6; color: white !important; border-color: #3b82f6; }
+        .dataTables_wrapper .dataTables_filter input { border-radius: 0.375rem; border: 1px solid #d1d5db; padding: 0.5rem 0.75rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .dashboard-link-button { display: inline-flex; align-items: center; padding: 0.5rem 1rem; background-color: #e5e7eb; color: #4b5563; font-weight: 600; border-radius: 0.5rem; transition: background-color 0.3s ease; }
+        .dashboard-link-button:hover { background-color: #d1d5db; }
+        @media (max-width: 639px) { .header-content { flex-direction: column; align-items: center; } }
+        /* Fix DataTables layout */
+        #payments-table_wrapper { padding: 1.5rem; }
     </style>
 </head>
-<body class="bg-gray-100 font-sans antialiased">
+<body class="bg-gray-50 font-sans antialiased">
 
 <div class="min-h-screen py-8">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        
         <header class="flex flex-col sm:flex-row justify-center sm:justify-between items-center mb-6 space-y-4 sm:space-y-0">
             <div class="order-2 sm:order-1 w-full sm:w-auto text-center sm:text-left">
                 <a href="{% url 'pages:portal-home' %}" class="dashboard-link-button">
@@ -86,13 +45,13 @@
                 </a>
             </div>
             <div class="order-1 sm:order-2 w-full sm:w-auto text-center sm:text-right">
-                <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="KwikSchools Logo" class="h-10 mx-auto" style="height: auto; width:100px;">
+                <img src="{{ school_info.logo.url }}" alt="KwikSchools Logo" class="h-10 mx-auto" style="height: auto; width:80px;">
             </div>
         </header>
 
-        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-800 text-center mb-8">
-            <i class="fas fa-chart-bar text-blue-500 mr-3"></i> Total Payments Reports
-        </h2>
+        <h1 class="text-4xl font-extrabold text-gray-900 text-center mb-10">
+            <i class="fas fa-file-invoice-dollar text-blue-600 mr-3"></i> Total Payments Report
+        </h1>
 
         {% if messages %}
             <div class="mb-6">
@@ -105,22 +64,22 @@
             </div>
         {% endif %}
 
-        <div class="bg-white shadow-lg rounded-xl p-6 sm:p-8 mb-8">
-            <h2 class="text-xl font-bold text-gray-800 mb-5">Filter Report</h2>
+        <div class="bg-white shadow-xl rounded-xl p-6 sm:p-8 mb-8 border border-gray-100">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">Filter Options</h2>
             <form method="get" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 items-end">
                 <div class="lg:col-span-1">
-                    <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                    <input type="date" name="start_date" id="start_date" value="{{ selected_start_date }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                    <label for="start_date" class="block text-sm font-semibold text-gray-700 mb-1">Start Date</label>
+                    <input type="date" name="start_date" id="start_date" value="{{ selected_start_date }}" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                 </div>
                 <div class="lg:col-span-1">
-                    <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-                    <input type="date" name="end_date" id="end_date" value="{{ selected_end_date }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                    <label for="end_date" class="block text-sm font-semibold text-gray-700 mb-1">End Date</label>
+                    <input type="date" name="end_date" id="end_date" value="{{ selected_end_date }}" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                 </div>
                 <div class="lg:col-span-1">
-                    <label for="term-filter" class="block text-sm font-medium text-gray-700 mb-1">Term</label>
-                    <select name="term" id="term-filter" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                    <label for="term-filter" class="block text-sm font-semibold text-gray-700 mb-1">Term</label>
+                    <select name="term" id="term-filter" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                         <option value="">All Terms</option>
-                        {% for term in terms %}
+                        {% for term in all_terms %} 
                             <option value="{{ term.id }}" {% if selected_term_id|stringformat:"s" == term.id|stringformat:"s" %}selected{% endif %}>
                                 {{ term.name }}
                             </option>
@@ -128,10 +87,10 @@
                     </select>
                 </div>
                 <div class="lg:col-span-1">
-                    <label for="session-filter" class="block text-sm font-medium text-gray-700 mb-1">Session</label>
-                    <select name="session" id="session-filter" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                    <label for="session-filter" class="block text-sm font-semibold text-gray-700 mb-1">Session</label>
+                    <select name="session" id="session-filter" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                         <option value="">All Sessions</option>
-                        {% for session in sessions %}
+                        {% for session in all_sessions %}
                             <option value="{{ session.id }}" {% if selected_session_id|stringformat:"s" == session.id|stringformat:"s" %}selected{% endif %}>
                                 {{ session.name }}
                             </option>
@@ -139,22 +98,22 @@
                     </select>
                 </div>
                 <div class="lg:col-span-2">
-                    <label for="student-filter" class="block text-sm font-medium text-gray-700 mb-1">Student</label>
-                    <select name="student" id="student-filter" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                    <label for="student-filter" class="block text-sm font-semibold text-gray-700 mb-1">Student</label>
+                    <select name="student" id="student-filter" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                         <option value="">All Students</option>
-                        {% for student in students %}
+                        {% for student in all_students %}
                             <option value="{{ student.id }}" {% if selected_student_id|stringformat:"s" == student.id|stringformat:"s" %}selected{% endif %}>
-                                {{ student.first_name }} {{ student.last_name }} ({{ student.USN }})
+                                {{ student.user.first_name }} {{ student.user.last_name }} ({{ student.USN }})
                             </option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="lg:col-span-6 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 mt-4">
-                    <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300 ease-in-out">
+                    <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300">
                         <i class="fas fa-filter mr-2"></i>
                         Apply Filter
                     </button>
-                    <a href="{% url 'payments:total_payments_report' %}" class="w-full sm:w-auto px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-md shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-300 ease-in-out text-center">
+                    <a href="{% url 'payments:total_payments_report' %}" class="w-full sm:w-auto px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-300 text-center">
                         <i class="fas fa-sync-alt mr-2"></i>
                         Clear Filters
                     </a>
@@ -162,84 +121,98 @@
             </form>
         </div>
 
-        <div class="bg-white shadow-lg rounded-xl p-6 sm:p-8 mb-8">
-            <h2 class="text-xl font-bold text-gray-800 mb-5">Summary Totals</h2>
+        <div class="bg-white shadow-xl rounded-xl p-6 sm:p-8 mb-8 border border-gray-100">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">Report Summary</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                <div class="bg-blue-50 p-6 rounded-lg shadow-inner">
-                    <p class="text-sm font-medium text-gray-600 mb-1">Total Original Amount</p>
-                    <p class="text-3xl font-extrabold text-blue-800">N{{ total_original_amount|floatformat:2 }}</p>
+                
+                <div class="bg-blue-50 p-6 rounded-lg shadow-inner border border-blue-200">
+                    <p class="text-sm font-medium text-gray-600 mb-1">Total Invoice Amount</p>
+                    <p class="text-3xl font-extrabold text-blue-800">N{{ summary_totals.total_invoice_amount|default:0|floatformat:2 }}</p> 
                 </div>
-                <div class="bg-green-50 p-6 rounded-lg shadow-inner">
+                
+                <div class="bg-green-50 p-6 rounded-lg shadow-inner border border-green-200">
                     <p class="text-sm font-medium text-gray-600 mb-1">Total Amount Received</p>
-                    <p class="text-3xl font-extrabold text-green-800">N{{ total_amount_received|floatformat:2 }}</p>
+                    <p class="text-3xl font-extrabold text-green-800">N{{ summary_totals.total_amount_paid|default:0|floatformat:2 }}</p>
                 </div>
-                <div class="bg-yellow-50 p-6 rounded-lg shadow-inner">
-                    <p class="text-sm font-medium text-gray-600 mb-1">Total Discount Given</p>
-                    <p class="text-3xl font-extrabold text-yellow-800">N{{ total_discount_given|floatformat:2 }}</p>
+                
+                <div class="bg-red-50 p-6 rounded-lg shadow-inner border border-red-200">
+                    <p class="text-sm font-medium text-gray-600 mb-1">Total Balance Due</p>
+                    <p class="text-3xl font-extrabold {% if summary_totals.total_balance_due|default:0 > 0 %}text-red-800{% else %}text-gray-800{% endif %}">
+                        N{{ summary_totals.total_balance_due|default:0|floatformat:2 }}
+                    </p>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white shadow-lg rounded-xl overflow-hidden">
+        <div class="bg-white shadow-xl rounded-xl overflow-hidden border border-gray-100">
             <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                <h2 class="text-xl font-bold text-gray-800">Detailed Payment Breakdown</h2>
+                <h2 class="text-2xl font-bold text-gray-800">Detailed Payment Breakdown</h2>
             </div>
+            
             <div class="overflow-x-auto">
                 <table id="payments-table" class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                    <thead class="bg-gray-100">
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                                 S/N
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                                 Student Name (ID)
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                                 Category
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                                 Term / Session
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Original Amount
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                Invoice Amount
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Discount
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                Amount Paid
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Amount Received
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                Balance Due
                             </th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         {% if payment_breakdown %}
                             {% for item in payment_breakdown %}
-                                <tr>
+                                <tr class="hover:bg-gray-50 transition duration-150">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ forloop.counter }}</td>
+                                    
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {{ item.student__first_name }} {{ item.student__last_name }} ({{ item.student__USN }})
+                                        {{ item.student__user__first_name }} {{ item.student__user__last_name }} 
+                                        <span class="text-xs text-gray-400">({{ item.student__USN }})</span>
                                     </td>
+                                    
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                         {{ item.payment_category__name|default:"N/A" }}
                                     </td>
+                                    
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                         {{ item.term__name|default:"N/A" }} / {{ item.session__name|default:"N/A" }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                        <span class="font-semibold text-gray-800">N{{ item.sum_original|floatformat:2 }}</span>
+                                    
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-semibold">
+                                        N{{ item.sum_original|default:0|floatformat:2 }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                        <span class="text-red-500">N{{ item.sum_fixed_discount|add:item.sum_percentage_discount|floatformat:2 }}</span>
-                                    </td>
+                                    
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-700">
-                                        N{{ item.sum_amount_received|floatformat:2 }}
+                                        N{{ item.sum_amount_received|default:0|floatformat:2 }}
+                                    </td>
+                                    
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-extrabold 
+                                        {% if item.sum_balance|default:0 > 0 %}text-red-600{% else %}text-gray-500{% endif %}">
+                                        N{{ item.sum_balance|default:0|floatformat:2 }}
                                     </td>
                                 </tr>
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="7" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
-                                    No payment breakdown found for the selected filters.
+                                <td colspan="7" class="px-6 py-10 whitespace-nowrap text-center text-lg font-medium text-gray-500 bg-gray-50">
+                                    <i class="fas fa-exclamation-circle mr-2"></i> No detailed payment breakdown found for the selected filters.
                                 </td>
                             </tr>
                         {% endif %}
@@ -250,9 +223,9 @@
     </div>
 </div>
 
-<footer class="bg-gray-800 text-gray-400 py-6 text-center">
+<footer class="bg-gray-900 text-gray-400 py-6 text-center mt-10">
     <div class="container mx-auto px-4">
-        <p>&copy; KwikSchools. All rights reserved.</p>
+        <p>&copy; Powered by: <a href="https://kwikschools.com"><u>KwikSchools EdTech</u></a> All rights reserved.</p>
     </div>
 </footer>
 
@@ -261,7 +234,7 @@
         // Initialize Select2 on the student filter dropdown
         $('#student-filter').select2({
             placeholder: "Select a student",
-            allowClear: true // This allows users to deselect the current value
+            allowClear: true 
         });
 
         // Initialize DataTables on the main payments table
@@ -273,7 +246,7 @@
             "responsive": true,
             "pageLength": 10,
             "language": {
-                "search": "Search Payments:",
+                "search": "Search Records:",
                 "emptyTable": "No payment records found.",
                 "info": "Showing _START_ to _END_ of _TOTAL_ entries",
                 "infoEmpty": "Showing 0 to 0 of 0 entries",

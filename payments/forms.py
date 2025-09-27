@@ -1,199 +1,287 @@
-# student_management_app/forms.py (or payments/forms.py)
-
+# payments/forms.py
 from django import forms
-from .models import Payment, PaymentCategory, CategoryFee # Import CategoryFee
-from students.models import Student # Make sure Student is imported
+from django.db.models import Sum, F
+from django.db.models.functions import Coalesce  # Correct import for the Coalesce function
+from .models import Payment, StudentFeeAssignment, PaymentCategory, PaymentNotification, BankDetail
+from students.models import Student
 from decimal import Decimal
 from curriculum.models import Term, Session
 
-class PaymentForm(forms.ModelForm):
-    """
-    Form for recording a new payment.
-    Dynamically adjusts fields based on whether the user is staff or a student.
-    """
-    category_fee = forms.ModelChoiceField(
-        queryset=CategoryFee.objects.all().select_related('term', 'session', 'payment_category').order_by('session__name', 'term__name', 'payment_category__name', 'fee_name'),
-        required=False,
-        label="Select Fee Type",
-        help_text="Select the specific fee (e.g., 'Tuition - Semester 1')",
-        widget=forms.Select(attrs={'class': 'form-control'})
+
+
+class StudentPaymentForm(forms.ModelForm):
+    # This field is now used for both staff and student payments
+    payment_category = forms.ModelChoiceField(
+        queryset=None,
+        label="Payment Category",
+        required=True,
+        empty_label="--- Select a category ---",
+    )
+    
+    # Add the session and term fields
+    session = forms.ModelChoiceField(
+        queryset=Session.objects.all().order_by('-start_date'),
+        label="Session",
+        empty_label="--- Select a session ---",
+        required=True,
+    )
+    term = forms.ModelChoiceField(
+        queryset=Term.objects.all().order_by('name'),
+        label="Term",
+        empty_label="--- Select a term ---",
+        required=True,
+    )
+    
+    # Add the payment_date field here
+    payment_date = forms.DateField(
+        label='Payment Date',
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
     )
 
     class Meta:
         model = Payment
         fields = [
-            'student', 'category_fee',
-            'original_amount', 'discount_amount', 'discount_percentage',
+            'student',
+            'session',  # Add these fields to the Meta.fields list
+            'term',     # Add these fields to the Meta.fields list
+            'payment_category',
             'amount_received',
-            'payment_method', 'transaction_id', 'notes',
-            'term', 'session', 'payment_category',
-            'is_installment', 'total_installments'
+            'payment_method',
+            'transaction_id',
+            'payment_date',
+            'notes',
         ]
-        widgets = {
-            'student': forms.Select(attrs={'class': 'form-control'}),
-            'original_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
-            'discount_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'placeholder': 'e.g., 50.00'}),
-            'discount_percentage': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100', 'placeholder': 'e.g., 10.00'}),
-            'amount_received': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'placeholder': 'Enter amount paid'}),
-            'payment_method': forms.Select(attrs={'class': 'form-control'}),
-            'transaction_id': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional transaction ID'}),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Any additional notes'}),
-            'term': forms.Select(attrs={'class': 'form-control'}),
-            'session': forms.Select(attrs={'class': 'form-control'}),
-            'payment_category': forms.Select(attrs={'class': 'form-control'}),
-            'is_installment': forms.CheckboxInput(attrs={'class': 'form-checkbox h-5 w-5 text-blue-600'}),
-            'total_installments': forms.HiddenInput(), # Hiding the input field
-        }
-        labels = {
-            'student': 'Select Student',
-            'original_amount': 'Original Amount Due',
-            'discount_amount': 'Fixed Discount Amount',
-            'discount_percentage': 'Percentage Discount (%)',
-            'amount_received': 'Amount Paid',
-            'payment_method': 'Payment Method',
-            'transaction_id': 'Transaction ID',
-            'notes': 'Notes',
-            'term': 'Academic Term',
-            'session': 'Academic Session',
-            'payment_category': 'Payment Category',
-            'is_installment': 'Is this an installment payment?',
-        }
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        
+        # Add a widget to the student field for consistent styling
+        self.fields['student'].widget = forms.Select(attrs={'class': 'form-control'})
 
-        is_staff_user = self.user and self.user.is_staff
         is_student_user = self.user and hasattr(self.user, 'student')
 
-        self.fields['term'].queryset = Term.objects.all().order_by('-start_date')
-        self.fields['session'].queryset = Session.objects.all().order_by('-start_date')
+        # Populate the payment_category field for all users
         self.fields['payment_category'].queryset = PaymentCategory.objects.all().order_by('name')
-        self.fields['category_fee'].empty_label = "-- Select a Fee Type --"
 
         if is_student_user:
             student_instance = self.user.student
             self.fields['student'].queryset = Student.objects.filter(pk=student_instance.pk)
             self.fields['student'].initial = student_instance.pk
             self.fields['student'].widget = forms.HiddenInput()
-
-            self.fields['category_fee'].required = True
-            
-            del self.fields['original_amount']
-            del self.fields['discount_amount']
-            del self.fields['discount_percentage']
-            
-            self.fields['term'].required = False
-            self.fields['term'].widget = forms.HiddenInput()
-            self.fields['session'].required = False
-            self.fields['session'].widget = forms.HiddenInput()
-            self.fields['payment_category'].required = False
-            self.fields['payment_category'].widget = forms.HiddenInput()
-
-        elif is_staff_user:
-            self.fields['category_fee'].required = False
-            self.fields['category_fee'].widget = forms.HiddenInput()
-            
-            self.fields['original_amount'].required = True
-            self.fields['student'].empty_label = "-- Select a Student --"
-            self.fields['term'].empty_label = "-- Select a Term --"
-            self.fields['session'].empty_label = "-- Select a Session --"
-            self.fields['payment_category'].empty_label = "-- Select a Category --"
-            self.fields['term'].required = True
-            self.fields['session'].required = True
-            self.fields['payment_category'].required = True
-            
         else:
-            self.fields['category_fee'].required = False
-            self.fields['category_fee'].widget = forms.HiddenInput()
-            self.fields['original_amount'].required = True
+            self.fields['student'].queryset = Student.objects.all().order_by('last_name')
             self.fields['student'].empty_label = "-- Select a Student --"
-            self.fields['term'].empty_label = "-- Select a Term --"
-            self.fields['session'].empty_label = "-- Select a Session --"
-            self.fields['payment_category'].empty_label = "-- Select a Category --"
-            self.fields['term'].required = True
-            self.fields['session'].required = True
-            self.fields['payment_category'].required = True
+
+
+# PARENT PAYMENT FORM
+class ParentPaymentForm(forms.ModelForm):
+    """
+    Form for parents to make a payment on behalf of a student.
+    Uses AJAX to dynamically load outstanding fees for the selected child.
+    """
+    student = forms.ModelChoiceField(
+        queryset=None,
+        label="Select Child",
+        empty_label="--- Select a child ---",
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'student-select'})
+    )
+    
+    student_fee_assignment = forms.ModelChoiceField(
+        queryset=None,
+        label="Select Outstanding Fee",
+        empty_label="--- Select an outstanding fee ---",
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'fee-assignment-select'}),
+        required=False
+    )
+    
+    # Add the payment_date field here
+    payment_date = forms.DateField(
+        label='Payment Date',
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+    )
+    
+    class Meta:
+        model = Payment
+        fields = [
+            'student',
+            'student_fee_assignment',
+            'amount_received',
+            'payment_method',
+            'transaction_id',
+            'payment_date',
+            'notes',
+        ]
+        widgets = {
+            'amount_received': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'payment_method': forms.Select(attrs={'class': 'form-control'}),
+            'transaction_id': forms.TextInput(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.parent = kwargs.pop('parent', None)
+        super().__init__(*args, **kwargs)
+
+        if self.parent:
+            self.fields['student'].queryset = Student.objects.filter(parent=self.parent).order_by('last_name')
+            self.fields['student_fee_assignment'].queryset = StudentFeeAssignment.objects.none()
 
     def clean(self):
         cleaned_data = super().clean()
-        user = self.user
-        is_staff_user = user and user.is_staff
-        is_student_user = user and hasattr(user, 'student')
         amount_received = cleaned_data.get('amount_received')
-        is_installment = cleaned_data.get('is_installment')
-        
+        student_fee_assignment = cleaned_data.get('student_fee_assignment')
+
+        if not student_fee_assignment:
+            self.add_error('student_fee_assignment', 'Please select a fee to pay.')
+            
         if amount_received is None:
             self.add_error('amount_received', 'Amount paid is required.')
         elif amount_received <= 0:
             self.add_error('amount_received', 'Amount paid must be greater than zero.')
 
-        if is_student_user:
-            category_fee = cleaned_data.get('category_fee')
-            if not category_fee:
-                self.add_error('category_fee', 'Please select a fee type.')
-            else:
-                original_amount = category_fee.amount_due
-                net_amount_due = original_amount
-                if not is_installment:
-                    if amount_received is not None and amount_received.quantize(Decimal('0.01')) != net_amount_due.quantize(Decimal('0.01')):
-                        self.add_error('amount_received', f'Amount paid (N{amount_received:.2f}) must be equal to the full amount due (N{net_amount_due:.2f}) for a full payment. Please pay the full amount or select "Is this an installment payment?".')
+        if student_fee_assignment and amount_received:
+            total_paid_result = student_fee_assignment.payments.aggregate(total=Sum('amount_received'))['total']
+            total_paid = total_paid_result if total_paid_result is not None else Decimal('0.00')
+            
+            balance_due = student_fee_assignment.amount_due - total_paid
 
-        elif is_staff_user:
-            original_amount = cleaned_data.get('original_amount')
-            discount_amount = cleaned_data.get('discount_amount', Decimal('0.00'))
-            discount_percentage = cleaned_data.get('discount_percentage', Decimal('0.00'))
-            term = cleaned_data.get('term')
-            session = cleaned_data.get('session')
-            payment_category = cleaned_data.get('payment_category')
-
-            if not original_amount:
-                self.add_error('original_amount', 'Original amount due is required.')
-            if not term:
-                self.add_error('term', 'Academic Term is required.')
-            if not session:
-                self.add_error('session', 'Academic Session is required.')
-            if not payment_category:
-                self.add_error('payment_category', 'Payment Category is required.')
-
-            if original_amount is not None:
-                calculated_net_due = original_amount
-                if discount_percentage > 0:
-                    calculated_net_due -= (original_amount * (discount_percentage / Decimal('100.00')))
-                if discount_amount > 0:
-                    calculated_net_due -= discount_amount
-
-                if calculated_net_due < 0:
-                    self.add_error(None, 'Total discount cannot exceed the original amount due.')
-
-                if not is_installment:
-                    if amount_received is not None and amount_received.quantize(Decimal('0.01')) != calculated_net_due.quantize(Decimal('0.01')):
-                        self.add_error('amount_received', f'Amount paid (N{amount_received:.2f}) must be equal to the net amount due (N{calculated_net_due:.2f}) for a full payment. Please pay the full amount or mark as installment.')
+            if amount_received > balance_due:
+                self.add_error('amount_received', f'The payment amount cannot exceed the outstanding balance of ₦{balance_due:.2f}.')
 
         return cleaned_data
     
 
 
-# Parent make payment for child's form
-class ParentPaymentForm(forms.ModelForm):
-    category_fee = forms.ModelChoiceField(
-        queryset=CategoryFee.objects.all().order_by('payment_category__name'),
-        label="Payment Item",
-        help_text="Select the fee you want to pay for."
+class SpecificItemPaymentForm(forms.ModelForm):
+    """
+    Form for making payments for specific, non-invoice items (e.g., uniforms).
+    """
+    # The 'student' field will be used for staff to select a student.
+    student = forms.ModelChoiceField(
+        queryset=Student.objects.all(),
+        label="Select Student",
+        required=True
     )
-
+    # This field allows the user to select the specific item category.
+    payment_category = forms.ModelChoiceField(
+        queryset=PaymentCategory.objects.all(),
+        label="Item/Fee Category",
+        required=True
+    )
+    
     class Meta:
         model = Payment
-        fields = ['category_fee', 'amount_received']
+        fields = ['student', 'payment_category', 'amount_received', 'payment_method', 'payment_date', 'notes']
+        widgets = {
+            'payment_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+# full payment form
+class FullPaymentForm(forms.ModelForm):
+    # This form is for making a full or partial payment against the total balance
+    class Meta:
+        model = Payment
+        fields = ['student', 'session', 'term', 'amount_received', 'payment_method', 'transaction_id']
+        widgets = {
+            'student': forms.HiddenInput(),
+            'session': forms.HiddenInput(),
+            'term': forms.HiddenInput(),
+        }
 
     def __init__(self, *args, **kwargs):
-        student = kwargs.pop('student', None)
+        super().__init__(*args, **kwargs)
+        # Use crispy_forms layout for a cleaner appearance
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            'amount_received',
+            'payment_method',
+            'transaction_id',
+        )
+
+
+# PAYMENT NOTIFICATION
+class PaymentNotificationForm(forms.ModelForm):
+    """
+    Form for parents/students to notify the school of an offline payment,
+    with user-role based restrictions on student selection.
+    """     
+    # Use ModelChoiceFields for Session and Term
+    session = forms.ModelChoiceField(
+        queryset=Session.objects.all().order_by('-start_date'),
+        label="Session (Optional)",
+        empty_label="--- Select a session ---",
+        required=False,
+    )
+    term = forms.ModelChoiceField(
+        queryset=Term.objects.all().order_by('name'),
+        label="Term (Optional)",
+        empty_label="--- Select a term ---",
+        required=False,
+    )
+
+    # --- CORRECTED: Custom ModelChoiceField for Bank Account ---
+    bank_account = forms.ModelChoiceField(
+        # The .filter(is_active=True) part is REMOVED as that field doesn't exist
+        queryset=BankDetail.objects.all().order_by('bank_name'), 
+        label="School Bank Account Paid To",
+        empty_label="--- Select the School's Bank Account ---",
+        required=True, # This remains required for a valid payment notification
+    )
+    
+    class Meta:
+        model = PaymentNotification
+        fields = [
+            'student',
+            'amount_paid',
+            'payment_method',
+            'bank_account', # Included in fields
+            'transaction_id',
+            'payment_date',
+            'session',
+            'term',
+            'notes',
+        ]
+        widgets = {
+            'amount_paid': forms.NumberInput(attrs={'step': '0.01', 'min': '0'}),
+            'payment_date': forms.DateInput(attrs={'type': 'date'}),
+            'transaction_id': forms.TextInput(attrs={'placeholder': 'Bank/Gateway Reference ID'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        # Pop user and parent objects passed from the view
+        self.user = kwargs.pop('user', None)
+        self.parent = kwargs.pop('parent', None)
         super().__init__(*args, **kwargs)
 
-    def clean_amount_received(self):
-        amount_received = self.cleaned_data.get('amount_received')
-        category_fee = self.cleaned_data.get('category_fee')
+        # --- SECURITY AND UX LOGIC ---
+        is_staff_user = self.user and self.user.is_staff
 
-        if category_fee and amount_received and amount_received > category_fee.amount_due:
-            self.add_error('amount_received', 'The payment amount cannot exceed the fee amount.')
-        return amount_received
+        if self.user and hasattr(self.user, 'parent') and self.parent:
+            # CASE 1: LOGGED-IN USER IS A PARENT
+            children_qs = Student.objects.filter(parent=self.parent).order_by('last_name')
+            self.fields['student'].queryset = children_qs
+            self.fields['student'].empty_label = "--- Select a child ---"
+            
+            # If they have only one child, pre-select it AND HIDE THE FIELD
+            if children_qs.count() == 1:
+                single_child = children_qs.first()
+                self.fields['student'].initial = single_child.pk
+                self.fields['student'].widget = forms.HiddenInput()
+                
+        elif self.user and hasattr(self.user, 'student'):
+            # CASE 2: LOGGED-IN USER IS A STUDENT
+            student_instance = self.user.student
+            
+            # Restrict queryset to only themselves, set initial, and hide
+            self.fields['student'].queryset = Student.objects.filter(pk=student_instance.pk)
+            self.fields['student'].initial = student_instance.pk
+            self.fields['student'].widget = forms.HiddenInput()
+            
+        elif is_staff_user:
+            # CASE 3: ADMIN/STAFF USER (Keep default behavior for staff)
+            self.fields['student'].queryset = Student.objects.all().order_by('last_name')
+            self.fields['student'].empty_label = "-- Select a Student --"
+        else:
+            # Fallback for unauthenticated or unlinked users
+            self.fields['student'].queryset = Student.objects.none()

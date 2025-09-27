@@ -652,8 +652,177 @@ def assign_classgroup_to_students_view(request):
 
 
 # Parent Logic
+# @login_required
+# def parent_dashboard(request):
+#     try:
+#         parent = Parent.objects.get(user=request.user)
+#         children = Student.objects.filter(parent=parent).prefetch_related('scores__term')
+#     except Parent.DoesNotExist:
+#         children = []
+    
+#     children_with_reports = []
+#     all_terms = Term.objects.all().order_by('id')
+#     all_sessions = Session.objects.all().order_by('id')
+    
+#     for child in children:
+#         child_data = {
+#             'child': child,
+#             'termly_reports': [],
+#             'session_reports': [],
+#             'payment_summary': {},
+#         }
+        
+#         # Check for available termly reports
+#         for term in all_terms:
+#             if child.scores.filter(term=term).exists():
+#                 child_data['termly_reports'].append(term)
+        
+#         # Check for available session reports
+#         for session in all_sessions:
+#             if child.scores.filter(term__session=session).exists():
+#                 child_data['session_reports'].append(session)
+        
+#         # Get all unique completed payments for the child
+#         completed_payments = Payment.objects.filter(
+#             student=child,
+#             status='completed'
+#         ).values(
+#             'payment_category', 'term', 'session'
+#         ).annotate(
+#             total_paid=Sum('amount_received')
+#         ).order_by('payment_category__name')
+
+#         for payment_item in completed_payments:
+#             try:
+#                 # Find the corresponding CategoryFee to get the total amount due
+#                 category_fee = CategoryFee.objects.get(
+#                     payment_category__id=payment_item['payment_category'],
+#                     term__id=payment_item['term'],
+#                     session__id=payment_item['session']
+#                 )
+#                 amount_due = category_fee.amount_due
+#                 balance = amount_due - payment_item['total_paid']
+
+#                 child_data['payment_summary'][category_fee.id] = {
+#                     'category_fee': category_fee,
+#                     'total_paid': payment_item['total_paid'],
+#                     'balance': balance,
+#                 }
+#             except CategoryFee.DoesNotExist:
+#                 # Handle cases where a payment exists but the corresponding fee is deleted
+#                 pass
+
+#         children_with_reports.append(child_data)
+        
+#     # Fetch SchoolIdentity
+#     try:
+#         school_identity = SchoolIdentity.objects.first()
+#     except SchoolIdentity.DoesNotExist:
+#         school_identity = None
+    
+#     context = {
+#         'children_with_reports': children_with_reports,
+#         'school_identity': school_identity,
+#     }
+#     return render(request, 'students/parent_dashboard.html', context)
+
+
+
+# @login_required
+# def parent_dashboard(request):
+#     # Import necessary models locally to avoid circular dependencies if possible
+#     from .models import Parent, Student
+#     from curriculum.models import Session, Term    # Assuming Session is also used here
+#     from payments.models import StudentFeeAssignment, Payment
+#     from django.db.models import Sum, F
+#     from decimal import Decimal
+
+#     try:
+#         parent = Parent.objects.get(user=request.user)
+#         children = Student.objects.filter(parent=parent).prefetch_related('scores__term')
+#     except Parent.DoesNotExist:
+#         children = []
+    
+#     children_with_reports = []
+#     all_terms = Term.objects.all().order_by('id')
+#     all_sessions = Session.objects.all().order_by('id')
+    
+#     for child in children:
+#         child_data = {
+#             'child': child,
+#             'termly_reports': [],
+#             'session_reports': [],
+#             'payment_summary': {},
+#         }
+        
+#         # Check for available termly reports (Existing logic unchanged)
+#         for term in all_terms:
+#             if child.scores.filter(term=term).exists():
+#                 child_data['termly_reports'].append(term)
+        
+#         # Check for available session reports (Existing logic unchanged)
+#         for session in all_sessions:
+#             if child.scores.filter(term__session=session).exists():
+#                 child_data['session_reports'].append(session)
+        
+#         # --- START: CORRECTED PAYMENT SUMMARY LOGIC ---
+        
+#         # 1. Get ALL fees assigned (invoiced) to the student
+#         fees_assigned = StudentFeeAssignment.objects.filter(
+#     # Filter conditions for the child...
+# ).annotate(
+#     total_paid=Sum(F('payments__amount_received')) # <-- CORRECTED: Use 'payments'
+# ).annotate(
+#     balance=F('amount_due') - F('total_paid')
+# )
+
+#         for fee in fees_assigned:
+#             # Calculate total paid (default to Decimal('0.00') if no payments exist)
+#             total_paid = fee.total_paid if fee.total_paid is not None else Decimal('0.00')
+#             balance = fee.amount_due - total_paid
+
+#             child_data['payment_summary'][fee.pk] = {
+#                 'fee_assignment': fee,
+#                 'amount_due': fee.amount_due,
+#                 'total_paid': total_paid,
+#                 'balance': balance,
+#             }
+        
+#         # --- END: CORRECTED PAYMENT SUMMARY LOGIC ---
+
+#         children_with_reports.append(child_data)
+        
+#     # Fetch SchoolIdentity (Existing logic unchanged)
+#     try:
+#         from pages.models import SchoolIdentity # Assuming this is where SchoolIdentity is
+#         school_identity = SchoolIdentity.objects.first()
+#     except Exception:
+#         school_identity = None
+    
+#     context = {
+#         'children_with_reports': children_with_reports,
+#         'school_identity': school_identity,
+#     }
+#     return render(request, 'students/parent_dashboard.html', context)
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+
 @login_required
 def parent_dashboard(request):
+    """
+    Shows a dashboard for parents listing their children, reports, and fee summary.
+    All model imports are kept local to prevent circular import issues.
+    """
+    # --- START: LOCAL IMPORTS (To prevent circular import issues) ---
+    from .models import Parent, Student
+    from curriculum.models import Session, Term
+    from payments.models import StudentFeeAssignment, Payment
+    from django.db.models import Sum
+    from decimal import Decimal
+    # --- END: LOCAL IMPORTS ---
+
+    # 1. Fetch Parent and Children
     try:
         parent = Parent.objects.get(user=request.user)
         children = Student.objects.filter(parent=parent).prefetch_related('scores__term')
@@ -661,70 +830,73 @@ def parent_dashboard(request):
         children = []
     
     children_with_reports = []
-    all_terms = Term.objects.all().order_by('id')
+    
+    # Fetch all terms/sessions for report card links
+    all_terms = Term.objects.all().order_by('id') 
     all_sessions = Session.objects.all().order_by('id')
     
+    # Get current session and term for display context
+    current_session = Session.objects.filter(is_current=True).order_by('-name').first()
+    current_term = Term.objects.filter(session=current_session, is_current=True).order_by('-start_date').first()
+
     for child in children:
         child_data = {
             'child': child,
             'termly_reports': [],
             'session_reports': [],
-            'payment_summary': {},
+            'grand_payment_summary': {}, 
+            'current_term': current_term,
+            'current_session': current_session,
         }
         
-        # Check for available termly reports
+        # Report Card Logic (Preserved)
         for term in all_terms:
             if child.scores.filter(term=term).exists():
                 child_data['termly_reports'].append(term)
         
-        # Check for available session reports
         for session in all_sessions:
             if child.scores.filter(term__session=session).exists():
                 child_data['session_reports'].append(session)
         
-        # Get all unique completed payments for the child
-        completed_payments = Payment.objects.filter(
-            student=child,
-            status='completed'
-        ).values(
-            'payment_category', 'term', 'session'
-        ).annotate(
+        # --- START: DEFINITIVE CORRECTED AGGREGATED PAYMENT SUMMARY LOGIC ---
+        
+        # 1. Calculate Total Fees Due: Sum 'amount_due' from all fee assignments.
+        total_due_agg = StudentFeeAssignment.objects.filter(
+            student=child
+        ).aggregate(total_due=Sum('amount_due'))
+
+        total_due = total_due_agg.get('total_due') or Decimal('0.00')
+
+        # 2. Calculate Total Paid So Far: Using the direct 'student' Foreign Key on the Payment model.
+        # This bypasses the complex join to StudentFeeAssignment that was causing issues.
+        total_paid_agg = Payment.objects.filter(
+            student=child
+        ).aggregate(
             total_paid=Sum('amount_received')
-        ).order_by('payment_category__name')
+        )
+        
+        total_paid = total_paid_agg.get('total_paid') or Decimal('0.00')
 
-        for payment_item in completed_payments:
-            try:
-                # Find the corresponding CategoryFee to get the total amount due
-                category_fee = CategoryFee.objects.get(
-                    payment_category__id=payment_item['payment_category'],
-                    term__id=payment_item['term'],
-                    session__id=payment_item['session']
-                )
-                amount_due = category_fee.amount_due
-                balance = amount_due - payment_item['total_paid']
+        # 3. Calculate the overall balance
+        total_balance = total_due - total_paid
 
-                child_data['payment_summary'][category_fee.id] = {
-                    'category_fee': category_fee,
-                    'total_paid': payment_item['total_paid'],
-                    'balance': balance,
-                }
-            except CategoryFee.DoesNotExist:
-                # Handle cases where a payment exists but the corresponding fee is deleted
-                pass
+        # 4. Attach the grand summary to child_data
+        child_data['grand_payment_summary'] = {
+            'total_due': total_due,
+            'total_paid': total_paid, 
+            'total_balance': total_balance,
+            'is_paid': total_balance <= 0
+        }
+        
+        # --- END: DEFINITIVE CORRECTED AGGREGATED PAYMENT SUMMARY LOGIC ---
 
         children_with_reports.append(child_data)
         
-    # Fetch SchoolIdentity
-    try:
-        school_identity = SchoolIdentity.objects.first()
-    except SchoolIdentity.DoesNotExist:
-        school_identity = None
-    
     context = {
         'children_with_reports': children_with_reports,
-        'school_identity': school_identity,
     }
     return render(request, 'students/parent_dashboard.html', context)
+
 
 @staff_member_required
 def parent_list_view(request):

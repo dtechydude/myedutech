@@ -1,162 +1,75 @@
 {% extends 'pages/portal_home.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    {% block title %}
-	<title>Student No In Class</title>
-    {% endblock title %}
-	
-	
-	<!-- FAVICONS ICON -->
-	<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
-	<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
-    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+{% block title %}
+<title>Student Count by Class</title>
+{% endblock title %}
 
-</head>
+{% block extra_head %}
+<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+<link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+{% endblock extra_head %}
 
-<body>
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li><i class="fas fa-users"></i>  Students Count by Class</li>
+            </ol>
+        </div>
 
-    <!--*******************
-        Preloader start
-    ********************-->
-   <div id="preloader">
-		<div class="lds-ripple">
-			<div></div>
-			<div></div>
-		</div>
-    </div>
-    <!--*******************
-        Preloader end
-    ********************-->
+        <div class="row">
+            {% for st in student_no %}
+            
+            <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between">
+                            
+                            <div>
+                                <h5 class="card-title text-primary mb-1">
+                                    <a href="#" class="text-decoration-none">{{ st.current_class__name }}</a>
+                                </h5>
+                                <p class="text-muted small mb-0">Total Students</p>
+                            </div>
 
-
-    <!--**********************************
-        Main wrapper start
-    ***********************************-->
-    <div id="main-wrapper">
-
-        <!--**********************************
-            Nav header start
-        ***********************************-->
-		
-        <!--**********************************
-            Nav header end
-        ***********************************-->
-		
-		<!--**********************************
-            Chat box start
-        ***********************************-->
-	
-		<!--**********************************
-            Chat box End
-        ***********************************-->
-
-
-				
-        <!--**********************************
-            Header start
-        ***********************************-->
-    
-        <!--**********************************
-            Header end ti-comment-alt
-        ***********************************-->
-
-        <!--**********************************
-            Sidebar start
-        ***********************************-->
-
-        <!--**********************************
-            Sidebar end
-        ***********************************-->
-
-        <!--**********************************
-            Content body start
-        ***********************************-->
-        {% block content_body %}
-        <div class="content-body">
-            <div class="container-fluid">
-				<div class="row page-titles">
-					<ol class="breadcrumb">
-						<li class="breadcrumb-item active"><a href="javascript:void(0)">Student Number In Class</a></li>
-					</ol>
-                </div>
-
-				
-                <div class="row">
-                    {% for st in student_no %}
-                    <div class="col-xl-3 col-lg-6 col-sm-6">
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="new-arrival-product">
-                                    <div class="new-arrivals-img-contnent">
-                                        <!-- <img class="img-fluid" src="images/product/1.jpg" alt=""> -->
-                                    </div>
-                                    <div class="new-arrival-content text-center mt-3">
-                                        
-                                        <h4><a href="">{{ st.current_class__name }}</a></h4>
-                                        <ul class="star-rating">
-                                            <li><i class="fa fa-star"></i></li>
-                                            <li><i class="fa fa-star"></i></li>
-                                            <li><i class="fa fa-star"></i></li>
-                                            <li><i class="fa fa-star-half-empty"></i></li>
-                                            <li><i class="fa fa-star-half-empty"></i></li>
-                                        </ul>
-                                        <span class="price">{{ st.count }}</span>
-                                    </div>
-                                </div>
+                            <div class="text-end">
+                                <h1 class="font-weight-bold display-6 mb-0 text-dark">{{ st.count }}</h1>
                             </div>
                         </div>
-                    </div>
-                    {% endfor %}
-                                     
-                                </div>
-                            </div>
+
+                        <hr class="mt-3 mb-3">
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                             <span class="badge badge-secondary light">
+                                 <i class="fa fa-graduation-cap me-1"></i> Class Info
+                             </span>
+                             <a href="#" class="text-primary small fw-bold">
+                                 View Details <i class="fa fa-arrow-right ms-1"></i>
+                             </a>
                         </div>
                     </div>
                 </div>
             </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    No student count data available at the moment.
+                </div>
+            </div>
+            {% endfor %}
         </div>
-        {% endblock content_body %}
-        <!--**********************************
-            Content body end
-        ***********************************-->
+        </div>
+</div>
+{% endblock content_body %}
 
-
-        <!--**********************************
-            Footer start
-        ***********************************-->
-    
-        <!--**********************************
-            Footer end
-        ***********************************-->
-
-        <!--**********************************
-           Support ticket button start
-        ***********************************-->
-
-        <!--**********************************
-           Support ticket button end
-        ***********************************-->
-
-
-    </div>
-    <!--**********************************
-        Main wrapper end
-    ***********************************-->
-
-    <!--**********************************
-        Scripts
-    ***********************************-->
-    <!-- Required vendors -->
-     {% block scripts %}
-    <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
-	<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
-	<script src="{% static 'pages/js/custom.min.js' %}"></script>
-	<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
-	<script src="{% static 'pages/js/demo.js' %}"></script>
-    <script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
-    {% endblock scripts %}	
-</body>
-</html>
+{% block scripts %}
+<script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
+<script src="{% static 'pages/js/custom.min.js' %}"></script>
+<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+<script src="{% static 'pages/js/demo.js' %}"></script>
+<script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
+{% endblock scripts %}

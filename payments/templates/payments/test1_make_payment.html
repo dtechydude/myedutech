@@ -13,18 +13,31 @@
     <meta name="description" content="KwikSchools: School Mgt System" />
     <meta name="format-detection" content="telephone=no">
 
-    <title>Create New Payment</title>
+    <title>Record New Payment</title>
 
     <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
-    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
-    
     <style>
         .authincation-content {
             padding: 2rem;
+        }
+        /* Style for Select2 to match Bootstrap form-control */
+        .select2-container .select2-selection--single {
+            height: calc(2.25rem + 2px);
+            border: 1px solid #ced4da;
+            border-radius: .25rem;
+        }
+        .select2-container .select2-selection--single .select2-selection__rendered {
+            line-height: calc(2.25rem + 2px);
+            padding-left: .75rem;
+            padding-right: 2rem;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: calc(2.25rem + 2px);
         }
     </style>
 </head>
@@ -32,15 +45,15 @@
 <body class="min-vh-100 d-flex flex-column align-items-center justify-content-center">
     <main role="main" class="container my-5">
         <div class="row justify-content-center">
-            <div class="col-12 col-sm-10 col-md-8 col-lg-6">
+            <div class="col-12 col-md-10 col-lg-8">
                 <div class="card shadow-lg border-0 p-4 rounded-4">
                     <div class="card-body">
                         <div class="text-center mb-4">
                             <a href="{% url 'pages:portal-home' %}"><img src="{% static 'pages/images/kwikschool_logo.png' %}" width="80" height="80" alt="KwikSchools Logo"></a>
                         </div>
-                        <h3 class="text-center fw-bold mb-4">Create New Payment</h3>
+                        <h3 class="text-center fw-bold mb-4">Record New Payment</h3>
 
-                        {# Messages Display #}
+                        {# Messages Display (Includes error message from create_payment) #}
                         {% if messages %}
                             <div class="mb-4" aria-live="polite" aria-atomic="true">
                                 {% for message in messages %}
@@ -54,54 +67,73 @@
 
                         <form method="post" novalidate>
                             {% csrf_token %}
-
-                            {# Non-field errors #}
-                            {% if form.non_field_errors %}
-                                <div class="alert alert-danger" role="alert">
-                                    <h4 class="alert-heading">Form Errors:</h4>
-                                    <ul>
-                                        {% for error in form.non_field_errors %}
-                                            <li>{{ error }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                            {% endif %}
-
-                            {# Student Name for self-service users #}
+                            
+                            {# Student Name for self-service users (unchanged logic) #}
                             {% if request.user.is_authenticated and request.user.student %}
                                 <div class="alert alert-info text-center" role="alert">
                                     Making payment for: <strong>{{ request.user.student.first_name }} {{ request.user.student.last_name }}</strong>
                                 </div>
+                            {% else %}
+                                {# The 'student' field is a searchable dropdown for admins #}
+                                <div class="mb-3">
+                                    {{ form.student|as_crispy_field }}
+                                </div>
                             {% endif %}
-
-                            {# Render the form fields #}
-                            {% for field in form %}
-                                {% if field.field.widget.input_type == 'hidden' %}
-                                    {{ field }}
-                                {% elif field.name == 'is_installment' %}
-                                    <div id="div_id_{{ field.name }}" class="mb-3 form-check">
-                                        {{ field }}
-                                        <label class="form-check-label fw-bold" for="{{ field.id_for_label }}">
-                                            {{ field.label }}
-                                        </label>
-                                        {% if field.help_text %}
-                                            <small class="form-text text-muted">{{ field.help_text }}</small>
-                                        {% endif %}
-                                        {% if field.errors %}
-                                            {% for error in field.errors %}
-                                                <div class="invalid-feedback d-block">{{ error }}</div>
-                                            {% endfor %}
-                                        {% endif %}
-                                    </div>
-                                {% else %}
-                                    <div id="div_id_{{ field.name }}" class="mb-3">
-                                        {{ field|as_crispy_field }}
-                                    </div>
-                                {% endif %}
-                            {% endfor %}
                             
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.session|as_crispy_field }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.term|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.payment_category|as_crispy_field }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.amount_received|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.payment_date|as_crispy_field }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.payment_method|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.transaction_id|as_crispy_field }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.notes|as_crispy_field }}
+                            </div>
+
+                            {# Render hidden fields at the end #}
+                            {% for field in form.hidden_fields %}
+                                {{ field }}
+                            {% endfor %}
+
                             <div id="additional-info-section" class="mb-3">
-                                {# These paragraphs will be populated by the JS #}
+                                {# This section displays student debt information (populated by JS) #}
                             </div>
                             
                             <div class="d-grid gap-2">
@@ -120,86 +152,84 @@
     </main>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRz7/I68z9u7+h+4d9G+17Ww29L14M/a9c=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const isInstallmentCheckbox = document.getElementById('id_is_installment');
-            const installmentNumberDiv = document.getElementById('div_id_installment_number');
-            const totalInstallmentsDiv = document.getElementById('div_id_total_installments');
-            const categoryFeeSelect = document.getElementById('id_category_fee');
-            const additionalInfoSection = document.getElementById('additional-info-section');
+        $(document).ready(function() {
 
-            // Dynamically create elements for displaying amounts
-            const originalAmountDisplay = document.createElement('p');
-            originalAmountDisplay.className = 'text-muted fw-bold mb-1';
-            const remainingBalanceDisplay = document.createElement('p');
-            remainingBalanceDisplay.className = 'text-success fw-bold';
-            
-            // Append these new elements to the info section
-            if(additionalInfoSection) {
-                additionalInfoSection.appendChild(originalAmountDisplay);
-                additionalInfoSection.appendChild(remainingBalanceDisplay);
-            }
-            
-
-            function toggleInstallmentFields() {
-                const isChecked = isInstallmentCheckbox.checked;
+            // --- 1. DOUBLE SUBMISSION PREVENTION (The Fix for IntegrityError) ---
+            // On form submit, disable the button to prevent double-click or accidental resubmission
+            $('form').on('submit', function() {
+                const submitButton = $(this).find('button[type="submit"]');
                 
-                if (installmentNumberDiv) installmentNumberDiv.style.display = isChecked ? 'block' : 'none';
-                if (totalInstallmentsDiv) totalInstallmentsDiv.style.display = isChecked ? 'block' : 'none';
-            }
+                // Disable button and update text
+                submitButton.prop('disabled', true);
+                submitButton.html('<i class="bi bi-hourglass-split me-2"></i>Processing...');
+            });
 
-            // --- AJAX to fetch CategoryFee details for students ---
-            const getCategoryFeeDetailsUrl = "{% url 'payments:get_category_fee_details' %}";
+            // --- 2. Initialize Select2 ---
+            $('#id_student').select2({
+                placeholder: "Search for a student...",
+                allowClear: true,
+                ajax: {
+                    url: "{% url 'payments:student_search_ajax' %}",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { q: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data.results };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 2
+            });
+            
+            // --- 3. Debt Fetching Logic ---
+            const studentSelect = document.getElementById('id_student');
+            const sessionSelect = document.getElementById('id_session');
+            const termSelect = document.getElementById('id_term');
+            const additionalInfoSection = $('#additional-info-section');
 
-            function fetchOriginalAmount() {
-                if (categoryFeeSelect && categoryFeeSelect.value) {
-                    const categoryFeeId = categoryFeeSelect.value;
+            function getStudentDebt() {
+                const studentId = studentSelect.value;
+                const sessionId = sessionSelect.value;
+                const termId = termSelect.value;
+                
+                if (studentId && sessionId && termId) {
+                    const url = `/payments/get-student-debt/${studentId}/${sessionId}/${termId}/`;
                     
-                    fetch(`${getCategoryFeeDetailsUrl}?category_fee_id=${categoryFeeId}`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.json();
-                        })
+                    additionalInfoSection.html('<p class="text-info">Loading debt info...</p>');
+
+                    fetch(url)
+                        .then(response => response.json())
                         .then(data => {
-                            if (data.amount_due) {
-                                originalAmountDisplay.innerHTML = `<strong>Expected Amount:</strong> N${data.amount_due}`;
-                                if (data.balance_remaining !== undefined) {
-                                    remainingBalanceDisplay.innerHTML = `<strong>Remaining Balance:</strong> N${data.balance_remaining}`;
-                                } else {
-                                    remainingBalanceDisplay.innerHTML = '';
-                                }
-                            } else {
-                                originalAmountDisplay.innerHTML = '';
-                                remainingBalanceDisplay.innerHTML = '';
-                            }
+                            additionalInfoSection.html(`
+                                <p class="text-muted">Current Debt: <strong>₦${data.current_debt.toFixed(2)}</strong></p>
+                                <p class="text-muted">Total Fees Due: <strong>₦${data.total_fees.toFixed(2)}</strong></p>
+                                <p class="text-muted">Total Payments: <strong>₦${data.total_payments.toFixed(2)}</strong></p>
+                            `);
                         })
                         .catch(error => {
-                            console.error('Error fetching fee details:', error);
-                            originalAmountDisplay.innerHTML = 'Error fetching fee details.';
-                            remainingBalanceDisplay.innerHTML = '';
+                            console.error('Error fetching student debt:', error);
+                            additionalInfoSection.html(`<p class="text-danger">Could not load debt info.</p>`);
                         });
                 } else {
-                    originalAmountDisplay.innerHTML = '';
-                    remainingBalanceDisplay.innerHTML = '';
+                    additionalInfoSection.html('');
                 }
             }
 
-            // Initial calls
-            if (isInstallmentCheckbox) {
-                isInstallmentCheckbox.addEventListener('change', toggleInstallmentFields);
-                toggleInstallmentFields();
-            }
-
-            if (categoryFeeSelect) {
-                categoryFeeSelect.addEventListener('change', fetchOriginalAmount);
-                if (categoryFeeSelect.value) {
-                    fetchOriginalAmount();
-                }
-            }
+            // Bind change events using jQuery (necessary for Select2 and consistent with the ready function)
+            $(studentSelect).on('change', getStudentDebt);
+            $(sessionSelect).on('change', getStudentDebt);
+            $(termSelect).on('change', getStudentDebt);
+            
+            // Initial call
+            getStudentDebt();
         });
     </script>
+
 </body>
 </html>
