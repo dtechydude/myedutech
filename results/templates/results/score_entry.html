@@ -44,9 +44,8 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div class="d-flex align-items-center">
                    
-                    <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="" class="me-3" style="max-width: 100px; max-height: auto;">
+                    <img src="{{ school_info.logo.url }}" alt="" class="me-3" style="max-width: 80px; max-height: auto;">
                 
-                    <h5 class="fw-bold text-success mb-0">Enter Student Scores</h5>
                 </div>
                 <a href="/dashboard/" class="btn btn-link text-secondary">Back To Dashboard</a>
             </div>

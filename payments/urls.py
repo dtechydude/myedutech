@@ -2,7 +2,7 @@
 
 from django.urls import path
 from . import views as payment_views
-from payments.views import PaymentNotificationListView
+from payments.views import PaymentNotificationListView, UserPaymentNotificationListView
 
 app_name = 'payments'
 
@@ -12,6 +12,8 @@ urlpatterns = [
     path('payment/<int:pk>/', payment_views.payment_detail, name='payment-detail'),
     path('notify-payment/', payment_views.notify_payment, name='notify_payment'),
     path('notification-success/', payment_views.payment_notification_success, name='payment-notification-success'),
+    path('notifications/my-submissions/', UserPaymentNotificationListView.as_view(), name='my-notifications'), 
+
     # NEW STAFF PATHS
     path('notifications/list/', PaymentNotificationListView.as_view(), name='notification-list'),
     path('notifications/process/<int:pk>/', payment_views.process_notification, name='process-notification'),

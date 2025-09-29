@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.db import transaction
 from django.views.generic import ListView
 from django.urls import reverse
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Sum, F, Q, Case, Max, When, OuterRef, Subquery, DecimalField, Value, ExpressionWrapper 
 from decimal import Decimal
 from django.db.models.functions import Coalesce
@@ -1271,3 +1272,47 @@ def process_notification(request, pk):
     # For now, it redirects back to the list.
     
     return redirect('payments:notification-list')
+
+
+# User view their own notification
+class UserPaymentNotificationListView(LoginRequiredMixin, ListView):
+    """
+    Displays payment notifications relevant to the logged-in user (Student or Parent) 
+    by filtering on the correct 'notified_by' field.
+    """
+    model = PaymentNotification
+    template_name = 'payments/user_notification_list.html'
+    context_object_name = 'notifications'
+    ordering = ['-submission_date'] 
+    paginate_by = 10
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = super().get_queryset()
+        
+        # 1. CORRECTED: Filter by the user who actually notified the payment (notified_by)
+        q_filter = Q(notified_by=user) # <--- CHANGE MADE HERE
+        
+        # 2. Check if the user is a Student 
+        if hasattr(user, 'student'):
+            # OR notifications directly associated with their Student profile
+            q_filter |= Q(student=user.student)
+            
+        # 3. Check if the user is a Parent/Guardian 
+        if hasattr(user, 'parentguardian'):
+            try:
+                # Get the primary keys of all students linked to this parent
+                student_pks = user.parentguardian.students.values_list('pk', flat=True)
+                
+                # OR notifications for any student belonging to this parent
+                q_filter |= Q(student__pk__in=student_pks)
+            except Exception:
+                pass
+
+        # Apply the final filter
+        return queryset.filter(q_filter).distinct()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = "My Payment Submissions"
+        return context

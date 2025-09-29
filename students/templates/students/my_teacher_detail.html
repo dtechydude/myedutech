@@ -1,185 +1,148 @@
 {% extends 'pages/portal_home.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    
-    <title>My Teacher Detail</title>
-    
-    </head>
-<body>
 
-    <div id="preloader">
-        <div class="lds-ripple">
-            <div></div>
-            <div></div>
+{% block title %}
+<title>My Form Teacher: {% if has_teacher %}{{ teacher.get_full_name }}{% else %}Not Assigned{% endif %}</title>
+{% endblock title %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock head %}
+
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="#">Home</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">Form Teacher Detail</a></li>
+            </ol>
         </div>
-    </div>
-    <div id="main-wrapper">
 
-        {% block content_body %}
-        <div class="content-body">
-        
-            <div class="container-fluid">
-                <div class="row mt-4">
-                    <div class="col-xl-12">
-                        <div class="row">
-                            <div class="col-xl-12">
-                                <div class="card overflow-hidden">
-                                    <div class="card-body">
-                                        {% if has_teacher %}
-                                        <p>Hello, {{ student.first_name }}! Here is Your Form Teacher's Detail</p>
-                                        <div class="row m-0">
-                                            <div class="col-xl-6 p-0">
-                                                <div class="card-body">
-                                                    <div class="guest-profile">
-                                                        <div class="d-flex">
-                                                            <img src="{{ teacher.user.profile.image.url }}" alt="">
-                                                            <div>
-                                                                <h2 class="font-w600">{{ teacher.first_name }} {{ teacher.last_name }}</h2>
-                                                                <span class="text-secondary"><strong>Username:</strong> {{ teacher.user.username }}</span>
-                                                                <div class="call d-flex align-items-center">
-                                                                    <a href="javascript:void(0);"><i class="fas fa-phone-alt text-secondary"></i></a>
-                                                                    <button class="btn btn-secondary ms-3">
-                                                                        (+234) {{ teacher.user.profile.phone }} <br>
-                                                                        (+234 ) {{ teacher.phone_home }}
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                            <div class="dropdown dropend ms-auto">
-                                                                <a href="javascript:void(0);" class="btn-link" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                        <path d="M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z" stroke="#575757" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                                        <path d="M12 6C12.5523 6 13 5.55228 13 5C13 4.44772 12.5523 4 12 4C11.4477 4 11 4.44772 11 5C11 5.55228 11.4477 6 12 6Z" stroke="#575757" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                                        <path d="M12 20C12.5523 20 13 19.5523 13 19C13 18.4477 12.5523 18 12 18C11.4477 18 11 18.4477 11 19C11 19.5523 11.4477 20 12 20Z" stroke="#575757" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                                    </svg>
-                                                                </a>
-                                                            </div>
-                                                        </div>
-                                                        <div class="d-flex">
-                                                            <div class="mt-4 check-status">
-                                                                <span class="d-block mb-2"><strong>E-mail</strong></span>
-                                                                <span class="font-w500 fs-16">{{ teacher.user.email }}</span>
-                                                            </div>
-                                                            <div class="mt-4">
-                                                                <span class="d-block mb-2"><strong>Teacher's Role</strong></span>
-                                                                <span class="font-w500 fs-16">{{ teacher.staff_role }}</span>
-                                                            </div>
-                                                        </div>
-                                                        <div class="d-flex">
-                                                            <div class="mt-4 check-status">
-                                                                <span class="d-block mb-2"><strong>Date Employed</strong></span>
-                                                                <span class="font-w500 fs-16">{{ teacher.date_employed }}</span>
-                                                            </div>
-                                                            <div class="mt-4">
-                                                                <span class="d-block mb-2"><strong>Marital Status</strong></span>
-                                                                <span class="font-w500 fs-16">{{ teacher.marital_status }}</span>
-                                                            </div>
-                                                        </div>
-                                                        <div class="d-flex flex-wrap">
-                                                            <div class="mt-4 check-status p-3">
-                                                                <span class="d-block mb-2">About My Teacher</span>
-                                                                <h4 class="font-w500 fs-24">Teacher's Bio</h4>
-                                                                {% if teacher.user.profile.bio %}
-                                                                <p class="mt-2">{{ teacher.user.profile.bio }}</p>
-                                                                {% else %}
-                                                                <p class="mt-2" >Your Teacher Has Not Updated His Bio</p>
-                                                                {% endif %}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-xl-6 p-0">
-                                                <div class="guest-carousel owl-carousel owl-carousel owl-loaded owl-drag owl-dot">
-                                                    <div class="item">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {% else %}
-                                        <div class="text-center py-5">
-                                            <i class="fas fa-user-slash fa-5x text-info mb-3"></i>
-                                            <h3 class="text-info">No Teacher Assigned.</h3>
-                                            <p>Please contact the school administration for assistance.</p>
-                                        </div>
+        <div class="row justify-content-center">
+            <div class="col-xl-10 col-lg-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h4 class="card-title text-white mb-0">Hello, {{ student.first_name }}! Here is Your Form Teacher's Detail</h4>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if has_teacher %}
+                        
+                        <div class="row g-0">
+                            <div class="col-lg-5 col-md-12 border-end p-4">
+                                <div class="text-center mb-4">
+                                    <img src="{{ teacher.user.profile.image.url }}" alt="{{ teacher.get_full_name }}" 
+                                         class="rounded-circle shadow-lg mb-3" 
+                                         style="width: 150px; height: 150px; object-fit: cover;">
+                                    
+                                    <h2 class="font-w600 text-primary">{{ teacher.get_full_name }}</h2>
+                                    <span class="text-secondary d-block mb-3">
+                                        <i class="fas fa-id-badge me-1"></i> 
+                                        Username: {{ teacher.user.username }}
+                                    </span>
+                                </div>
+
+                                <div class="row text-center border-top pt-3">
+                                    <div class="col-12 mb-3">
+                                        <h6 class="text-muted">Contact Teacher</h6>
+                                        <a href="mailto:{{ teacher.user.email }}" class="btn btn-outline-info btn-block mb-2 w-100">
+                                            <i class="fas fa-envelope me-1"></i> {{ teacher.user.email }}
+                                        </a>
+                                        <button class="btn btn-outline-secondary btn-block w-100">
+                                            <i class="fas fa-phone-alt me-1"></i> (+234) {{ teacher.user.profile.phone|default:'N/A' }} 
+                                        </button>
+                                        {% if teacher.phone_home %}
+                                        <button class="btn btn-outline-secondary btn-block mt-2 w-100">
+                                            <i class="fas fa-home me-1"></i> (+234) {{ teacher.phone_home }} 
+                                        </button>
                                         {% endif %}
                                     </div>
                                 </div>
                             </div>
+                            
+                            <div class="col-lg-7 col-md-12 p-4">
+                                
+                                <h5 class="mb-3 text-info">General Information</h5>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6 mb-3">
+                                        <span class="d-block text-muted"><strong>Teacher's Role</strong></span>
+                                        <span class="font-w500 fs-16">{{ teacher.staff_role }}</span>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <span class="d-block text-muted"><strong>Marital Status</strong></span>
+                                        <span class="font-w500 fs-16">{{ teacher.marital_status }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-4 border-bottom pb-3">
+                                    <div class="col-md-6 mb-3">
+                                        <span class="d-block text-muted"><strong>Date Employed</strong></span>
+                                        <span class="font-w500 fs-16">{{ teacher.date_employed|date:"M d, Y"|default:'N/A' }}</span>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <span class="d-block text-muted"><strong>Gender</strong></span>
+                                        <span class="font-w500 fs-16">{{ teacher.user.profile.gender|default:'N/A' }}</span>
+                                    </div>
+                                </div>
+                                
+                                <h5 class="mb-3 text-info">About My Teacher (Bio)</h5>
+                                {% if teacher.user.profile.bio %}
+                                <p class="mt-2">{{ teacher.user.profile.bio }}</p>
+                                {% else %}
+                                <p class="mt-2 text-muted fst-italic">Your Teacher Has Not Updated Their Biographical Information Yet.</p>
+                                {% endif %}
+                            </div>
                         </div>
+                        
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-user-slash fa-5x text-warning mb-3"></i>
+                            <h3 class="text-warning">No Form Teacher is Currently Assigned to your Class.</h3>
+                            <p class="text-muted">Please contact the school administration for assistance regarding your class assignment.</p>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
-        {% endblock content_body %}
-        </div>
-    {% block script %}
-    <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+    </div>
+</div>
+{% endblock content_body %}
 
-    <script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
-    
-    <script src="{% static 'pages/vendor/apexchart/apexchart.js' %}"></script>
-    
-    
-    <script src="{% static 'pages/js/dashboard/dashboard-1.js' %}"></script>
-    
-    <script src="{% static 'pages/vendor/owl-carousel/owl.carousel.js' %}"></script>
-    <script src="{% static 'pages/vendor/bootstrap-datetimepicker/js/moment.js' %}"></script>
-    <script src="{% static 'pages/vendor/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js' %}"></script>
-    
-    <script src="{% static 'pages/js/custom.min.js' %}"></script>
-    <script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
-    <script src="{% static 'pages/js/demo.js' %}"></script>
-    <script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
-    <script>
-        function TravlCarousel()
-            {
+{% block script %}
+<script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
+<script src="{% static 'pages/vendor/apexchart/apexchart.js' %}"></script>
+<script src="{% static 'pages/vendor/owl-carousel/owl.carousel.js' %}"></script>
+<script src="{% static 'pages/vendor/bootstrap-datetimepicker/js/moment.js' %}"></script>
+<script src="{% static 'pages/vendor/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js' %}"></script>
 
-                /* testimonial one function by = owl.carousel.js */
-                jQuery('.guest-carousel').owlCarousel({
-                    loop:false,
-                    margin:15,
-                    nav:true,
-                    autoplaySpeed: 3000,
-                    navSpeed: 3000,
-                    paginationSpeed: 3000,
-                    slideSpeed: 3000,
-                    smartSpeed: 3000,
-                    autoplay: false,
-                    animateOut: 'fadeOut',
-                    dots:true,
-                    navText: ['<i class="fas fa-arrow-left"></i>', '<i class="fas fa-arrow-right"></i>'],
-                    responsive:{
-                        0:{
-                            items:1
-                        },
-                        
-                        480:{
-                            items:1
-                        },      
-                        
-                        767:{
-                            items:1
-                        },
-                        1750:{
-                            items:1
-                        },
-                        1920:{
-                            items:1
-                        },
-                    }
-                })
+<script src="{% static 'pages/js/custom.min.js' %}"></script>
+<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+<script>
+    // Moved the carousel initialization logic here, simplified to only include the necessary function
+    function initGuestCarousel() {
+        /* testimonial one function by = owl.carousel.js */
+        jQuery('.guest-carousel').owlCarousel({
+            loop: false,
+            margin: 15,
+            nav: false, // Removed nav since the HTML element was empty
+            autoplay: false,
+            dots: true,
+            responsive: {
+                0: { items: 1 },
+                768: { items: 1 }
             }
+        });
+    }
 
-            jQuery(window).on('load',function(){
-                setTimeout(function(){
-                    TravlCarousel();
-                }, 1000); 
-            });
-            
-    </script>
-     {% endblock script %}
-
-</body>
-</html>
+    // Initialize the carousel only if it exists in the new structure (which currently it doesn't)
+    // Removed the setTimeout for faster loading
+    jQuery(document).ready(function(){
+        // Note: The carousel HTML element was removed as it was empty and wasn't needed for details.
+        // If you need it later, you'll need to re-add the HTML structure.
+        // initGuestCarousel(); 
+    });
+</script>
+{% endblock script %}

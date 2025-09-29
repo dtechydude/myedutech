@@ -217,7 +217,7 @@ def student_payment_pass_view(request, enrollment_id):
     return render(request, 'transport/test_student_payment_pass.html', context)
 
 
-#staff enroll student for bus
+# staff enroll student for bus
 def is_staff_or_superuser(user):
     return user.is_staff or user.is_superuser
 
@@ -231,17 +231,22 @@ def bus_enrollment_list_view(request):
     for enrollment in enrollments:
         # Get total paid by this student for this enrollment
         total_paid_float = BusPayment.objects.filter(
+            # Assuming 'enrollment' is the correct ForeignKey name in BusPayment model
             enrollment=enrollment,
             is_approved=True
         ).aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0.0
 
-        # 🆕 Convert the float to a Decimal to prevent the TypeError
+        # Convert the float result from aggregate to a Decimal for accurate math
         total_paid = Decimal(str(total_paid_float))
 
-        # 🆕 Now, perform the subtraction with both operands as Decimal
+        # --- THE FIX: Assign the calculated total paid to the enrollment object ---
+        enrollment.total_paid = total_paid  # <--- THIS IS THE MISSING LINE
+
+        # Now, perform the balance subtraction with both operands as Decimal
+        # Note: If enrollment.route.bus_fee is a DecimalField, Decimal(str()) is not strictly needed for it.
         enrollment.balance = enrollment.route.bus_fee - total_paid
 
-        # Calculate a more readable status
+        # Calculate a more readable status (this part is not used in the table)
         if enrollment.balance <= 0:
             enrollment.payment_status = "Paid in Full"
             enrollment.status_class = "text-success"

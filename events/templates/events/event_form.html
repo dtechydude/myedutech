@@ -1,3 +1,4 @@
+{% load static %}
 {% load crispy_forms_tags %}
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="light">
@@ -5,11 +6,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% if form.instance.pk %}Edit Event{% else %}Add Event{% endif %}</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
             background-color: #f8f9fa; /* Light grey background */
             color: #212529; /* Dark text color */
+            /* Added min-height and flex to push footer to the bottom */
+            min-height: 100vh; 
+            display: flex;
+            flex-direction: column;
+        }
+        .main-content {
+            flex-grow: 1; /* Allows content to take up remaining space */
         }
         .card {
             background-color: #ffffff; /* White card background */
@@ -49,10 +59,38 @@
         .text-red {
             color: #dc3545 !important;
         }
+        /* Custom Header Styling (Light Theme) */
+        .app-header {
+            background-color: #ffffff; /* White header background */
+            padding: 15px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        /* Custom Footer Styling (Light Theme) */
+        .app-footer {
+            background-color: #ffffff; /* White footer background */
+            padding: 15px 0;
+            font-size: 0.9em;
+            border-top: 1px solid #dee2e6;
+            margin-top: auto; /* Pushes the footer to the bottom */
+        }
     </style>
 </head>
 <body>
-    <div class="container mt-5">
+    
+    <header class="app-header">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                {% if school_info.logo_url %}
+                    <img src="{{ school_info.logo_url }}" alt="{{ school_info.name }} Logo" style="height: 40px; margin-right: 10px;">
+                {% endif %}
+                {% if school_info.name %}
+                    <h4 class="text-dark mb-0">{{ school_info.name }}</h4>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+    
+    <div class="container mt-5 mb-5 main-content">
         <div class="row justify-content-center">
             <div class="col-md-8 col-lg-6">
                 <div class="card p-4">
@@ -65,10 +103,10 @@
                             {{ form|crispy }}
                             <div class="d-grid gap-2 mt-4">
                                 <button type="submit" class="btn btn-primary-red">
-                                    Save
+                                    <i class="fas fa-save me-1"></i> Save
                                 </button>
                                 <a href="{% url 'events:calendar' %}" class="btn btn-secondary-light">
-                                    Cancel
+                                    <i class="fas fa-calendar-alt me-1"></i> Cancel
                                 </a>
                             </div>
                         </form>
@@ -77,6 +115,16 @@
             </div>
         </div>
     </div>
+    
+    <footer class="app-footer text-center">
+        <div class="container">
+            <p class="mb-0 text-muted">
+                &copy; {{ "now"|date:"Y" }} 
+                Powered by: <a href="https://kwikschools.com"> KwikSchools Edtech</a> - All Rights Reserved.
+            </p>
+        </div>
+    </footer>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

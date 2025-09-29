@@ -81,7 +81,7 @@ except admin.sites.NotRegistered:
 
 @admin.register(Term)
 class TermAdmin(admin.ModelAdmin):
-    list_display = ('name', 'session', 'start_date', 'end_date')
+    list_display = ('name', 'session', 'start_date', 'end_date', 'is_current')
     list_filter = ('session',)
     search_fields = ('name', 'session__name')
     # Add the MotorAbilityScoreInline here

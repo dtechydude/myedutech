@@ -36,7 +36,7 @@ class SchoolIdentityAdmin(admin.ModelAdmin):
     exclude = ['slug',]
 
 class SessionAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    list_display = ('name', 'start_date', 'end_date')
+    list_display = ('name', 'start_date', 'end_date', 'is_current')
     exclude = ['slug']
     # ADDED: This fixes the autocomplete error.
     search_fields = ['name',]
@@ -112,7 +112,7 @@ class LessonAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     exclude = ['slug']
 
 class TermAdmin(admin.ModelAdmin):
-    list_display = ('name', 'start_date', 'end_date')
+    list_display = ('name', 'start_date', 'end_date', 'is_current')
     raw_id_fields = ('session',)
     # ADDED: This also needs search_fields for autocomplete
     search_fields = ['name', 'session__name']

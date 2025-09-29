@@ -294,7 +294,23 @@ class StudentSelfDetailView(LoginRequiredMixin, DetailView):
 # new student update form
 class StudentUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'students/student_update_form.html'
-    
+    # Define the default form and model here for clarity
+    # model = Student 
+    # form_class = StudentUpdateForm # This is often necessary even if overridden by get_form_class
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Check if the user is staff before allowing them to access the view.
+        If not staff, redirect them to the portal home page.
+        """
+        if not request.user.is_staff:
+            messages.error(request, "You do not have permission to edit student details.")
+            # Redirect to the main portal home page
+            return redirect(reverse_lazy('pages:portal-home')) # Change 'pages:portal-home' to your actual home URL name
+        
+        # If the user is staff, proceed with the UpdateView logic
+        return super().dispatch(request, *args, **kwargs)
+
     def get_object(self, queryset=None):
         """
         Retrieves the student object based on the URL parameter (usn).
@@ -303,19 +319,20 @@ class StudentUpdateView(LoginRequiredMixin, UpdateView):
         return get_object_or_404(Student, USN=usn)
 
     def get_form_class(self):
-        # ... (rest of your get_form_class method is correct)
-        if self.request.user.is_superuser or self.request.user.is_staff:
+        # Allow superusers to use the superuser form, staff uses the standard form
+        if self.request.user.is_superuser:
             return SuperUserStudentUpdateForm
+        
+        # If the user is staff (and passed the dispatch check)
         return StudentUpdateForm
 
     def get_success_url(self):
         """
         Defines the URL to redirect to after a successful form submission.
         """
-        # Make sure this also uses 'usn'
-        return reverse_lazy('students:student-detail', kwargs={'usn': self.object.USN})
+        # Ensure 'self.object' is available after a successful save
+        return reverse_lazy('students:student-detail', kwargs={'id': self.object.USN})
 
-     
 
 class StudentDeleteView(LoginRequiredMixin, DeleteView):
     template_name = 'students/student_delete.html'

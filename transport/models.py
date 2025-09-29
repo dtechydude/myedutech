@@ -7,6 +7,8 @@ from django.conf import settings
 from django.urls import reverse
 from django.core.validators import MinLengthValidator, MaxValueValidator, MinValueValidator 
 from curriculum.models import Session, Term
+from datetime import date # Import date
+
 
 
 # Create your models here.
@@ -62,7 +64,7 @@ class BusPayment(models.Model):
     """
     enrollment = models.ForeignKey(StudentOnRoute, on_delete=models.CASCADE, related_name='payments')
     amount_paid = models.DecimalField(max_digits=15, decimal_places=2, help_text='Amount paid for this transaction.')
-    payment_date = models.DateField(verbose_name='Payment Date')  # The field is now editable
+    payment_date = models.DateField(default=date.today, verbose_name='Payment Date')  # The field is now editable
     is_approved = models.BooleanField(default=False, help_text="Check if this payment is confirmed.")
     
     PAYMENT_METHOD_CHOICES = [

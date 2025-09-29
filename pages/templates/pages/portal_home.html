@@ -406,8 +406,8 @@
 							<li><a href="{% url 'events:calendar' %}">School Events Calendar</a></li>
 							
 							{% if user.is_superuser or user.is_staff %}
-							<li><a href="/admin/" target="_blank">Main Settings</a></li>							
-							<li><a href="/admin/curriculum/schoolidentity/" target="_blank">Add/Edit School Info</a></li>
+							<li><a href="/admin/" target="_blank">Main Settings</a></li>
+							<li><a href="{% url 'events:event_new' %}">Add New Event</a></li>							
 							<li><a href="{% url 'users:all_users' %}">All Registered Users</a></li>
 							<li><a href="{% url 'students:student_search_list' %}">Search Students</a></li>
 							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>	
@@ -557,7 +557,10 @@
 							{% if user.student %}
 							<li><a href="{% url 'payments:student_invoice' %}">My Invoice</a></li>
 							<li><a href="{% url 'payments:payment_history' %}">My Payment History</a></li>	
-							<li><a href="{% url 'payments:notify_payment' %}">Make New Payment</a></li>												
+							<li><a href="{% url 'payments:notify_payment' %}">Make New Payment</a></li>
+							<li><a href="{% url 'payments:my-notifications' %}">My Payment Notifications</a></li>	
+	
+																		
 							</li>		
 							{% endif %}						
 							
@@ -879,12 +882,11 @@
 								<div class="row">
 									<div class="col-xl-6">
 										<div class="card">
-											<!-- <div class="card-header border-0 pb-0">
-												<h4 class="fs-20">School Schedule</h4>
-											</div> -->
 											<div class="card-header border-0 pb-0">
-												<h6 class="fs-6">{% if school_info %}<i class="fas fa-school"></i> - {{ school_info.name }}{% endif %} - Events</h6>
-												<a href="{% url 'events:calendar' %}" class="btn btn-primary btn-sm">View Calendar</a>
+												</div>									
+											<div class="card-header border-0 pb-0">
+												<p class="fs-6"><i class="fas fa-school"></i> - {{ school_info.name }}</p>
+												<a href="{% url 'events:calendar' %}" class="btn btn-primary btn-sm">View School Events</a>
 											</div>
 											<div class="card-body pb-2 loadmore-content" id="BookingContent">
 												<div class="text-center event-calender border-bottom booking-calender">
@@ -897,42 +899,28 @@
 															<h4>My Profile Details</h4>
 															<div class="users d-flex align-items-center">																
 																<div>
-																	<!-- <span class="fs-16 font-w500 me-3">NAME: {{ user.first_name }}  <strong>{{ user.last_name}}</strong></span><br>
-																	<span style="color: brown;">Updated: {{ user.profile.updated }}</span> <br>
-																	<span><strong>E-MAIL:</strong> {{ user.email }}</span> <br>
-																	<span><strong>PROFILE PHONE: </strong> {{ user.profile.phone }}</span><br>
-																	<span> <strong>ROLE:</strong> </span><span style="color: brown;"> 
-																		{% if user.is_superuser %}SUPERUSER 
-																		{% elif user.student %}
-																		STUDENT
-																		{% elif user.teacher %}
-																		TEACHERS
-																		{% elif user.staff %}
-																		NON-ACADEMIC STAFF
-																		{% else %}
-																		ADMIN 
-																		{% endif %}</span> <br> -->
-																		   <ul class="list-unstyled">
-                    <li class="mb-1"><span class="font-w500 me-2">NAME:</span> <strong>{{ user.first_name }} {{ user.last_name}}</strong></li>
-                    <li class="mb-1"><span class="font-w500 me-2">EMAIL:</span> <span>{{ user.email }}</span></li>
-                    <li class="mb-1"><span class="font-w500 me-2">PHONE:</span> <span>{{ user.profile.phone }}</span></li>
-                    <li class="mb-1"><span class="font-w500 me-2">ROLE:</span>
-                        {% if user.is_superuser %}
-                        <span class="badge bg-primary">SUPERUSER</span>
-                        {% elif user.student %}
-                        <span class="badge bg-success">STUDENT</span>
-                        {% elif user.teacher %}
-                        <span class="badge bg-info">TEACHER</span>
-                        {% elif user.parent %}
-                        <span class="badge bg-secondary">GUARDIAN/PARENT</span>
-                        {% else %}
-                        <span class="badge bg-secondary">ADMIN</span>
-                        {% endif %}
-                    </li>
-                    <li class="mb-1"><span class="font-w500 me-2">UPDATED:</span> <span class="text-muted">{{ user.profile.updated|date:"F j, Y" }}</span></li>
-                </ul>
+																
+																												<ul class="list-unstyled">
+															<li class="mb-1"><span class="font-w500 me-2">NAME:</span> <strong>{{ user.first_name }} {% if user.student.middle_name %} {{ user.student.middle_name }} {% endif %}{{ user.last_name}}</strong></li>
+															<li class="mb-1"><span class="font-w500 me-2">EMAIL:</span> <span>{{ user.email }}</span></li>
+															<li class="mb-1"><span class="font-w500 me-2">PHONE:</span> <span>{{ user.profile.phone }}</span></li>
+															<li class="mb-1"><span class="font-w500 me-2">ROLE:</span>
+																{% if user.is_superuser %}
+																<span class="badge bg-primary">SUPERUSER</span>
+																{% elif user.student %}
+																<span class="badge bg-success">STUDENT</span>
+																{% elif user.teacher %}
+																<span class="badge bg-info">TEACHER</span>
+																{% elif user.parent %}
+																<span class="badge bg-secondary">GUARDIAN/PARENT</span>
+																{% else %}
+																<span class="badge bg-secondary">ADMIN</span>
+																{% endif %}
+															</li>
+															<li class="mb-1"><span class="font-w500 me-2">UPDATED:</span> <span class="text-muted">{{ user.profile.updated|date:"F j, Y" }}</span></li>
+														</ul>
 
-																</div>
+																										</div>
 															</div>
 														</div>
 													</div>

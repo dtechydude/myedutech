@@ -111,15 +111,15 @@
                                     {% if standard %}               
                                         {% if classmates %}
                                             <!-- <h4>Classmates:</h4> -->
-                                            <tr>
-                                                {% for classmate in classmates %}
+                                              {% for classmate in classmates %}
+                                            <tr>                                               
                                                 <td> {{ forloop.counter }}  </td>
                                                     <td> {{ classmate.last_name }}  </td>
                                                     <td>{{ classmate.first_name }}</td>
                                                     <td>{{ classmate.gender }}</td>
-                                                    <td>{{ classmate.guardian_phone }}</td>
-                                                    {% endfor %}
+                                                    <td>{{ classmate.guardian_phone }}</td>                                                   
                                             </tr>
+                                             {% endfor %}
                                         {% else %}
                                             <p class="no-classmates">No other classmates found in your classroom.</p>
                                         {% endif %}

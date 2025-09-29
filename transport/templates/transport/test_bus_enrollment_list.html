@@ -55,7 +55,9 @@
                                         <td>{{ enrollment.session.name }}</td>
                                         <td>{{ enrollment.term.name }}</td>
                                         <td>N{{ enrollment.route.bus_fee|floatformat:2 }}</td>
-                                        <td><span class="text-success">N{{ enrollment.total_paid|floatformat:2 }}</span></td>
+                                        
+                                        <td><span class="text-secondary"> <strong>N{{ enrollment.total_paid|floatformat:2 }}</strong></span></td>
+                                        
                                         <td>
                                             {% if enrollment.balance > 0 %}
                                                 <span class="text-danger">N{{ enrollment.balance|floatformat:2 }}</span>
@@ -78,7 +80,7 @@
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="9" class="text-center">No students are currently enrolled in a bus route.</td>
+                                        <td colspan="10" class="text-center">No students are currently enrolled in a bus route.</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
