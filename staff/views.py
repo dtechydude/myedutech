@@ -13,6 +13,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.template.loader import get_template
 # from xhtml2pdf import pisa
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from collections import Counter
 from staff.models import Teacher
 from students.models import Student
 from curriculum.models import Standard, ClassGroup, SchoolIdentity
@@ -129,16 +130,43 @@ def classroom_students(request, class_id):
     return render(request, 'staff/classroom_students.html', context)
 
 
+# Count Teachers Class Students
+
 class TeacherStudentCountListView(ListView):
     model = Teacher
     template_name = 'staff/all_teachers_student_counts.html'
-    context_object_name = 'teachers' # Renames the default 'object_list' to 'teachers'
+    context_object_name = 'teachers'
+
+    def get_queryset(self):
+        # Prefetch the related students and their class to minimize database queries
+        return super().get_queryset().prefetch_related(
+            'teacher__current_class'
+        ).order_by('user__last_name', 'user__first_name')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
         for teacher in context['teachers']:
-            teacher.student_count = teacher.teacher.count() # Add student_count as an attribute
+            # Get all students related to this teacher (via the related_name 'teacher')
+            students = teacher.teacher.all()
+            
+            # 1. Calculate the Total Count (Used in the 'Total Students' column)
+            teacher.total_student_count = students.count() 
+            
+            # 2. Determine the Class Name(s) for the single 'Class' column
+            
+            # Use a set to get unique Standard objects the students belong to
+            unique_classes = {s.current_class for s in students if s.current_class}
+            
+            # Get the name from each unique class, sort them, and join into a string
+            # This populates the 'Class' column with a comma-separated list
+            class_names = [c.name for c in sorted(list(unique_classes), key=lambda x: x.name)]
+            
+            # Store the joined string as 'assigned_classes'
+            teacher.assigned_classes = ", ".join(class_names)
+            
         return context
+
     
 
 # Teachers Subjects & Classes Assigned

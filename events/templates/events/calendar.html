@@ -7,92 +7,116 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>School Calendar - {{ school_info.name }}</title>
     <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    
     <style>
-        /* Existing styles */
         body {
             background-color: #f8f9fa;
             color: #212529;
-            display: flex; /* Enable flexbox for sticky footer */
+            display: flex;
             flex-direction: column;
-            min-height: 100vh; /* Ensure body takes full viewport height */
+            min-height: 100vh;
         }
+
         .main-content {
-            flex-grow: 1; /* Allow content to push footer down */
+            flex-grow: 1;
         }
+
         .calendar-container {
             background-color: #ffffff;
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+            position: relative;
         }
+
         .calendar {
             width: 100%;
             table-layout: fixed;
             border-collapse: collapse;
+            min-width: 600px;
         }
+
         .calendar th, .calendar td {
-            text-align: center;
+            text-align: left;
             padding: 10px;
             border: 1px solid #dee2e6;
             vertical-align: top;
             height: 120px;
             position: relative;
+            font-size: 0.85rem;
         }
+
         .calendar th {
             background-color: #e9ecef;
             color: #212529;
+            text-align: center;
         }
+
         .calendar td {
             background-color: #ffffff;
         }
+
         .calendar td .date {
             position: absolute;
             top: 5px;
             right: 5px;
             color: #6c757d;
             font-weight: bold;
+            font-size: 0.75rem;
         }
+
         .calendar ul {
             list-style: none;
-            padding: 0;
-            margin: 0;
-            text-align: left;
+            padding-left: 0;
+            margin-top: 25px;
         }
+
         .calendar li {
-            margin-bottom: 5px;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
         }
+
         .calendar a.event-link {
-            font-size: 0.9em;
-            word-wrap: break-word;
-            color: #dc3545;
-            transition: color 0.2s ease-in-out;
+            display: inline-block;
+            padding: 2px 6px;
+            background-color: #dc3545;
+            color: #fff;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.75rem;
+            white-space: normal;
+            word-break: break-word;
         }
+
         .calendar a.event-link:hover {
-            color: #c82333;
+            background-color: #c82333;
         }
-        /* Buttons and Heading styles remain */
+
         .btn-primary-red {
             background-color: #dc3545;
             border-color: #dc3545;
             color: #fff;
-            transition: background-color 0.2s ease-in-out;
         }
+
         .btn-primary-red:hover {
             background-color: #c82333;
             border-color: #c82333;
         }
+
         .btn-secondary-light {
             background-color: #e9ecef;
             border-color: #e9ecef;
             color: #212529;
         }
+
         .btn-secondary-light:hover {
             background-color: #dee2e6;
             border-color: #dee2e6;
         }
+
         .calendar-heading {
             display: flex;
             align-items: center;
@@ -100,18 +124,48 @@
             gap: 10px;
         }
 
-        /* NEW: Header and Footer Styles */
         .school-header {
             background-color: #fff;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             padding: 15px 0;
             margin-bottom: 20px;
         }
+
         .page-footer {
-            background-color: #343a40; /* Dark background for footer */
-            color: #f8f9fa; /* Light text */
+            background-color: #343a40;
+            color: #f8f9fa;
             padding: 15px 0;
             margin-top: 40px;
+        }
+
+        /* Toggle buttons */
+        .view-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        /* Responsive Fixes */
+        @media (max-width: 768px) {
+            .calendar-container {
+                padding: 10px;
+            }
+
+            .calendar th, .calendar td {
+                padding: 8px;
+                height: auto;
+            }
+
+            .calendar td .date {
+                font-size: 0.65rem;
+            }
+
+            .calendar a.event-link {
+                display: block;
+                margin-top: 2px;
+                font-size: 0.7rem;
+            }
         }
     </style>
 </head>
@@ -130,14 +184,21 @@
             </div>
         </div>
     </header>
+
     <div class="main-content">
         <div class="container">
             <div class="row">
                 <div class="col-12 calendar-container">
                     
-                    <div class="calendar-heading">
+                    <div class="calendar-heading mb-3">
                         <i class="bi bi-calendar-check-fill fs-2 text-danger"></i>
                         <h2 class="text-center text-danger">School Events Calendar</h2>
+                    </div>
+
+                    <!-- View Toggle Buttons (Client-side Only) -->
+                    <div class="view-toggle">
+                        <button class="btn btn-secondary-light" onclick="toggleView('monthly')">Monthly View</button>
+                        <button class="btn btn-secondary-light" onclick="toggleView('weekly')">Weekly View</button>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -145,28 +206,56 @@
                         <span class="fs-4 text-dark">{{ month_name }} {{ month_year }}</span>
                         <a href="?{{ next_month }}" class="btn btn-secondary-light">Next Month</a>
                     </div>
-                    
+
                     <div class="d-flex justify-content-center my-4 gap-2">
                         <a class="btn btn-secondary-light" href="/dashboard/">Back to Dashboard</a>
                         {% if user.is_authenticated and user.is_staff %}
-                        <a class="btn btn-primary-red" href="{% url 'events:event_new' %}">Add Event</a>
+                            <a class="btn btn-primary-red" href="{% url 'events:event_new' %}">Add Event</a>
                         {% endif %}
                     </div>
-                    
-                    {{ calendar|safe }}
+
+                    <!-- Calendar HTML (Server-rendered) -->
+                    <div id="calendar-monthly-view">
+                        {{ calendar|safe }}
+                    </div>
+
+                    <!-- Optional placeholder for weekly view -->
+                    <div id="calendar-weekly-view" class="d-none">
+                        <div class="alert alert-info text-center">
+                            Weekly view is under construction. Stay tuned!
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- <footer class="page-footer">
+
+    <!-- Footer (optional) -->
+    <!--
+    <footer class="page-footer">
         <div class="container text-center">
             <p class="mb-0 small">
                 &copy; {% now "Y" %} {{ school_info.name|default:"KwikSchools" }}. All rights reserved.
                 <span class="d-block d-md-inline-block">| Contact: <a href="mailto:{{ school_info.email|default:'info@school.com' }}" class="text-light text-decoration-none">{{ school_info.email|default:'info@school.com' }}</a></span>
             </p>
         </div>
-    </footer> -->
+    </footer>
+    -->
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleView(view) {
+            const monthly = document.getElementById('calendar-monthly-view');
+            const weekly = document.getElementById('calendar-weekly-view');
+            if (view === 'weekly') {
+                monthly.classList.add('d-none');
+                weekly.classList.remove('d-none');
+            } else {
+                weekly.classList.add('d-none');
+                monthly.classList.remove('d-none');
+            }
+        }
+    </script>
 </body>
 </html>

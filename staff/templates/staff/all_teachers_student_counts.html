@@ -5,17 +5,13 @@
 
 <head>
     
-	<!-- PAGE TITLE HERE -->
     {% block title %}
-	<title>Teachers Student Count</title>
-	{% endblock title %}
-	
-	<!-- FAVICONS ICON -->
+    <title>Teachers Student Count</title>
+    {% endblock title %}
+    
     {% block favicon %}
-    <!-- Datatable -->
     <link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
-    <!-- Custom Stylesheet -->
-	<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+    <link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
     <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
     {% endblock favicon %}
 
@@ -23,70 +19,21 @@
 
 <body>
 
-    <!--*******************
-        Preloader start
-    ********************-->
-   <div id="preloader">
-		<div class="lds-ripple">
-			<div></div>
-			<div></div>
-		</div>
+    <div id="preloader">
+        <div class="lds-ripple">
+            <div></div>
+            <div></div>
+        </div>
     </div>
-    <!--*******************
-        Preloader end
-    ********************-->
-
-
-    <!--**********************************
-        Main wrapper start
-    ***********************************-->
     <div id="main-wrapper">
 
-        <!--**********************************
-            Nav header start
-        ***********************************-->
-		
-        <!--**********************************
-            Nav header end
-        ***********************************-->
-		
-		<!--**********************************
-            Chat box start
-        ***********************************-->
-		
-		<!--**********************************
-            Chat box End
-        ***********************************-->
-
-		
-        <!--**********************************
-            Header start
-        ***********************************-->
-       
-        <!--**********************************
-            Header end ti-comment-alt
-        ***********************************-->
-
-        <!--**********************************
-            Sidebar start
-        ***********************************-->
-      
-        <!--**********************************
-            Sidebar end
-        ***********************************-->
-
-        <!--**********************************
-            Content body start
-        ***********************************-->
         {% block content_body %}
         <div class="content-body">
-            <div class="container-fluid">				
+            <div class="container-fluid">              
                 
-                <!-- row -->
-
                 <div class="row">
                 
-					<div class="col-12">
+                    <div class="col-12">
                         <div class="card">
                             <div class="card-header">
                                 <h4 class="card-title" style="color:orangered;"><i class="fa fa-users" aria-hidden="true"></i><span style="color: blueviolet;"> Form Teacher's Students Count</span> </h4>
@@ -99,24 +46,35 @@
                                                 <th>S/N</th>
                                                 <th>Teacher's Name</th>
                                                 <th>Teacher's Phone</th>
-                                                <th>Total Students</th>                                               
-                                              
+                                                <th>Class</th> <th>Total Students</th>                                 
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {# For class-based view (TeacherStudentCountListView) #}
-                                            {% for teacher in teachers %}                                            <tr>
-                                                
-                                                <td>{{ forloop.counter}} </td>
-                                                <td><strong>{{ teacher.last_name }} </strong>{{ teacher.first_name }}</td>
-                                                <td>{{ teacher.phone_home }}</td>
-                                                <td><strong>{{ teacher.student_count }}</strong></td>
-                                                
-                                                {% endfor %}
-                                            </tr>
-                                           
-                                           
-                                         
+                                            {# RENDERED TABLE CONTENT WITH REFACTORED VARIABLES #}
+                                            {% for teacher in teachers %}
+                                                <tr>
+                                                    
+                                                    <td>{{ forloop.counter}} </td>
+                                                    <td><strong>{{ teacher.user.last_name }} </strong>{{ teacher.user.first_name }}</td>
+                                                    <td>{{ teacher.phone_home|default:"N/A" }}</td>
+                                                    
+                                                    <td>
+                                                        {% if teacher.assigned_classes %}
+                                                            <span class="badge badge-secondary">{{ teacher.assigned_classes }}</span>
+                                                        {% else %}
+                                                            -
+                                                        {% endif %}
+                                                    </td>
+                                                    
+                                                    <td><strong>{{ teacher.total_student_count }}</strong></td>
+                                                    
+                                                </tr>
+                                            {% empty %}
+                                                <tr>
+                                                    <td colspan="5" class="text-center text-muted">No teachers found.</td>
+                                                </tr>
+                                            {% endfor %}
+                                            
                                         </tbody>
                                     </table>
                                 </div>
@@ -126,56 +84,24 @@
 
 
 
-				</div>
+                </div>
             </div>
         </div>
         {% endblock content_body %}
-        <!--**********************************
-            Content body end
-        ***********************************-->
-
-
-        <!--**********************************
-            Footer start
-        ***********************************-->
-       
-        <!--**********************************
-            Footer end
-        ***********************************-->
-
-        <!--**********************************
-           Support ticket button start
-        ***********************************-->
-
-        <!--**********************************
-           Support ticket button end
-        ***********************************-->
-
-        
-    </div>
-    <!--**********************************
-        Main wrapper end
-    ***********************************-->
-
-    <!--**********************************
-        Scripts
-    ***********************************-->
-    <!-- Required vendors -->
+        </div>
     {% block scripts %}
     <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
     <script src="{% static 'pages/vendor/chart.js/Chart.bundle.min.js' %}"></script>
-	<!-- Apex Chart -->
-	<script src="{% static 'pages/vendor/apexchart/apexchart.js' %}"></script>
-	
-    <!-- Datatable -->
+    <script src="{% static 'pages/vendor/apexchart/apexchart.js' %}"></script>
+    
     <script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
     <script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
 
-	<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
+    <script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
 
     <script src="{% static 'pages/js/custom.min.js' %}"></script>
-	<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
-	<script src="{% static 'pages/js/demo.js' %}"></script>
+    <script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+    <script src="{% static 'pages/js/demo.js' %}"></script>
     <script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
     {% endblock scripts %}
 </body>

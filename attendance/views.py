@@ -89,17 +89,17 @@ def take_daily_attendance(request):
 
 
 
-@login_required
+# ATTENDANCE REPORT
+login_required
 def attendance_report(request):
+    # ... (initial setup remains unchanged) ...
     current_user = request.user
     teacher = None
 
-    # New logic: Superusers have special privileges
     is_superuser = current_user.is_superuser
 
     if not is_superuser:
         try:
-            # Only try to get a Teacher object if the user is not a superuser
             teacher = Teacher.objects.get(user=current_user)
         except Teacher.DoesNotExist:
             pass
@@ -121,6 +121,9 @@ def attendance_report(request):
         form_start_date = report_form.cleaned_data.get('start_date')
         form_end_date = report_form.cleaned_data.get('end_date')
         selected_student = report_form.cleaned_data.get('student')
+        
+        # NEW: Get the selected class filter
+        selected_class = report_form.cleaned_data.get('current_class')
 
         if form_start_date:
             context_start_date = form_start_date
@@ -134,15 +137,24 @@ def attendance_report(request):
             date__range=(context_start_date, context_end_date)
         )
         
-        # New logic: If superuser, show all students. Otherwise, filter by selected student or teacher.
+        # Determine the base set of students to report on (Teacher/Superuser/Selected Student)
+        students_to_report = Student.objects.all()
+
         if selected_student:
-            attendance_records_query = attendance_records_query.filter(student=selected_student)
+            students_to_report = students_to_report.filter(pk=selected_student.pk)
         elif not is_superuser and teacher:
-            teacher_students = Student.objects.filter(form_teacher=teacher)
-            attendance_records_query = attendance_records_query.filter(student__in=teacher_students)
-        # If is_superuser and no specific student is selected, the query remains unfiltered by student.
+            students_to_report = students_to_report.filter(form_teacher=teacher)
+
+        # NEW: Apply the class filter to the student set
+        if selected_class:
+            students_to_report = students_to_report.filter(current_class=selected_class)
+            
+        # Filter the attendance records by the final list of students
+        attendance_records_query = attendance_records_query.filter(student__in=students_to_report)
+
 
         for record in attendance_records_query.order_by('student__last_name', 'date'):
+            # ... (data processing loop remains unchanged) ...
             student = record.student
             record_date = record.date
 
@@ -158,6 +170,7 @@ def attendance_report(request):
                 student_attendance_summary[student]['absent'] += 1
             student_attendance_summary[student]['total_days'] += 1
 
+    # ... (context remains unchanged) ...
     context = {
         'report_form': report_form,
         'attendance_data': attendance_data,
@@ -165,7 +178,7 @@ def attendance_report(request):
         'start_date': context_start_date,
         'end_date': context_end_date,
         'teacher': teacher,
-        'is_superuser': is_superuser, # Pass this to the template for conditional logic
+        'is_superuser': is_superuser,
         'student_attendance_summary': student_attendance_summary,
     }
     return render(request, 'attendance/test_attendance_report.html', context)

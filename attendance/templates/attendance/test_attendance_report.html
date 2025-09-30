@@ -1,4 +1,3 @@
- <!-- attendance/templates/attendance/attendance_report.html -->
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -8,58 +7,70 @@
     <title>Attendance Report</title>
     <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
 
-    
     {# Bootstrap CSS CDN #}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
-    {# Django static files load (for your logo) #}
     {% load static %}
-    {% load attendance_filters %} {# Your custom filters for date range and dictionary lookup #}
-    {% load crispy_forms_tags %} {# For rendering Django forms with Bootstrap styling #}
+    {% load attendance_filters %}
+    {% load crispy_forms_tags %}
 
-    {# Optional: Custom styles for better integration or specific overrides #}
     <style>
         body {
-            background-color: #f8f9fa; /* Light gray background */
+            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         .container {
             padding-top: 2rem;
             padding-bottom: 2rem;
+            flex: 1;
         }
         .card {
-            border-radius: 0.75rem; /* Slightly more rounded cards */
+            border-radius: 0.75rem;
         }
         .card-header {
-            background-color: #f0f2f5; /* Light header background */
+            background-color: #f0f2f5;
             border-bottom: 1px solid #e9ecef;
             border-top-left-radius: 0.75rem;
             border-top-right-radius: 0.75rem;
         }
         .table thead th {
-            font-size: 0.75rem; /* Smaller font for table headers */
+            font-size: 0.75rem;
         }
         .table tbody td {
-            vertical-align: middle; /* Center content vertically in table cells */
+            vertical-align: middle;
         }
         .badge {
-            min-width: 60px; /* Ensure consistent width for badges */
+            min-width: 60px;
             padding: 0.4em 0.8em;
         }
+        footer {
+            background-color: #f0f2f5;
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #555;
+        }
     </style>
-
 </head>
 <body>
 
-<div class="container mt-4"> {# Bootstrap container with top margin #}
+<div class="container mt-4">
+
+    {# Back to Dashboard Button at the Top #}
+    <div class="mb-3">
+        <a href="/dashboard/" class="btn btn-outline-primary">
+            <i class="fas fa-home me-2"></i> Back to Dashboard
+        </a>
+    </div>
 
     {# School Logo Section #}
     <div class="text-center mb-4">
-        <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="School Logo" class="img-fluid" style="max-height: 100px;">
-        {# IMPORTANT: Replace 'path/to/your/school_logo.png' with your actual logo path #}
-        {# Ensure you have collected static files: python manage.py collectstatic #}
+        <img src="{{ school_info.logo.url }}" alt="School Logo" class="img-fluid" style="max-height: 100px;">
     </div>
 
-    <h2 class="text-center mb-4">Attendance Report</h2> {# Bootstrap text-center and margin #}
+    <h2 class="text-center mb-4">Attendance Report</h2>
 
     {# Messages Display #}
     {% if messages %}
@@ -73,14 +84,17 @@
     {% endif %}
 
     {# Filter Form #}
-    <div class="card shadow-sm mb-4"> {# Bootstrap card for the filter section #}
+    <div class="card shadow-sm mb-4">
         <div class="card-header">
             <h3 class="card-title mb-0">Filter Report</h3>
         </div>
         <div class="card-body">
-            <form method="GET" class="row g-3 align-items-end"> {# Bootstrap row with gutters and aligned items #}
-                <div class="col-md-4"> {# Bootstrap column for responsive layout #}
-                    {{ report_form.student|as_crispy_field }} {# Render field with Crispy Forms #}
+            <form method="GET" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    {{ report_form.student|as_crispy_field }}
+                </div>
+                <div class="col-md-3">
+                    {{ report_form.current_class|as_crispy_field }}
                 </div>
                 <div class="col-md-3">
                     {{ report_form.start_date|as_crispy_field }}
@@ -88,15 +102,9 @@
                 <div class="col-md-3">
                     {{ report_form.end_date|as_crispy_field }}
                 </div>
-                <div class="col-md-2 d-grid"> {# d-grid makes button full width in its column #}
-                    <button type="submit" class="btn btn-primary">
-                        Generate Report
-                    </button>
-                </div>
-                <div class="col-12 text-center mt-3"> {# Full width column for clear filters button #}
-                    <a href="{% url 'attendance:attendance_report' %}" class="btn btn-outline-secondary">
-                        Clear Filters
-                    </a>
+                <div class="col-12 d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                    <button type="submit" class="btn btn-primary">Generate Report</button>
+                    <a href="{% url 'attendance:attendance_report' %}" class="btn btn-outline-secondary">Clear Filters</a>
                 </div>
             </form>
         </div>
@@ -104,20 +112,19 @@
 
     {# Attendance Table #}
     {% if attendance_data %}
-        <div class="card shadow-lg"> {# Bootstrap card for the table #}
+        <div class="card shadow-lg">
             <div class="card-header">
                 <h3 class="card-title mb-0">Daily Attendance Overview ({{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }})</h3>
             </div>
-            <div class="card-body p-0"> {# Remove padding if table handles it #}
-                <div class="table-responsive"> {# Makes table scrollable on small screens #}
-                    <table class="table table-striped table-hover mb-0"> {# Bootstrap table styles #}
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
                         <thead>
                             <tr>
                                 <th scope="col">Student Name</th>
                                 {% for date_header in start_date|timesince_range:end_date %}
                                     <th scope="col" class="text-center">{{ date_header|date:"M d" }}</th>
                                 {% endfor %}
-                                {# New Headers for summary counts #}
                                 <th scope="col" class="text-center">Present</th>
                                 <th scope="col" class="text-center">Absent</th>
                                 <th scope="col" class="text-center">Total Days</th>
@@ -129,10 +136,8 @@
                                     <td>{{ student.get_full_name }}</td>
                                     {% for date_cell in start_date|timesince_range:end_date %}
                                         <td class="text-center">
-                                            {# First, get the attendance record for the specific date #}
                                             {% with attendance_record=daily_records|get_item:date_cell %}
                                                 {% if attendance_record %}
-                                                    {# Now check the 'present' attribute of the attendance_record object #}
                                                     {% if attendance_record.present %}
                                                         <span class="badge bg-success">Present</span>
                                                     {% else %}
@@ -144,17 +149,10 @@
                                             {% endwith %}
                                         </td>
                                     {% endfor %}
-                                    {# New Data Cells for summary counts #}
                                     {% with student_summary=student_attendance_summary|get_item:student %}
-                                        <td class="text-center text-success fw-bold">
-                                            {{ student_summary.present }}
-                                        </td>
-                                        <td class="text-center text-danger fw-bold">
-                                            {{ student_summary.absent }}
-                                        </td>
-                                        <td class="text-center text-dark fw-bold">
-                                            {{ student_summary.total_days }}
-                                        </td>
+                                        <td class="text-center text-success fw-bold">{{ student_summary.present }}</td>
+                                        <td class="text-center text-danger fw-bold">{{ student_summary.absent }}</td>
+                                        <td class="text-center text-dark fw-bold">{{ student_summary.total_days }}</td>
                                     {% endwith %}
                                 </tr>
                             {% endfor %}
@@ -168,16 +166,18 @@
             No attendance data found for the selected criteria and date range.
         </div>
     {% endif %}
-    <hr>
-        <div><p><a href="/dashboard/">Back to DASHBOARD</a></p></div>
-    </div>
 </div>
 
-        
-     
+{# Footer Section #}
+<footer>
+    &copy; POWERED BY: <a href="https://kwikschools.com"> KwikSchools EdTech </a> {{ now|date:"Y" }}. All rights reserved.
+</footer>
 
-{# Bootstrap JS CDN (bundle includes Popper) #}
+{# Bootstrap JS CDN #}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+{# Font Awesome CDN for icons (e.g., dashboard button) #}
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 
 </body>
 </html>
