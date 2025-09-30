@@ -125,6 +125,71 @@ class ClassFeeTemplateAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     autocomplete_fields = ['student_class', 'payment_category', 'term', 'session']
     actions = ['delete_selected']
 
+
+# # Online Elearn integration
+# @admin.register(SubjectOnlineMeeting)
+# class SubjectOnlineMeetingAdmin(admin.ModelAdmin):
+#     # What columns to show in the list view
+#     list_display = (
+#         'subject', 
+#         'standard_name', # Custom method to show the Class Name
+#         'platform', 
+#         'is_active', 
+#         'meeting_link'
+#     )
+    
+#     # Filters on the right sidebar
+#     list_filter = (
+#         'is_active', 
+#         'platform', 
+#         'subject__standard' # Filter by the Class/Standard
+#     )
+    
+#     # Fields to search across
+#     search_fields = (
+#         'subject__name', 
+#         'subject__standard__name', 
+#         'meeting_link'
+#     )
+    
+#     # How the fields appear when adding/editing a link
+#     fieldsets = (
+#         ('Meeting Details', {
+#             'fields': ('subject', 'platform', 'meeting_link', 'is_active'),
+#             'description': 'Select the E-Learning Subject and provide the recurring meeting URL.'
+#         }),
+#     )
+
+#     # --- Custom Methods ---
+
+#     # Method to display the Standard/Class name in the list view
+#     @admin.display(description='Class (Standard)', ordering='subject__standard__name')
+#     def standard_name(self, obj):
+#         return obj.subject.standard.name
+
+#     # --- Permission Enforcement (Assuming Staff or a Custom Teacher flag) ---
+
+#     def has_view_permission(self, request, obj=None):
+#         """Allows viewing only if user is staff or a recognized teacher."""
+#         # Assuming your User model/profile has an 'is_teacher' boolean/property
+#         return request.user.is_staff or getattr(request.user, 'is_teacher', False)
+    
+#     def has_add_permission(self, request):
+#         """Allows adding only if user is staff or a recognized teacher."""
+#         return request.user.is_staff or getattr(request.user, 'is_teacher', False)
+
+#     def has_change_permission(self, request, obj=None):
+#         """Allows changing only if user is staff or a recognized teacher."""
+#         return request.user.is_staff or getattr(request.user, 'is_teacher', False)
+
+#     def has_delete_permission(self, request, obj=None):
+#         """Allows deleting only if user is staff or a recognized teacher."""
+#         # Teachers may only be allowed to delete their own links, but here we allow staff/all teachers
+#         return request.user.is_staff or getattr(request.user, 'is_teacher', False)
+
+
+
+
 admin.site.register(Session, SessionAdmin)
 admin.site.register(ClassGroup, ClassGroupAdmin)
 admin.site.register(Subject, SubjectAdmin)

@@ -117,7 +117,7 @@ class ReceiptAdmin(admin.ModelAdmin):
 @admin.register(StudentFeeAssignment)
 class StudentFeeAssignmentAdmin(admin.ModelAdmin):
     list_display = ('student', 'payment_category', 'term', 'session', 'amount_due')
-    list_filter = ('term', 'session', 'payment_category')
+    list_filter = ('term', 'session', 'payment_category', 'student__current_class')
     search_fields = ('student__USN', 'student__first_name', 'student__last_name', 'payment_category__name')
     raw_id_fields = ('student', 'payment_category', 'term', 'session')
 

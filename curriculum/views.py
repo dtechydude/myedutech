@@ -1,8 +1,9 @@
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
-from django.urls import reverse_lazy
+from django.shortcuts import render, redirect
+from django.urls import reverse_lazy, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
+from django.db.models import Prefetch, Q # Add Q and Prefetch
 from django.views.generic import(TemplateView, DetailView,
                                 ListView, FormView, CreateView, 
                                 UpdateView, DeleteView)
@@ -11,6 +12,7 @@ from .forms import CommentForm, LessonForm, ReplyForm
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from students.models import Student
+from django.core.exceptions import ObjectDoesNotExist
 
 
 
@@ -207,5 +209,133 @@ def form_teachers_head_list(request):
 
    
 
+# online class integration
+# @login_required
+# def e_learning_home(request):
+#     user = request.user
+#     context = {}
+    
+#     if hasattr(user, 'student') and user.student.current_class:
+#         # 1. Get the student's current class
+#         student_class = user.student.current_class
+        
+#         # 2. Fetch all active online links for that specific class
+#         platforms = OnlineClassPlatform.objects.filter(
+#             current_class=student_class,
+#             is_active=True
+#         ).order_by('platform')
 
-   
+#         context['student_class_name'] = student_class.name
+#         context['platforms'] = platforms
+    
+#     elif user.is_staff or user.is_teacher:
+#         # Optional: Staff/Teachers see all active links for management
+#         platforms = OnlineClassPlatform.objects.filter(is_active=True).order_by('current_class__name')
+#         context['platforms'] = platforms
+#         context['is_staff_view'] = True
+        
+#     else:
+#         # User is logged in but not a student with a class or staff
+#         context['platforms'] = []
+
+#     return render(request, 'e_learning/e_learning_page.html', context)
+
+
+# @login_required
+# def class_meeting_list_view(request):
+#     user = request.user
+#     context = {'subjects_with_meetings': []}
+    
+#     # ------------------------------------------------------------
+#     # A) CHECK FOR STAFF / TEACHER ACCESS (View Admin Message)
+#     # ------------------------------------------------------------
+#     is_teacher = getattr(user, 'is_teacher', False)
+
+#     if user.is_staff or is_teacher:
+#         context['is_staff_view'] = True
+#         return render(request, 'curriculum/class_meeting_list.html', context)
+
+#     # ------------------------------------------------------------
+#     # B) STUDENT LOGIC
+#     # ------------------------------------------------------------
+#     is_fully_assigned_student = (
+#         hasattr(user, 'student') and user.student and user.student.current_class
+#     )
+    
+#     if is_fully_assigned_student:
+#         # --- EXECUTE NORMAL STUDENT FLOW ---
+#         student_class = user.student.current_class
+#         context['student_class_name'] = student_class.name
+        
+#         # ... (rest of your successful student logic remains the same)
+#         subjects = ELearningSubject.objects.filter(
+#             standard=student_class
+#         ).prefetch_related(
+#             Prefetch(
+#                 'online_meetings',
+#                 queryset=SubjectOnlineMeeting.objects.filter(is_active=True),
+#                 to_attr='active_meetings'
+#             )
+#         ).order_by('name')
+
+#         for subject in subjects:
+#             if subject.active_meetings:
+#                 context['subjects_with_meetings'].append({
+#                     'subject_name': subject.name,
+#                     'meetings': subject.active_meetings,
+#                 })
+        
+#         return render(request, 'curriculum/class_meeting_list.html', context)
+    
+#     # ------------------------------------------------------------
+#     # C) FALLBACK: LOGGED-IN USER IS NOT STAFF, NOT TEACHER, AND NOT A FULLY ASSIGNED STUDENT
+#     # ------------------------------------------------------------
+    
+#     # Instead of rendering a potentially confusing empty template, redirect to home.
+#     # Replace 'home' with the actual name of your home/dashboard URL
+#     return redirect(reverse('pages:portal-home')) # <--- THIS IS THE CRITICAL CHANGE
+
+
+@login_required
+def class_meeting_list_view(request):
+    user = request.user
+    context = {'subjects_with_meetings': []}
+
+    # --- Staff / Superuser ---
+    if user.is_superuser or user.is_staff:
+        context['is_staff_view'] = True
+        return render(request, 'curriculum/class_meeting_list.html', context)
+
+    # --- Student branch ---
+    try:
+        student = user.student  # works if OneToOneField
+    except ObjectDoesNotExist:
+        student = None
+
+    if student and student.current_class:
+        student_class = student.current_class
+        context['student_class_name'] = student_class.name
+
+        subjects = (
+            ELearningSubject.objects.filter(standard=student_class)
+            .prefetch_related(
+                Prefetch(
+                    'online_meetings',
+                    queryset=SubjectOnlineMeeting.objects.filter(is_active=True),
+                    to_attr='active_meetings'
+                )
+            )
+            .order_by('name')
+        )
+
+        for subject in subjects:
+            if subject.active_meetings:
+                context['subjects_with_meetings'].append({
+                    'subject_name': subject.name,
+                    'meetings': subject.active_meetings,
+                })
+
+        return render(request, 'curriculum/class_meeting_list.html', context)
+
+    # --- Fallback ---
+    return redirect(reverse('pages:portal-home'))

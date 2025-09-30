@@ -1,0 +1,60 @@
+{% extends 'pages/portal_home.html' %} 
+{% block content %}
+    
+<div class="container mt-5">
+    <h1 class="mb-4">
+        <i class="fas fa-chalkboard-teacher"></i> 
+        {% if is_staff_view %}
+            Online Meeting Management 🧑‍🏫
+        {% else %}
+            Your Live Online Classes 📚
+        {% endif %}
+    </h1>
+
+    <hr/>
+
+    {% if is_staff_view %}
+        <div class="alert alert-info">
+            <p>You are viewing as a Staff/Teacher. To manage meeting links, please go to the **Django Admin** and use the **Subject Online Meeting** section.</p>
+        </div>
+    {% elif student_class_name %}
+        <p class="lead text-muted">Active meetings for your class: <strong>{{ student_class_name }}</strong></p>
+        
+        {% if subjects_with_meetings %}
+            <div class="row">
+                {% for item in subjects_with_meetings %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card shadow h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary">{{ item.subject_name }}</h5>
+                                <p class="card-text small text-muted">Join the live session:</p>
+                                
+                                <div class="list-group">
+                                    {% for meeting in item.meetings %}
+                                    <a href="{{ meeting.meeting_link }}" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center mb-2 btn-{{ meeting.platform|lower }}">
+                                        <i class="fas fa-video me-2"></i> 
+                                        <strong>{{ meeting.get_platform_display }} Class Link</strong>
+                                        <span class="badge bg-success rounded-pill">LIVE</span>
+                                    </a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-warning">
+                There are no active online meetings scheduled for your class subjects right now.
+            </div>
+        {% endif %}
+        
+    {% else %}
+        <div class="alert alert-danger">
+            You are not currently assigned to a class, or the student profile could not be loaded. Please contact support.
+        </div>
+    {% endif %}
+
+</div>
+
+{% endblock content %}
