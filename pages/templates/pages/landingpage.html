@@ -132,7 +132,7 @@
 
     <div class="contact-info">
         <p>
-            <i class="fas fa-map-marker-alt me-2"></i> {{ school_info.address_line_1 }} {% if school_info.addess_line_2 %}{{ school_info.address_line_2}}{% endif%}
+            <i class="fas fa-map-marker-alt me-2"></i> {{ school_info.address_line_1 }} <br /> {% if school_info.address_line_2 %}{{ school_info.address_line_2}}{% endif%}
         </p>
         <p>
             <i class="fas fa-phone-alt me-2"></i> <a href="tel:{{school_info.phone_1}}">{{school_info.phone1}}</a>
