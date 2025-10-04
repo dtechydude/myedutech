@@ -88,9 +88,12 @@
                 
 					<div class="col-12">
                         <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title" style="color:orangered;"> <i class="fas fa-chalkboard-teacher"></i> Teachers Profile Datatable </h4>
-                            </div>
+                                <div class="card-header">
+                                <h4 class="card-title" style="color:green;"><i class="fas fa-users"></i> Teachers Profile Datatable </h4>
+                                <a href="{% url 'staff:teacher-list' %}?export=csv" class="btn btn-success float-end">
+                                        <i class="fas fa-file-download me-2"></i> Export to CSV
+                                    </a>
+                                    </div>
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table id="example3" class="display" style="min-width: 845px">

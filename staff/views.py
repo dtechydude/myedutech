@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
 from django.db.models import Count
+import csv
 from django.db.models import F
 from django.db import transaction
 #converting html to pdf
@@ -21,14 +22,35 @@ from staff.forms import TeacherUpdateForm, TeacherForm, CustomUserCreationForm, 
 from django.contrib.auth.forms import UserCreationForm
 
 
-#Displays all teachers
+
 @login_required
 def teachers_list(request):
-    all_teachers = Teacher.objects.all().order_by('-date_employed')    
+    """
+    A view to display all users and export them to a CSV,
+    only accessible by staff users.
+    """
+    user = request.user
+    
+    # Restrict access to only staff users
+    if not user.is_staff:
+        return redirect('pages/portal_home.html') # Redirect to a safe URL for non-staff users
 
-    context = {
-        'all_teachers': all_teachers
-    }
+    all_teachers_list = Teacher.objects.all().order_by('last_name', 'first_name')
+    
+    # Handle CSV export request
+    if request.GET.get('export') == 'csv':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="all_teachers.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Username', 'First Name', 'Last Name', 'Email', 'Phone', 'State Of Origin', 'User Type', 'Registered Date'])
+
+        for u in all_teachers_list:
+            writer.writerow([u.user.username, u.first_name, u.last_name, u.user.email, u.user.profile.phone, u.user.profile.state_of_origin, u.user.profile.user_type, u.user.profile.created])
+        return response
+
+    # Normal template rendering
+    context = {'all_teachers': all_teachers_list}
     return render(request, 'staff/teachers_list.html', context)
 
 
