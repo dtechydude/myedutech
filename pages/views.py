@@ -284,6 +284,13 @@ def teacher_guarantor_email_list_view(request):
 def video_guides_view(request):
     # A placeholder list of video data with an 'is_staff_only' flag
     video_list = [
+         {
+            'title': 'Smart Intro - KwikSchools',
+            'youtube_url': 'https://www.youtube.com/embed/lMgWQgFQrrY',
+            'description': 'A Smart Intro To KwikSchools.',
+            'is_staff_only': False
+        },
+        # Add more videos here
         {
             'title': 'A KwikSchools Quick Guide',
             'youtube_url': 'https://www.youtube.com/embed/KwjiFOwDOl4',
@@ -297,18 +304,18 @@ def video_guides_view(request):
             'is_staff_only': True  # This video is for staff only
         },
          {
+            'title': 'Kwikschools - Payment Module 1 (Admin)',
+            'youtube_url': 'https://www.youtube.com/embed/_DeB_8i-3jc',
+            'description': 'Set Up - Payment Module',
+            'is_staff_only': True  # This video is for staff only
+        },
+         {
             'title': 'Kwikschools - Student Enrolment & Teachers Signup',
             'youtube_url': 'https://www.youtube.com/embed/EHOePJXKWp0',
             'description': 'Set Up - Initial portal set up',
             'is_staff_only': True  # This video is for staff only
         },
-        {
-            'title': 'Smart Intro - KwikSchools',
-            'youtube_url': 'https://www.youtube.com/embed/lMgWQgFQrrY',
-            'description': 'A Smart Intro To KwikSchools.',
-            'is_staff_only': False
-        },
-        # Add more videos here
+       
     ]
 
     # Filter videos based on the user's staff status
