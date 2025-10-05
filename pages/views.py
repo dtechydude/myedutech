@@ -315,6 +315,12 @@ def video_guides_view(request):
             'description': 'Set Up - Initial portal set up',
             'is_staff_only': True  # This video is for staff only
         },
+         {
+            'title': 'Kwikschools - Assign Form Teachers To Classes',
+            'youtube_url': 'https://www.youtube.com/embed/jnm5nk58L-Q',
+            'description': 'How to assign form teachers to classes',
+            'is_staff_only': True  # This video is for staff only
+        },
        
     ]
 

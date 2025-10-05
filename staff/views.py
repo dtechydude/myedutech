@@ -22,7 +22,7 @@ from staff.forms import TeacherUpdateForm, TeacherForm, CustomUserCreationForm, 
 from django.contrib.auth.forms import UserCreationForm
 
 
-
+# All Techers
 @login_required
 def teachers_list(request):
     """
