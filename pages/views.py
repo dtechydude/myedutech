@@ -298,28 +298,34 @@ def video_guides_view(request):
             'is_staff_only': False
         },
         {
-            'title': 'Kwikschools - School Set-Up (Admin)',
+            'title': 'Admin - School Set-Up (Admin)',
             'youtube_url': 'https://www.youtube.com/embed/dGpsPRIlkH4',
             'description': 'Set Up - Initial portal set up',
             'is_staff_only': True  # This video is for staff only
         },
          {
-            'title': 'Kwikschools - Payment Module 1 (Admin)',
+            'title': 'Admin - Payment Module 1 (Admin)',
             'youtube_url': 'https://www.youtube.com/embed/_DeB_8i-3jc',
             'description': 'Set Up - Payment Module',
             'is_staff_only': True  # This video is for staff only
         },
          {
-            'title': 'Kwikschools - Student Enrolment & Teachers Signup',
+            'title': 'Admin - Student Enrolment & Teachers Signup',
             'youtube_url': 'https://www.youtube.com/embed/EHOePJXKWp0',
             'description': 'Set Up - Initial portal set up',
             'is_staff_only': True  # This video is for staff only
         },
          {
-            'title': 'Kwikschools - Assign Form Teachers To Classes',
+            'title': 'Admin - Assign Form Teachers To Classes',
             'youtube_url': 'https://www.youtube.com/embed/jnm5nk58L-Q',
             'description': 'How to assign form teachers to classes',
             'is_staff_only': True  # This video is for staff only
+        },
+        {
+            'title': 'STUDENTS - The Student Dashboard 1',
+            'youtube_url': 'https://www.youtube.com/embed/jnm5nk58L-Q',
+            'description': 'Exploring the student dashboard',
+            'is_staff_only': False  # This video is for staff only
         },
        
     ]
