@@ -323,7 +323,7 @@ def video_guides_view(request):
         },
         {
             'title': 'STUDENTS - The Student Dashboard 1',
-            'youtube_url': 'https://www.youtube.com/embed/jnm5nk58L-Q',
+            'youtube_url': 'https://www.youtube.com/embed/xK9He7qwJLE',
             'description': 'Exploring the student dashboard',
             'is_staff_only': False  # This video is for staff only
         },
