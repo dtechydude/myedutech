@@ -1,5 +1,4 @@
 # payments/urls.py
-
 from django.urls import path
 from . import views as payment_views
 from payments.views import PaymentNotificationListView, UserPaymentNotificationListView

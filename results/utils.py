@@ -1,54 +1,137 @@
 # schools/utils.py
 
+# def get_grade(score):
+#     """
+#     Assigns a letter grade based on a numerical score (out of 100).
+#     """
+#     if score is None:
+#         return "N/A"
+#     score = float(score) # Ensure it's a float for comparisons
+#     if 75 <= score <= 100:
+#         return "A"
+#     elif 65 <= score < 75:
+#         return "B"
+#     elif 55 <= score < 65:
+#         return "C"
+#     elif 45 <= score < 55:
+#         return "D"
+#     elif 0 <= score < 45:
+#         return "F"
+#     else:
+#         return "Invalid" # For scores outside the expected range (e.g., negative or >100)
+
+# def get_subject_remark(score):
+#     """
+#     Provides a text remark for a subject score.
+#     """
+#     if score is None:
+#         return "No score recorded."
+#     score = float(score)
+#     if 80 <= score <= 100:
+#         return "Excellent."
+#     elif 70 <= score < 80:
+#         return "Very Good."
+#     elif 60 <= score < 70:
+#         return "Good."
+#     elif 50 <= score < 60:
+#         return "Average."
+#     elif 40 <= score < 50:
+#         return "Fair."
+#     elif 0 <= score < 40:
+#         return "Poor."
+#     else:
+#         return "Score out of typical range."
+
+# def get_overall_remark(average_score):
+#     """
+#     Provides an overall term remark based on the average score.
+#     """
+#     if average_score is None:
+#         return "No overall average available."
+#     average_score = float(average_score)
+#     if 75 <= average_score <= 100:
+#         return "Outstanding academic achievement this term. Keep up the excellent work!"
+#     elif 65 <= average_score < 75:
+#         return "Very good overall performance. Continue to strive for excellence."
+#     elif 55 <= average_score < 65:
+#         return "Good academic progress. Focus on improving weaker areas."
+#     elif 45 <= average_score < 55:
+#         return "Fair overall performance. Requires more dedication and effort across subjects."
+#     elif 0 <= average_score < 45:
+#         return "Below average performance. Urgent need for improvement and support."
+#     else:
+#         return "Average score out of typical range."
+    
+
+
 def get_grade(score):
     """
-    Assigns a letter grade based on a numerical score (out of 100).
+    Assigns a letter grade based on a numerical score (out of 100),
+    aligned with the report card's displayed grading keys.
     """
     if score is None:
         return "N/A"
-    score = float(score) # Ensure it's a float for comparisons
-    if 75 <= score <= 100:
+    try:
+        score = float(score)
+    except ValueError:
+        return "Invalid"
+        
+    if 80 <= score <= 100:
         return "A"
-    elif 65 <= score < 75:
+    elif 71 <= score < 80:
+        return "B+"
+    elif 60 <= score < 71:
         return "B"
-    elif 55 <= score < 65:
+    elif 50 <= score < 60:
         return "C"
-    elif 45 <= score < 55:
+    elif 45 <= score < 50:
         return "D"
-    elif 0 <= score < 45:
+    elif 40 <= score < 45:
+        return "E" # New range for E
+    elif 0 <= score < 40:
         return "F"
     else:
-        return "Invalid" # For scores outside the expected range (e.g., negative or >100)
+        return "Invalid"
 
 def get_subject_remark(score):
     """
-    Provides a text remark for a subject score.
+    Provides a text remark for a subject score, aligned with the new grading scale.
+    Adjusted slightly to match typical academic remarks for the new ranges.
     """
     if score is None:
         return "No score recorded."
-    score = float(score)
+    try:
+        score = float(score)
+    except ValueError:
+        return "Score out of typical range."
+        
     if 80 <= score <= 100:
         return "Excellent."
-    elif 70 <= score < 80:
+    elif 71 <= score < 80:
         return "Very Good."
-    elif 60 <= score < 70:
+    elif 60 <= score < 71:
         return "Good."
     elif 50 <= score < 60:
         return "Average."
     elif 40 <= score < 50:
-        return "Fair."
+        return "Needs more effort." # Combines D and E ranges for a single remark
     elif 0 <= score < 40:
         return "Poor."
     else:
         return "Score out of typical range."
-
+# get_overall_remark remains largely acceptable but is slightly adjusted 
+# for consistency with the new overall grade boundaries (75, 65, 55, 45).
 def get_overall_remark(average_score):
     """
     Provides an overall term remark based on the average score.
     """
     if average_score is None:
         return "No overall average available."
-    average_score = float(average_score)
+    try:
+        average_score = float(average_score)
+    except ValueError:
+        return "Average score out of typical range."
+        
     if 75 <= average_score <= 100:
         return "Outstanding academic achievement this term. Keep up the excellent work!"
     elif 65 <= average_score < 75:
@@ -61,6 +144,3 @@ def get_overall_remark(average_score):
         return "Below average performance. Urgent need for improvement and support."
     else:
         return "Average score out of typical range."
-    
-
-

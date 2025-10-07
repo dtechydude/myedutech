@@ -544,6 +544,113 @@ def get_overall_remark(average):
         return "Very Poor"
 
 
+# class StudentReportCardView(LoginRequiredMixin, View):
+#     """
+#     Generates and displays a single student's report card for a specific term.
+#     Accessible by teachers/admins (for any student) and by the student themselves.
+#     """
+#     template_name = 'results/test_student_report_card_detail.html'
+#     pdf_template_name = 'results/test_student_report_card_pdf.html' # Dedicated template for PDF layout
+
+#     def get(self, request, student_id, term_id, *args, **kwargs):
+#         student = get_object_or_404(Student, id=student_id)
+#         term = get_object_or_404(Term, id=term_id)
+
+#         # Authorization Check
+#         if not hasattr(request.user, 'teacher'):
+#             if not (hasattr(request.user, 'student') and request.user.student == student):
+#                 messages.error(request, "You are not authorized to view this report card.")
+#                 return redirect('student_dashboard' if hasattr(request.user, 'student') else 'home') 
+
+#         # --- FIX: Updated code for ATTENDANCE and NEXT TERM ---
+#         # Get all attendance records for the student in the given term
+#         student_attendance = Attendance.objects.filter(student=student, date__gte=term.start_date, date__lte=term.end_date)
+        
+#         # Calculate days present and absent using the `present` boolean field
+#         days_present = student_attendance.filter(present=True).count()
+#         days_absent = student_attendance.filter(present=False).count()
+        
+#         # Calculate total school days opened for the student's class during the term
+#         total_school_days = Attendance.objects.filter(
+#             student__current_class=student.current_class, 
+#             date__gte=term.start_date, 
+#             date__lte=term.end_date
+#         ).values('date').distinct().count()
+
+#         # Get the next term's start date. Assumes terms are ordered by start_date.
+#         next_term = Term.objects.filter(start_date__gt=term.end_date).order_by('start_date').first()
+#         next_term_start_date = next_term.start_date if next_term else None
+
+#         # Count total students in the student's class
+#         total_students_in_class = Student.objects.filter(current_class=student.current_class).count()
+
+#         # Fetch scores for the student in the selected term
+#         scores = Score.objects.filter(student=student, term=term).select_related('subject').order_by('subject__name')
+
+#         report_data = []
+#         total_scores_sum = 0
+#         subjects_with_scores_count = 0
+
+#         for score in scores:
+#             current_total_score = score.total_score if score.total_score is not None else 0
+#             total_ca = (score.ca1 or 0) + (score.ca2 or 0) + (score.ca3 or 0)
+
+#             report_data.append({
+#                 'subject': score.subject.name,
+#                 'ca1': score.ca1 if score.ca1 is not None else 'N/A',
+#                 'ca2': score.ca2 if score.ca2 is not None else 'N/A',
+#                 'ca3': score.ca3 if score.ca3 is not None else 'N/A',
+#                 'total_ca': total_ca,
+#                 'exam_score': score.exam_score if score.exam_score is not None else 'N/A',
+#                 'total_score': current_total_score,
+#                 'grade': get_grade(current_total_score),
+#                 'remark': get_subject_remark(current_total_score),
+#             })
+            
+#             if score.total_score is not None:
+#                 total_scores_sum += current_total_score
+#                 subjects_with_scores_count += 1
+
+#         overall_average = None
+#         overall_remark = "No scores recorded for this term."
+#         if subjects_with_scores_count > 0:
+#             overall_average = total_scores_sum / subjects_with_scores_count
+#             overall_remark = get_overall_remark(overall_average)
+
+#         motor_ability_score = MotorAbilityScore.objects.filter(student=student, term=term).first()
+        
+#         try:
+#             school_identity = SchoolIdentity.objects.first()
+#         except SchoolIdentity.DoesNotExist:
+#             school_identity = None
+
+#         context = {
+#             'student': student,
+#             'term': term,
+#             'report_data': report_data,
+#             'overall_average': f"{overall_average:.2f}" if overall_average is not None else 'N/A',
+#             'overall_remark': overall_remark,
+#             'motor_ability_score': motor_ability_score,
+#             'school_identity': school_identity,
+#             'total_school_days': total_school_days,
+#             'days_present': days_present,
+#             'days_absent': days_absent,
+#             'next_term_start_date': next_term_start_date,
+#             'total_students_in_class': total_students_in_class,
+#         }
+
+#         if 'download' in request.GET and request.GET['download'] == 'pdf':
+#             filename = f"{student.first_name.replace(' ', '_')}_{term.name.replace(' ', '_')}_TermlyReportCard.pdf"
+#             pdf_response = render_to_pdf_xhtml2pdf(self.pdf_template_name, context)
+            
+#             if pdf_response:
+#                 pdf_response['Content-Disposition'] = f'attachment; filename="{filename}"'
+#                 return pdf_response
+#             else:
+#                 return HttpResponse("Error generating PDF.", status=500)
+
+#         return render(request, self.template_name, context)
+
 class StudentReportCardView(LoginRequiredMixin, View):
     """
     Generates and displays a single student's report card for a specific term.
@@ -562,26 +669,21 @@ class StudentReportCardView(LoginRequiredMixin, View):
                 messages.error(request, "You are not authorized to view this report card.")
                 return redirect('student_dashboard' if hasattr(request.user, 'student') else 'home') 
 
-        # --- FIX: Updated code for ATTENDANCE and NEXT TERM ---
-        # Get all attendance records for the student in the given term
+        # --- ATTENDANCE and NEXT TERM ---
         student_attendance = Attendance.objects.filter(student=student, date__gte=term.start_date, date__lte=term.end_date)
         
-        # Calculate days present and absent using the `present` boolean field
         days_present = student_attendance.filter(present=True).count()
         days_absent = student_attendance.filter(present=False).count()
         
-        # Calculate total school days opened for the student's class during the term
         total_school_days = Attendance.objects.filter(
             student__current_class=student.current_class, 
             date__gte=term.start_date, 
             date__lte=term.end_date
         ).values('date').distinct().count()
 
-        # Get the next term's start date. Assumes terms are ordered by start_date.
         next_term = Term.objects.filter(start_date__gt=term.end_date).order_by('start_date').first()
         next_term_start_date = next_term.start_date if next_term else None
 
-        # Count total students in the student's class
         total_students_in_class = Student.objects.filter(current_class=student.current_class).count()
 
         # Fetch scores for the student in the selected term
@@ -611,10 +713,11 @@ class StudentReportCardView(LoginRequiredMixin, View):
                 total_scores_sum += current_total_score
                 subjects_with_scores_count += 1
 
+        # --- FIX: Pass raw numeric average, not a formatted string ---
         overall_average = None
         overall_remark = "No scores recorded for this term."
         if subjects_with_scores_count > 0:
-            overall_average = total_scores_sum / subjects_with_scores_count
+            overall_average = total_scores_sum / subjects_with_scores_count # Keep as a float!
             overall_remark = get_overall_remark(overall_average)
 
         motor_ability_score = MotorAbilityScore.objects.filter(student=student, term=term).first()
@@ -628,7 +731,8 @@ class StudentReportCardView(LoginRequiredMixin, View):
             'student': student,
             'term': term,
             'report_data': report_data,
-            'overall_average': f"{overall_average:.2f}" if overall_average is not None else 'N/A',
+            # Pass the raw number here (or None). The template will handle formatting for display.
+            'overall_average': overall_average, 
             'overall_remark': overall_remark,
             'motor_ability_score': motor_ability_score,
             'school_identity': school_identity,

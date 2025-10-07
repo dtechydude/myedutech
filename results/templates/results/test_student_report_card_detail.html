@@ -266,11 +266,6 @@
               </tr>
           </table>
         </div>
-        <!-- <div class="behavioral-summary">
-            <strong>Total Score:</strong> {{ motor_ability_score.total_score|default:"-" }} / {{ motor_ability_score.max_possible_score|default:"-" }} |
-            <strong>Average Score:</strong> {{ motor_ability_score.average_score|floatformat:2|default:"-" }}
-        </div> -->
-
         <h6 class="text-center mt-4">General Remarks</h6>
         <div class="comment-section my-4">
           <table class="w-100 remark-table" style="border-style: hidden;">
@@ -279,23 +274,37 @@
                 <td style="border-style: hidden; padding-right: 15px;">
                   <strong style="font-size:13px; color:#990000; text-decoration:underline;">Class Teacher's Remark:</strong> <br>
                   <span style="font-size:12px;">
-                    {% if overall_average > 79 %}Your dedication and commitment to learning are evident in your results. Keep it up and do better.
-                    {% elif overall_average > 70 %}You're doing well, but there's room for improvement in some areas. Work harder on the weak subjects.
-                    {% elif overall_average > 60 %}Good performance. You can do better next term, improve on the weak subjects.
-                    {% elif overall_average > 50 %}A significant effort is needed to bring your grades up to an acceptable level. You need to do more.
-                    {% elif overall_average > 39 %}Your performance falls significantly below expectations. Immediate action is required.
-                    {% else %}You have performed poorly and this result is not acceptable. You need to wake up from your weaknesses.{% endif %}
+                    {% if overall_average is not None and overall_average > 75 %}
+                      Your dedication and commitment to learning are evident in your **Outstanding** results. Keep it up!
+                    {% elif overall_average is not None and overall_average > 65 %}
+                      You've shown **Very Good** effort. Work harder to achieve the next level of excellence.
+                    {% elif overall_average is not None and overall_average > 55 %}
+                      **Good** academic progress this term. Please focus on improving your weaker subjects.
+                    {% elif overall_average is not None and overall_average > 45 %}
+                      **Fair** performance. A significant effort and more focus are needed next term.
+                    {% elif overall_average is not None and overall_average >= 0 %}
+                      **Below Average** performance. Immediate and focused action is required to bring your grades up.
+                    {% else %}
+                      No meaningful average available. See subject scores for details.
+                    {% endif %}
                   </span>
                 </td>
                 <td style="border-style: hidden;">
                   <strong style="font-size:13px; color:#990000; text-decoration:underline;">Principal's/Head Teacher's Remark:</strong> <br>
                   <span style="font-size:12px;">
-                    {% if overall_average > 79 %}Outstanding effort and achievement! Keep up the excellent work. Ensure to do more next term.
-                    {% elif overall_average > 70 %}Impressive work overall. Continue to strive for excellence. Your performance is quite encouraging.
-                    {% elif overall_average > 60 %}Meeting expectations in most areas. Keep working harder to improve. You can do better than this next term.
-                    {% elif overall_average > 50 %}Your performance has room for growth. Extra effort and attention are needed.
-                    {% elif overall_average > 39 %}Struggling in some areas. Focused effort is required for improvement.
-                    {% else %}Your performance is far below acceptable grade. You need to work hard to meet up.{% endif %}
+                    {% if overall_average is not None and overall_average > 75 %}
+                      Exceptional term! Continue your focused efforts to maintain this **Outstanding** academic level.
+                    {% elif overall_average is not None and overall_average > 65 %}
+                      A **Very Good** showing. We encourage you to seek out challenging opportunities next term.
+                    {% elif overall_average is not None and overall_average > 55 %}
+                      Satisfactory performance. Aim higher and strive for more **Good** results in all areas.
+                    {% elif overall_average is not None and overall_average > 45 %}
+                      Room for growth is evident. Your diligence is key to moving past this **Fair** average.
+                    {% elif overall_average is not None and overall_average >= 0 %}
+                      Performance is a concern. We require a meeting with your parents/guardians to discuss required support.
+                    {% else %}
+                      General performance data is unavailable.
+                    {% endif %}
                   </span>
                 </td>
               </tr>

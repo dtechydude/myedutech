@@ -52,6 +52,7 @@ class StudentAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_filter = ['current_class', 'student_status']
     search_fields = ('first_name', 'last_name', 'user__username', 'current_class__name', 'USN')
     raw_id_fields = ['user', 'form_teacher', 'badge', 'class_on_admission', 'hostel_name', 'parent',]
+    exclude = ['fee_balance']
 
     actions = ['assign_fees_to_students']
 
