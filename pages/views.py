@@ -327,6 +327,12 @@ def video_guides_view(request):
             'description': 'Exploring the student dashboard',
             'is_staff_only': False  # This video is for staff only
         },
+        {
+            'title': 'TEACHERS - The Teachers Dashboard 1',
+            'youtube_url': 'https://www.youtube.com/embed/HiRL_cLb8Z8',
+            'description': 'Exploring the teachers dashboard',
+            'is_staff_only': False  # This video is for staff only
+        },
        
     ]
 

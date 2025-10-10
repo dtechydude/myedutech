@@ -305,7 +305,7 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
                     )
                     initial_data.append({
                         'student_id': student.id,
-                        'student_name': student.first_name,
+                        'student_name': student.get_full_name(),
                         'score_id': score_instance.id,
                         'ca1': score_instance.ca1,
                         'ca2': score_instance.ca2,

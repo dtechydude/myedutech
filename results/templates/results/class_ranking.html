@@ -2,156 +2,268 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Class Ranking - {{ standard.name }} - {{ term.name }}</title>
-    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Class Ranking - {{ standard.name }} - {{ term.name }}</title>
+  <link rel="shortcut icon" href="{% static 'pages/images/favicon.png' %}" type="image/png" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjG6hW+ALEwIH" crossorigin="anonymous">
-    <style>
-        body {
-            background-color: #f8f9fa; /* Light background */
-        }
-        .header {
-            background-color: #ffffff;
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid #e0e0e0;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo {
-            font-size: 1.75rem;
-            font-weight: bold;
-            color: #007bff; /* Primary blue */
-            text-decoration: none;
-        }
-        .centered-container {
-            max-width: 900px;
-            margin: 3rem auto;
-        }
-        .card {
-            border: none;
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-            border-radius: 0.5rem;
-        }
-        .card-header-primary {
-            background-color: #007bff;
-            color: white;
-            border-bottom: none;
-            border-radius: 0.5rem 0.5rem 0 0;
-            padding: 1rem 1.5rem;
-            font-weight: bold;
-            font-size: 1.25rem;
-        }
-        .card-header-secondary {
-            background-color: #6c757d;
-            color: white;
-            border-bottom: none;
-            border-radius: 0.5rem 0.5rem 0 0;
-            padding: 0.75rem 1.5rem;
-            font-weight: bold;
-            font-size: 1.15rem;
-        }
-        .table thead th {
-            background-color: #e9ecef;
-            color: #495057;
-            padding: 1rem; /* Added padding to header cells */
-        }
-        .table tbody tr:hover {
-            background-color: #f1f1f1;
-        }
-        .table td {
-            padding: 0.75rem 1rem; /* Added padding to data cells */
-        }
-    </style>
+  <style>
+    :root {
+      --brand-blue: #0056b3;
+      --brand-orange: #ff8800;
+      --brand-red: #d9534f;
+      --light-bg: #f8f9fb;
+      --card-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.05);
+    }
+
+    body {
+      background-color: var(--light-bg);
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    .header {
+      background: #fff;
+      border-bottom: 2px solid var(--brand-blue);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .header img {
+      height: 55px;
+      object-fit: contain;
+    }
+
+    .btn-outline-primary {
+      color: var(--brand-blue);
+      border-color: var(--brand-blue);
+      font-weight: 500;
+    }
+
+    .btn-outline-primary:hover {
+      background-color: var(--brand-blue);
+      color: #fff;
+    }
+
+    /* MAIN CONTENT */
+    .main-container {
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      padding: 3rem 1rem;
+    }
+
+    .content-wrapper {
+      width: 100%;
+      max-width: 950px;
+    }
+
+    h1, h2 {
+      color: var(--brand-blue);
+      font-weight: 700;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      margin-top: 3rem;
+      margin-bottom: 1.25rem;
+    }
+
+    /* CARD */
+    .card {
+      border: none;
+      border-radius: 0.75rem;
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+    }
+
+    .card-header-primary {
+      background: linear-gradient(90deg, var(--brand-blue), var(--brand-orange));
+      color: #fff;
+      text-align: center;
+      font-weight: 600;
+      font-size: 1.2rem;
+      padding: 1rem 1.5rem;
+    }
+
+    .card-header-secondary {
+      background: linear-gradient(90deg, var(--brand-orange), var(--brand-red));
+      color: #fff;
+      border: none;
+      text-align: left;
+      padding: 0.9rem 1.5rem;
+      font-weight: 600;
+      font-size: 1.05rem;
+    }
+
+    .card-body {
+      padding: 1.75rem;
+      background-color: #fff;
+    }
+
+    /* TABLE */
+    .table {
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+
+    .table thead th {
+      background-color: #f0f4ff;
+      color: var(--brand-blue);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      padding: 1rem;
+    }
+
+    .table tbody tr:hover {
+      background-color: #fff8f0;
+      transition: 0.2s ease-in;
+    }
+
+    .table td, .table th {
+      padding: 0.85rem 1rem;
+      vertical-align: middle;
+    }
+
+    .fw-bold {
+      color: var(--brand-blue);
+    }
+
+    /* FOOTER */
+    .footer {
+      background-color: #fff;
+      border-top: 2px solid var(--brand-blue);
+      text-align: center;
+      padding: 1rem 0;
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+
+    .footer a {
+      color: var(--brand-orange);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .footer a:hover {
+      color: var(--brand-red);
+      text-decoration: underline;
+    }
+  </style>
 </head>
+
 <body>
-    <header class="header">
-        <a href="#" class="logo"><img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="" width="100" height="auto"></a>
-        <a href="{% url 'results:ranking_list' %}" class="btn btn-outline-primary">Back to Ranking List</a>
-    </header>
+  <header class="header">
+    <a href="#">
+      <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="KwikSchools Logo" />
+    </a>
+    <a href="{% url 'results:ranking_list' %}" class="btn btn-outline-primary">
+      <i class="fas fa-arrow-left me-2"></i> Back to Ranking List
+    </a>
+  </header>
 
-    <div class="centered-container">
-        <h1 class="text-center mb-4">Class Ranking</h1>
+  <main class="main-container">
+    <div class="content-wrapper">
+      <h1><i class="fas fa-trophy text-warning me-2"></i>Class Ranking</h1>
 
-        <div class="card shadow-sm mb-5">
-            <div class="card-header-primary text-center">
-                Ranking for {{ standard.name }} - {{ term.name }} - {{ term.session.name }} (Examination)
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover table-striped mb-0">
-                        <thead>
-                            <tr>
-                                <th scope="col" class="text-center">Position</th>
-                                <th scope="col">Student Name</th>
-                                <th scope="col" class="text-center">Overall Average (%)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for student_data in overall_ranking_data %}
-                            <tr>
-                                <td class="text-center fw-bold">{{ student_data.rank }}</td>
-                                <td>{{ student_data.student.user.get_full_name }}</td>
-                                <td class="text-center">
-                                    {% if student_data.overall_average > 0 %}
-                                        {{ student_data.overall_average|floatformat:2 }}%
-                                    {% else %}
-                                        N/A
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="3" class="text-center text-muted">No students with scores found for this class and term.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+      <div class="card mb-5">
+        <div class="card-header-primary">
+          Ranking for {{ standard.name }} - {{ term.name }} - {{ term.session.name }} (Examination)
         </div>
-
-        {% if subject_ranking_data %}
-        <h2 class="text-center mb-4">Subject Rankings</h2>
-        {% for subject_name, students_list in subject_ranking_data.items %}
-        <div class="card shadow-sm mb-4">
-            <div class="card-header-secondary">
-                {{ subject_name }} Ranking
-            </div>
-            <div class="card-body">
-                {% if students_list %}
-                <div class="table-responsive">
-                    <table class="table table-sm table-striped mb-0">
-                        <thead>
-                            <tr>
-                                <th scope="col" class="text-center">Position</th>
-                                <th scope="col">Student Name</th>
-                                <th scope="col" class="text-center">Score (%)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for student_score in students_list %}
-                            <tr>
-                                <td class="text-center fw-bold">{{ student_score.rank }}</td>
-                                <td>{{ student_score.student.user.get_full_name }}</td>
-                                <td class="text-center">{{ student_score.total_score }} %</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <p class="text-center text-muted mb-0">No scores found for this subject.</p>
-                {% endif %}
-            </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0 text-center align-middle">
+              <thead>
+                <tr>
+                  <th scope="col">Position</th>
+                  <th scope="col" class="text-start">Student Name</th>
+                  <th scope="col">Overall Average (%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for student_data in overall_ranking_data %}
+                <tr>
+                  <td class="fw-bold">{{ student_data.rank }}</td>
+                  <td class="text-start">{{ student_data.student.user.get_full_name }}</td>
+                  <td>
+                    {% if student_data.overall_average > 0 %}
+                      {{ student_data.overall_average|floatformat:2 }}%
+                    {% else %}
+                      N/A
+                    {% endif %}
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3" class="text-center text-muted">
+                    <i class="fa-solid fa-circle-exclamation text-danger me-2"></i>No students with scores found for this class and term.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
-        {% endfor %}
-        {% endif %}
+      </div>
+
+      {% if subject_ranking_data %}
+      <h2><i class="fas fa-book-open text-danger me-2"></i>Subject Rankings</h2>
+      {% for subject_name, students_list in subject_ranking_data.items %}
+      <div class="card mb-4">
+        <div class="card-header-secondary">
+          <i class="fas fa-book me-2"></i>{{ subject_name }} Ranking
+        </div>
+        <div class="card-body">
+          {% if students_list %}
+          <div class="table-responsive">
+            <table class="table table-sm table-striped mb-0 text-center align-middle">
+              <thead>
+                <tr>
+                  <th scope="col">Position</th>
+                  <th scope="col" class="text-start">Student Name</th>
+                  <th scope="col">Score (%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for student_score in students_list %}
+                <tr>
+                  <td class="fw-bold">{{ student_score.rank }}</td>
+                  <td class="text-start">{{ student_score.student.user.get_full_name }}</td>
+                  <td>{{ student_score.total_score }}%</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <p class="text-center text-muted mb-0">No scores found for this subject.</p>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+      {% endif %}
     </div>
+  </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <footer class="footer">
+    &copy; {% now "Y" %} All Rights Reserved.
+    <span class="d-none d-sm-inline"> | Powered by <a href="https://kwikschools.com" target="_blank">KwikSchools EdTech</a></span>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -2,172 +2,220 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Assigned Classes and Subjects</title>
-    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Assigned Classes & Subjects</title>
+  <link rel="shortcut icon" href="{% static 'pages/images/favicon.png' %}" type="image/png" />
+  
+  <!-- Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjG6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            background-color: #f8f9fa; /* Light background */
-            min-height: 100vh; /* Ensures body takes full viewport height */
-            display: flex;
-            flex-direction: column;
-        }
-        .main-content-wrapper {
-            flex-grow: 1; /* Pushes the footer down */
-        }
-        .header {
-            background-color: #ffffff;
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid #e0e0e0;
-            margin-bottom: 2rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo {
-            font-size: 1.75rem;
-            font-weight: bold;
-            color: #007bff; /* Primary blue */
-            text-decoration: none;
-        }
-        .centered-container {
-            max-width: 600px; /* Further reduced width */
-            margin-top: 3rem;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .card {
-            border: none;
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-            border-radius: 0.5rem;
-            margin-bottom: 2rem;
-        }
-        .card-header {
-            background-color: #007bff;
-            color: white;
-            border-bottom: none;
-            border-radius: 0.5rem 0.5rem 0 0;
-            padding: 1rem 1.5rem;
-            font-weight: bold;
-            font-size: 1.25rem;
-        }
-        .card-body {
-            padding: 1.5rem;
-            background-color: #fff;
-        }
-        .list-group-item {
-            border-left: none;
-            border-right: none;
-            padding: 0.75rem 1.5rem;
-            border-color: #e0e0e0;
-        }
-        .list-group-item:first-child {
-            border-top-left-radius: 0;
-            border-top-right-radius: 0;
-        }
-        .list-group-item:last-child {
-            border-bottom-left-radius: 0;
-            border-bottom-right-radius: 0;
-        }
-        .btn-secondary {
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        }
-        .text-muted {
-            color: #6c757d !important;
-        }
-        /* Footer Style */
-        .footer {
-            padding: 1rem 0;
-            background-color: #ffffff;
-            border-top: 1px solid #e9ecef;
-            margin-top: 3rem; /* Space above the footer */
-            width: 100%; /* Full width */
-        }
-        /* NEW: Footer content wrapper to match the max-width of the centered-container */
-        .footer-content {
-            max-width: 600px; 
-            margin-left: auto;
-            margin-right: auto;
-            text-align: center; /* Center the text inside this wrapper */
-            padding: 0 15px; /* Add slight padding for very small screens */
-        }
-    </style>
+  <style>
+    :root {
+      --brand-blue: #0056b3;     /* Deep blue for header and accents */
+      --brand-orange: #ff8800;   /* Vibrant orange for highlights */
+      --brand-red: #d9534f;      /* Muted red for attention/contrast */
+      --light-bg: #f8f9fb;
+      --card-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.05);
+    }
+
+    body {
+      background-color: var(--light-bg);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+    }
+
+    /* HEADER */
+    .header {
+      background: #fff;
+      border-bottom: 2px solid var(--brand-blue);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .header img {
+      height: 55px;
+      object-fit: contain;
+    }
+
+    .btn-outline-primary {
+      color: var(--brand-blue);
+      border-color: var(--brand-blue);
+    }
+
+    .btn-outline-primary:hover {
+      background-color: var(--brand-blue);
+      color: #fff;
+    }
+
+    /* MAIN CONTENT */
+    .main-content-wrapper {
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      padding: 3rem 1rem;
+    }
+
+    .content-container {
+      width: 100%;
+      max-width: 700px;
+    }
+
+    .page-title {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .page-title h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: var(--brand-blue);
+    }
+
+    .page-title p {
+      color: #6c757d;
+      margin-top: 0.5rem;
+    }
+
+    /* CARDS */
+    .card {
+      border: none;
+      border-radius: 0.75rem;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 2rem;
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.08);
+    }
+
+    .card-header {
+      background: linear-gradient(90deg, var(--brand-blue), var(--brand-orange));
+      color: #fff;
+      font-weight: 600;
+      font-size: 1.1rem;
+      border: none;
+      padding: 1rem 1.5rem;
+    }
+
+    .list-group-item {
+      padding: 0.9rem 1.5rem;
+      border-color: #f0f0f0;
+    }
+
+    .list-group-item:nth-child(odd) {
+      background-color: #fffdf9;
+    }
+
+    .list-group-item:hover {
+      background-color: #fff3e0;
+    }
+
+    .text-muted {
+      color: #888 !important;
+    }
+
+    /* FOOTER */
+    .footer {
+      background-color: #fff;
+      border-top: 2px solid var(--brand-blue);
+      text-align: center;
+      padding: 1rem 0;
+      font-size: 0.9rem;
+      color: #6c757d;
+      position: relative;
+    }
+
+    .footer a {
+      color: var(--brand-orange);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .footer a:hover {
+      color: var(--brand-red);
+      text-decoration: underline;
+    }
+  </style>
 </head>
+
 <body>
 
-    <header class="header">
-        <a href="#" class="logo">
-            <img src="{% static 'pages/images/kwikschool_logo.png' %}" width="100" height="auto" alt="">
-        </a>
-        
-        <a href="/dashboard" class="btn btn-outline-primary">
-            <i class="fas fa-arrow-left me-2"></i>Back To Dashboard
-        </a>
-    </header>
-    
-    <div class="main-content-wrapper">
-        <div class="centered-container">
-            <div class="text-center mb-4">
-                <h1 class="mb-2">
-                    Welcome, 
-                    {% if teacher.middle_name %}
-                        {{ teacher.get_full_name }}! 
-                    {% else %} 
-                        {{ teacher.last_name }} {{ teacher.first_name }}! 
-                    {% endif %}
-                </h1>
-                <p>Here are your assigned classes and subjects.</p>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-book me-2"></i> My Subjects
-                </div>
-                <div class="card-body">
-                    {% if teacher.subjects_taught.all %}
-                        <ul class="list-group list-group-flush">
-                        {% for subject in teacher.subjects_taught.all %}
-                            <li class="list-group-item">{{ subject.name }}</li>
-                        {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p class="card-text text-muted">You have no subjects assigned.</p>
-                    {% endif %}
-                </div>
-            </div>
+  <header class="header">
+    <a href="#">
+      <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="KwikSchools Logo" />
+    </a>
+    <a href="/dashboard" class="btn btn-outline-primary">
+      <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+    </a>
+  </header>
 
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-chalkboard-user me-2"></i> My Classes
-                </div>
-                <div class="card-body">
-                    {% if teacher.standards_assigned.all %}
-                        <ul class="list-group list-group-flush">
-                        {% for standard in teacher.standards_assigned.all %}
-                            <li class="list-group-item">{{ standard.name }}</li>
-                        {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p class="card-text text-muted">You have no classes assigned.</p>
-                    {% endif %}
-                </div>
-            </div>
+  <main class="main-content-wrapper">
+    <div class="content-container">
+      <div class="page-title">
+        <h1>
+          Welcome,
+          {% if teacher.middle_name %}
+            {{ teacher.get_full_name }}!
+          {% else %}
+            {{ teacher.last_name }} {{ teacher.first_name }}!
+          {% endif %}
+        </h1>
+        <p>Here are your assigned classes and subjects.</p>
+      </div>
+
+      <!-- Subjects Card -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-book me-2"></i> My Subjects
         </div>
+        <div class="card-body">
+          {% if teacher.subjects_taught.all %}
+            <ul class="list-group list-group-flush">
+              {% for subject in teacher.subjects_taught.all %}
+                <li class="list-group-item"><i class="fa-solid fa-circle text-danger me-2"></i>{{ subject.name }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted mb-0">You have no subjects assigned.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Classes Card -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-chalkboard-user me-2"></i> My Classes
+        </div>
+        <div class="card-body">
+          {% if teacher.standards_assigned.all %}
+            <ul class="list-group list-group-flush">
+              {% for standard in teacher.standards_assigned.all %}
+                <li class="list-group-item"><i class="fa-solid fa-square text-warning me-2"></i>{{ standard.name }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted mb-0">You have no classes assigned.</p>
+          {% endif %}
+        </div>
+      </div>
     </div>
+  </main>
 
-    <footer class="footer">
-        <div class="footer-content">
-            <span class="text-muted small">
-                &copy; {% now "Y" %} All Rights Reserved. 
-                <span class="d-none d-sm-inline">| Powered by <a href="https://kwikschools.com">KwikSchools EdTech</a></span>
-            </span>
-        </div>
-    </footer>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <footer class="footer">
+    &copy; {% now "Y" %} All Rights Reserved.
+    <span class="d-none d-sm-inline"> | Powered by <a href="https://kwikschools.com" target="_blank">KwikSchools EdTech</a></span>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
