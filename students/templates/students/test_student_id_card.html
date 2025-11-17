@@ -44,8 +44,13 @@
             width: 60px;
             height: 60px;
             border-radius: 50%;
-            border: 2px solid white;
+            border: 2px solid white; 
+            background-color: white; 
             margin-bottom: 5px;
+            /* === CORRECTION FOR AUTOFIT === */
+            object-fit: contain; 
+            padding: 5px; /* Optional: adds internal margin */
+            /* ============================== */
         }
         .header h5 {
             margin: 0;
@@ -158,21 +163,21 @@
         </div>
 
        <div class="profile-photo-container">
-    {% if student.user.profile.image %}
-   
-        <img src="{{ student.user.profile.image.url }}" alt="{{ student.get_full_name }}">
-    {% else %}
-        <img src="{% static 'images/default_profile.png' %}" alt="Default Profile">
-    {% endif %}
+     {% if student.user.profile.image %}
+    
+         <img src="{{ student.user.profile.image.url }}" alt="{{ student.get_full_name }}">
+     {% else %}
+         <img src="{% static 'images/default_profile.png' %}" alt="Default Profile">
+     {% endif %}
 </div>
-   <div class="details-section">
+    <div class="details-section">
     <h4 class="mb-1 text-primary">{{ student.get_full_name|upper }}</h4>
-    <p class="text-muted">{{ student.USN }}</p>
+    <p class="text-muted">Unique Std. No.(USN) - <strong>{{ student.USN }}</strong></p>
 
-   
+    
     <div class="badge-section">
-        <span>{{ student.current_class.name|default:"N/A" }}</span>
-    </div>   
+        <span>CLASS : "{{ student.current_class.name|default:"N/A" }}"</span>
+    </div> 	
 
     <div class="row text-center mt-3 mx-0">
         <div class="col-6 p-0">
@@ -188,27 +193,14 @@
                 <p>{{ student.DOB|date:"M d, Y"|default:"N/A" }}</p>
             </div>
         </div> {% comment %}
-        <!-- <div class="col-6 p-0">
-            <div class="detail-item">
-                <strong>Gender</strong>
-                <p>{{ student.gender|upper|default:"N/A" }}</p>
-            </div>
-        </div>
-        <div class="col-6 p-0">
-            <div class="detail-item">
-                <strong>Student Type</strong>
-                <span>{{ student.student_type|upper|default:"N/A" }}</span>
-            </div>
-        </div>
-    </div>     --> {% endcomment %}
+        {% endcomment %}
     {% comment %}
     <div class="qr-code-section text-center">
-        <!-- <strong>Scan for Details</strong> -->
         <div id="qrcode" class="mx-auto mt-2"> </div>
     </div> {% endcomment %}
 </div>
-  <div id="qrcode" class="mx-auto mt-2 "> </div>
-<div class="footer  ">  
+    <div id="qrcode" class="mx-auto mt-2 "> </div>
+<div class="footer 	"> 	
     <p>If found, please return to the school administration.</p>
 </div>
     <script>
