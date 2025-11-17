@@ -1,31 +1,89 @@
 from django import forms
 from curriculum.models import Term, Standard, Session# Import Standard
-from.models import MotorAbilityScore
+from.models import MotorAbilityScore, MidTermScore
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.forms import ValidationError
 
 
 
-#works well 001
+# #works well 001
+# class ScoreEntryForm(forms.Form):
+#     """Form for a single student's score entry."""
+#     student_id = forms.IntegerField(widget=forms.HiddenInput())
+#     student_name = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+#     score_id = forms.IntegerField(widget=forms.HiddenInput(), required=False) # To update existing scores
+
+#     ca1 = forms.DecimalField(
+#         max_digits=5, decimal_places=2, required=False,
+#         widget=forms.NumberInput(attrs={'placeholder': 'CA1', 'min': 0, 'max': 100})
+#     )
+#     ca2 = forms.DecimalField(
+#         max_digits=5, decimal_places=2, required=False,
+#         widget=forms.NumberInput(attrs={'placeholder': 'CA2', 'min': 0, 'max': 100})
+#     )
+#     ca3 = forms.DecimalField(
+#         max_digits=5, decimal_places=2, required=False,
+#         widget=forms.NumberInput(attrs={'placeholder': 'CA3', 'min': 0, 'max': 100})
+#     )
+#     exam_score = forms.DecimalField(
+#         max_digits=5, decimal_places=2, required=False,
+#         widget=forms.NumberInput(attrs={'placeholder': 'Exam', 'min': 0, 'max': 100})
+#     )
+
+#     def clean(self):
+#         cleaned_data = super().clean()
+#         ca1 = cleaned_data.get('ca1')
+#         ca2 = cleaned_data.get('ca2')
+#         ca3 = cleaned_data.get('ca3')
+#         exam_score = cleaned_data.get('exam_score')
+
+#         # Example validation: ensure scores are within a reasonable range (e.g., 0-100)
+#         # You can add more complex validation based on your school's grading system
+#         if ca1 is not None and (ca1 < 0 or ca1 > 100):
+#             self.add_error('ca1', "CA1 score must be between 0 and 100.")
+#         if ca2 is not None and (ca2 < 0 or ca2 > 100):
+#             self.add_error('ca2', "CA2 score must be between 0 and 100.")
+#         if ca3 is not None and (ca3 < 0 or ca3 > 100):
+#             self.add_error('ca3', "CA3 score must be between 0 and 100.")
+#         if exam_score is not None and (exam_score < 0 or exam_score > 100):
+#             self.add_error('exam_score', "Exam score must be between 0 and 100.")
+       
+#         return cleaned_data
+
+# New Correction 002
 class ScoreEntryForm(forms.Form):
-    """Form for a single student's score entry."""
+    """
+    Form for a single student's score entry, aligned with Score model constraints:
+    CA fields max 40, Exam field max 60.
+    """
     student_id = forms.IntegerField(widget=forms.HiddenInput())
-    student_name = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'readonly': 'readonly'}))
-    score_id = forms.IntegerField(widget=forms.HiddenInput(), required=False) # To update existing scores
+    # Note: Using TextInput(attrs={'readonly': 'readonly'}) is fine for display
+    student_name = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'readonly': 'readonly'})) 
+    score_id = forms.IntegerField(widget=forms.HiddenInput(), required=False) 
 
+    # CA fields should have a MAX of 40 (based on your model definition)
     ca1 = forms.DecimalField(
         max_digits=5, decimal_places=2, required=False,
-        widget=forms.NumberInput(attrs={'placeholder': 'CA1', 'min': 0, 'max': 100})
+        widget=forms.NumberInput(attrs={'placeholder': 'CA1 (Max 40)', 'min': 0, 'max': 40}),
+        # Use explicit validators for robust form-level checking
+        validators=[MinValueValidator(0), MaxValueValidator(40)] 
     )
     ca2 = forms.DecimalField(
         max_digits=5, decimal_places=2, required=False,
-        widget=forms.NumberInput(attrs={'placeholder': 'CA2', 'min': 0, 'max': 100})
+        widget=forms.NumberInput(attrs={'placeholder': 'CA2 (Max 40)', 'min': 0, 'max': 40}),
+        validators=[MinValueValidator(0), MaxValueValidator(40)] 
     )
     ca3 = forms.DecimalField(
         max_digits=5, decimal_places=2, required=False,
-        widget=forms.NumberInput(attrs={'placeholder': 'CA3', 'min': 0, 'max': 100})
+        widget=forms.NumberInput(attrs={'placeholder': 'CA3 (Max 40)', 'min': 0, 'max': 40}),
+        validators=[MinValueValidator(0), MaxValueValidator(40)] 
     )
+    
+    # Exam score should have a MAX of 60 (based on your model definition)
     exam_score = forms.DecimalField(
         max_digits=5, decimal_places=2, required=False,
-        widget=forms.NumberInput(attrs={'placeholder': 'Exam', 'min': 0, 'max': 100})
+        widget=forms.NumberInput(attrs={'placeholder': 'Exam (Max 60)', 'min': 0, 'max': 60}),
+        validators=[MinValueValidator(0), MaxValueValidator(60)] 
     )
 
     def clean(self):
@@ -33,19 +91,17 @@ class ScoreEntryForm(forms.Form):
         ca1 = cleaned_data.get('ca1')
         ca2 = cleaned_data.get('ca2')
         ca3 = cleaned_data.get('ca3')
-        exam_score = cleaned_data.get('exam_score')
+        # exam_score = cleaned_data.get('exam_score') # Not needed for total CA check
 
-        # Example validation: ensure scores are within a reasonable range (e.g., 0-100)
-        # You can add more complex validation based on your school's grading system
-        if ca1 is not None and (ca1 < 0 or ca1 > 100):
-            self.add_error('ca1', "CA1 score must be between 0 and 100.")
-        if ca2 is not None and (ca2 < 0 or ca2 > 100):
-            self.add_error('ca2', "CA2 score must be between 0 and 100.")
-        if ca3 is not None and (ca3 < 0 or ca3 > 100):
-            self.add_error('ca3', "CA3 score must be between 0 and 100.")
-        if exam_score is not None and (exam_score < 0 or exam_score > 100):
-            self.add_error('exam_score', "Exam score must be between 0 and 100.")
-       
+        # --- CRITICAL: Total CA Validation (Max 40) ---
+        # This mirrors the logic from your Score model's clean method to catch errors early.
+        total_ca = (ca1 or 0) + (ca2 or 0) + (ca3 or 0)
+        
+        if total_ca > 40:
+            # Adding a general form error to capture the combined validation failure
+            # This will display at the top of the formset.
+            raise ValidationError('The combined total of CA scores (CA1 + CA2 + CA3) cannot exceed 40 for any student.')
+            
         return cleaned_data
 
 
@@ -128,3 +184,16 @@ class MotorAbilityScoreForm(forms.ModelForm):
                 'class': 'form-control', # For Bootstrap styling
                 'placeholder': '1-5'
             })
+
+
+# MID TERM ENTRY FORM
+class MidTermScoreForm(forms.ModelForm):
+    """
+    Form for entering a single MidTermScore (out of 100).
+    """
+    class Meta:
+        model = MidTermScore
+        fields = ['exam_total_score']
+        widgets = {
+            'exam_total_score': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100', 'placeholder': 'Score (0-100)'}),
+        }

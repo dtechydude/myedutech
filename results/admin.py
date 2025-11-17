@@ -1,7 +1,7 @@
 from doctest import Example
 from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
-from results.models import Examination, Score, MotorAbilityScore
+from results.models import Examination, Score, MotorAbilityScore, MidTermScore
 from curriculum.models import Term
 
 
@@ -97,7 +97,36 @@ class TermAdmin(admin.ModelAdmin):
     # # inlines = [MotorAbilityScoreInline, ScoreInline]
 
 
+@admin.register(MidTermScore)
+class MidTermScoreAdmin(admin.ModelAdmin):
+    # ... other admin settings ...
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser or request.user.is_staff:
+            return qs
+        
+        # Filter for teachers: only allow editing scores for their classes/subjects
+        if hasattr(request.user, 'teacher'):
+            teacher = request.user.teacher
+            return qs.filter(
+                student__current_class=teacher.class_assigned,
+                subject__in=teacher.subjects_taught.all()
+            )
+        return qs.none() # Hide scores if not staff/teacher
+    
+    def has_change_permission(self, request, obj=None):
+        if request.user.is_superuser or request.user.is_staff:
+            return True
+        
+        if obj is not None and hasattr(request.user, 'teacher'):
+            teacher = request.user.teacher
+            # Allow change if the teacher teaches this subject AND this class
+            return (obj.subject in teacher.subjects_taught.all() and 
+                    obj.student.current_class == teacher.class_assigned)
+        return False
+        
+    # Apply similar logic to has_add_permission and has_delete_permission
 
 
 

@@ -25,7 +25,7 @@
     .header-section {
       text-align: center;
       padding: 10px;
-     
+      
     }
     .header-section img {
       width: 80px;
@@ -75,7 +75,7 @@
         font-size: 20px !important;
         font-weight: bold;
         letter-spacing: 1.5px;
-       
+        
     }
     /* Styles for compact grading keys */
     .grading-keys-table {
@@ -142,8 +142,8 @@
     <div class="no-print">
       {% comment %}
         <a href="{% url 'results:student_report_card_detail' student.id term.id %}?download=pdf"
-           target="_blank"
-           class="btn btn-primary btn-lg">
+            target="_blank"
+            class="btn btn-primary btn-lg">
             Download Termly Report as PDF
         </a>
         {% endcomment %}
@@ -154,19 +154,19 @@
 
     <div class="report-card-wrapper">
       <div class="header-section">
-         {% if school_identity.logo %}
+          {% if school_identity.logo %}
         <img src="{{ school_identity.logo.url }}" alt="School Logo" style="width: 100px; height: auto;"> 
       {% else %}
         <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo">
       {% endif %}
         <br>       
-       <p>
+        <p>
         <span style="font-size: 18px;">{% if school_identity.name %}<strong>{{ school_identity.name }}</strong> {% else %}St. George's School{% endif %}</span><br>
       <span style="font-size: 11px;">
           {% if school_identity.address_line_1 %}{{ school_identity.address_line_1 }}{% else %}123 School Lane{% endif %}
           {% if school_identity.address_line_2 %}{{ school_identity.address_line_2 }}{% endif %} <br>
           {% if school_identity.phone1 %}<strong>PHONE: </strong>{{ school_identity.phone1 }}{% endif %} </span>
-          </p>      
+          </p>       
       </div> 
       <div class="p-3">
         <h4 class="text-center report-heading">
@@ -233,7 +233,23 @@
         </div>
         
         <div class="summary-section text-center my-3">
-          <p><strong>Overall Average Score:</strong> <span style="color: #0056b3; font-size: 16px;">{{ overall_average|floatformat:2 }}%</span></p>
+            <p>
+                <strong>Overall Average Score:</strong> 
+                <span style="color: #0056b3; font-size: 16px; margin-right: 30px;">
+                    {% if overall_average is not None %}
+                        {{ overall_average|floatformat:2 }}%
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </span>
+                
+                {% comment %} --- NEW RANKING DISPLAY --- {% endcomment %}
+                <strong>POSITION IN CLASS:</strong>
+                <span style="color: #990000; font-size: 16px;">
+                    {{ student_position_display }}
+                </span>
+                {% comment %} --- END NEW RANKING DISPLAY --- {% endcomment %}
+            </p>
         </div>
 
         <h6 class="text-center mt-3">Motor Ability & Behavioral Traits (Score out of 5)</h6>
@@ -259,7 +275,7 @@
               <span style="color: green;">Physical Education: </span><strong><span style="font-size:10px; color:#990000;">{{ motor_ability_score.physical_education|default:"-" }} </span>,</strong>
               <span style="color: green;">Games: </span><strong><span style="font-size:10px; color:#990000;">{{ motor_ability_score.games|default:"-" }} </span>,</strong>
               
-            </td>
+              </td>
               
             </tr>
             <tr>
@@ -356,24 +372,7 @@
       </div>
     </div>
     
-    <!-- <div class="text-center mt-5 back-link no-print">
-        <a href="{% url 'results:report_card_list' %}{% if term %}/?term={{ term.id }}{% endif %}{% if student.current_class %}&standard={{ student.current_class.id }}{% endif %}" class="btn btn-secondary btn-lg">
-            Back to Student List
-        </a>
-    </div> -->
-<!-- 
-    <div class="text-center mt-5 back-link no-print">
-    <a href="{% url 'results:report_card_list' %}{% if term %}?term={{ term.id }}{% if student.current_class %}&standard={{ student.current_class.id }}{% endif %}{% elif student.current_class %}?standard={{ student.current_class.id }}{% endif %}" class="btn btn-secondary btn-lg">
-        Back to Student List
-    </a>
-</div>
-    <div class="mt-4 text-center">
-            <a href="{% url 'results:motor_ability_score_create_update' student.id term.id %}" class="btn btn-primary">
-                <i class="bi bi-pencil-square"></i> Record Motor Ability Scores
-            </a>
-        </div> -->
-
-<div class="d-flex justify-content-center mt-5 no-print">
+    <div class="d-flex justify-content-center mt-5 no-print">
     {% if user.teacher or user.is_superuser or user.is_staff %}
     <a href="{% url 'results:report_card_list' %}{% if term %}?term={{ term.id }}{% if student.current_class %}&standard={{ student.current_class.id }}{% endif %}{% elif student.current_class %}?standard={{ student.current_class.id }}{% endif %}" class="btn btn-secondary btn-lg me-4">
         Back to Student List
@@ -382,11 +381,11 @@
     <a href="{% url 'results:motor_ability_score_create_update' student.id term.id %}" class="btn btn-success btn-lg me-4">
         <i class="bi bi-pencil-square"></i> Record Motor Ability Scores
     </a>
-     {% elif user.student %}
+      {% elif user.student %}
       <a href="{% url 'results:student_dashboard' %}" class="btn btn-secondary btn-lg">Back to Dashboard</a>
     {% else %}
       <a href="{% url '/dashboard' %}" class="btn btn-secondary btn-lg">Back to Home</a>
-   
+    
     {% endif %}
 </div>
 
