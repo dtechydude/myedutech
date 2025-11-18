@@ -268,6 +268,7 @@ class ResultPublication(models.Model):
     class Meta:
         unique_together = ('student', 'term')
         verbose_name = "Result Publication Status"
+        verbose_name_plural = 'Result Publication Status'
         
     def __str__(self):
         status = 'ALLOWED' if self.is_published else 'BLOCKED'
