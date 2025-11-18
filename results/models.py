@@ -258,6 +258,22 @@ class MotorAbilityScore(models.Model):
         return sum(all_scores) / len(all_scores) if all_scores else 0
     
 
+# Result Publication Model
+class ResultPublication(models.Model):
+    """Admin-controlled permission to view a specific student's report for a term."""
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    term = models.ForeignKey(Term, on_delete=models.CASCADE)
+    is_published = models.BooleanField(default=False, verbose_name="Permission Granted to View Report")
+    
+    class Meta:
+        unique_together = ('student', 'term')
+        verbose_name = "Result Publication Status"
+        
+    def __str__(self):
+        status = 'ALLOWED' if self.is_published else 'BLOCKED'
+        return f"{self.student.get_full_name()} ({self.term.name}): {status}"
+
+
 
 # MID TERM Results
 class MidTermScore(models.Model):

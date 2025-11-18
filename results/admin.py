@@ -1,7 +1,7 @@
 from doctest import Example
 from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
-from results.models import Examination, Score, MotorAbilityScore, MidTermScore
+from results.models import Examination, Score, MotorAbilityScore, MidTermScore, ResultPublication
 from curriculum.models import Term
 
 
@@ -31,7 +31,7 @@ class ScoreAdmin(admin.ModelAdmin):
     list_display=('student', 'subject', 'term', 'ca1', 'ca2', 'exam_score', 'total_score')
     search_fields = ('student__USN', 'subject__name')
     raw_id_fields = ['student', 'subject', 'term']
-    list_filter  = ['term']
+    list_filter  = ['term', 'student__current_class']
 
 
 
@@ -96,7 +96,36 @@ class TermAdmin(admin.ModelAdmin):
     # # To add multiple inlines:
     # # inlines = [MotorAbilityScoreInline, ScoreInline]
 
+# Result Publication Logic
+@admin.register(ResultPublication)
+class ResultPublicationAdmin(admin.ModelAdmin):
+    # The actions list enables the bulk actions dropdown
+    # We rename the actions to be clearer for the Admin
+    actions = ['publish_reports', 'block_reports'] 
+    
+    list_display = ('student', 'term', 'is_published')
+    search_fields = ('student__USN', 'student__user__first_name', 'term__name')
+    list_filter = ('term', 'is_published', 'student__current_class')
+    raw_id_fields = ('student', 'term')
 
+    # --- BULK ACTION 1: PUBLISH (Allow Viewing) ---
+    def publish_reports(self, request, queryset):
+        # Action to allow viewing for selected records
+        updated_count = queryset.update(is_published=True)
+        self.message_user(request, f"{updated_count} selected reports have been set to PUBLISHED (Students can view).", level='success')
+    publish_reports.short_description = "✅ Publish selected reports (Allow Student Viewing)"
+
+    # --- BULK ACTION 2: BLOCK (Unpublish/Restrict Viewing) ---
+    def block_reports(self, request, queryset):
+        # Action to block viewing for selected records (e.g., for fees)
+        updated_count = queryset.update(is_published=False)
+        self.message_user(request, f"{updated_count} selected reports have been set to BLOCKED (Students cannot view).", level='warning')
+    block_reports.short_description = "❌ Block selected reports (Restrict Student Viewing)"
+
+    
+
+
+# Mid Term Admin Logic
 @admin.register(MidTermScore)
 class MidTermScoreAdmin(admin.ModelAdmin):
     # ... other admin settings ...

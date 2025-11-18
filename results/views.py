@@ -15,7 +15,7 @@ from django.views import View
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.forms import formset_factory, modelformset_factory
-from .models import Score, MotorAbilityScore, MidTermScore
+from .models import Score, MotorAbilityScore, MidTermScore, ResultPublication
 from .forms import ScoreEntryForm, ReportCardFilterForm, SessionReportCardFilterForm, MotorAbilityScoreForm, MidTermScoreForm # Import new form
 from .utils import get_grade, get_subject_remark, get_overall_remark # Import helper functions
 from django.template.loader import render_to_string # Import render_to_string
@@ -479,7 +479,7 @@ class TeacherRequiredMixin(UserPassesTestMixin):
 #         return render(request, self.template_name, context)
 
 
-# New adjustment
+# New adjustment 002
 class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
     template_name = 'results/score_entry.html'
 
@@ -1824,6 +1824,54 @@ def parent_session_report_card_detail(request, student_id, session_id):
     return render(request, 'results/parent_session_report_card.html', context)
 
 
+# Result Publication View
+class ResultPermissionGatekeeperView(View):
+    """
+    Acts as a gatekeeper to StudentReportCardView, checking the Admin-set
+    ResultPublication permission for a specific student and term.
+    """
+    
+    def get(self, request, student_id, term_id, *args, **kwargs):
+        # 1. Bypass Check for Admins/Teachers
+        # Admins or teachers should always see the result to do their job.
+        if hasattr(request.user, 'teacher') or request.user.is_superuser:
+            # Pass the request directly to the original view
+            return StudentReportCardView.as_view()(request, student_id, term_id, *args, **kwargs)
+
+        # 2. Student Authorization Check
+        # Ensure only the actual student (if logged in) can proceed
+        is_correct_student = hasattr(request.user, 'student') and request.user.student.id == student_id
+        
+        if is_correct_student:
+            try:
+                # 3. Check Admin Publication Status
+                publication_status = ResultPublication.objects.get(
+                    student_id=student_id, 
+                    term_id=term_id
+                )
+                
+                if publication_status.is_published:
+                    # Permission granted by Admin
+                    return StudentReportCardView.as_view()(request, student_id, term_id, *args, **kwargs)
+                else:
+                    # Permission denied by Admin
+                    messages.error(request, "Your report card viewing access has been temporarily restricted by the administration.")
+                    return redirect('results:student_dashboard') # Redirect to student's safe page
+
+            except ResultPublication.DoesNotExist:
+                # If the Admin hasn't explicitly created the record, default to restricted access
+                messages.error(request, "Access to this report card is pending administrative review.")
+                return redirect('resuults:student_dashboard')
+        
+        # 4. Fallback for unauthorized users
+        messages.error(request, "You are not authorized to view this report card.")
+        return redirect('pages:portal-home')
+
+
+
+
+
+
 # MID-TERM RESULTS VIEW
 
 class MidTermScoreEntryView(LoginRequiredMixin, View):
@@ -1941,6 +1989,9 @@ class MidTermScoreEntryView(LoginRequiredMixin, View):
         messages.error(request, "There was an error in the score entry. Please check the scores entered.")
         return render(request, self.template_name, context)
     
+
+
+
 
 class MidTermReportCardView(LoginRequiredMixin, View):
     """
