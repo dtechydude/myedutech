@@ -128,34 +128,63 @@ class ResultPublicationAdmin(admin.ModelAdmin):
 # Mid Term Admin Logic
 @admin.register(MidTermScore)
 class MidTermScoreAdmin(admin.ModelAdmin):
-    # ... other admin settings ...
+    list_display = ('student', 'subject', 'term', 'exam_total_score', 'student_class')
+    search_fields = ('student__USN', 'student__user__first_name', 'subject__name')
+    # Allows filtering by term, subject, and the student's current class
+    list_filter = ('term', 'subject', 'student__current_class') 
+    raw_id_fields = ('student', 'subject', 'term')
+    
+    # Custom method to display student's current class in the admin list
+    def student_class(self, obj):
+        # Assumes obj.student.current_class exists and has a 'name' attribute
+        return obj.student.current_class.name
+    student_class.short_description = 'Class'
 
+    # --- 1. Limit QuerySet (What records a user sees in the list) ---
     def get_queryset(self, request):
         qs = super().get_queryset(request)
+        
+        # Superuser and Staff see everything
         if request.user.is_superuser or request.user.is_staff:
             return qs
         
         # Filter for teachers: only allow editing scores for their classes/subjects
         if hasattr(request.user, 'teacher'):
             teacher = request.user.teacher
+            # Returns scores where the student is in the teacher's assigned class 
+            # AND the score's subject is one the teacher teaches
             return qs.filter(
                 student__current_class=teacher.class_assigned,
                 subject__in=teacher.subjects_taught.all()
             )
-        return qs.none() # Hide scores if not staff/teacher
+        # Hide scores if not staff/teacher
+        return qs.none() 
     
+    # --- 2. Limit Change Permission (What records a user can modify) ---
     def has_change_permission(self, request, obj=None):
+        # Superuser and Staff can change anything
         if request.user.is_superuser or request.user.is_staff:
             return True
         
+        # For teachers, check if they are authorized to modify this specific score object (obj)
         if obj is not None and hasattr(request.user, 'teacher'):
             teacher = request.user.teacher
-            # Allow change if the teacher teaches this subject AND this class
+            # Allow change if the teacher teaches this subject AND the student belongs to their class
             return (obj.subject in teacher.subjects_taught.all() and 
                     obj.student.current_class == teacher.class_assigned)
+        
+        # Block change permission if not an admin/staff or an authorized teacher
         return False
         
-    # Apply similar logic to has_add_permission and has_delete_permission
+    # --- 3. Optional: Block Add/Delete for Teachers ---
+    # Teachers should generally use the dedicated front-end entry view (MidTermScoreEntryView).
+    def has_add_permission(self, request):
+        # Only allow staff/superusers to add new records manually via admin
+        return request.user.is_staff or request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        # Only allow staff/superusers to delete records
+        return request.user.is_staff or request.user.is_superuser
 
 
 

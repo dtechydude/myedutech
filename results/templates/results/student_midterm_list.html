@@ -1,0 +1,245 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mid-Term Results List | {{ school_info.name|default:"Portal" }}</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <style>
+        body {
+            background-color: #f4f6f9; /* Lighter background */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .main-content {
+            flex: 1; /* Main content takes up available space */
+            padding-bottom: 70px; /* Space for fixed footer */
+        }
+        .container {
+            max-width: 1000px;
+        }
+        .header-section {
+            padding: 20px 0;
+            border-bottom: 3px solid #007bff; /* Primary color separator */
+            margin-bottom: 25px;
+        }
+        .header-title {
+            color: #343a40;
+            font-weight: 600;
+        }
+        .school-info {
+            font-size: 1.1rem;
+            color: #6c757d;
+        }
+        
+        /* --- Student Card Styles --- */
+        .card {
+            border-left: 5px solid #1abc9c; /* Success color highlight */
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.12) !important;
+        }
+        
+        /* --- Teacher Table Styles --- */
+        .table thead th {
+            background-color: #007bff; /* Primary color header */
+            color: white;
+            font-weight: 500;
+        }
+        .table tbody tr {
+            vertical-align: middle;
+            background-color: white;
+            transition: background-color 0.15s;
+        }
+        .table tbody tr:hover {
+            background-color: #f0f8ff; /* Subtle hover effect */
+        }
+        .btn-info {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        
+        /* --- Footer Styles --- */
+        .footer {
+            background-color: #343a40;
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+            width: 100%;
+            margin-top: auto; /* Push footer to the bottom */
+        }
+        
+        /* Ensure table is scrollable on small screens (Bootstrap utility) */
+        .table-responsive {
+            margin-bottom: 20px;
+        }
+        
+    </style>
+</head>
+<body>
+
+<div class="main-content">
+    <div class="container mt-5">
+        
+        {# --- HEADER SECTION: School Name & Dashboard Button --- #}
+        <div class="header-section d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="header-title mb-1">Mid-Term Reports</h1>
+                <p class="school-info">{{ school_info.name|default:"School Management Portal" }}</p>
+            </div>
+            <a href="/dashboard" class="btn btn-secondary btn-lg shadow-sm">
+                <i class="fas fa-tachometer-alt mr-2"></i> Back to Dashboard
+            </a>
+        </div>
+        
+        
+        {# --- TEACHER VIEW START (WITH PAGINATION) --- #}
+        {% if current_user_type == 'teacher' %}
+        
+        <h3 class="mb-4 text-primary">Reports for {{ assigned_class.name }} Students</h3>
+        <p class="text-muted mb-4">Viewing Page {{ page_obj.number|default:'1' }} of {{ page_obj.paginator.num_pages|default:'1' }}.</p>
+
+        {# Use page_obj.object_list if available, otherwise fallback to available_reports #}
+        {% with reports_to_display=page_obj.object_list|default:available_reports %}
+            {% if reports_to_display %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead">
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Academic Session</th>
+                            <th>Term</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in reports_to_display %}
+                        <tr>
+                            <td class="text-left"><i class="fas fa-user-graduate text-primary mr-2"></i>{{ report.student_name }}</td>
+                            <td class="text-center">{{ report.session_name }}</td>
+                            <td class="text-center">{{ report.term_name }}</td>
+                            <td class="text-center">
+                                <a href="{% url 'results:midterm_report_card_detail' student_id=report.student_id term_id=report.term_id %}" 
+                                   class="btn btn-sm btn-info shadow-sm">
+                                    <i class="fas fa-eye"></i> View Report
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {# --- Pagination Controls --- #}
+            {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&laquo;</span>
+                        </li>
+                    {% endif %}
+
+                    {% for i in page_obj.paginator.page_range %}
+                        <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                        </li>
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&raquo;</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {# --- End Pagination Controls --- #}
+
+
+            {% else %}
+            <div class="alert alert-warning text-center border-warning" role="alert">
+                <h4 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> No Reports Found</h4>
+                <p>No mid-term reports found for your assigned class ({{ assigned_class.name }}).</p>
+            </div>
+            {% endif %}
+        {% endwith %}
+        {# --- TEACHER VIEW END --- #}
+        
+        
+        {% else %}
+        
+        {# --- STUDENT VIEW START (Using cards, usually doesn't need pagination) --- #}
+        <h3 class="mb-4 text-primary">Reports Available for {{ student.get_full_name }}</h3>
+        
+        <div class="row">
+            {% if available_reports %}
+                {% for report in available_reports %}
+                <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
+                    <div class="card shadow">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">
+                                <i class="fas fa-book-open mr-2"></i> {{ report.term_name }}
+                            </h5>
+                            <p class="card-text text-muted">Session: {{ report.session_name }}</p>
+                            
+                            {# Student link uses the logged-in student's ID and the report's term ID #}
+                            <a href="{% url 'results:midterm_report_card_detail' student_id=student.id term_id=report.term_id %}" 
+                                class="btn btn-sm btn-outline-success mt-2">
+                                <i class="fas fa-file-alt"></i> View Report Card
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info text-center border-info" role="alert">
+                        <h4 class="alert-heading"><i class="fas fa-info-circle"></i> No Reports Found</h4>
+                        <p>There are no mid-term reports currently available for your account.</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        {# --- STUDENT VIEW END --- #}
+        
+        {% endif %}
+
+    </div>
+</div>
+
+{# --- FOOTER SECTION --- #}
+<footer class="footer">
+    <div class="container">
+        <p class="mb-0">&copy; {% now "Y" %} -  <a href="https://kwikschools.com">KwikSchools EdTech</a>  All Rights Reserved.</p>
+    </div>
+</footer>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+</body>
+</html>

@@ -54,7 +54,7 @@ INSTALLED_APPS = [
 
 
     # Installed Apps
-    'django_ckeditor_5',
+     'django_ckeditor_5',
     'storages',
     'crispy_forms',
     'crispy_bootstrap4',

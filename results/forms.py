@@ -191,9 +191,38 @@ class MidTermScoreForm(forms.ModelForm):
     """
     Form for entering a single MidTermScore (out of 100).
     """
+    
+    # Ensure the field is not required at the form level to allow empty submission
+    exam_total_score = forms.DecimalField(
+        required=False,
+        max_digits=5, # Adjust based on your model, using DecimalField for 0.01 step
+        decimal_places=2,
+    )
+
     class Meta:
         model = MidTermScore
         fields = ['exam_total_score']
         widgets = {
-            'exam_total_score': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100', 'placeholder': 'Score (0-100)'}),
+            'exam_total_score': forms.NumberInput(attrs={
+                'class': 'form-control form-control-score mx-auto', 
+                'step': '0.01', 
+                'min': '0', 
+                'max': '100', 
+                'placeholder': 'Score (0-100)'
+            }),
         }
+
+    # --- CRITICAL FIX ---
+    def clean_exam_total_score(self):
+        """
+        Ensures that an empty input is explicitly returned as None (NULL),
+        preventing Django from setting it to 0.
+        """
+        score = self.cleaned_data.get('exam_total_score')
+        
+        # If score is None (empty input), return None.
+        if score is None:
+            return None
+        
+        # Otherwise, return the validated score.
+        return score

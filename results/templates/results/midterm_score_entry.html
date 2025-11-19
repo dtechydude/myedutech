@@ -1,0 +1,148 @@
+{% load static %}
+{% load crispy_forms_filters %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Score Entry: {{ subject.name }}</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <style>
+        body {
+            background-color: #f4f6f9;
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .content-wrap {
+            padding: 30px 15px;
+            flex-grow: 1;
+        }
+        .score-entry-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+        }
+        .form-header {
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+        }
+        .table thead th {
+            background-color: #007bff;
+            color: white;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+        .table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .form-control-score {
+            max-width: 120px;
+            text-align: center; /* Center the input text */
+        }
+        footer {
+            background-color: #343a44;
+            color: #ccc;
+            padding: 15px 0;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="content-wrap">
+    <div class="score-entry-container">
+        
+        {# --- Top Action Bar: Back Button --- #}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="{% url 'results:midterm_score_selection' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Selection
+            </a>
+            <p class="text-muted mb-0 small">Logged in as: {{ request.user.get_full_name }}</p>
+        </div>
+
+        {# --- Form Header --- #}
+        <div class="form-header text-center">
+            {% if school_info %}
+                <h1 class="h4 text-primary font-weight-bold">{{ school_info.name|default:"School Management System" }}</h1>
+            {% else %}
+                <h1 class="h4 text-primary font-weight-bold">Score Entry Portal</h1>
+            {% endif %}
+            
+            <h2 class="h5 mt-2">Mid-Term Score Entry: **{{ subject.name }}** - **{{ assigned_class.name }}** (**{{ term.name }}**)</h2>
+        </div>
+
+        {# --- Score Entry Form --- #}
+        <form method="post">
+            {% csrf_token %}
+            
+            {{ formset.management_form }}
+            
+            {% if formset.non_form_errors %}
+                <div class="alert alert-danger mt-3" role="alert">
+                    <h5>Form Errors:</h5>
+                    {{ formset.non_form_errors }}
+                </div>
+            {% endif %}
+
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th class="w-25">Student Name</th>
+                            <th class="w-20">Admission No.</th>
+                            <th class="w-35 text-center">Mid-Term Score (0-100)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for form in formset %}
+                            {# Attach the student object to the form instance for easy access #}
+                            {% with student=form.instance.student %}
+                                <tr class="{% if form.errors %}table-danger{% endif %}">
+                                    <td>{{ student.get_full_name }}</td>
+                                    <td>{{ student.USN }}</td>
+                                    <td class="text-center">
+                                        {# Hidden fields (IDs) #}
+                                        {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                                        
+                                        {# Apply Bootstrap classes using the loaded filter #}
+                                        {{ form.exam_total_score }}                                        
+                                        {% if form.exam_total_score.errors %}
+                                            <div class="text-danger small mt-1">{{ form.exam_total_score.errors }}</div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endwith %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-center mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-save"></i> Save All Scores
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# --- Footer Section (Optional, adjust as per your base template or project structure) --- #}
+<footer class="text-center">
+    &copy; {% now "Y" %} <a href="https://kwikschools.com">KwikSchools EdTech</a> | All Rights Reserved.
+</footer>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

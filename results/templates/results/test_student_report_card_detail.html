@@ -232,25 +232,35 @@
           </table>
         </div>
         
-        <div class="summary-section text-center my-3">
-            <p>
-                <strong>Overall Average Score:</strong> 
-                <span style="color: #0056b3; font-size: 16px; margin-right: 30px;">
+      <div class="summary-section text-center my-4">
+    <div class="p-3 bg-white border rounded shadow-sm">
+        <p class="mb-0 d-flex flex-wrap justify-content-center align-items-center">
+            
+            {# --- 1. OVERALL AVERAGE SCORE BLOCK --- #}
+            <span class="d-inline-flex align-items-center mx-3 my-1">
+                <strong class="text-muted mr-2 text-uppercase small">Overall Average Score:</strong>
+                <span class="text-primary h5 font-weight-bold mb-0">
                     {% if overall_average is not None %}
-                        {{ overall_average|floatformat:2 }}%
+                        <i class="fas fa-percent mr-1"></i> {{ overall_average|floatformat:2 }}%
                     {% else %}
-                        N/A
+                        <span class="text-secondary">N/A</span>
                     {% endif %}
                 </span>
-                
-                {% comment %} --- NEW RANKING DISPLAY --- {% endcomment %}
-                <strong>POSITION IN CLASS:</strong>
-                <span style="color: #990000; font-size: 16px;">
-                    {{ student_position_display }}
+            </span>
+            
+            <span class="text-muted mx-3 my-1 d-none d-sm-inline">|</span> 
+            
+            {# --- 2. POSITION IN CLASS BLOCK --- #}
+            <span class="d-inline-flex align-items-center mx-3 my-1">
+                <strong class="text-muted mr-2 text-uppercase small">Position in Class:</strong>
+                <span class="text-danger h5 font-weight-bold mb-0">
+                    <i class="fas fa-trophy mr-1"></i> {{ student_position_display }}
                 </span>
-                {% comment %} --- END NEW RANKING DISPLAY --- {% endcomment %}
-            </p>
-        </div>
+            </span>
+            
+        </p>
+    </div>
+</div>
 
         <h6 class="text-center mt-3">Motor Ability & Behavioral Traits (Score out of 5)</h6>
         <div class="table-responsive">
@@ -367,7 +377,7 @@
         <img src="{% static 'pages/images/sign.jpg' %}" alt="Signature" style="width: 100px; height: auto;">
         {% endif %}
           <p class="font-weight-bold">Authorized Signature <br>
-          <span class="text-muted">Date: {{ "now"|date:"M d, Y" }}</span></p>
+          <span class="text-muted"><small> <i>{{ school_identity.name}}</i></small></span></p>
         </div>
       </div>
     </div>

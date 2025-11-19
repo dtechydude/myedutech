@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 from .views import (
-    ScoreEntryView, ScoreEntrySuccessView,
+    ScoreEntryView, ScoreEntrySuccessView, MidTermScoreEntryView, MidTermReportCardView, StudentMidTermListView, MidTermScoreSelectionView, MidTermScoreSuccessView,
     ReportCardListView, StudentReportCardView, StudentDashboardView, SessionReportCardListView, StudentSessionReportCardView, ClassRankingView, StandardsAndTermsListView, ResultPermissionGatekeeperView # Import new views
 )
 
@@ -67,8 +67,36 @@ urlpatterns = [
     # ... other URL patterns
 
 
+    # 1. SCORE ENTRY PAGE (Teacher/Admin access)
+    # 1. New List View for Students (Student accesses this first)
+    path('midterm/score/select/', 
+         MidTermScoreSelectionView.as_view(), 
+         name='midterm_score_selection'),
+    path('midterm/reports/', 
+         StudentMidTermListView.as_view(), 
+         name='student_midterm_list'),
+    # The URL needs to carry the class, subject, and term IDs to define the score sheet
+    # path('midterm/score/entry/<int:class_id>/<int:subject_id>/<int:term_id>/', 
+    #      MidTermScoreEntryView.as_view(), 
+    #      name='midterm_score_entry'),
+    path(
+        'midterm/score/entry/<int:class_id>/<int:subject_id>/<int:term_id>/',
+        views.MidTermScoreEntryView.as_view(),
+        name='midterm_score_entry'
+    ),
 
+    path('midterm/score/success/<int:class_id>/<int:subject_id>/<int:term_id>/', 
+     MidTermScoreSuccessView.as_view(), 
+     name='midterm_score_success'),
+         
+    # You will likely need a selection page (e.g., 'teacher_midterm_select')
+    # to choose class/subject/term before hitting the entry page.
 
+    # 2. REPORT CARD VIEW (Student/Teacher/Admin access)
+    path('midterm/report/<int:student_id>/<int:term_id>/', 
+         MidTermReportCardView.as_view(), 
+         name='midterm_report_card_detail'),
 ]
+
 
 

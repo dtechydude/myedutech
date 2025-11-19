@@ -495,10 +495,13 @@
 
 							
 							{% elif user.student %}
-							<li><a href="{% url 'results:student_dashboard' %}">My Results</a></li>							
+							<li><a href="{% url 'results:student_dashboard' %}">Termly/Session Results</a></li>	
+							<li><a href="{% url 'results:student_midterm_list' %}">My Mid-Term Results</a></li>							
 
-							{% elif user.teacher %}						
-							<li><a href="{% url 'results:score_entry' %}">Record Exam Results</a></li>
+							{% elif user.teacher %}
+							<li><a href="{% url 'results:midterm_score_selection' %}">Record Mid-Term Results</a></li>
+							<li><a href="{% url 'results:student_midterm_list' %}">View Mid-Term Results</a></li>						
+							<li><a href="{% url 'results:score_entry' %}">Record End Of Term Results</a></li>
 							<li><a href="{% url 'results:report_card_list' %}">Termly Report Cards</a></li>
 							<li><a href="{% url 'results:session_report_card_list' %}">Annual Report Cards</a></li>
 							<li><a href="{% url 'results:ranking_list' %}">Student's Exam Ranking</a></li>

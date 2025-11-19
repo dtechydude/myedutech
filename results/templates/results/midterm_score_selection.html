@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Score Entry Parameters</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body { background-color: #f4f6f9; min-height: 100vh; display: flex; flex-direction: column; }
+        .container { max-width: 700px; flex-grow: 1; margin-top: 50px; }
+        .card { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
+        .btn-entry { background-color: #ffc107; border-color: #ffc107; color: #343a40; font-weight: bold; }
+        footer { background-color: #343a44; color: #ccc; padding: 15px 0; margin-top: 30px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h4 text-primary font-weight-bold">
+            {% if school_info %}{{ school_info.name }}{% else %}Score Entry Portal{% endif %}
+        </h1>
+        <a href="/dashboard/" class="btn btn-outline-secondary btn-sm shadow-sm">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-primary text-white text-center">
+            <h5 class="mb-0"><i class="fas fa-keyboard mr-2"></i> Select Parameters for Score Entry</h5>
+        </div>
+        <div class="card-body">
+            
+            <p class="text-muted text-center mb-4">You are entering scores for **{{ assigned_class.name }}**.</p>
+
+            <form method="get" id="score-entry-form">
+                <input type="hidden" name="class_id" value="{{ assigned_class.id }}">
+
+                <div class="form-group">
+                    <label for="id_subject"><i class="fas fa-book-open mr-2 text-info"></i> Subject:</label>
+                    <select id="id_subject" name="subject_id" class="form-control form-control-lg" required>
+                        <option value="">-- Choose Subject --</option>
+                        {% for subject in available_subjects %}
+                            <option value="{{ subject.id }}">{{ subject.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_term"><i class="fas fa-calendar-alt mr-2 text-success"></i> Term:</label>
+                    <select id="id_term" name="term_id" class="form-control form-control-lg" required>
+                        <option value="">-- Choose Term --</option>
+                        {% for term in available_terms %}
+                            <option value="{{ term.id }}">{{ term.name }} ({{ term.session.name }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mt-4">
+                    <button type="button" class="btn btn-entry btn-lg btn-block shadow" onclick="redirectToScoreEntry()">
+                        <i class="fas fa-arrow-right"></i> Proceed to Entry Form
+                    </button>
+                </div>
+            </form>
+            
+        </div>
+    </div>
+</div>
+
+<footer class="text-center">
+    <div class="container">
+        <p class="mb-0 small">&copy; {% now "Y" %} {{ school_info.name|default:"School Management System" }} | All Rights Reserved.</p>
+    </div>
+</footer>
+
+<script>
+    function redirectToScoreEntry() {
+        const subjectId = document.getElementById('id_subject').value;
+        const termId = document.getElementById('id_term').value;
+        const classId = document.querySelector('input[name="class_id"]').value;
+        
+        if (subjectId && termId) {
+            // Dynamic URL construction using the three required parameters
+            const url = "{% url 'results:midterm_score_entry' class_id=0 subject_id=0 term_id=0 %}".replace('/0/0/0/', `/${classId}/${subjectId}/${termId}/`);
+            window.location.href = url;
+        } else {
+            alert('Please select both a Subject and a Term to continue.');
+        }
+    }
+</script>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>
