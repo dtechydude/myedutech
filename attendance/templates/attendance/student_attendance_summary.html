@@ -1,0 +1,197 @@
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Attendance Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <style>
+        /* Custom Styles for Appearance */
+        body {
+            background-color: #f4f7fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Inter', sans-serif;
+        }
+        main {
+            flex: 1;
+            padding-top: 20px;
+            padding-bottom: 50px;
+        }
+        .header-section {
+            background-color: #ffffff;
+            border-bottom: 4px solid #007bff; /* School Accent Color */
+            padding: 15px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .attendance-card {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+            border: none;
+        }
+        .card-header-custom {
+            background-color: #007bff; /* Primary color header */
+            color: white;
+            padding: 20px;
+            border-bottom: none;
+        }
+        .data-card {
+            border-radius: 10px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .data-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+        .data-card .display-4 {
+            font-weight: 700;
+        }
+        .progress {
+            height: 18px;
+            border-radius: 9px;
+            background-color: #e9ecef;
+        }
+        .progress-bar {
+            font-size: 12px;
+            font-weight: 600;
+        }
+        footer {
+            background-color: #343a40;
+            color: #adb5bd;
+            padding: 20px 0;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    
+    <header class="header-section">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h4 text-primary fw-bold mb-0">
+                    {% if school_info %}{{ school_info.name }}{% else %}School Management System{% endif %}
+                </h1>
+                <h2 class="h5 mb-0 text-secondary">Attendance Report</h2>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9 col-md-10">
+                <h2 class="text-center mb-5 text-dark">Personal Attendance Summary</h2>
+                
+                {% if error %}
+                    <div class="alert alert-danger text-center shadow-sm" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i> {{ error }}
+                    </div>
+                {% else %}
+                    <div class="card attendance-card">
+                        <div class="card-header-custom text-center">
+                            <h4 class="mb-0 fw-bold">{{ student.get_full_name }}</h4>
+                            <p class="mb-0 fs-6">{{ current_term }} ({{ current_session }})</p>
+                        </div>
+                        <div class="card-body p-4 p-md-5">
+
+                            <div class="row text-center mb-5">
+                                <div class="col-12">
+                                    <p class="lead text-muted mb-1">Total Recorded Days in Period</p>
+                                    <h3 class="display-5 fw-bold text-dark">{{ total_days }}</h3>
+                                </div>
+                            </div>
+
+                            <div class="row g-4 mb-4">
+                                <div class="col-md-6">
+                                    <div class="card data-card bg-success text-white">
+                                        <div class="card-body py-4 px-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <i class="fas fa-calendar-check fa-3x opacity-75"></i>
+                                                </div>
+                                                <div class="text-end">
+                                                    <h1 class="display-4">{{ days_present }}</h1>
+                                                    <p class="lead mb-0">Days Present</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="card data-card bg-danger text-white">
+                                        <div class="card-body py-4 px-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <i class="fas fa-calendar-times fa-3x opacity-75"></i>
+                                                </div>
+                                                <div class="text-end">
+                                                    <h1 class="display-4">{{ days_absent }}</h1>
+                                                    <p class="lead mb-0">Days Absent</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if total_days > 0 %}
+                                <div class="mt-5">
+                                    <h5 class="mb-3 fw-bold">
+                                        Attendance Rate: 
+                                        <span class="text-primary">{{ percent_present }}%</span>
+                                    </h5>
+                                    <div class="progress" role="progressbar" aria-label="Attendance Progress">
+                                        <div class="progress-bar bg-success" 
+                                            style="width: {{ percent_present }}%;" 
+                                            aria-valuenow="{{ percent_present }}" 
+                                            aria-valuemin="0" 
+                                            aria-valuemax="100">
+                                            {{ percent_present }}% Present
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info text-center mt-5">
+                                    <i class="fas fa-info-circle me-2"></i> No attendance records found for this term.
+                                </div>
+                            {% endif %}
+
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4 d-flex justify-content-center gap-3">
+                        
+                        <!-- ADDED: View Attendance Detail Button -->
+                        <a href="{% url 'attendance:student-attendance-detail' student_id=student.pk %}" class="btn btn-primary btn-lg shadow-sm">
+                            <i class="fas fa-calendar-alt me-2"></i> View Attendance Detail
+                        </a>
+
+                        <!-- Existing: Back to Dashboard Button -->
+                        <a href="{% url 'pages:portal-home' %}" class="btn btn-outline-secondary btn-lg shadow-sm">
+                            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+                        </a>
+                    </div>
+                    
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-auto">
+        <div class="container text-center">
+            <p class="mb-1">
+                &copy; {% now "Y" %} 
+                Powered By: <a href="https://kwikschools.com"> KwikSchools EdTech</a>
+                | All Rights Reserved.
+            </p>
+            <small class="text-muted">Attendance data is recorded per official school policy.</small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

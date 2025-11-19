@@ -476,6 +476,7 @@
 							<li><a href="{% url 'attendance:take_daily_attendance' %}">Mark Attendance</a></li>
 							{% endif %}
 							<li><a href="{% url 'attendance:attendance_report' %}">Attendance Report</a></li>
+							<li><a href="{% url 'attendance:attendance-student-list' %}">Attendance List</a></li>
 							
 							</ul>
 						{% endif %}
@@ -907,11 +908,10 @@
 													<div class="d-flex align-items-center mb-3">
 														
 														<div class="ms-4 bed-text">
-															<h4>My Profile Details</h4>
+															<h4>My Profile Details</h4>															
 															<div class="users d-flex align-items-center">																
-																<div>
-																
-																												<ul class="list-unstyled">
+																<div>																
+															<ul class="list-unstyled">
 															<li class="mb-1"><span class="font-w500 me-2">NAME:</span> <strong>{{ user.first_name }} {% if user.student.middle_name %} {{ user.student.middle_name }} {% endif %}{{ user.last_name}}</strong></li>
 															<li class="mb-1"><span class="font-w500 me-2">EMAIL:</span> <span>{{ user.email }}</span></li>
 															<li class="mb-1"><span class="font-w500 me-2">PHONE:</span> <span>{{ user.profile.phone }}</span></li>
@@ -931,7 +931,7 @@
 															<li class="mb-1"><span class="font-w500 me-2">UPDATED:</span> <span class="text-muted">{{ user.profile.updated|date:"F j, Y" }}</span></li>
 														</ul>
 
-																										</div>
+															</div>
 															</div>
 														</div>
 													</div>

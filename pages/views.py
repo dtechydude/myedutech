@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from django.contrib.auth.models import User
 from students.models import Student
+from attendance.models import Attendance
 from staff.models import Teacher
 from payments.models import BankDetail
 from users.models import Profile
@@ -16,6 +17,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import  DetailView
 import csv
 from django.http import HttpResponse
+from datetime import date, timedelta
 
 
 # Create your views here.
@@ -67,6 +69,7 @@ def dashboard(request):
         events = paginator.page(1)
     except EmptyPage:
         events = paginator.page(paginator.num_pages)
+    
     
        
     context = {        

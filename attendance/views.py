@@ -8,8 +8,13 @@ from .models import Attendance
 from students.models import Student
 from datetime import date, timedelta # Make sure to import these!
 from staff.models import Teacher
-from curriculum.models import SchoolIdentity
+from curriculum.models import Session, Term
+from decimal import Decimal
 from .forms import AttendanceDateForm, AttendanceForm, AttendanceReportForm # Import new forms
+import json
+from django.http import HttpResponseForbidden, Http404
+
+
 
 # Helper to get teacher profile, handles not found case
 def get_teacher_profile(user):
@@ -182,3 +187,317 @@ def attendance_report(request):
         'student_attendance_summary': student_attendance_summary,
     }
     return render(request, 'attendance/test_attendance_report.html', context)
+
+
+# STUDENT ATTENDANCE REPORT ADVANCE -ENABLES STUDENTS TO SEE THEIR ATTENDANCE BETTER
+
+# =========================================================================
+# HELPERS & AUTHORIZATION
+# =========================================================================
+
+def get_current_student(user):
+    """Retrieves the Student profile linked to the logged-in user."""
+    try:
+        # Assuming Student model has a OneToOneField or ForeignKey to auth.User
+        return Student.objects.get(user=user)
+    except Student.DoesNotExist:
+        raise Http404("Student profile not found for this user.")
+
+def is_authorized_to_view_student(user, student_id):
+    """
+    Checks if the user is authorized (Staff, Form Teacher, or the Student themselves) 
+    to view the specified student's records.
+    """
+    if not user.is_authenticated:
+        return False
+        
+    # 1. Allow Admins/Staff
+    if user.is_staff:
+        return True
+    
+    try:
+        # Check student access (either form teacher or student themselves)
+        student_profile = Student.objects.select_related('form_teacher__user').get(pk=student_id)
+        
+        # 2. Allow the Student themselves (Self-View)
+        if hasattr(student_profile, 'user') and student_profile.user == user:
+            return True
+            
+        # 3. Allow the Form Teacher
+        if student_profile.form_teacher and student_profile.form_teacher.user == user:
+            return True
+            
+    except Student.DoesNotExist:
+        return False
+        
+    return False
+
+# =========================================================================
+# 1. STUDENT LIST VIEW (Roster for Staff/Teachers)
+# =========================================================================
+
+@login_required
+def student_list_view(request):
+    """
+    Displays a list of students the logged-in user is authorized to see (All, Form Class, or Self).
+    """
+    user = request.user
+    students = Student.objects.none()
+    title = "Attendance Roster"
+    
+    # 1. Staff/Admin View (See All)
+    if user.is_staff:
+        students = Student.objects.select_related('current_class').all().order_by('current_class__name', 'first_name')
+        title = "All Students Attendance Records"
+    
+    # 2. Teacher/Student View (Filtered)
+    else:
+        try:
+            # Check if user is a Teacher/Form Teacher
+            teacher_profile = Teacher.objects.get(user=user)
+            
+            # Filter students where the form_teacher is the logged-in user's Teacher profile
+            students = Student.objects.filter(form_teacher=teacher_profile).select_related('current_class').order_by('current_class__name', 'first_name')
+            title = f"Your Assigned Class Attendance"
+            
+        except Teacher.DoesNotExist:
+            # If not a recognized Teacher profile, check if they are a Student viewing themselves
+            try:
+                # FIX: Corrected Student.objects.objects to Student.objects
+                students = Student.objects.filter(user=user).select_related('current_class')
+                title = "Your Attendance Record"
+            except:
+                # Still no match (e.g., a generic authenticated user)
+                students = Student.objects.none() 
+                title = "No Students Found"
+
+    context = {
+        'students': students,
+        'title': title,
+        'is_staff': user.is_staff,
+    }
+    return render(request, 'attendance/student_attendance_list.html', context)
+
+
+# =========================================================================
+# 2. STAFF/TEACHER: ATTENDANCE SUMMARY VIEW (Uses student_id from URL)
+# =========================================================================
+
+@login_required
+def student_attendance_summary(request, student_id):
+    """
+    Shows the attendance summary for the student specified by student_id.
+    """
+    # 1. AUTHORIZATION CHECK: SECURITY FIRST
+    if not is_authorized_to_view_student(request.user, student_id):
+        return HttpResponseForbidden("You are not authorized to view this student's records.")
+        
+    context = {}
+    current_student = get_object_or_404(Student, pk=student_id)
+
+    try:
+        # 2. Get the current active Session and Term
+        current_session = Session.objects.get(is_current=True)
+        current_term = Term.objects.get(is_current=True) 
+        
+        # 3. Filter Attendance Records using the date range of the current Term
+        attendance_records = Attendance.objects.filter(
+            student=current_student,
+            date__gte=current_term.start_date, 
+            date__lte=current_term.end_date 
+        )
+        
+        # 4. Calculate Summary (relies on 'present' boolean field in Attendance model)
+        days_present = attendance_records.filter(present=True).count()
+        days_absent = attendance_records.filter(present=False).count()
+        total_days = days_present + days_absent
+        
+        # 5. Calculate Attendance Percentage
+        percent_present = 0.0
+        if total_days > 0:
+            percent_present = round((days_present / total_days) * 100, 1)
+
+        # 6. Build Context
+        context.update({
+            'student': current_student,
+            'days_present': days_present,
+            'days_absent': days_absent,
+            'total_days': total_days,
+            'current_session': current_session,
+            'current_term': current_term,
+            'percent_present': percent_present,
+        })
+        
+    except (Session.DoesNotExist, Term.DoesNotExist):
+        context['error'] = "No current school session or term found for reporting."
+    except Exception as e:
+        context['error'] = f"An unexpected error occurred: {e}"
+
+    return render(request, 'attendance/student_attendance_summary.html', context)
+
+
+# =========================================================================
+# 3. STAFF/TEACHER: ATTENDANCE DETAIL VIEW (Uses student_id from URL)
+# =========================================================================
+
+@login_required
+def student_attendance_detail(request, student_id):
+    """
+    Displays a calendar view of the student's attendance records for the term.
+    """
+    # 1. AUTHORIZATION CHECK: SECURITY FIRST
+    if not is_authorized_to_view_student(request.user, student_id):
+        return HttpResponseForbidden("You are not authorized to view this student's records.")
+    
+    context = {}
+    current_student = get_object_or_404(Student, pk=student_id)
+    
+    try:
+        # 2. Get the current active Session and Term
+        current_session = Session.objects.get(is_current=True)
+        current_term = Term.objects.get(is_current=True) 
+
+        # 3. Fetch all attendance records for the term
+        attendance_records = Attendance.objects.filter(
+            student=current_student,
+            date__gte=current_term.start_date, 
+            date__lte=current_term.end_date 
+        ).order_by('date')
+
+        # 4. Prepare data for JavaScript: { "YYYY-MM-DD": "Present" / "Absent" }
+        # FIX: Uses the 'present' boolean field, which prevents the 'AttributeError: status'
+        attendance_map = {}
+        for record in attendance_records:
+            date_str = record.date.strftime('%Y-%m-%d')
+            status = "Present" if record.present else "Absent"
+            attendance_map[date_str] = status
+
+        # 5. Build Context
+        context.update({
+            'student': current_student,
+            'current_session': current_session,
+            'current_term': current_term,
+            # Pass the map as a JSON string for safe use in JavaScript
+            'attendance_data_json': json.dumps(attendance_map) 
+        })
+        
+    except (Session.DoesNotExist, Term.DoesNotExist):
+        context['error'] = "No current school session or term found for reporting."
+    except Exception as e:
+        context['error'] = f"An unexpected error occurred: {e}"
+    
+    return render(request, 'attendance/student_attendance_detail.html', context)
+
+
+# =========================================================================
+# 4. STUDENT SELF-SERVICE: SUMMARY VIEW (Does NOT use student_id from URL)
+# =========================================================================
+
+@login_required
+def self_attendance_summary(request):
+    """
+    Allows a logged-in student to view their own attendance summary.
+    This view uses the same logic as student_attendance_summary but gets the ID from the user.
+    """
+    # Get the student associated with the logged-in user
+    try:
+        current_student = get_current_student(request.user)
+    except Http404:
+        return redirect('pages:portal-home') # Redirect non-students
+    
+    # We now have the student object, we can apply the same logic as the staff view.
+    context = {}
+
+    try:
+        # 1. Get the current active Session and Term
+        current_session = Session.objects.get(is_current=True)
+        current_term = Term.objects.get(is_current=True) 
+        
+        # 2. Filter Attendance Records using the date range of the current Term
+        attendance_records = Attendance.objects.filter(
+            student=current_student,
+            date__gte=current_term.start_date, 
+            date__lte=current_term.end_date 
+        )
+        
+        # 3. Calculate Summary (relies on 'present' boolean field in Attendance model)
+        days_present = attendance_records.filter(present=True).count()
+        days_absent = attendance_records.filter(present=False).count()
+        total_days = days_present + days_absent
+        
+        # 4. Calculate Attendance Percentage
+        percent_present = 0.0
+        if total_days > 0:
+            percent_present = round((days_present / total_days) * 100, 1)
+
+        # 5. Build Context
+        context.update({
+            'student': current_student,
+            'days_present': days_present,
+            'days_absent': days_absent,
+            'total_days': total_days,
+            'current_session': current_session,
+            'current_term': current_term,
+            'percent_present': percent_present,
+        })
+        
+    except (Session.DoesNotExist, Term.DoesNotExist):
+        context['error'] = "No current school session or term found for reporting."
+    except Exception as e:
+        context['error'] = f"An unexpected error occurred: {e}"
+
+    return render(request, 'attendance/student_attendance_summary.html', context)
+
+
+# =========================================================================
+# 5. STUDENT SELF-SERVICE: DETAIL VIEW (Does NOT use student_id from URL)
+# =========================================================================
+
+@login_required
+def self_attendance_detail(request):
+    """
+    Allows a logged-in student to view their own detailed attendance calendar.
+    This view uses the same logic as student_attendance_detail but gets the ID from the user.
+    """
+    # Get the student associated with the logged-in user
+    try:
+        current_student = get_current_student(request.user)
+    except Http404:
+        return redirect('pages:portal-home') # Redirect non-students
+
+    context = {}
+    
+    try:
+        # 1. Get the current active Session and Term
+        current_session = Session.objects.get(is_current=True)
+        current_term = Term.objects.get(is_current=True) 
+
+        # 2. Fetch all attendance records for the term
+        attendance_records = Attendance.objects.filter(
+            student=current_student,
+            date__gte=current_term.start_date, 
+            date__lte=current_term.end_date 
+        ).order_by('date')
+
+        # 3. Prepare data for JavaScript: { "YYYY-MM-DD": "Present" / "Absent" }
+        attendance_map = {}
+        for record in attendance_records:
+            date_str = record.date.strftime('%Y-%m-%d')
+            status = "Present" if record.present else "Absent"
+            attendance_map[date_str] = status
+
+        # 4. Build Context
+        context.update({
+            'student': current_student,
+            'current_session': current_session,
+            'current_term': current_term,
+            # Pass the map as a JSON string for safe use in JavaScript
+            'attendance_data_json': json.dumps(attendance_map) 
+        })
+        
+    except (Session.DoesNotExist, Term.DoesNotExist):
+        context['error'] = "No current school session or term found for reporting."
+    except Exception as e:
+        context['error'] = f"An unexpected error occurred: {e}"
+    
+    return render(request, 'attendance/student_attendance_detail.html', context)
