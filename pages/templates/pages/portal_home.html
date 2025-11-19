@@ -996,7 +996,7 @@
 															<div class="tab-pane fade show active" id="Daily1">															
 															</div>														
 															<div class="tab-pane fade show active" id="Daily1">
-																<h4> Welcome to the Admin Portal</h4>
+																<h4 class="text-danger"> You Are Logged In As A Portal ADMIN!</h4>
 																<p>This portal enables you, as an administrator, to efficiently add, edit, and delete school information.
 																Please ensure that you:																
 																<ul>
@@ -1064,9 +1064,10 @@
 															
 															<div class="mb-5 mt-4 d-flex align-items-center">
 																<div>
-																	<h4 class="text-secondary">How To Use The Portal - <a href="{% url 'pages:video-guides' %}">PORTAL MANUAL</a></h4>
+																	<a href="{% url 'pages:video-guides' %}" class="btn btn-primary mt-4">
+															<i class="fas fa-book me-2"></i> View Portal Manual
+																</a>
 																</div>
-																<div><a href="#" class="ms-5"><i class="fas fa-arrow-right fs-20"></i></a></div>
 															</div>
 														</div>
 														{% elif user.student %}													
