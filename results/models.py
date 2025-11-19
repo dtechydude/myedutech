@@ -31,67 +31,6 @@ class Examination(models.Model):
     
 
     
-# #works well 001
-# class Score(models.Model):
-#     """Represents a student's score in a specific subject for a given term."""
-#     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='scores')
-#     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-#     term = models.ForeignKey(Term, on_delete=models.CASCADE)
-#     # Continuous Assessment (CA) scores - adjust fields as per school's grading system
-#     ca1 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(40)])
-#     ca2 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(40)])
-#     ca3 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(40)])
-#     exam_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(60)])
-#     total_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
-
-#     class Meta:
-#         # Each student can only have one score entry per subject per term
-#         unique_together = ('student', 'subject', 'term')
-#         ordering = ['student__first_name', 'student__last_name']
-#         verbose_name = 'Exams & CA Scores'
-#         verbose_name_plural = 'Exams & CA Scores'
-
-#     def __str__(self):
-#         return f"{self.student.first_name} - {self.subject.name} ({self.term.name})"
-
-#     # def save(self, *args, **kwargs):
-#     #     # Auto-calculate total_score if CA and exam scores are present
-#     #     total_ca = 0
-#     #     if self.ca1 is not None:
-#     #         total_ca += self.ca1
-#     #     if self.ca2 is not None:
-#     #         total_ca += self.ca2
-#     #     if self.ca3 is not None:
-#     #         total_ca += self.ca3
-       
-#     #     if self.exam_score is not None:
-#     #         self.total_score = total_ca + self.exam_score
-#     #     else:
-#     #         self.total_score = total_ca # If only CA scores are available
-
-#     #     super().save(*args, **kwargs)
-
-#     def clean(self):
-#         """
-#         Custom validation to ensure total CA score does not exceed 40.
-#         """
-#         super().clean()
-#         total_ca = (self.ca1 or 0) + (self.ca2 or 0) + (self.ca3 or 0)
-#         if total_ca > 40:
-#             raise ValidationError('The total sum of CA scores (CA1, CA2, CA3) cannot exceed 40.')
-
-#     def save(self, *args, **kwargs):
-#         self.full_clean() # Call full_clean to run the validation check
-
-#         # Auto-calculate total_score
-#         total_ca = (self.ca1 or 0) + (self.ca2 or 0) + (self.ca3 or 0)
-        
-#         if self.exam_score is not None:
-#             self.total_score = total_ca + self.exam_score
-#         else:
-#             self.total_score = total_ca # If only CA scores are available
-
-#         super().save(*args, **kwargs)
 
 # Work on 002
 class Score(models.Model):

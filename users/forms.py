@@ -81,22 +81,7 @@ class UserRegistrationForm(forms.ModelForm):
             raise forms.ValidationError('Passwords don\'t match.')
         return cd['password2']
 
-# class StudentEnrollmentForm(forms.ModelForm):
-#     # Form fields for Student model
-#     class Meta:
-#         model = Student
-#         fields = [
-#             'USN', 'middle_name', 'current_class', 'class_group', 
-#             'gender', 'DOB', 'blood_group', 'genotype', 
-#             'health_remark', 'student_type', 'hostel_name',
-#             'date_admitted', 'class_on_admission', 
-#             'guardian_name', 'guardian_address', 'guardian_phone', 
-#             'guardian_email', 'relationship', 
-            
-#         ]
-#         widgets = {
-#             'USN': forms.TextInput(attrs={'readonly': 'readonly'}),
-#         }
+
 
 class StudentEnrollmentForm(forms.ModelForm):
     class Meta:

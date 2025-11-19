@@ -6,15 +6,6 @@ from curriculum.models import Term
 
 
 
-# class ResultAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-#     # inlines = [MotorAbility1Inline, ResultImage1Inline] 
-#     # exclude =['remark', 'student_id']
-#     list_display=('student', 'subject', 'exam', 'score')
-#     # list_filter  = ['student_detail__standard']
-#     search_fields = ('student', 'exam')
-#     raw_id_fields = ['student', 'exam',]
-
-
 
 class ExaminationAdmin(admin.ModelAdmin):
        

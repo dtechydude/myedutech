@@ -103,7 +103,7 @@ class Standard(models.Model):
         blank=True,
         related_name='form_class'
     )   
-    promotion_order = models.IntegerField(unique=True, help_text="Order of classes for promotion (e.g., 0 for the lowest class, 1 for Basic 1, 2 for Basic 2)")
+    promotion_order = models.IntegerField(unique=True, null=True, blank=True, help_text="Order of classes for promotion (e.g., 0 for the lowest class, 1 for Basic 1, 2 for Basic 2)")
     desc = models.CharField(max_length=200, blank=True, null=True, verbose_name='description') 
     slug = models.SlugField(null=True, blank=True)
 

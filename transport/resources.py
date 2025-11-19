@@ -1,5 +1,4 @@
 # In your app's resources.py
-
 from import_export import resources
 from .models import StudentOnRoute, BusPayment
 

@@ -1,5 +1,4 @@
 # your_app/admin.py
-
 from django.contrib import admin, messages
 from decimal import Decimal
 from django.db.models import Sum
