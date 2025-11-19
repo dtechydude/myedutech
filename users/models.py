@@ -6,7 +6,7 @@ from users.utils import generate_ref_code
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.ImageField(default='default.jpg', upload_to='profile_pics', verbose_name='Profile Pic')
+    image = models.ImageField(default='default.jpg', upload_to='profile_pics', verbose_name='Profile Pic', blank=True, null=True,)
     phone = models.CharField(max_length=11, blank=True)
 
     select = 'Select'

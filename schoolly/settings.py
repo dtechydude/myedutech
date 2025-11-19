@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'embed_video',
     'djrichtextfield',
     'tinymce',
+    'django_cleanup.apps.CleanupConfig'
 
 ]
 

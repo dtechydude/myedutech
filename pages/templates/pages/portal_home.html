@@ -354,7 +354,11 @@
 							</li>
 							<li class="nav-item dropdown header-profile">
 								<a class="nav-link" href="javascript:void(0);" role="button" data-bs-toggle="dropdown">
-									<img src="{{user.profile.image.url}}" width="20" alt="Profile"/>
+								{% if user.profile.image and user.profile.image.name %}
+									<img src="{{ user.profile.image.url }}" width="20" alt="Profile"/>
+								{% else %}
+									<img src="{% static 'pages/images/default.jpg' %}" width="20" alt="Profile"/>
+								{% endif %}
 								</a>
 								<div class="dropdown-menu dropdown-menu-end">
 									<a href="$" class="dropdown-item ai-icon">
@@ -726,7 +730,11 @@
 				</ul>
 				<div class="dropdown header-profile2 ">
 					<div class="header-info2 text-center">
-						<img src="{{user.profile.image.url}}" alt="profile"/>
+						{% if user.profile.image and user.profile.image.name %}
+									<img src="{{ user.profile.image.url }}" width="20" alt="Profile"/>
+								{% else %}
+									<img src="{% static 'pages/images/default.jpg' %}" width="20" alt="Profile"/>
+								{% endif %}
 						<div class="sidebar-info">
 							<div>
 								<h5 class="font-w500 mb-0">{{user}}</h5>
@@ -897,7 +905,7 @@
 												</div>	
 												<div class="rooms mt-3 d-flex align-items-center justify-content-between flex-wrap">
 													<div class="d-flex align-items-center mb-3">
-														<!-- <img src="{{ user.profile.image.url }}" alt="" width="100px" height="100px"> -->
+														
 														<div class="ms-4 bed-text">
 															<h4>My Profile Details</h4>
 															<div class="users d-flex align-items-center">																
@@ -927,7 +935,20 @@
 															</div>
 														</div>
 													</div>
-													<span class="date bg-secondary mb-3"><i class="fas fa-user"></i></span>
+													<!-- <span class="date bg-secondary mb-3"><i class="fas fa-user"></i></span> -->
+													<span class="date bg-secondary mb-3">
+													{% if user.profile.image and user.profile.image.name %}
+														<img src="{{ user.profile.image.url }}" 
+															alt="Profile"
+															style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;"
+														/>
+													{% else %}
+														<img src="{% static 'pages/images/default.jpg' %}" 
+															alt="Profile"
+															style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;"
+														/>
+													{% endif %}
+												</span>
 												</div>
 											
 												<!-- <div class="rooms mt-3 d-flex align-items-center justify-content-between flex-wrap">
@@ -975,10 +996,16 @@
 															<div class="tab-pane fade show active" id="Daily1">															
 															</div>														
 															<div class="tab-pane fade show active" id="Daily1">
-																<h4> About The Portal</h4>
-																<p>This Portal allows you as the admin to Add, Edit and Delete information. <br>
-																	Enter Your SCHOOL's NAME correctly and upload the school logo not larger than 180px by 180px in .jpg file format <br>
-																	Enter Your SCHOOL'S ADDRESS, PHONE and EMAIL correctly.
+																<h4> Welcome to the Admin Portal</h4>
+																<p>This portal enables you, as an administrator, to efficiently add, edit, and delete school information.
+																Please ensure that you:																
+																<ul>
+																<li> - Enter your <strong>school's name</strong> exactly as it should appear in official records.</li>
+																<li> - Upload the <strong>school logo</strong> (maximum: <strong>200 × 200 px</strong>; accepted formats: <code>.jpg</code>, <code>.png</code>).</li>
+																<li> - Provide the correct <strong>address, phone number,</strong> and <strong>email</strong>.</li>
+																<li> - Configure essential settings such as <strong>payments</strong>, <strong>departments</strong>, and <strong>user roles</strong>.</li>
+																</ul>
+																
 																</p>																												
 																</div>
 														</div>
@@ -1005,8 +1032,8 @@
 												<div class="card bg-secondary">
 													<div class="card-body">
 														<div class="d-flex align-items-end pb-4 justify-content-between">
-															<span class="fs-14 font-w500 text-white">Payments Count</span>
-															<span class="fs-20 font-w600 text-white"><span class="pe-2"></span>{{ payments }}</span>
+															<span class="fs-14 font-w500 text-white">Total Teachers</span>
+															<span class="fs-20 font-w600 text-white"><span class="pe-2"></span>{{ teacher_num }}</span>
 														</div>
 														<div class="progress default-progress h-auto">
 															<div class="progress-bar bg-white progress-animated" style="width: 30%; height:13px;" role="progressbar">
@@ -1021,18 +1048,7 @@
 												<div class="card">
 													<div class="card-body">
 														<div class="row">
-															<div class="col-xl-3 col-sm-3 col-6 mb-4 col-xxl-6">
-																<div class="text-center">
-																	<h5 class="fs-28 font-w600">{{ teacher_num }}</h5>
-																	<span class="fs-16">Total Teachers</span>
-																</div>
-															</div>
-															<div class="col-xl-3 col-sm-3 col-6 mb-4 col-xxl-6">
-																<div class="text-center">
-																	<h5 class="fs-28 font-w600">{{ staff_num }}</h5>
-																	<span class="fs-16">Other Staff</span>
-																</div>
-															</div>
+															
 															<div class="col-xl-3 col-sm-3 col-6 mb-4 col-xxl-6">
 																<div class="text-center">
 																	<h5 class="fs-28 font-w600">{{ boarder_std}}</h5>
@@ -1053,69 +1069,114 @@
 																<div><a href="#" class="ms-5"><i class="fas fa-arrow-right fs-20"></i></a></div>
 															</div>
 														</div>
-														{% else %}
-													
+														{% elif user.student %}													
 
 													<div class="mb-5 mt-4 d-flex align-items-center">
 													<div>
-														<h4 class="mb-3"><a href="javascript:void(0);" class="text-secondary">About This Portal</a></h4>
-														<div class="user-info">
-															<p><strong>STUDENTS:</strong></p>
-															<ul class="list-unstyled">
-																<li>
-																	<span><strong>Access Academic Records and Progress:</strong></span>
-																	Students can log in to view their grades, transcripts, attendance records, and academic standing in real-time.
-																</li>
-																<li>
-																	<span><strong>E-Learning & CBT:</strong></span>
-																	The e-learning center allows students to access materials and make contributions in the class. The portal also allows you to access CBT directly.
-																</li>
-																<li>
-																	<span><strong>Payments/Bills:</strong></span>
-																	You can make all your payments and access the necessary fees chart. Please ensure you use the correct school account for payments.
-																</li>
-															</ul>
+														<h4 class="mb-3"><a href="javascript:void(0);" class="text-success">You Are Logged In As A STUDENT!</a></h4>
+														<div class="user-info">															
+															<p style="text-align: justify;">
 
-															<p class="mt-4"><strong>TEACHERS:</strong></p>
-															<ul class="list-unstyled">
-																<li>
-																	<span><strong>Attendance:</strong></span>
-																	Mark daily attendance using the attendance tools/menu.
-																</li>
-																<li>
-																	<span><strong>Access Your Students:</strong></span>
-																	The portal allows you to access personal details of all the students in your class.
-																</li>
-																<li>
-																	<span><strong>Upload E-Learning Materials:</strong></span>
-																	Use the E-Learning menu to upload your e-learning materials accordingly.
-																</li>
-															</ul>
+																<span><strong>Your Profile</strong> <br>
+																You can update your personal information at any time through the profile section. Keeping your details accurate helps with communication and official records.
+																</span> <br>
+																<span><strong>Password & Security</strong> <br>
+																All users receive a default password at registration. For your security, it is strongly recommended that you change your password immediately after your first login.
+																</span> <br>
+																<strong>Help & Support</strong><br>
+																If you encounter any issues or need assistance, please visit the Help Center via the support menu or contact the portal administrator.
+																You can use the internal “Ticket” communication tool to submit complaints, report issues, or request assistance.															</p>
+															</p>
 
-															<p class="mt-4"><strong>ALL Users:</strong></p>
-															<ul class="list-unstyled">
-																<li>
-																	<span><strong>Your Profile:</strong></span>
-																	You can update your profile by accessing it through the profile links.
-																</li>
-																<li>
-																	<span><strong>Reset Password:</strong></span>
-																	A default password is given at registration; users can change their password for more secure access.
-																</li>
-																<li>
-																	<span><strong>Help Center:</strong></span>
-																	For any assistance, please use the help center menu tool or contact the portal administrator.
-																</li>
-															</ul>
+																<!-- For Students -->
+																<p style="text-align: justify;">																
+																<span><strong>Academic Records & Progress</strong> <br>
+																Students can access their grades, transcripts, attendance history, and overall academic performance in real time.
+																</span><br>
+																<span> <strong>E-Learning & CBT Access</strong> <br>
+																The portal provides an e-learning center where students can view class materials, participate in discussions, and access Computer-Based Tests (CBT) when assigned.
+																</span><br>
+																<span><strong>Payments & Billing</strong> <br>
+																All required payments can be made directly through the portal. A comprehensive fees chart is available for reference.
+																Please ensure that all payments are made using the correct official school account.
+																</span>
+															</p>						
 														</div>
 														<a href="{% url 'pages:video-guides' %}" class="btn btn-primary mt-4">
 															<i class="fas fa-book me-2"></i> View Portal Manual
 														</a>
-													</div>
+													</div>													
+												</div>												
+
+													{% elif user.teacher %}																								
+
+													<div class="mb-5 mt-4 d-flex align-items-center">
 													<div>
-														<a href="javascript:void(0);" class="ms-5"><i class="fas fa-arrow-right fs-20"></i></a>
-													</div>
-												</div>
+														<h4 class="mb-3"><a href="javascript:void(0);" class="text-success">You Are Logged In As A TEACHER!</a></h4>
+														<div class="user-info">															
+															<p style="text-align: justify;">
+
+																<span><strong>Your Profile / Password & Security </strong> <br>
+																You can update your personal information at any time through the profile section. Keeping your details accurate helps with communication and official records.
+																All users receive a default password at registration. For your security, it is strongly recommended that you change your password immediately after your first login.
+																</span> <br>
+																<strong>Help & Support</strong><br>
+																If you encounter any issues or need assistance, please visit the Help Center via the support menu or contact the portal administrator.
+																You can use the internal “Ticket” communication tool to submit complaints, report issues, or request assistance.															</p>
+															</p>
+
+																<!-- For Teacher -->
+																<p style="text-align: justify;">	
+																<span><strong>Result Upload</strong> <br>
+																Teachers can upload academic results for their assigned subjects and classes, including Continuous Assessment (CA) and examination scores. 
+																Subject teachers can only enter results for the subjects they teach, while form teachers have broader access and may upload results for all students in their class.
+																</span><br>															
+																<span><strong>Attendance Management</strong> <br>
+																Teachers can take and update daily attendance for their classes using the attendance tools available in the portal.	</span><br>
+																<span> <strong>Student Information Access</strong> <br>
+																The portal allows teachers to view relevant student details for their assigned classes, enabling better communication and academic support.	</span><br>
+																<span><strong>Upload E-Learning Materials</strong> <br>
+																Teachers can upload notes, assignments, and other academic resources through the E-Learning menu to support digital learning.
+																</span>
+															</p>						
+														</div>
+														<a href="{% url 'pages:video-guides' %}" class="btn btn-primary mt-4">
+															<i class="fas fa-book me-2"></i> View Portal Manual
+														</a>
+													</div>													
+												</div>	
+												
+														{% elif user.parent %}																									
+												<div class="mb-5 mt-4 d-flex align-items-center">
+													<div>
+														<h4 class="mb-3"><a href="javascript:void(0);" class="text-secondary">You Are Logged In As A PARENT!</a></h4>
+														<div class="user-info">															
+															<p style="text-align: justify;">
+
+																<span><strong>Your Profile</strong> <br>
+																You can update your personal information at any time through the profile section. Keeping your details accurate helps with communication and official records.
+																</span> <br>
+																<span><strong>Password & Security</strong> <br>
+																All users receive a default password at registration. For your security, it is strongly recommended that you change your password immediately after your first login.
+																</span> <br>
+																<strong>Help & Support</strong><br>
+																If you encounter any issues or need assistance, please visit the Help Center via the support menu or contact the portal administrator.
+																You can use the internal “Ticket” communication tool to submit complaints, report issues, or request assistance.															</p>
+
+																<!-- For Parent -->
+																<p style="text-align: justify;">	
+																<span><strong>Parents Role</strong> <br>
+																As a parent, you can use the portal to monitor your ward’s academic progress, including viewing results, attendance, and overall performance. 
+																You can also make required school payments on their behalf and communicate directly with the school through the portal’s messaging or support features.
+																</span><br>															
+																
+															</p>						
+														</div>
+														<a href="{% url 'pages:video-guides' %}" class="btn btn-primary mt-4">
+															<i class="fas fa-book me-2"></i> View Portal Manual
+														</a>
+													</div>													
+												</div>	
 														{% endif %}
 													</div>
 												</div>
