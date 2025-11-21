@@ -1,0 +1,209 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ school_info.name }} — Alumni List</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background:#f8f9fa;
+            display:flex;
+            min-height:100vh;
+            flex-direction:column;
+        }
+        footer {
+            background:#747a80;
+            color:#fff;
+            padding:15px 0;
+            text-align:center;
+            margin-top:auto;
+        }
+        .page-title { font-weight:600; }
+        .table thead th { background:#f1f1f1; }
+        .photo-thumb {
+            width:40px;
+            height:40px;
+            border-radius:50%;
+            object-fit:cover;
+            border:1px solid #ddd;
+        }
+        .export-btn { margin-left:10px; }
+        .horizontal-scroll {
+            overflow-x:auto;
+            -webkit-overflow-scrolling:touch;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+         <h4>{{ school_info.name }}</h4>
+        <h2 class="page-title mb-0">🎓 Alumni Records</h2>
+       
+
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'students:alumni_list' %}?{% if request.GET.session %}session={{ request.GET.session }}&{% endif %}{% if request.GET.year %}year={{ request.GET.year }}&{% endif %}{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}export=csv"
+               class="btn btn-success">
+                ⬇ Export CSV
+            </a>
+            <a href="/dashboard" class="btn btn-secondary">← Back to Dashboard</a>
+        </div>
+    </div>
+
+    <form method="get" class="row g-3 mb-4">
+
+        <div class="col-md-3 col-sm-6">
+            <label class="form-label">Session</label>
+            <select name="session" class="form-select">
+                <option value="">All Sessions</option>
+                {% for s in sessions %}
+                    <option value="{{ s.id }}"
+                        {% if request.GET.session|stringformat:"s" == s.id|stringformat:"s" %}
+                            selected
+                        {% endif %}>
+                        {{ s.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2 col-sm-6">
+            <label class="form-label">Graduation Year</label>
+            <select name="year" class="form-select">
+                <option value="">All Years</option>
+                {% for y in years %}
+                    <option value="{{ y|stringformat:'s' }}"
+                        {% if request.GET.year == y|stringformat:"s" %}
+                            selected
+                        {% endif %}>
+                        {{ y }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-4 col-sm-12">
+            <label class="form-label">Search</label>
+            <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Name or ID…" class="form-control">
+        </div>
+
+        <div class="col-md-3 col-sm-12 d-flex gap-2 align-items-end">
+            <button class="btn btn-primary w-100">Filter Results</button>
+
+            <a href="{% url 'students:alumni_list' %}" class="btn btn-light w-100">Clear</a>
+        </div>
+    </form>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0 horizontal-scroll">
+
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Photo</th>
+                    <th>Name</th>
+                    <th>Previous Class</th>
+                    <th>Session</th>
+                    <th>Graduated On</th>
+                    <th class="text-end">Action</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for student in alumni %}
+                    {% with rec=student.graduation_records.first %}
+                    <tr>
+                        <td>
+                            {% if student.user.profile.image %}
+                                <img src="{{ student.user.profile.image.url }}" class="photo-thumb">
+                            {% else %}
+                                <img src="{% static 'pages/images/default-avatar.png' %}" class="photo-thumb">
+                            {% endif %}
+                        </td>
+
+                        <td class="fw-semibold">{{ student.get_full_name }}</td>
+
+                        <td>
+                            {% if rec %}{{ rec.graduated_class.name }}{% else %}-{% endif %}
+                        </td>
+
+                        <td>{{ student.graduated_session.name|default:"-" }}</td>
+
+                        <td>
+                            {% if rec and rec.date_graduated %}
+                                {{ rec.date_graduated|date:"Y-m-d H:i" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end">
+                            <a href="{% url 'students:readmit_student' student.id %}" 
+                               class="btn btn-sm btn-outline-success">
+                                Re-admit
+                            </a>
+                        </td>
+                    </tr>
+                    {% endwith %}
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">No alumni found.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+
+            {% if alumni.has_previous %}
+            <li class="page-item">
+                <a class="page-link"
+                    href="?page={{ alumni.previous_page_number }}
+                        {% if request.GET.session %}&session={{ request.GET.session }}{% endif %}
+                        {% if request.GET.year %}&year={{ request.GET.year }}{% endif %}
+                        {% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                    &laquo; Previous
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="page-item disabled">
+                <span class="page-link">
+                    Page {{ alumni.number }} of {{ alumni.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if alumni.has_next %}
+            <li class="page-item">
+                <a class="page-link"
+                    href="?page={{ alumni.next_page_number }}
+                        {% if request.GET.session %}&session={{ request.GET.session }}{% endif %}
+                        {% if request.GET.year %}&year={{ request.GET.year }}{% endif %}
+                        {% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                    Next &raquo;
+                </a>
+            </li>
+            {% endif %}
+
+        </ul>
+    </nav>
+
+</div>
+
+<footer>
+    &copy; {{ now.year }} POWERED BY: <strong>KwikSchools EdTech </strong> — All Rights Reserved.
+</footer>
+
+</body>
+</html>

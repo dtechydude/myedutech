@@ -18,6 +18,13 @@ urlpatterns = [
     path('hostel_list/', students_views.hostel_list, name='hostel_list'),
     path('graduated_students_list/', students_views.graduated_students_list, name='graduated_students_list'),
     path('graduate-students/', students_views.graduate_students_view, name='graduate_students'),
+
+    # New Graduates/Alumni URLS
+    path('graduate/', students_views.graduate_students_view, name='graduate_students'),
+    path('alumni/', students_views.alumni_list_view, name='alumni_list'),
+    path('alumni/readmit/<int:student_id>/', students_views.readmit_student, name='readmit_student'),
+
+
     path('upcoming_birthdays/', students_views.upcoming_birthdays_view, name='upcoming_birthdays'),
 
     path('student/id-card/<int:student_id>/', students_views.StudentIDCardView.as_view(), name='student_id_card'),

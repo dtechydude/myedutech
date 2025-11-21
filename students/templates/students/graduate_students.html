@@ -13,12 +13,12 @@
     <style>
         body { 
             background-color: #f0f2f5; 
-            min-height: 100vh; /* Ensures body takes full viewport height */
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
         .main-content {
-            flex-grow: 1; /* Allows content area to push the footer down */
+            flex-grow: 1;
         }
         .header-central {
             background-color: #ffffff;
@@ -34,21 +34,12 @@
             justify-content: space-between;
             align-items: center;
         }
-        .container-form {
-            max-width: 800px;
-        }
-        .logo-link {
-            display: block;
-            margin: 0 auto;
-            text-align: center;
-        }
-        /* Color Overrides (Dark Orange/Red Theme) */
-        .bg-custom-danger {
-            background-color: #dc3545 !important; /* Red */
-        }
-        .text-dark-orange {
-            color: #ff8c00 !important; /* Dark orange */
-        }
+        .container-form { max-width: 800px; }
+        .logo-link { display: block; margin: 0 auto; text-align: center; }
+
+        .bg-custom-danger { background-color: #dc3545 !important; }
+        .text-dark-orange { color: #ff8c00 !important; }
+
         .btn-custom-danger {
             background-color: #dc3545;
             border-color: #dc3545;
@@ -58,18 +49,31 @@
             background-color: #c82333;
             border-color: #bd2130;
         }
-        /* Footer Style */
+
         .footer {
             padding: 1rem 0;
             background-color: #ffffff;
             border-top: 1px solid #e9ecef;
-            margin-top: 3rem; /* Space above the footer */
+            margin-top: 3rem;
         }
-        /* Mobile adjustment for back button */
+
         @media (max-width: 576px) {
-            .header-content { flex-direction: column; }
+            .header-content { 
+                /* Ensures title and buttons stack vertically on mobile */
+                flex-direction: column; 
+            }
             .logo-link { margin-bottom: 1rem; }
             .header-content > * { width: 100%; text-align: center; }
+            /* Force header buttons to be full width on mobile */
+            .btn-header-responsive {
+                width: 100% !important;
+                display: block !important;
+                margin-top: 0.5rem; /* Add spacing between buttons */
+            }
+            /* Adjust spacing for the main title when stacked */
+            .header-content h4 {
+                margin: 1rem 0; 
+            }
         }
     </style>
 </head>
@@ -77,18 +81,16 @@
 
 <header class="header-central">
     <div class="header-content">
-        <a href="{% url 'students:graduated_students_list' %}" class="btn btn-sm btn-outline-secondary d-none d-sm-inline-flex align-items-center">
-            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-        </a>
         
-        <a href="/dashboard/" class="logo-link flex-grow-1">
-            <img src="{{ school_info.logo.url }}" alt="School Logo" width="100" height="auto" class="img-fluid">
-        </a>
-
-        <a href="{% url 'students:graduated_students_list' %}" class="btn btn-sm btn-outline-secondary d-sm-none w-100">
+        <a href="/dashboard/" class="btn btn-sm btn-outline-secondary btn-header-responsive d-flex justify-content-center align-items-center d-sm-inline-flex">
             <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a> 
+        
+        <h4>{{ school_info.name }}</h4> 
+        
+        <a href="{% url 'students:alumni_list' %}" class="btn btn-sm btn-outline-secondary btn-header-responsive d-flex justify-content-center align-items-center d-sm-inline-flex mt-2 mt-sm-0">
+            Go To Alumni List<i class="fas fa-arrow-right ms-2"></i>
         </a>
-        <div class="d-none d-sm-inline-block" style="width: 150px;"></div>
     </div>
 </header>
 
@@ -99,16 +101,17 @@
                 <h3 class="mb-0"><i class="fas fa-user-graduate me-2"></i> {{ title|default:"Move Students to Alumni" }}</h3>
                 <p class="mb-0 small opacity-75">A two-step process to graduate students to the Alumni list.</p>
             </div>
+
             <div class="card-body p-4">
                 
                 {% if messages %}
                 <div class="mb-4">
-                {% for message in messages %}
-                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                {% endfor %}
+                    {% for message in messages %}
+                    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
                 </div>
                 {% endif %}
 
@@ -135,38 +138,57 @@
                 {% if selected_standard %}
                 <div class="step-section mt-4 p-3 border rounded bg-light">
                     <h5 class="card-title text-success mb-3">2. Confirm Students for Graduation ({{ selected_standard.name }})</h5>
+
                     <form method="post" action="{% url 'students:graduate_students' %}">
                         {% csrf_token %}
                         <input type="hidden" name="standard_id" value="{{ selected_standard.id }}">
-                        
+
+                        <div class="mb-4">
+                            <label for="session-select" class="form-label fw-bold text-dark-orange">Graduation Session:</label>
+                            <select class="form-select form-select-lg" id="session-select" name="graduation_session_id" required>
+                                <option value="">-- Select Session --</option>
+                                {% for session in sessions %}
+                                <option value="{{ session.id }}">{{ session.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
                         <div class="mb-3">
                             <div class="form-check pb-2 border-bottom">
                                 <input class="form-check-input" type="checkbox" id="select-all-students">
-                                <label class="form-check-label fw-bold text-dark" for="select-all-students">Select/Deselect All Students</label>
+                                <label class="form-check-label fw-bold text-dark" for="select-all-students">
+                                    Select/Deselect All Students
+                                </label>
                             </div>
 
                             <ul class="list-group list-group-flush mt-3" style="max-height: 300px; overflow-y: auto;">
                                 {% for student in students %}
                                 <li class="list-group-item d-flex align-items-center py-2">
-                                    <input class="form-check-input me-3 student-checkbox" type="checkbox" name="selected_students" value="{{ student.id }}" id="student-{{ student.id }}" checked>
+                                    <input class="form-check-input me-3 student-checkbox" type="checkbox"
+                                            name="selected_students" value="{{ student.id }}"
+                                            id="student-{{ student.id }}" checked>
+
                                     <label class="form-check-label flex-grow-1" for="student-{{ student.id }}">
-                                        <i class="fas fa-user-circle me-1 text-muted"></i> {{ student.get_full_name }}
+                                        <i class="fas fa-user-circle me-1 text-muted"></i>
+                                        {{ student.get_full_name }}
                                     </label>
                                 </li>
                                 {% empty %}
                                 <li class="list-group-item text-center text-danger py-4">
-                                    <i class="fas fa-exclamation-triangle me-2"></i> No active students found in the class to graduate.
+                                    <i class="fas fa-exclamation-triangle me-2"></i> No active students found in this class.
                                 </li>
                                 {% endfor %}
                             </ul>
                         </div>
-                        
+
                         <button type="submit" class="btn btn-success mt-4 w-100 btn-lg shadow">
-                            <i class="fas fa-check-circle me-2"></i> CONFIRM & GRADUATE ({{ students|length|default:"0" }} Selected)
+                            <i class="fas fa-check-circle me-2"></i>
+                            CONFIRM & GRADUATE ({{ students|length|default:"0" }} Selected)
                         </button>
                     </form>
                 </div>
                 {% endif %}
+
             </div>
         </div>
     </div>
@@ -180,45 +202,42 @@
         </span>
     </div>
 </footer>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const selectAllCheckbox = document.getElementById('select-all-students');
-        const studentCheckboxes = document.querySelectorAll('.student-checkbox');
-        const graduateButton = document.querySelector('.btn-success.shadow');
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('select-all-students');
+    const studentCheckboxes = document.querySelectorAll('.student-checkbox');
+    const graduateButton = document.querySelector('.btn-success.shadow');
 
-        function updateGraduateButtonText() {
-            const selectedCount = document.querySelectorAll('.student-checkbox:checked').length;
-            graduateButton.innerHTML = `<i class="fas fa-check-circle me-2"></i> CONFIRM & GRADUATE (${selectedCount} Selected)`;
-            graduateButton.disabled = (selectedCount === 0);
-        }
+    function updateGraduateButtonText() {
+        const selectedCount = document.querySelectorAll('.student-checkbox:checked').length;
+        graduateButton.innerHTML = `<i class="fas fa-check-circle me-2"></i> CONFIRM & GRADUATE (${selectedCount} Selected)`;
+        graduateButton.disabled = (selectedCount === 0);
+    }
 
-        if (selectAllCheckbox) {
-            selectAllCheckbox.checked = studentCheckboxes.length > 0 && 
-                                        Array.from(studentCheckboxes).every(checkbox => checkbox.checked);
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = studentCheckboxes.length > 0 &&
+            Array.from(studentCheckboxes).every(checkbox => checkbox.checked);
 
-            selectAllCheckbox.addEventListener('change', function() {
-                studentCheckboxes.forEach(checkbox => {
-                    checkbox.checked = this.checked;
-                });
-                updateGraduateButtonText();
-            });
-        }
-        
-        studentCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const allChecked = Array.from(studentCheckboxes).every(cb => cb.checked);
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.checked = allChecked;
-                }
-                updateGraduateButtonText();
-            });
-        });
-
-        if (graduateButton) {
+        selectAllCheckbox.addEventListener('change', function() {
+            studentCheckboxes.forEach(checkbox => checkbox.checked = this.checked);
             updateGraduateButtonText();
-        }
+        });
+    }
+    
+    studentCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const allChecked = Array.from(studentCheckboxes).every(cb => cb.checked);
+            if (selectAllCheckbox) { selectAllCheckbox.checked = allChecked; }
+            updateGraduateButtonText();
+        });
     });
+
+    if (graduateButton) { updateGraduateButtonText(); }
+});
 </script>
+
 </body>
 </html>

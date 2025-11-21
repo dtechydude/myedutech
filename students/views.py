@@ -5,13 +5,14 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
 from django.db.models import Count, Sum, Q
+from django.db import models
 import datetime
 #converting html to pdf
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template.loader import get_template
 # from xhtml2pdf import pisa
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from students.models import Student, Hostel, Parent
+from students.models import Student, Hostel, Parent, GraduationRecord
 from staff.models import Teacher
 from students.forms import StudentUpdateForm, SuperUserStudentUpdateForm
 from payments.models import Payment, CategoryFee # Import Payment and CategoryFee models
@@ -33,6 +34,7 @@ from django.db import IntegrityError, transaction
 from datetime import date
 from django.views import View
 from django.contrib.admin.views.decorators import staff_member_required
+
 
 
 
@@ -125,7 +127,11 @@ def student_boarder_list(request):
     else:
         return render(request, 'pages/portal_home.html')
 
-# GRADUATED Students List
+
+
+
+# ==========================================================================
+# GRADUATED Students List Old
 @login_required
 def graduated_students_list(request):
     """
@@ -143,54 +149,226 @@ def graduated_students_list(request):
 def is_authorized_staff(user):
     return user.is_superuser or user.is_staff
 
+
+
 @user_passes_test(is_authorized_staff)
 def graduate_students_view(request):
-    """
-    Filters students by class, allows selecting multiple students,
-    and changes their status to 'graduated' in a batch.
-    """
+    standards = Standard.objects.all().order_by('name')
+    sessions = Session.objects.all().order_by('-start_date')  # or use name
     students = Student.objects.none()
     selected_standard = None
-    
-    if request.method == 'POST':
-        selected_student_ids = request.POST.getlist('selected_students')
-        standard_id = request.POST.get('standard_id')
 
-        if not selected_student_ids:
-            messages.error(request, "Please select at least one student to graduate.")
-            return redirect('graduate_students')
+    if request.method == "GET":
+        standard_id = request.GET.get('standard')
+        if standard_id:
+            selected_standard = get_object_or_404(Standard, id=standard_id)
+            students = Student.objects.filter(
+                current_class=selected_standard
+            ).exclude(student_status='graduated').order_by('last_name')
 
-        try:
-            with transaction.atomic():
-                students_to_graduate = Student.objects.filter(id__in=selected_student_ids)
-                count = students_to_graduate.count()
-                
-                students_to_graduate.update(student_status='graduated')
-                
-            messages.success(request, f"Successfully graduated {count} students.")
+        return render(request, 'students/graduate_students.html', {
+            'standards': standards,
+            'sessions': sessions,
+            'students': students,
+            'selected_standard': selected_standard,
+            'title': 'Graduate Students To Alumni',
+        })
 
-        except Exception as e:
-            messages.error(request, f"An error occurred: {e}")
+    # POST
+    selected_ids = request.POST.getlist('selected_students')
+    session_id = request.POST.get('graduation_session_id')
 
+    if not selected_ids:
+        messages.error(request, "Please select at least one student to graduate.")
         return redirect('students:graduate_students')
-    
-    # GET request
-    standard_id_param = request.GET.get('standard')
-    if standard_id_param:
-        selected_standard = get_object_or_404(Standard, id=standard_id_param)
-        # Filter active students in the selected class
-        students = Student.objects.filter(current_class=selected_standard).exclude(student_status='graduated').order_by('last_name')
 
-    standards = Standard.objects.all().order_by('name')
+    # validate session
+    graduation_session = None
+    if session_id:
+        graduation_session = get_object_or_404(Session, id=session_id)
 
-    context = {
+    try:
+        with transaction.atomic():
+            students_to_grad = Student.objects.filter(id__in=selected_ids)
+
+            # Ensure Alumni standard exists
+            alumni_standard, created = Standard.objects.get_or_create(name__iexact='Alumni', defaults={'name': 'Alumni'})
+
+            count = students_to_grad.count()
+            for student in students_to_grad:
+                # Create a graduation record
+                GraduationRecord.objects.create(
+                    student=student,
+                    session=graduation_session,
+                    graduated_class=student.current_class
+                )
+
+                # Update student fields
+                student.student_status = 'graduated'
+                student.current_class = alumni_standard
+                student.graduated_session = graduation_session
+                student.save()
+
+        messages.success(request, f"Successfully graduated {count} students.")
+    except Exception as e:
+        messages.error(request, f"An error occurred: {e}")
+
+    return redirect('students:graduate_students')
+
+
+# @user_passes_test(is_authorized_staff)
+# def alumni_list_view(request):
+#     queryset = Student.objects.filter(student_status='graduated').select_related('current_class', 'graduated_session')
+#     sessions = Session.objects.all().order_by('-start_date')
+#     standards = Standard.objects.filter(name__iexact='Alumni') | Standard.objects.exclude(name__iexact='Alumni')  # for filter if needed
+
+#     # filtering
+#     session_id = request.GET.get('session')
+#     class_id = request.GET.get('class')
+#     year = request.GET.get('year')
+#     q = request.GET.get('q')
+
+#     if session_id:
+#         queryset = queryset.filter(graduated_session__id=session_id)
+#     if class_id:
+#         # Assuming GraduationRecord is related via 'graduation_records' on Student
+#         queryset = queryset.filter(graduation_records__graduated_class__id=class_id)
+#     if year:
+#         # Filtering by year is correct
+#         queryset = queryset.filter(graduation_records__date_graduated__year=year)
+#     if q:
+#         queryset = queryset.filter(
+#             # adjust fields as appropriate
+#             models.Q(first_name__icontains=q) |
+#             models.Q(last_name__icontains=q) |
+#             models.Q(USN__icontains=q)
+#         )
+
+#     queryset = queryset.distinct().order_by('-graduation_records__date_graduated', 'last_name')
+
+#     # pagination
+#     paginator = Paginator(queryset, 25)
+#     page = request.GET.get('page')
+#     alumni_page = paginator.get_page(page)
+
+#     # years for filter - CORRECTED LINE
+#     # GraduationRecord.objects.dates() returns a QuerySet of datetime objects
+#     date_objects = GraduationRecord.objects.dates('date_graduated', 'year', order='DESC')
+#     # Use a list comprehension to extract the 'year' attribute from each datetime object
+#     years = [date_obj.year for date_obj in date_objects] 
+
+#     return render(request, 'students/alumni_list.html', {
+#         'alumni': alumni_page,
+#         'sessions': sessions,
+#         'years': years,
+#         'standards': standards,
+#         'q': q,
+#     })
+
+from django.contrib.auth.decorators import user_passes_test
+from django.core.paginator import Paginator
+from django.db import models
+from django.http import HttpResponse
+import csv
+
+@user_passes_test(is_authorized_staff)
+def alumni_list_view(request):
+    queryset = Student.objects.filter(student_status='graduated') \
+        .select_related('current_class', 'graduated_session')
+
+    sessions = Session.objects.all().order_by('-start_date')
+    standards = Standard.objects.filter(name__iexact='Alumni') | Standard.objects.exclude(name__iexact='Alumni')
+
+    # ---- FILTERING ----
+    session_id = request.GET.get('session')
+    class_id = request.GET.get('class')
+    year = request.GET.get('year')
+    q = request.GET.get('q')
+
+    if session_id:
+        queryset = queryset.filter(graduated_session__id=session_id)
+
+    if class_id:
+        queryset = queryset.filter(graduation_records__graduated_class__id=class_id)
+
+    if year:
+        queryset = queryset.filter(graduation_records__date_graduated__year=year)
+
+    if q:
+        queryset = queryset.filter(
+            models.Q(first_name__icontains=q) |
+            models.Q(last_name__icontains=q) |
+            models.Q(USN__icontains=q)
+        )
+
+    queryset = queryset.distinct().order_by('-graduation_records__date_graduated', 'last_name')
+
+    # ---- SIMPLE CSV EXPORT WITHOUT CHANGING YOUR LOGIC ----
+    if request.GET.get("export") == "csv":
+        response = HttpResponse(content_type="text/csv")
+        response['Content-Disposition'] = 'attachment; filename="alumni.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(["Name", "Previous Class", "Session", "Graduated On"])
+
+        for student in queryset:
+            rec = student.graduation_records.first()
+            writer.writerow([
+                student.get_full_name(),
+                rec.graduated_class.name if rec else "-",
+                student.graduated_session.name if student.graduated_session else "-",
+                rec.date_graduated.strftime("%Y-%m-%d %H:%M") if rec and rec.date_graduated else "-"
+            ])
+        return response
+
+    # ---- PAGINATION (unchanged) ----
+    paginator = Paginator(queryset, 25)
+    page = request.GET.get('page')
+    alumni_page = paginator.get_page(page)
+
+    # ---- YEARS (unchanged) ----
+    date_objects = GraduationRecord.objects.dates('date_graduated', 'year', order='DESC')
+    years = [date_obj.year for date_obj in date_objects]
+
+    return render(request, 'students/alumni_list.html', {
+        'alumni': alumni_page,
+        'sessions': sessions,
+        'years': years,
         'standards': standards,
-        'students': students,
-        'selected_standard': selected_standard,
-        'title': 'Graduate Students To Alumni',
-    }
-    return render(request, 'students/graduate_students.html', context)
-    
+        'q': q,
+    })
+
+
+
+@user_passes_test(is_authorized_staff)
+def readmit_student(request, student_id):
+    student = get_object_or_404(Student, id=student_id, student_status='graduated')
+    standards = Standard.objects.exclude(name__iexact='Alumni').order_by('name')
+
+    if request.method == 'POST':
+        new_class_id = request.POST.get('new_class')
+        if not new_class_id:
+            messages.error(request, "Please choose a class to re-admit the student into.")
+            return redirect('students:readmit_student', student_id=student.id)
+
+        new_class = get_object_or_404(Standard, id=new_class_id)
+        student.current_class = new_class
+        student.student_status = 'active'
+        student.graduated_session = None  # optional: clear session
+        student.save()
+
+        messages.success(request, f"{student.get_full_name()} has been re-admitted into {new_class.name}.")
+        return redirect('students:alumni_list')
+
+    return render(request, 'students/readmit_student.html', {
+        'student': student,
+        'standards': standards,
+    })
+
+#  End Graduated View Code
+#======================================================================================
+
+
 
  # Hostel List
 @login_required
@@ -668,162 +846,6 @@ def assign_classgroup_to_students_view(request):
 
 
 
-# Parent Logic
-# @login_required
-# def parent_dashboard(request):
-#     try:
-#         parent = Parent.objects.get(user=request.user)
-#         children = Student.objects.filter(parent=parent).prefetch_related('scores__term')
-#     except Parent.DoesNotExist:
-#         children = []
-    
-#     children_with_reports = []
-#     all_terms = Term.objects.all().order_by('id')
-#     all_sessions = Session.objects.all().order_by('id')
-    
-#     for child in children:
-#         child_data = {
-#             'child': child,
-#             'termly_reports': [],
-#             'session_reports': [],
-#             'payment_summary': {},
-#         }
-        
-#         # Check for available termly reports
-#         for term in all_terms:
-#             if child.scores.filter(term=term).exists():
-#                 child_data['termly_reports'].append(term)
-        
-#         # Check for available session reports
-#         for session in all_sessions:
-#             if child.scores.filter(term__session=session).exists():
-#                 child_data['session_reports'].append(session)
-        
-#         # Get all unique completed payments for the child
-#         completed_payments = Payment.objects.filter(
-#             student=child,
-#             status='completed'
-#         ).values(
-#             'payment_category', 'term', 'session'
-#         ).annotate(
-#             total_paid=Sum('amount_received')
-#         ).order_by('payment_category__name')
-
-#         for payment_item in completed_payments:
-#             try:
-#                 # Find the corresponding CategoryFee to get the total amount due
-#                 category_fee = CategoryFee.objects.get(
-#                     payment_category__id=payment_item['payment_category'],
-#                     term__id=payment_item['term'],
-#                     session__id=payment_item['session']
-#                 )
-#                 amount_due = category_fee.amount_due
-#                 balance = amount_due - payment_item['total_paid']
-
-#                 child_data['payment_summary'][category_fee.id] = {
-#                     'category_fee': category_fee,
-#                     'total_paid': payment_item['total_paid'],
-#                     'balance': balance,
-#                 }
-#             except CategoryFee.DoesNotExist:
-#                 # Handle cases where a payment exists but the corresponding fee is deleted
-#                 pass
-
-#         children_with_reports.append(child_data)
-        
-#     # Fetch SchoolIdentity
-#     try:
-#         school_identity = SchoolIdentity.objects.first()
-#     except SchoolIdentity.DoesNotExist:
-#         school_identity = None
-    
-#     context = {
-#         'children_with_reports': children_with_reports,
-#         'school_identity': school_identity,
-#     }
-#     return render(request, 'students/parent_dashboard.html', context)
-
-
-
-# @login_required
-# def parent_dashboard(request):
-#     # Import necessary models locally to avoid circular dependencies if possible
-#     from .models import Parent, Student
-#     from curriculum.models import Session, Term    # Assuming Session is also used here
-#     from payments.models import StudentFeeAssignment, Payment
-#     from django.db.models import Sum, F
-#     from decimal import Decimal
-
-#     try:
-#         parent = Parent.objects.get(user=request.user)
-#         children = Student.objects.filter(parent=parent).prefetch_related('scores__term')
-#     except Parent.DoesNotExist:
-#         children = []
-    
-#     children_with_reports = []
-#     all_terms = Term.objects.all().order_by('id')
-#     all_sessions = Session.objects.all().order_by('id')
-    
-#     for child in children:
-#         child_data = {
-#             'child': child,
-#             'termly_reports': [],
-#             'session_reports': [],
-#             'payment_summary': {},
-#         }
-        
-#         # Check for available termly reports (Existing logic unchanged)
-#         for term in all_terms:
-#             if child.scores.filter(term=term).exists():
-#                 child_data['termly_reports'].append(term)
-        
-#         # Check for available session reports (Existing logic unchanged)
-#         for session in all_sessions:
-#             if child.scores.filter(term__session=session).exists():
-#                 child_data['session_reports'].append(session)
-        
-#         # --- START: CORRECTED PAYMENT SUMMARY LOGIC ---
-        
-#         # 1. Get ALL fees assigned (invoiced) to the student
-#         fees_assigned = StudentFeeAssignment.objects.filter(
-#     # Filter conditions for the child...
-# ).annotate(
-#     total_paid=Sum(F('payments__amount_received')) # <-- CORRECTED: Use 'payments'
-# ).annotate(
-#     balance=F('amount_due') - F('total_paid')
-# )
-
-#         for fee in fees_assigned:
-#             # Calculate total paid (default to Decimal('0.00') if no payments exist)
-#             total_paid = fee.total_paid if fee.total_paid is not None else Decimal('0.00')
-#             balance = fee.amount_due - total_paid
-
-#             child_data['payment_summary'][fee.pk] = {
-#                 'fee_assignment': fee,
-#                 'amount_due': fee.amount_due,
-#                 'total_paid': total_paid,
-#                 'balance': balance,
-#             }
-        
-#         # --- END: CORRECTED PAYMENT SUMMARY LOGIC ---
-
-#         children_with_reports.append(child_data)
-        
-#     # Fetch SchoolIdentity (Existing logic unchanged)
-#     try:
-#         from pages.models import SchoolIdentity # Assuming this is where SchoolIdentity is
-#         school_identity = SchoolIdentity.objects.first()
-#     except Exception:
-#         school_identity = None
-    
-#     context = {
-#         'children_with_reports': children_with_reports,
-#         'school_identity': school_identity,
-#     }
-#     return render(request, 'students/parent_dashboard.html', context)
-
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
 
 @login_required
 def parent_dashboard(request):
@@ -982,41 +1004,6 @@ def export_parents_csv(request):
             ])
 
     return response
-
-
-
-# # Parent List
-# @staff_member_required
-# def parent_list_view(request):
-#     query = request.GET.get('q', '')
-    
-#     parents_list = Parent.objects.all().prefetch_related('children')
-    
-#     if query:
-#         parents_list = parents_list.filter(
-#             Q(guardian_name__icontains=query) |
-#             Q(guardian_email__icontains=query) |
-#             Q(user__username__icontains=query) |
-#             Q(children__first_name__icontains=query) |
-#             Q(children__last_name__icontains=query)
-#         ).distinct()
-
-#     paginator = Paginator(parents_list, 10)
-#     page_number = request.GET.get('page')
-#     page_obj = paginator.get_page(page_number)
-
-#     # Get the school identity to pass to the template
-#     try:
-#         school_identity = SchoolIdentity.objects.first()
-#     except SchoolIdentity.DoesNotExist:
-#         school_identity = None
-    
-#     context = {
-#         'page_obj': page_obj,
-#         'query': query,
-#         'school_identity': school_identity  # Pass the school identity to the context
-#     }
-#     return render(request, 'students/parent_list.html', context)
 
 
 # Student's Birthay

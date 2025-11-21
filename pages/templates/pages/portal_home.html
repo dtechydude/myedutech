@@ -441,7 +441,7 @@
 							<li><a href="{% url 'students:parent_list' %}">PARENTS LIST</a></li>	
 							<li><a href="{% url 'students:parent-dashboard' %}">PARENTS DASHBOARD</a></li>
 							<li><a href="{% url 'students:graduate_students' %}">Move Students To Alumni</a></li>
-							<li><a href="{% url 'students:graduated_students_list' %}">GRADUATE/ALUMNI List</a></li>
+							<li><a href="{% url 'students:alumni_list' %}">GRADUATE/ALUMNI List</a></li>
 							
 							{% elif user.teacher %}							
 							<li><a href="{% url 'students:student-list' %}">My Students</a></li>
@@ -872,8 +872,10 @@
 														<h5 class="mb-0 font-w600">{{ user.teacher.staff_role }}</h5>
 														<p class="mb-0 text-nowrap ">My Role</p>
 														{% elif user.is_authenticated and user.student %}
-														<h5 class="mb-0 font-w600">{{ user.student.date_admitted }}</h5>
-														<p class="mb-0 text-nowrap ">Admission Date</p>
+														<a href="{% url 'results:student_dashboard' %}">
+														<h5 class="mb-0 font-w600">Check Results</h5>
+														<p class="mb-0 text-nowrap ">Termly/Session</p>
+													</a>														
 														{% elif user.is_authenticated and user.parent %}
 														<a href="{% url 'tickets:create_ticket' %}">
 														<h5 class="mb-0 font-w600">Ticket</h5>

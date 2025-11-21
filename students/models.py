@@ -6,7 +6,7 @@ from django.template.defaultfilters import slugify
 from django.db.models.signals import post_save, post_delete
 from datetime import timedelta
 from django.urls import reverse
-from curriculum.models import Standard, Subject, ClassGroup
+from curriculum.models import Standard, Subject, ClassGroup, Session
 # from portal.models import Teacher
 from staff.models import Teacher
 # from attendance.models import AttendanceTotal
@@ -193,6 +193,7 @@ class Student(models.Model):
     ]
 
     student_status = models.CharField(max_length=15, choices=student_status, default=active)
+    graduated_session = models.ForeignKey(Session, on_delete=models.SET_NULL, null=True, blank=True, related_name="graduated_students")
     fee_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0, blank=True, null=True)
 
 
@@ -220,5 +221,13 @@ class Student(models.Model):
         Returns the form teacher from the assigned ClassGroup.
         """
         return self.form_teacher if self.current_class else None
-    
-   
+
+
+class GraduationRecord(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="graduation_records")
+    session = models.ForeignKey("curriculum.Session", on_delete=models.SET_NULL, null=True, blank=True)
+    graduated_class = models.ForeignKey(Standard, on_delete=models.SET_NULL, null=True, blank=True)
+    date_graduated = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.student.first_name} - {self.session}"   

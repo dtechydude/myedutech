@@ -1861,7 +1861,7 @@ class ResultPermissionGatekeeperView(View):
             except ResultPublication.DoesNotExist:
                 # If the Admin hasn't explicitly created the record, default to restricted access
                 messages.error(request, "Access to this report card is pending administrative review.")
-                return redirect('resuults:student_dashboard')
+                return redirect('results:student_dashboard')
         
         # 4. Fallback for unauthorized users
         messages.error(request, "You are not authorized to view this report card.")
