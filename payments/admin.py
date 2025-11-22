@@ -3,10 +3,11 @@ from django.contrib import admin, messages
 from decimal import Decimal
 from django.db.models import Sum
 from .models import Payment, PaymentNotification, StudentFeeAssignment, PaymentCategory, Receipt, BankDetail, StudentAccountLedger
+from import_export.admin import ImportExportModelAdmin
 
 
 @admin.register(Payment)
-class PaymentAdmin(admin.ModelAdmin):
+class PaymentAdmin(ImportExportModelAdmin):
     list_display = (
         'student', 'payment_category', 'term', 'session',
         'original_amount', 'amount_received', 'balance_after_payment',
@@ -82,39 +83,34 @@ class PaymentAdmin(admin.ModelAdmin):
 #     search_fields = ('name',)
 
 @admin.register(PaymentCategory)
-class PaymentCategoryAdmin(admin.ModelAdmin):
+class PaymentCategoryAdmin(ImportExportModelAdmin):
     list_display = ('name', 'description')
     search_fields = ('name',)      
 
 @admin.register(BankDetail)
-class BankDetailAdmin(admin.ModelAdmin):
+class BankDetailAdmin(ImportExportModelAdmin):
     list_display = ('acc_name', 'acc_number', 'bank_name')
     search_fields = ('acc_name','acc_number', 'bank_name')
     list_filter = ('bank_name',)
 
-# @admin.register(CategoryFee)
-# class CategoryFeeAdmin(admin.ModelAdmin):
-#     list_display = ('fee_name', 'payment_category', 'term', 'session', 'amount_due')
-#     list_filter = ('payment_category', 'term', 'session')
-#     search_fields = ('fee_name', 'payment_category__name', 'term__name', 'session__name')
-#     raw_id_fields = ['payment_category', 'term', 'session']
+
 
 @admin.register(StudentAccountLedger)
-class StudentAccountLedgerAdmin(admin.ModelAdmin):
+class StudentAccountLedgerAdmin(ImportExportModelAdmin):
     list_display = ('student', 'term', 'session', 'balance', 'last_updated')
     list_filter = ('term', 'session', 'last_updated')
     search_fields = ('student__first_name', 'student__last_name', 'student__student_id')
     readonly_fields = ('balance', 'last_updated') 
 
 @admin.register(Receipt)
-class ReceiptAdmin(admin.ModelAdmin):
+class ReceiptAdmin(ImportExportModelAdmin):
     list_display = ('receipt_number', 'payment', 'issue_date', 'generated_by')
     list_filter = ('issue_date', 'generated_by')
     search_fields = ('receipt_number', 'payment__student__first_name', 'payment__student__last_name')
     readonly_fields = ('receipt_number', 'issue_date', 'generated_by', 'payment')
 
 @admin.register(StudentFeeAssignment)
-class StudentFeeAssignmentAdmin(admin.ModelAdmin):
+class StudentFeeAssignmentAdmin(ImportExportModelAdmin):
     list_display = ('student', 'payment_category', 'term', 'session', 'amount_due')
     list_filter = ('term', 'session', 'payment_category', 'student__current_class')
     search_fields = ('student__USN', 'student__first_name', 'student__last_name', 'payment_category__name')
@@ -129,7 +125,7 @@ class StudentFeeAssignmentAdmin(admin.ModelAdmin):
 
 # Payment Notification Admin
 @admin.register(PaymentNotification)
-class PaymentNotificationAdmin(admin.ModelAdmin):
+class PaymentNotificationAdmin(ImportExportModelAdmin):
     # Fields displayed in the list view
     list_display = (
         'student_name', 

@@ -1,9 +1,10 @@
 from datetime import timedelta, datetime
 from django.contrib import admin
 from .models import Attendance
+from import_export.admin import ImportExportModelAdmin
 
-
-class AttendanceAdmin(admin.ModelAdmin):   
+@admin.register(Attendance)
+class AttendanceAdmin(ImportExportModelAdmin):   
  
     list_display = ('student', 'date',  'present')
     list_filter = ['student__current_class']
@@ -12,4 +13,4 @@ class AttendanceAdmin(admin.ModelAdmin):
 
   
 
-admin.site.register(Attendance, AttendanceAdmin)
+

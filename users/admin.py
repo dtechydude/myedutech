@@ -43,7 +43,7 @@ class CustomUserAdmin(ImportExportModelAdmin, DefaultUserAdmin): # Inherit from 
 
 
 
-class UserProfileAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+class UserProfileAdmin(ImportExportModelAdmin):
            
     list_display=('user', 'code', 'user_type', 'phone', 'state_of_origin')
     list_filter  = ['user_type',]
@@ -51,7 +51,7 @@ class UserProfileAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     raw_id_fields = ['user',]
 
 
-class DeptAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+class DeptAdmin(ImportExportModelAdmin):
        
     list_display=('id', 'name')
     list_filter  = ['name',]

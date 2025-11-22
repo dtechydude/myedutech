@@ -4,14 +4,14 @@ from import_export.admin import ImportExportModelAdmin
 
 
 
-class StaffPositionAdmin(admin.ModelAdmin):
+class StaffPositionAdmin(ImportExportModelAdmin):
     list_display = ('name', 'description')
     search_fields = ('name',)
     ordering = ['name',]
     exclude = ('slug',)
 
     
-class TeacherAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+class TeacherAdmin(ImportExportModelAdmin):
     list_display = ( 'user', 'last_name', 'first_name', 'staff_role', 'phone_home', 'qualification' )
     search_fields = ('first_name', 'last_name')
     list_filter = ['staff_role',]

@@ -7,7 +7,7 @@ from curriculum.models import Term
 
 
 
-class ExaminationAdmin(admin.ModelAdmin):
+class ExaminationAdmin(ImportExportModelAdmin):
        
     list_display=('name', 'standard', 'term')
     autocomplete_fields = ['standard']
@@ -17,7 +17,7 @@ class ExaminationAdmin(admin.ModelAdmin):
 #     list_display=('student', 'subject', 'exam', 'score')
 
 #works well 001
-class ScoreAdmin(admin.ModelAdmin):
+class ScoreAdmin(ImportExportModelAdmin):
        
     list_display=('student', 'subject', 'term', 'ca1', 'ca2', 'exam_score', 'total_score')
     search_fields = ('student__USN', 'subject__name')
@@ -28,7 +28,7 @@ class ScoreAdmin(admin.ModelAdmin):
 
 # Admin for MotorAbilityScore (still useful for viewing all at once)
 @admin.register(MotorAbilityScore)
-class MotorAbilityScoreAdmin(admin.ModelAdmin):
+class MotorAbilityScoreAdmin(ImportExportModelAdmin):
     list_display = (
         'student', 'term', 'honesty', 'politeness', 'neatness', 'cooperation',
         'obedience', 'punctuality', 'physical_education', 'games'
@@ -71,7 +71,7 @@ except admin.sites.NotRegistered:
 
 
 @admin.register(Term)
-class TermAdmin(admin.ModelAdmin):
+class TermAdmin(ImportExportModelAdmin):
     list_display = ('name', 'session', 'start_date', 'end_date', 'is_current')
     list_filter = ('session',)
     search_fields = ('name', 'session__name')
@@ -118,7 +118,7 @@ class ResultPublicationAdmin(admin.ModelAdmin):
 
 # Mid Term Admin Logic
 @admin.register(MidTermScore)
-class MidTermScoreAdmin(admin.ModelAdmin):
+class MidTermScoreAdmin(ImportExportModelAdmin):
     list_display = ('student', 'subject', 'term', 'exam_total_score', 'student_class')
     search_fields = ('student__USN', 'student__user__first_name', 'subject__name')
     # Allows filtering by term, subject, and the student's current class
@@ -185,5 +185,3 @@ admin.site.register(Examination, ExaminationAdmin)
 # admin.site.register(ExamSubject, ExamSubjectAdmin)
 # admin.site.register(Result, ResultAdmin)
 admin.site.register(Score, ScoreAdmin)
-# admin.site.register(ResultSheet3, ResultSheet3Admin)
-# # admin.site.register(ResultImage, ResultImageAdmin)

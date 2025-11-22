@@ -1,13 +1,12 @@
 from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
-from import_export.admin import ImportExportModelAdmin
 from .models import StudentOnRoute, BusPayment, Route
 from .resources import StudentOnRouteResource, BusPaymentResource
 from django.db.models import Sum
 
 
 
-class RouteAdmin(admin.ModelAdmin):
+class RouteAdmin(ImportExportModelAdmin):
     list_display = ('name', 'route_id', 'bus_fee', 'direction', 'staff_in_charge', 'driver', 'driver_phone')
     search_fields = ('name', 'staff_in_charge__first_name',)
     ordering = ['name',]

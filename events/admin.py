@@ -1,8 +1,9 @@
 from django.contrib import admin
 from .models import Event
+from import_export.admin import ImportExportModelAdmin
 
 @admin.register(Event)
-class EventAdmin(admin.ModelAdmin):
+class EventAdmin(ImportExportModelAdmin):
     """
     Customizes the Django admin interface for the Event model.
     """

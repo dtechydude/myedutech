@@ -16,7 +16,7 @@ from payments.models import StudentFeeAssignment, PaymentCategory, Term, Session
 
 # Use @admin.register for all admin classes
 @admin.register(Hostel)
-class HostelAdmin(admin.ModelAdmin):
+class HostelAdmin(ImportExportModelAdmin):
     list_display = ('name', 'hostel_master')
     search_fields = ('name',)
     ordering = ['name',]
@@ -25,12 +25,12 @@ class HostelAdmin(admin.ModelAdmin):
 
 # STUDENT BADGE
 @admin.register(Badge)
-class BadgeAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+class BadgeAdmin(ImportExportModelAdmin):
     list_display=('name', 'desc')
     exclude=('slug',)
 
 @admin.register(Parent)
-class ParentAdmin(admin.ModelAdmin):
+class ParentAdmin(ImportExportModelAdmin):
     list_display = ('user', 'guardian_name', 'guardian_address', 'guardian_phone')
     search_fields = ('user__username',)
     raw_id_fields = ['user',]
@@ -217,7 +217,7 @@ def graduate_selected_students(self, request, queryset):
 
 # ----------------------------- Student Admin ----------------------------- #
 @admin.register(Student)
-class StudentAdmin(ImportExportModelAdmin, admin.ModelAdmin):
+class StudentAdmin(ImportExportModelAdmin):
     list_display = (
         'user', 'USN', 'first_name', 'last_name', 
         'current_class', 'date_admitted', 'guardian_phone', 'student_status'
@@ -300,7 +300,7 @@ class StudentAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 
 # ----------------------------- Graduation Record Admin ----------------------------- #
 @admin.register(GraduationRecord)
-class GraduationRecordAdmin(admin.ModelAdmin):
+class GraduationRecordAdmin(ImportExportModelAdmin):
     list_display = ('student', 'session', 'graduated_class', 'date_graduated')
     list_filter = ('session', 'graduated_class', 'date_graduated')
     search_fields = ('student__first_name', 'student__last_name', 'student__USN')
