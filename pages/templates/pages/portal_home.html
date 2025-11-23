@@ -353,7 +353,7 @@
 								</div>
 							</li>
 							<li class="nav-item dropdown header-profile">
-								<a class="nav-link" href="javascript:void(0);" role="button" data-bs-toggle="dropdown">
+								<a class="nav-link" href="/dashboard/" role="button" data-bs-toggle="dropdown">
 								{% if user.profile.image and user.profile.image.name %}
 									<img src="{{ user.profile.image.url }}" width="20" alt="Profile"/>
 								{% else %}
@@ -361,7 +361,7 @@
 								{% endif %}
 								</a>
 								<div class="dropdown-menu dropdown-menu-end">
-									<a href="$" class="dropdown-item ai-icon">
+									<a href="/dashboard/" class="dropdown-item ai-icon">
 										<svg id="icon-user2" xmlns="http://www.w3.org/2000/svg" class="text-primary" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
 										<span class="ms-2">{{user.first_name}} {{ user.last_name }} </span>
 									</a>
@@ -372,7 +372,7 @@
 										{% elif user.staff %}
 										<a href="{% url 'staff:staff-self-detail' %}" class="dropdown-item ai-icon">
 										{% else %}
-										<a href="#" class="dropdown-item ai-icon">								
+										<a href="/dashboard/" class="dropdown-item ai-icon">								
 										{% endif %}
 										<i class="fas fa-user text-danger" width="18" height="18"></i><span class="ms-2">My Profile </span></a>
 									<a href="{% url 'users:user_logout' %}" class="dropdown-item ai-icon">
@@ -708,7 +708,7 @@
 						</a>
 						<ul aria-expanded="false">	
 												
-							<li><a href="{% url 'students:graduated_students_list' %}">Old Students</a></li>							
+							<li><a href="{% url 'students:student_archive' %}">Old Students</a></li>							
 							{% comment %} <li><a href="{% url 'payments:archive_payment_chart_list' %}">Archived Fees Chart</a></li>	{% endcomment %}						
 									
 						</ul>
@@ -723,9 +723,9 @@
 							{% if user.teacher %}						
 							<li><a href="{% url 'staff:teacher-self-detail' %}">My Profile</a></li>
 							{% elif user.student %}
-							<li><a href="{% url 'students:student-self-detail' %}">My Profile</a></li>
+							<li><a href="{% url 'students:student-self-detail' %}">My Profile</a></li>							
 							{% else %}
-							<li><a href="">My Profile</a></li>
+							<li><a href="/dashboard/">My Profile</a></li>
 							{% endif %}
 							<li><a href="{% url 'users:password_reset' %}">Reset Password</a></li>							
 							<li><a href="{% url 'users:user_logout' %}">LogOut</a></li>				

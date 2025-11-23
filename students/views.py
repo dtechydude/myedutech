@@ -1069,3 +1069,201 @@ def upcoming_birthdays_view(request):
     }
     
     return render(request, 'students/upcoming_birthdays.html', context)
+
+
+#============================================================
+# LOGIC FOR STUDENT ARCHIVE
+# @staff_member_required
+# def student_archive(request):
+#     """
+#     Displays the archived student records, supporting search, filtering, and CSV export.
+#     Access is restricted to users who are logged in and have staff privileges (is_staff=True).
+#     """
+#     # Archived statuses
+#     archived_status = ['graduated', 'dropped', 'expelled', 'suspended']
+
+#     # Base queryset
+#     students = Student.objects.filter(student_status__in=archived_status)
+
+#     # --- SEARCH FILTERS ---
+#     q = request.GET.get('q')
+#     status_filter = request.GET.get('status')
+#     session_filter = request.GET.get('session')
+
+#     if q:
+#         students = students.filter(
+#             models.Q(first_name__icontains=q) |
+#             models.Q(last_name__icontains=q) |
+#             models.Q(USN__icontains=q)
+#         )
+
+#     if status_filter and status_filter != "all":
+#         students = students.filter(student_status=status_filter)
+
+#     if session_filter and session_filter != "all":
+#         students = students.filter(graduated_session_id=session_filter)
+
+#     # --- CSV EXPORT ---
+#     if request.GET.get("export") == "csv":
+#         return export_students_csv(students)
+
+#     # --- TEMPLATE RENDER ---
+#     # Note: Assuming 'Student' model has a foreign key to a 'Session' model implied by 'graduated_session'
+#     sessions = Student.objects.filter(graduated_session__isnull=False).values_list("graduated_session", "graduated_session__name").distinct()
+
+#     return render(request, "students/archive.html", {
+#         "students": students,
+#         "sessions": sessions,
+#         "selected_status": status_filter,
+#         "selected_session": session_filter,
+#         "q": q,
+#     })
+
+
+# def export_students_csv(queryset):
+#     """
+#     Helper function to generate a CSV response from a given student queryset.
+#     """
+#     response = HttpResponse(content_type='text/csv')
+#     response['Content-Disposition'] = 'attachment; filename="student_archive.csv"'
+
+#     writer = csv.writer(response)
+#     writer.writerow([
+#         "USN",
+#         "Full Name",
+#         "Gender",
+#         "Status",
+#         "Class on Admission",
+#         "Date Admitted",
+#         "Graduated Session",
+#         "Parent/Guardian",
+#         "Guardian Phone",
+#     ])
+
+#     for s in queryset:
+#         # Assuming s.class_on_admission and s.graduated_session are FK objects with a 'name' attribute
+#         writer.writerow([
+#             s.USN,
+#             f"{s.last_name} {s.first_name}",
+#             s.gender,
+#             s.student_status,
+#             s.class_on_admission.name if s.class_on_admission else "",
+#             s.date_admitted,
+#             s.graduated_session.name if s.graduated_session else "",
+#             s.guardian_name,
+#             s.guardian_phone,
+#         ])
+
+#     return response
+
+
+
+# --- Helper Function for CSV Export (Unchanged) ---
+def export_students_csv(queryset):
+    """
+    Helper function to generate a CSV response from a given student queryset.
+    (Assuming Student model and its field definitions are available)
+    """
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="student_archive.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        "USN",
+        "Full Name",
+        "Gender",
+        "Status",
+        "Class on Admission",
+        "Date Admitted",
+        "Graduated Session",
+        "Parent/Guardian",
+        "Guardian Phone",
+    ])
+
+    for s in queryset:
+        # Safely access foreign key names, assuming .name exists
+        class_name = s.class_on_admission.name if hasattr(s, 'class_on_admission') and s.class_on_admission else ""
+        session_name = s.graduated_session.name if hasattr(s, 'graduated_session') and s.graduated_session else ""
+        
+        writer.writerow([
+            s.USN,
+            f"{s.last_name} {s.first_name}",
+            s.gender,
+            s.student_status,
+            class_name,
+            s.date_admitted,
+            session_name,
+            s.guardian_name,
+            s.guardian_phone,
+        ])
+
+    return response
+# --------------------------------------------------
+
+@staff_member_required
+def student_archive(request):
+    """
+    Displays the archived student records, supporting search, filtering, and CSV export,
+    with server-side pagination.
+    """
+    # Archived statuses
+    archived_status = ['graduated', 'dropped', 'expelled', 'suspended']
+
+    # Base queryset, ordered for consistent pagination
+    students = Student.objects.filter(student_status__in=archived_status).order_by('-date_admitted', 'last_name')
+
+    # --- GET FILTERS & PAGE NUMBER ---
+    q = request.GET.get('q')
+    status_filter = request.GET.get('status')
+    session_filter = request.GET.get('session')
+    page = request.GET.get('page', 1) # Default to page 1
+
+    # --- APPLY FILTERS TO QUERYSET ---
+    if q:
+        students = students.filter(
+            models.Q(first_name__icontains=q) |
+            models.Q(last_name__icontains=q) |
+            models.Q(USN__icontains=q)
+        )
+
+    if status_filter and status_filter != "all":
+        students = students.filter(student_status=status_filter)
+
+    if session_filter and session_filter != "all":
+        students = students.filter(graduated_session_id=session_filter)
+
+    # --- CSV EXPORT (Must run on the full filtered queryset) ---
+    if request.GET.get("export") == "csv":
+        return export_students_csv(students)
+
+    # --- SERVER-SIDE PAGINATION ---
+    paginator = Paginator(students, 15) # 15 students per page
+    
+    try:
+        students_page = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        students_page = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range, deliver last page of results.
+        students_page = paginator.page(paginator.num_pages)
+
+    # --- PREPARE CONTEXT ---
+    sessions = Student.objects.filter(graduated_session__isnull=False).values_list("graduated_session", "graduated_session__name").distinct()
+
+    # Generate the query string fragment to preserve filters across pagination links
+    # Start with request.GET.copy() to get mutable object
+    params = request.GET.copy()
+    # Remove 'page' so it can be cleanly added back by the template pagination logic
+    if 'page' in params:
+        params.pop('page')
+    query_string = params.urlencode()
+
+    return render(request, "students/archive.html", {
+        "students": students_page, # Pass the Paginator Page object
+        "sessions": sessions,
+        "selected_status": status_filter,
+        "selected_session": session_filter,
+        "q": q,
+        "query_string": query_string, # Used to preserve filters in pagination links
+    })
