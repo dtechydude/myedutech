@@ -402,7 +402,7 @@
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 							<i class="flaticon-025-dashboard"></i>
 									
-							<span class="nav-text">Dashboard</span>
+							<span class="nav-text">DASHBOARD</span>
 						</a>
 						<ul aria-expanded="false">
 
@@ -429,7 +429,7 @@
 					{% if user.is_authenticated and not user.parent %}
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
-							<span class="nav-text">Student Mgt.</span>
+							<span class="nav-text">STUDENT MGT.</span>
 						</a>
 						<ul aria-expanded="false">
 							{% if user.is_superuser or user.is_staff %}
@@ -450,7 +450,10 @@
 
 							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>																	
 							
-							{% elif user.student %}							
+							{% elif user.student %}	
+							<li><a href="{% url 'students:student_id_card' student.id %}"> My ID Card</a></li>	
+							<li><a href="{% url 'attendance:self-attendance-summary' %}">Attendance Summary</a></li>	
+							<li><a href="{% url 'attendance:self-attendance-detail' %}">Attendance Detail</a></li>							
 							<li><a href="{% url 'students:student_id_card' student.id %}"> My ID Card</a></li>												
 							<li><a href="{% url 'staff:my_teacher_view' %}">My Teacher</a></li>
 							<li><a href="{% url 'students:my_classmates' %}">My Class Mates</a></li>
@@ -464,17 +467,17 @@
 
 					{% endif %}
 					{% if user.is_authenticated and not user.parent %}
-					{% if user.is_superuser or user.is_staff or user.teacher%}
+					{% if user.is_superuser or user.is_staff or user.teacher %}
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 							<i class="flaticon-013-checkmark"></i>
-							<span class="nav-text">Attendance</span>
+							<span class="nav-text">ATTENDANCE</span>
 						</a>
 						<ul aria-expanded="false">
 							{% if user.is_superuser or user.is_staff %}
 							<li><a href="/admin/attendance/attendance/" target="_blank">Mark Attendance</a></li>
 							{% elif user.teacher %}
 							<li><a href="{% url 'attendance:take_daily_attendance' %}">Mark Attendance</a></li>
-							{% endif %}
+							{% endif %}							
 							<li><a href="{% url 'attendance:attendance_report' %}">Attendance Report</a></li>
 							<li><a href="{% url 'attendance:attendance-student-list' %}">Attendance List</a></li>
 							
@@ -486,7 +489,7 @@
 					{% if user.is_authenticated and not user.parent %}
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
-							<span class="nav-text">Exams & Results</span>
+							<span class="nav-text">EXAMS & RESULTS</span>
 						</a>
 						<ul aria-expanded="false">
 							{% if user.is_superuser or user.is_staff %}
@@ -520,7 +523,7 @@
 					{% if user.is_superuser or user.is_staff %}
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
-							<span class="nav-text">Staff Mgt/Tools</span>
+							<span class="nav-text">STAFF/TEACHERS</span>
 						</a>
 						<ul aria-expanded="false">
 							<li><a href="{% url 'staff:teacher_user_signup'%}">Signup Teacher</a></li>
@@ -540,7 +543,7 @@
 					{% if user.is_authenticated and user.is_superuser or user.is_staff or user.student %}
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
-							<span class="nav-text">Payments/Bills</span>
+							<span class="nav-text">PAYMENTS & FEES</span>
 						</a>{% endif %}						
 						<ul aria-expanded="false"> 
 							
@@ -601,7 +604,7 @@
 					
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
-							<span class="nav-text">E-Learning</span>
+							<span class="nav-text">E-LEARNING</span>
 						</a>
 						<ul aria-expanded="false">							
 						
@@ -620,7 +623,7 @@
 					</li>
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
-						<span class="nav-text">School Bus</span>
+						<span class="nav-text">SCHOOL BUS</span>
 					</a>
 					<ul aria-expanded="false">
 						<li><a href="{% url 'transport:bus_route_list' %}">Bus Route/Fare</a></li>
@@ -646,7 +649,7 @@
 						{% endif %}
 						<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 							<i class="flaticon-013-checkmark"></i>
-								<span class="nav-text">Help Center</span>
+								<span class="nav-text">HELP CENTER</span>
 							</a>
 							<ul aria-expanded="false">
 								<li><a href="{% url 'pages:video-guides' %}">Video Guide</a></li>
@@ -657,7 +660,7 @@
 						{% if user.is_superuser or user.is_staff %}
 						<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 							<i class="flaticon-013-checkmark"></i>
-								<span class="nav-text">Info & Records</span>
+								<span class="nav-text">INFO & RECORDS</span>
 							</a>
 							<ul aria-expanded="false">
 							<li><a href="{% url 'events:calendar' %}">School Events Calendar</a></li>
@@ -674,7 +677,7 @@
 					
 						<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 							<i class="flaticon-013-checkmark"></i>
-								<span class="nav-text">Tickets</span>
+								<span class="nav-text">TICKETS</span>
 							</a>
 							
 							<ul aria-expanded="false">
@@ -701,7 +704,7 @@
 					{% if user.is_authenticated and user.is_superuser or user.is_staff %}
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
-							<span class="nav-text">Archives</span>
+							<span class="nav-text">ARCHIVES</span>
 						</a>
 						<ul aria-expanded="false">	
 												
@@ -714,7 +717,7 @@
 						{% endif %}					
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
-							<span class="nav-text">Settings</span>
+							<span class="nav-text">SETTINGS</span>
 						</a>
 						<ul aria-expanded="false">	
 							{% if user.teacher %}						

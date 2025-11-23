@@ -5,62 +5,68 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ID Card: {{ student.get_full_name }}</title>
-    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png'%} " />
 
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png'%}">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
     <style>
         body {
             background-color: #f0f2f5;
             display: flex;
+            flex-direction: column; /* Allow card and button to stack vertically */
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
         }
+
         .id-card-container {
             width: 350px;
             height: 550px;
             background-color: #ffffff;
             border-radius: 15px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             overflow: hidden;
-            position: relative;
-            margin: 20px;
             display: flex;
             flex-direction: column;
+            position: relative;
+            margin: 20px;
         }
+
+        /* HEADER FIXED + REDUCED HEIGHT */
         .header {
             background-color: #004d99;
             color: white;
-            padding: 15px;
             text-align: center;
-            position: relative;
+            padding: 8px 15px; /* reduced */
             border-bottom: 5px solid #ffcc00;
-            margin-bottom: 5px;
         }
+
         .header img.school-logo {
-            width: 60px;
-            height: 60px;
+            width: 55px;
+            height: 55px;
             border-radius: 50%;
-            border: 2px solid white; 
-            background-color: white; 
-            margin-bottom: 5px;
-            /* === CORRECTION FOR AUTOFIT === */
-            object-fit: contain; 
-            padding: 5px; /* Optional: adds internal margin */
-            /* ============================== */
+            border: 2px solid white;
+            background-color: white;
+            margin-bottom: 3px;
+            object-fit: contain;
+            padding: 4px;
         }
+
         .header h5 {
             margin: 0;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: bold;
         }
+
         .header p {
             margin: 0;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
         }
+
+        /* PROFILE PHOTO */
         .profile-photo-container {
             width: 100px;
             height: 100px;
@@ -70,46 +76,57 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            /* overflow: hidden; */
-            margin: 5px auto; /* Pulls the image up over the header */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            /* Margin set to move photo down slightly below header text */
+            margin: 5px auto 12px;  
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 5;
+            overflow: hidden;
+            position: relative;
         }
+
         .profile-photo-container img {
             width: 100%;
             height: 100%;
-            border-radius: 50%; /* This is the fix: makes the image circular */
             object-fit: cover;
+            border-radius: 50%;
         }
+
         .details-section {
             text-align: center;
-            padding: 0 20px 20px;
+            padding: 0 20px 15px;
             flex-grow: 1;
         }
+
         .details-section h4 {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             font-weight: bold;
             color: #333;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
+
         .details-section p {
             font-size: 0.9rem;
             margin: 2px 0;
             color: #555;
         }
-        .detail-item {
-            margin-top: 5px;
+
+        .badge-section span {
+            background-color: #ffcc00;
+            color: #004d99;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            display: inline-block;
         }
-        .detail-item strong {
+
+        #qrcode {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto;
             display: block;
-            font-size: 0.7rem;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
-        .qr-code-section {
-            text-align: center;
-            margin-top: 5px;
-        }
+
         .footer {
             background-color: #f8f9fa;
             padding: 5px;
@@ -118,105 +135,134 @@
             color: #777;
             border-top: 1px solid #e9ecef;
         }
-        .badge-section {
-            text-align: center;
-            margin-top: 5px;
+
+        #printButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        .badge-section span {
-            display: inline-block;
-            background-color: #ffcc00;
-            color: #004d99;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9rem;
+
+        #printButton:hover {
+            background-color: #0056b3;
         }
+
         @media print {
-            body {
-                background-color: #fff;
-                -webkit-print-color-adjust: exact;
-                margin: 0;
-                padding: 0;
+            #printButton {
+                display: none; /* Hide button when printing */
             }
+            
+            /* **CORRECTION: Removed fixed height (54mm) to allow content to fully render** */
             .id-card-container {
                 box-shadow: none;
                 border: 1px solid #ccc;
-                width: 85mm;
-                height: 54mm; /* Standard ID card size */
+                width: 85mm; /* Keep card width standard */
+                height: auto; /* Allow height to expand to fit all content */
+                margin: 10mm auto; /* Center card on printed page */
             }
-            .id-card-container h5, .id-card-container p {
-                font-size: 0.7rem !important;
+            
+            body {
+                background-color: #fff;
+                /* Ensure background print setting is active */
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                margin: 0;
+                padding: 0;
+                /* Reset body centering for print */
+                display: block;
+            }
+            
+            /* Ensure all card elements are printed */
+            .header, .profile-photo-container, .details-section, #qrcode, .footer {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
         }
     </style>
 </head>
+
 <body>
-    <div class="id-card-container">
-        <div class="header">
-            {% if school_identity.logo %}
-                <img src="{{ school_identity.logo.url }}" alt="School Logo" class="school-logo">
-            {% else %}
-                <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo" class="school-logo">
-            {% endif %}
-            <h5 class="text-uppercase">{{ school_identity.name|default:"KwikSchools" }}</h5>
-            <p>{{ school_identity.address_line_1|default:"123 School Lane" }}{% if school_identity.phone1 %} | Tel: {{ school_identity.phone1 }}{% endif %}</p>
+
+<div class="id-card-container">
+
+    <div class="header">
+        {% if school_identity.logo %}
+            <img src="{{ school_identity.logo.url }}" class="school-logo" alt="School Logo">
+        {% else %}
+            <img src="{% static 'images/default_school_logo.png' %}" class="school-logo" alt="School Logo">
+        {% endif %}
+
+        <h5 class="text-uppercase">{{ school_identity.name|default:"KwikSchools" }}</h5>
+        <p>
+            {{ school_identity.address_line_1|default:"123 School Lane" }}
+            {% if school_identity.phone1 %} | Tel: {{ school_identity.phone1 }}{% endif %}
+        </p>
+    </div>
+
+    <!-- PROFILE PHOTO FIXED AND PROPERLY POSITIONED -->
+    <div class="profile-photo-container">
+        {% if student.user.profile.image %}
+            <img src="{{ student.user.profile.image.url }}" alt="{{ student.get_full_name }}">
+        {% else %}
+            <img src="{% static 'images/default_profile.png' %}" alt="Default Profile">
+        {% endif %}
+    </div>
+
+    <div class="details-section">
+        <h4 class="text-primary">{{ student.get_full_name|upper }}</h4>
+        <p class="text-muted">USN — <strong>{{ student.USN }}</strong></p>
+
+        <div class="badge-section">
+            <span>CLASS: "{{ student.current_class.name|default:"N/A" }}"</span>
         </div>
 
-       <div class="profile-photo-container">
-     {% if student.user.profile.image %}
-    
-         <img src="{{ student.user.profile.image.url }}" alt="{{ student.get_full_name }}">
-     {% else %}
-         <img src="{% static 'images/default_profile.png' %}" alt="Default Profile">
-     {% endif %}
-</div>
-    <div class="details-section">
-    <h4 class="mb-1 text-primary">{{ student.get_full_name|upper }}</h4>
-    <p class="text-muted">Unique Std. No.(USN) - <strong>{{ student.USN }}</strong></p>
-
-    
-    <div class="badge-section">
-        <span>CLASS : "{{ student.current_class.name|default:"N/A" }}"</span>
-    </div> 	
-
-    <div class="row text-center mt-3 mx-0">
-        <div class="col-6 p-0">
-            <div class="detail-item">
-                <strong>Gender</strong>
-                {% comment %}<p>{{ student.current_class.name|default:"N/A" }}</p> {% endcomment %}
+        <div class="row text-center mt-3 mx-0">
+            <div class="col-6 p-0">
+                <strong style="font-size: 0.7rem; color:#888;">Gender</strong>
                 <p>{{ student.gender|upper|default:"N/A" }}</p>
             </div>
-        </div>
-        <div class="col-6 p-0">
-            <div class="detail-item">
-                <strong>Date of Birth</strong>
+
+            <div class="col-6 p-0">
+                <strong style="font-size: 0.7rem; color:#888;">Date of Birth</strong>
                 <p>{{ student.DOB|date:"M d, Y"|default:"N/A" }}</p>
             </div>
-        </div> {% comment %}
-        {% endcomment %}
-    {% comment %}
-    <div class="qr-code-section text-center">
-        <div id="qrcode" class="mx-auto mt-2"> </div>
-    </div> {% endcomment %}
+        </div>
+    </div>
+
+    <div id="qrcode" class="mt-2"></div>
+
+    <div class="footer">
+        <p>If found, please return to the school administration.</p>
+    </div>
+
 </div>
-    <div id="qrcode" class="mx-auto mt-2 "> </div>
-<div class="footer 	"> 	
-    <p>If found, please return to the school administration.</p>
-</div>
-    <script>
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const studentId = "{{ student.USN }}"; // or any unique identifier
-            if (studentId) {
-                new QRCode(document.getElementById("qrcode"), {
-                    text: studentId,
-                    width: 80,
-                    height: 80,
-                    colorDark : "#000000",
-                    colorLight : "#ffffff",
-                    correctLevel : QRCode.CorrectLevel.H
-                });
-            }
-        });
-    </script>
+
+<!-- PRINT BUTTON -->
+<button id="printButton" onclick="window.print()">
+    Print ID Card (Save as PDF)
+</button>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const studentId = "{{ student.USN }}";
+        if (studentId) {
+            new QRCode(document.getElementById("qrcode"), {
+                text: studentId,
+                width: 80,
+                height: 80,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+    });
+</script>
+
 </body>
 </html>
