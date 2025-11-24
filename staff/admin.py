@@ -3,7 +3,6 @@ from .models import StaffPosition, Teacher
 from import_export.admin import ImportExportModelAdmin
 
 
-
 class StaffPositionAdmin(ImportExportModelAdmin):
     list_display = ('name', 'description')
     search_fields = ('name',)
