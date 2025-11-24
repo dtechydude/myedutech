@@ -29,6 +29,7 @@ urlpatterns = [
 
     # Report Card URLs (Teacher/Admin access)
     path('report-cards/', ReportCardListView.as_view(), name='report_card_list'),
+ 
     path('report-cards/<int:student_id>/<int:term_id>/', StudentReportCardView.as_view(), name='student_report_card_detail'),
     
     path('class-ranking/<int:standard_id>/<int:term_id>/', ClassRankingView.as_view(), name='class_ranking'),

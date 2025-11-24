@@ -1,160 +1,203 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mid-Term Results List</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    
+    <title>Report Card Generator • {% if selected_term %}{{ selected_term.name }}{% else %}Select Term{% endif %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+
     <style>
+        :root {
+            --primary-color: #004d99;
+            --accent-color: #28a745;
+        }
+
         body {
-            background-color: #f8f9fa;
-            font-family: Arial, sans-serif;
+            background: #f7f9fb;
+            font-family: 'Inter', sans-serif;
         }
-        .container {
-            max-width: 900px;
+
+        .card-custom {
+            border: 1px solid #dcdcdc;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
         }
-        .header-title {
-            color: #343a40;
-            border-bottom: 2px solid #ccc;
-            padding-bottom: 10px;
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            font-weight: 600;
         }
-        .report-group-header {
-            background-color: #e9ecef;
-            padding: 10px 15px;
-            border-radius: 5px;
-            margin-top: 20px;
-            margin-bottom: 0;
-            font-weight: bold;
-            border-left: 5px solid #007bff;
+
+        .btn-primary:hover {
+            background-color: #003366;
+            border-color: #003366;
         }
-        .table thead th {
-            background-color: #343a40; /* Dark header for clarity */
+
+        .btn-action {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .btn-action:hover {
+            background-color: #1e7e34;
+            border-color: #1e7e34;
+        }
+
+        .table-custom-head {
+            background-color: var(--primary-color);
             color: white;
+            font-weight: 700;
         }
-        .table tbody tr:hover {
-            background-color: #f1f1f1;
+
+        footer {
+            text-align: center;
+            padding: 18px 10px;
+            font-size: 0.9rem;
+            color: #6c757d;
         }
     </style>
 </head>
+
 <body>
 
-<div class="container mt-5">
-    
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="header-title">
-            <i class="fas fa-file-invoice mr-2 text-primary"></i> 
-            Mid-Term Reports List
-        </h2>
-        <a href="{% url 'pages:portal-home' %}" class="btn btn-outline-secondary btn-sm shadow-sm">
-            <i class="fas fa-arrow-left"></i> Dashboard
+<div class="container py-5 px-4 px-lg-5">
+
+    <!-- HEADER -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5 border-bottom pb-3">
+        <div>
+            <h2>{{ school_info.name }}</h2>
+            <h6 class="fw-bolder text-primary mb-1">
+                <i class="fas fa-file-invoice me-3"></i> Termly Report Card Generation
+            </h6>
+            <p class="text-muted mb-0 ms-5 fs-5">
+                Select criteria to prepare and generate student report cards.
+            </p>
+        </div>
+
+        <a href="/dashboard" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm mt-3 mt-md-0">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
         </a>
     </div>
 
-    {% if current_user_type == 'teacher' %}
-    
-    {# --- TEACHER VIEW START (NEW GROUPING LOGIC) --- #}
-    <p class="text-muted mb-4">
-        Viewing reports for Form Class: **{{ assigned_class.name }}**. 
-        Select a student to view their report card for a specific term.
-    </p>
-
-    {% if available_reports %}
-        
-        {# Prepare data for grouping (requires re-iteration in Django template) #}
-        {% regroup available_reports by session_name as session_groups %}
-        
-        {% for session in session_groups %}
-        
-            {% regroup session.list by term_name as term_groups %}
-            
-            {% for term in term_groups %}
-                
-                <h4 class="report-group-header">
-                    <i class="fas fa-calendar-alt mr-2"></i> {{ session.grouper }} - {{ term.grouper }}
-                </h4>
-
-                <div class="table-responsive mb-5">
-                    <table class="table table-hover table-striped">
-                        <thead class="thead-dark">
-                            <tr>
-                                <th>Student Name</th>
-                                <th class="text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {# Loop through unique student-term reports within this term group #}
-                            {% for report in term.list %}
-                            <tr>
-                                <td><i class="fas fa-user-graduate text-primary mr-2"></i>{{ report.student_name }}</td>
-                                <td class="text-center">
-                                    {# Teacher/Admin links use the student_id and term_id #}
-                                    <a href="{% url 'results:midterm_report_card_detail' student_id=report.student_id term_id=report.term_id %}" 
-                                       class="btn btn-sm btn-info">
-                                        <i class="fas fa-eye"></i> View Report
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+    {% if messages %}
+        <div class="messages mb-4">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             {% endfor %}
-            
-        {% endfor %}
-
-    {% else %}
-    <div class="alert alert-warning text-center" role="alert">
-        <h4 class="alert-heading">No Reports Found</h4>
-        <p>No mid-term reports found for your assigned class ({{ assigned_class.name }}).</p>
-    </div>
-    {% endif %}
-    {# --- TEACHER VIEW END --- #}
-    
-    
-    {% else %}
-    
-    {# --- STUDENT VIEW START (Retained Original Structure) --- #}
-    <h2 class="header-title mb-4">Mid-Term Results Available for {{ student.get_full_name }}</h2>
-    
-    <div class="row">
-        {% if available_reports %}
-            {% for report in available_reports %}
-            <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title text-primary">{{ report.term_name }}</h5>
-                        <p class="card-text text-muted">Session: {{ report.session_name }}</p>
-                        
-                        {# Student link uses the logged-in student's ID and the report's term ID #}
-                        <a href="{% url 'results:midterm_report_card_detail' student_id=student.id term_id=report.term_id %}" 
-                            class="btn btn-sm btn-outline-success">
-                            <i class="fas fa-file-alt"></i> View Report Card
-                        </a>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        {% else %}
-            <div class="col-12">
-                <div class="alert alert-info text-center" role="alert">
-                    <h4 class="alert-heading">No Reports Found</h4>
-                    <p>There are no mid-term reports currently available for your account.</p>
-                </div>
-            </div>
-        {% endif %}
-    </div>
-    {# --- STUDENT VIEW END --- #}
-    
+        </div>
     {% endif %}
 
+    <!-- FILTER CARD -->
+    <div class="card card-custom p-4 mb-5">
+        <h5 class="mb-4 fw-semibold text-primary">
+            <i class="fas fa-filter me-2"></i> Select Term and Standard
+        </h5>
+
+        <form method="get" class="row g-3 align-items-end">
+            {% csrf_token %}
+
+            <div class="col-md-5">
+                <label class="form-label text-muted small mb-1">Academic Term (Mandatory)</label>
+                {{ form.term }}
+            </div>
+
+            <div class="col-md-5">
+                <label class="form-label text-muted small mb-1">Student Standard/Class</label>
+                {{ form.standard }}
+            </div>
+
+            <div class="col-md-2 d-grid gap-2">
+                <!-- Apply Filter -->
+                <button type="submit" class="btn btn-primary rounded-pill">
+                    <i class="fas fa-search me-2"></i> Apply
+                </button>
+
+                <!-- CLEAR FILTER BUTTON -->
+                <a href="?" class="btn btn-outline-secondary rounded-pill">
+                    <i class="fas fa-times me-1"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- STUDENT TABLE -->
+    <div class="card card-custom p-0 overflow-hidden">
+        <div class="card-header bg-white border-bottom py-3">
+            <h5 class="mb-0 fw-semibold text-dark">
+                Students Found
+                {% if selected_term %}<span class="text-secondary">for {{ selected_term.name }}</span>{% endif %}
+                {% if selected_standard %}<span class="text-secondary">in {{ selected_standard.name }}</span>{% endif %}
+                <span class="badge bg-primary ms-2">{{ students|length }}</span>
+            </h5>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-custom-head">
+                    <tr>
+                        <th>USN</th>
+                        <th>Student Name</th>
+                        <th>Current Class</th>
+                        <th>Parent Name</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                {% if selected_term and students %}
+                    {% for s in students %}
+                        <tr>
+                            <td><code>{{ s.USN }}</code></td>
+                            <td><strong>{{ s.last_name }}, {{ s.first_name }}</strong></td>
+                            <td>{{ s.current_class.name|default:'N/A' }}</td>
+                            <td>{{ s.guardian_name|default:"N/A" }}</td>
+
+                            <td>
+                                <a href="{% url 'results:student_report_card_detail' student_id=s.id term_id=selected_term.id %}"
+                                   class="btn btn-sm btn-action text-white rounded-pill">
+                                    Generate <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-5 bg-light">
+                            <i class="fas fa-info-circle fa-2x mb-3 text-secondary"></i><br>
+                            {% if not selected_term %}
+                                <strong>Please select an Academic Term and click "Apply Filter".</strong>
+                            {% else %}
+                                <strong>No students found for your filter.</strong>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endif %}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<!-- RESPONSIVE FOOTER -->
+<footer class="mt-5">
+    &copy; {{ school_info.name|default:"KwikSchools EdTech" }} • Report Card Utility.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
