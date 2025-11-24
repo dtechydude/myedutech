@@ -113,7 +113,7 @@
                                                 <th>Mobile</th>
                                                 <!-- <th>Email</th> -->
                                                 <th>Adm.Date</th>
-                                                <th>Action</th>
+                                                <!-- <th>Action</th> -->
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -128,12 +128,14 @@
                                                 <!-- <td>M.COM., P.H.D.</td> -->
                                                 <td><strong>{{ s.guardian_phone }}</strong></a></td>
                                                 <td>{{ s.date_admitted }}</td>
+                                                {% comment %}
                                                 <td>
 													<div class="d-flex">
 														<a href="{% url 'students:student-detail' s.USN %}" class="btn btn-success me-1">View</a>
 														<a href="{% url 'students:student-update' s.USN %}" class="btn btn-warning">Edit</a>
 													</div>
 												</td>
+                                                {% endcomment %}
                                                 {% endfor %}
                                             </tr>
                                            

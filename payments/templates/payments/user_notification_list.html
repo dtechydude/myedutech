@@ -46,7 +46,7 @@
                                         
                                         <td>{{ notification.student.get_full_name }}</td>
                                         
-                                        <td>{{ notification.item_paid_for|default:"School Fees" }}</td> 
+                                       <td>{{ notification.notes|default:"School Payments"|truncatewords:7 }}</td>
                                         
                                         <td>N{{ notification.amount_paid|floatformat:2 }}</td> 
                                         

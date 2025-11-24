@@ -802,7 +802,7 @@
 													<div class="ms-4">
 														{% if user.is_superuser or user.is_staff %}
 														<h5 class="mb-0 font-w600">{{ student_num }}</h5>
-														<p class="mb-0 text-nowrap ">Total Students</p>
+														<p class="mb-0 text-nowrap ">All-Time Enrollment</p>
 														{% elif user.is_authenticated and user.teacher %}
 														<h5 class="mb-0 font-w600">{{ user.teacher.date_employed }}</h5>
 														<p class="mb-0 text-nowrap ">Empl. Date</p>

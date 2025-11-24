@@ -19,7 +19,7 @@ class PaymentAdmin(ImportExportModelAdmin):
     search_fields = (
         'student__user__first_name', 'student__user__last_name', 'transaction_id', 'student__USN'
     )
-    raw_id_fields = ['student', 'payment_category', 'session', 'term']
+    raw_id_fields = ['student', 'payment_category', 'session', 'term', 'recorded_by']
     
     # These fields will be automatically calculated and are read-only to prevent manual changes.
     readonly_fields = ('original_amount', 'balance_before_payment', 'balance_after_payment')

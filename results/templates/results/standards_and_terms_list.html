@@ -200,7 +200,7 @@
                 <tr>
                   <th scope="col" class="text-start">Class Name</th>
                   {% for term in all_terms %}
-                    <th scope="col">{{ term.name }}</th>
+                    <th scope="col">{{ term.name }}/{{ term.session.name }}</th>
                   {% endfor %}
                 </tr>
               </thead>

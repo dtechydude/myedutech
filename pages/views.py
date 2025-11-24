@@ -35,9 +35,12 @@ def landing_page(request):
 def dashboard(request):  
     users_num = User.objects.count()
     student_num = Student.objects.count()
+    student_num_current = Student.objects.filter(student_status__in=['active', 'inactive']).count()
     num_of_classes = Standard.objects.count()
-    boarder_std = Student.objects.filter(student_type='boarder').count()
-    day_std = Student.objects.filter(student_type='day_student').count()
+    boarder_std = Student.objects.filter(student_type='boarder', student_status='active').count()
+    day_std = Student.objects.filter(student_type='day_student', student_status='active').count()
+    inactive_std = Student.objects.filter(student_status='inactive').count()
+
     num_student_inclass = Student.objects.filter().count()
     graduated = Student.objects.filter(student_status='graduated').count()
     dropped = Student.objects.filter(student_status='dropped').count()
@@ -94,6 +97,8 @@ def dashboard(request):
         # 'no_inteacherclass': no_inteacherclass,
         'classrooms':classrooms,
         'num_of_classes':num_of_classes,
+        'student_num_current':student_num_current,
+        'inactive_std ': inactive_std,
     
 
     }
