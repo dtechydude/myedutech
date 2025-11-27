@@ -81,7 +81,7 @@
                         <option value="">All Terms</option>
                         {% for term in all_terms %} 
                             <option value="{{ term.id }}" {% if selected_term_id|stringformat:"s" == term.id|stringformat:"s" %}selected{% endif %}>
-                                {{ term.name }}
+                                {{ term.name }}-{{ term.session }}
                             </option>
                         {% endfor %}
                     </select>
