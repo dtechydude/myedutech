@@ -68,19 +68,20 @@ def student_list(request):
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         writer = csv.writer(response)
         writer.writerow([
-            'Full Name', 'DOB', 'Student Email', 'Student Phone', 
-            'Guardian Phone', 'Guardian Email', 'Current Class', 'Student Status'
+            'StudentID', 'Full Name', 'Current Class', 'DOB', 'Student Email', 'Student Phone', 
+            'Guardian Phone', 'Guardian Email', 'Student Status'
         ])
 
         for student in students_to_export:
             writer.writerow([
+                student.user.username,
                 student.get_full_name(),
+                student.current_class.name if student.current_class else '',
                 student.DOB.strftime('%Y-%m-%d'),
                 student.user.email,
                 student.user.profile.phone,
                 student.guardian_phone,
                 student.guardian_email,
-                student.current_class.name if student.current_class else '',
                 student.student_status
             ])
         return response

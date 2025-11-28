@@ -201,7 +201,7 @@ class Student(models.Model):
     #     return f'{self.first_name} - {self.last_name}'
     
     def get_full_name(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.first_name} {self.middle_name} {self.last_name}"
     
     def __str__(self):
         return self.get_full_name()
