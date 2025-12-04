@@ -113,7 +113,7 @@ class Teacher(models.Model):
         """
         Returns the teachers's full name.
         """
-        return f"{self.user.first_name} - {self.user.last_name}"
+        return f"{self.user.first_name} - {self.middle_name} - {self.user.last_name}"
     
     class Meta:
         ordering = ['last_name']

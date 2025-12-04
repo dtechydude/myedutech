@@ -193,7 +193,7 @@ class Student(models.Model):
     ]
 
     student_status = models.CharField(max_length=15, choices=student_status, default=active)
-    graduated_session = models.ForeignKey(Session, on_delete=models.SET_NULL, null=True, blank=True, related_name="graduated_students")
+    graduated_session = models.ForeignKey(Session, on_delete=models.SET_NULL, null=True, blank=True, related_name="graduated_students", help_text='only applicable for graduated students')
     fee_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0, blank=True, null=True)
 
 
@@ -201,7 +201,7 @@ class Student(models.Model):
     #     return f'{self.first_name} - {self.last_name}'
     
     def get_full_name(self):
-        return f"{self.first_name} {self.middle_name} {self.last_name}"
+        return f"{self.last_name} {self.first_name} {self.middle_name}"
     
     def __str__(self):
         return self.get_full_name()
@@ -213,7 +213,7 @@ class Student(models.Model):
     class Meta:
         verbose_name = 'Student Details'
         verbose_name_plural = 'Student Details'
-        ordering = ['user']
+        ordering = ['last_name']
 
     @property
     def get_form_teacher(self):

@@ -219,7 +219,7 @@ def graduate_selected_students(self, request, queryset):
 @admin.register(Student)
 class StudentAdmin(ImportExportModelAdmin):
     list_display = (
-        'user', 'USN', 'first_name', 'last_name', 
+        'user', 'USN', 'last_name', 'first_name', 
         'current_class', 'date_admitted', 'guardian_phone', 'student_status'
     )
     list_filter = ['current_class', 'student_type', 'gender', 'student_status']
