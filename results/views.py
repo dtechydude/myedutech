@@ -2,7 +2,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.http import HttpResponse # Import HttpResponse
 from django.db.models import Sum, Avg, F # F object for database expressions
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.http import JsonResponse
 from django.db.models import Sum, Avg, Q, Max # Import Q for complex queries if needed
 from curriculum.models import Session, Term, Standard, Subject
 from attendance.models import Attendance
@@ -21,7 +22,7 @@ from .utils import get_grade, get_subject_remark, get_overall_remark # Import he
 from django.template.loader import render_to_string # Import render_to_string
 from curriculum.models import SchoolIdentity
 from transport.context_processors import school_identity as school_identity_processor
-
+from django.core.paginator import Paginator
 
 # For PDF generation using django-wkhtmltopdf
 # from wkhtmltopdf.views import PDFTemplateResponse # Import this
@@ -2295,3 +2296,112 @@ class MidTermScoreSuccessView(LoginRequiredMixin, View):
             'term_id': term_id,
         }
         return render(request, self.template_name, context)
+    
+
+# RESULT PUBLICATION VIEW
+
+def staff_only(user):
+    return user.is_staff or user.is_superuser
+
+
+@login_required
+@user_passes_test(staff_only)
+@transaction.atomic # Ensure data consistency during creation
+def result_publications_list(request):
+    query = request.GET.get('q', '')
+    class_id = request.GET.get('class', '')
+    term_id = request.GET.get('term', '')
+
+    publications = ResultPublication.objects.none() # Start with an empty queryset
+
+    if class_id and term_id:
+        # --- 1. Identify Target Students ---
+        target_students = Student.objects.filter(current_class_id=class_id, student_status='active')
+        
+        # --- 2. Generate Missing Records (Admin-style) ---
+        existing_pubs = ResultPublication.objects.filter(
+            term_id=term_id,
+            student__current_class_id=class_id
+        ).values_list('student_id', flat=True)
+
+        students_to_create = target_students.exclude(id__in=existing_pubs)
+        
+        new_pubs = []
+        for student in students_to_create:
+            new_pubs.append(ResultPublication(student=student, term_id=term_id, is_published=False))
+        
+        if new_pubs:
+            ResultPublication.objects.bulk_create(new_pubs)
+
+
+        # --- 3. Fetch Publications (Performance Optimized) ---
+        # CRITICAL FIX A: Use select_related to load Student's Class and the Term (and Session) in ONE query.
+        publications = ResultPublication.objects.filter(
+            term_id=term_id,
+            student__current_class_id=class_id
+        ).select_related('student__current_class', 'term', 'term__session') # ADDED 'term__session'
+        
+        # --- Search Filter ---
+        if query:
+            publications = publications.filter(
+                Q(student__first_name__icontains=query) |
+                Q(student__last_name__icontains=query) |
+                Q(student__USN__icontains=query)
+            )
+
+    # Ordering and Pagination
+    publications = publications.order_by('student__current_class__name', 'student__last_name')
+    paginator = Paginator(publications, 25)
+    page = request.GET.get('page')
+    publications = paginator.get_page(page)
+
+    # CRITICAL FIX B: Ensure the 'terms' context variable is optimized with select_related
+    all_terms_optimized = Term.objects.select_related('session').all() # ADDED select_related('session')
+
+    context = {
+        'publications': publications,
+        'classes': Standard.objects.all(),
+        'terms': all_terms_optimized, # Use the optimized queryset
+        'search_query': query,
+        'selected_class': class_id,
+        'selected_term': term_id,
+        'data_loaded': bool(class_id and term_id)
+    }
+    return render(request, 'results/result_publication_list.html', context)
+
+
+# The rest of your views (toggle_publication_status and bulk_update_publications) remain unchanged
+# as they do not need the session or class data to function.
+
+@login_required
+@user_passes_test(staff_only)
+def toggle_publication_status(request, pk):
+    publication = get_object_or_404(ResultPublication, pk=pk)
+    publication.is_published = not publication.is_published
+    publication.save()
+    return JsonResponse({'success': True, 'status': publication.is_published})
+
+
+@login_required
+@user_passes_test(staff_only)
+def bulk_update_publications(request):
+    action = request.POST.get('action')
+    class_id = request.POST.get('class_id')
+    term_id = request.POST.get('term_id')
+    student_id = request.POST.get('student_id')
+
+    queryset = ResultPublication.objects.all()
+
+    if class_id:
+        queryset = queryset.filter(student__current_class_id=class_id)
+    if term_id:
+        queryset = queryset.filter(term_id=term_id)
+    if student_id:
+        queryset = queryset.filter(student_id=student_id)
+
+    if action == 'publish':
+        updated_count = queryset.update(is_published=True)
+    elif action == 'unpublish':
+        updated_count = queryset.update(is_published=False)
+    
+    return JsonResponse({'success': True, 'count': updated_count})

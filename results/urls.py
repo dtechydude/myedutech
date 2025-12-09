@@ -97,6 +97,10 @@ urlpatterns = [
     path('midterm/report/<int:student_id>/<int:term_id>/', 
          MidTermReportCardView.as_view(), 
          name='midterm_report_card_detail'),
+
+    path('result-publications/', views.result_publications_list, name='result_publications_list'),
+    path('result-publications/toggle/<int:pk>/', views.toggle_publication_status, name='toggle_publication_status'),
+    path('result-publications/bulk/', views.bulk_update_publications, name='bulk_update_publications'),
 ]
 
 
