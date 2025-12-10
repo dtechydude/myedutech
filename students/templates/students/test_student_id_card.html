@@ -208,7 +208,7 @@
     <!-- PROFILE PHOTO FIXED AND PROPERLY POSITIONED -->
     <div class="profile-photo-container">
         {% if student.user.profile.image %}
-            <img src="{{ student.user.profile.image.url }}" alt="{{ student.get_full_name }}">
+            <img src="{{ student.user.profile.image_url }}" alt="{{ student.get_full_name }}">
         {% else %}
             <img src="{% static 'images/default_profile.png' %}" alt="Default Profile">
         {% endif %}

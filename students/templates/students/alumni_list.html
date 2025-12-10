@@ -122,7 +122,7 @@
                     <tr>
                         <td>
                             {% if student.user.profile.image %}
-                                <img src="{{ student.user.profile.image.url }}" class="photo-thumb">
+                                <img src="{{ student.user.profile.image_url }}" class="photo-thumb">
                             {% else %}
                                 <img src="{% static 'pages/images/default-avatar.png' %}" class="photo-thumb">
                             {% endif %}

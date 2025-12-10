@@ -148,6 +148,12 @@ class Profile(models.Model):
         verbose_name = 'User Profiles'
         verbose_name_plural = 'User Profiles'
 
+    @property
+    def image_url(self):
+        if self.image:
+            return self.image.url
+        return '/static/pages/images/default.jpg'
+
 
 
 
