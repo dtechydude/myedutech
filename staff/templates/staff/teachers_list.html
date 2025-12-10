@@ -114,7 +114,7 @@
                                             {% for ts in all_teachers %}
                                             <tr>
                                                 <td>{{ forloop.counter }}</td>
-												<td><a href="{% url 'staff:teacher-detail' ts.id %}"><img class="rounded-circle" width="40" height="40" src="{{ts.user.profile.image.url}}" alt=""></a></td>
+												<td><a href="{% url 'staff:teacher-detail' ts.id %}"><img class="rounded-circle" width="40" height="40" src="{{ts.user.profile.image_url}}" alt=""></a></td>
                                                 <td><strong>{{ ts.last_name }}</strong> {% if ts.middle_name %} {{ ts.middle_name }} {% endif %} {{ ts.first_name }}</td>
                                                 <td>{{ ts.user.username }}</td>
                                                 <td>{{ ts.dept }}</td>
