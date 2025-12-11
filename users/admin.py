@@ -42,12 +42,34 @@ class CustomUserAdmin(ImportExportModelAdmin, DefaultUserAdmin): # Inherit from 
     # )
 
 
+class StudentClassFilter(admin.SimpleListFilter):
+    title = 'Student Class'
+    parameter_name = 'current_class'
+
+    def lookups(self, request, model_admin):
+        from students.models import Standard
+        return [(cls.id, cls.name) for cls in Standard.objects.all()]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(user__student__current_class_id=self.value())
+        return queryset
+ 
 
 class UserProfileAdmin(ImportExportModelAdmin):
            
-    list_display=('user', 'code', 'user_type', 'phone', 'state_of_origin')
-    list_filter  = ['user_type',]
-    search_fields = ('user__username', 'code', 'user_type')
+    list_display=('user', 'last_name', 'first_name', 'code', 'user_type', 'phone', 'state_of_origin', 'code')
+    def last_name(self, obj):
+        return obj.user.last_name
+
+    def first_name(self, obj):
+        return obj.user.first_name
+
+    last_name.admin_order_field = 'user__last_name'
+    first_name.admin_order_field = 'user__first_name'
+
+    list_filter  = [StudentClassFilter, 'user_type',]
+    search_fields = ('user__username', 'user_type', 'user__last_name', 'user__first_name', 'code')
     raw_id_fields = ['user',]
 
 

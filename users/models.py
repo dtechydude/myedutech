@@ -124,7 +124,7 @@ class Profile(models.Model):
 
 #this function returns the profile name in the admin panel profile table
     def __str__ (self):
-        return f'username:- {self.user.username} - {self.code}'
+        return f'username:- {self.user.username} - {self.user.last_name} - {self.user.first_name}'
     
     def get_recommended_profiles(self):
         qs = Profile.objects.all()
