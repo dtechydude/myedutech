@@ -753,7 +753,11 @@
 				</div>
 				<div class="copyright">
 					<p class="text-center"><strong>KwikSchools</strong> &copy; {% now "Y" %} All Rights Reserved <br>
-					<span class="fs-12 text-center">By: <a href="https://fizcos.com">Fizcos Infotech Solutions</a></span></p>
+					<span class="fs-12 text-center">By: <a href="https://fizcos.com">Fizcos Infotech Solutions</a></span> <br>
+					{% if user.is_authenticated and user.is_superuser %}
+					<span class="fs-12 text-center"> <a href="https://kwikschools.com/privacy-policy-service-terms/">Privacy Policy & Service Terms</a></span>
+						{% endif %}
+				</p>
 				</div>
 			</div>
 		</div>
@@ -1260,7 +1264,11 @@
 		{% block footer %}
 		<div class="footer">
 			<div class="copyright">
-				<p>Developed by:  <a href="https://kwikschools.com/" target="_blank">KwikSchools</a> &copy; {% now "Y" %} All Rights Reserved</p>
+				<p>Developed by:  <a href="https://kwikschools.com/" target="_blank">KwikSchools</a> &copy; {% now "Y" %} All Rights Reserved <br>
+				{% if user.is_authenticated and user.is_superuser %}
+					<span class="fs-12 text-center"> <a href="https://kwikschools.com/privacy-policy-service-terms/">Privacy Policy & Service Terms</a></span>
+						{% endif %}
+				</p>
 			</div>
 		</div>
 		{% endblock footer %}
