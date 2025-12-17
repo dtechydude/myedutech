@@ -294,7 +294,7 @@
   inset: 0;
   background: url("{{ school_info.logo.url }}") center 30% no-repeat;
   background-size: 320px auto;
-  opacity: 0.08;              /* subtle watermark */
+  opacity: 0.12;              /* subtle watermark */
   pointer-events: none;       /* never blocks clicks */
   z-index: 0;
 }
@@ -381,9 +381,9 @@
                 <th class="text-center">CA1</th>
                 <th class="text-center">CA2</th>
                 <th class="text-center">CA3</th>
-                <th class="text-center">TOTAL CA</th>
+                <th class="text-center">CA (40)</th>
                 <th class="text-center">EXAM (60)</th>
-                <th class="text-center">TOTAL</th>
+                <th class="text-center">TOTAL%</th>
                 <th class="text-center">GRADE</th>
                 <th class="text-center">REMARK</th>
               </tr>
@@ -393,12 +393,12 @@
               <tr>
                 <td>{{forloop.counter}}</td>
                 <td colspan="2" class="text-left">{{ data.subject }}</td>
-                <td>{{ data.ca1|default:"-" }}</td>
-                <td>{{ data.ca2|default:"-" }}</td>
-                <td>{{ data.ca3|default:"-" }}</td>
-                <td>{{ data.total_ca|default:"-" }}</td>
-                <td>{{ data.exam_score|default:"-" }}</td>
-                <td><strong>{% if data.total_score > 40 %}{{ data.total_score }} {% else %}<span style="color: red;">{{ data.total_score }}</span> {% endif %}</strong></td>
+                <td>{{ data.ca1|floatformat:0|default:"N/A" }}</td>
+                <td>{{ data.ca2|floatformat:0|default:"N/A"}}</td>
+                <td>{{ data.ca3|floatformat:0|default:"N/A"}}</td>
+                <td>{{ data.total_ca|default:"-"|floatformat:0}}</td>
+                <td>{{ data.exam_score|default:"-"|floatformat:0 }}</td>
+                <td><strong>{% if data.total_score > 40 %}{{ data.total_score|default:"-"|floatformat:0  }} {% else %}<span style="color: red;">{{ data.total_score|default:"-"|floatformat:0  }}</span> {% endif %}</strong></td>
                 <td>{{ data.grade }}</td>
                 <td>{{ data.remark }}</td>
 
