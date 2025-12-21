@@ -1,0 +1,104 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+
+{% block title %}
+<title>CBT Exam Center</title>
+{% endblock title %}
+
+{% block head %}
+<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    .card-icon {
+        font-size: 3rem;
+        color: #17a2b8; /* A nice teal color */
+    }
+    .card-footer-link {
+        color: #17a2b8;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    .card-footer-link:hover {
+        text-decoration: underline;
+    }
+    .icon-list-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px; /* Added spacing between list items */
+    }
+    .icon-list-item i {
+        color: #17a2b8;
+        font-size: 1.25rem;
+        margin-right: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'pages:portal-home' %}">Home</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">CBT Exam Center</a></li>
+            </ol>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-info text-white text-center">
+                        <h4 class="card-title text-white mb-0">Your CBT Exam Center</h4>
+                    </div>
+                    <div class="card-body text-center">
+                        <i class="fas fa-desktop card-icon mb-3"></i>
+                        <h5 class="card-title">Welcome to the CBT Exam Portal!</h5>
+                        <p class="card-text text-muted">
+                            This page is your gateway to computer-based exams.
+                            <br>
+                            A new exam will appear here when the school has set one for your class.
+                        </p>
+                        
+                        <div class="alert alert-warning mt-4 mb-4" role="alert">
+                            <h5 class="fw-bold"><i class="fas fa-exclamation-triangle me-2"></i> No Exams Available</h5>
+                            <p class="mb-0" style="color:black;">
+                                There are currently no scheduled CBT exams for your class. Please check back later.
+                            </p>
+                        </div>
+
+                        <hr>
+                        
+                        <h5 class="mt-4 mb-3">Prepare for Your Next Exam! 🚀</h5>
+                        <p class="text-muted">
+                            Even without a scheduled exam, you can get ready. Click the links below for tips on how to prepare and ace your CBT.
+                        </p>
+                        <div class="row justify-content-center">
+                            <div class="col-md-8 text-start">
+                                <ul class="list-unstyled">
+                                    <li class="icon-list-item">
+                                        <i class="fas fa-clock"></i>
+                                        <a href="https://www.google.com/search?q=time+management+for+cbt+exams" class="card-footer-link" target="_blank">Master Time Management During the Exam</a>
+                                    </li> <br>
+                                    <li class="icon-list-item">
+                                        <i class="fas fa-brain"></i>
+                                        <a href="https://www.google.com/search?q=cbt+exam+preparation+tips" class="card-footer-link" target="_blank">Top Tips for Studying for a CBT</a>
+                                    </li> <br>
+                                    <li class="icon-list-item">
+                                        <i class="fas fa-mouse-pointer"></i>
+                                        <a href="https://www.google.com/search?q=navigating+a+cbt+interface" class="card-footer-link" target="_blank">Get Familiar with Computer Interface</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                 <div class="card-footer bg-light text-center">
+                    <p class="text-secondary fw-bold mb-0">
+                        Your performance and results will be available here after the exam.
+                    </p>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content_body %}

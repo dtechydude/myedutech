@@ -2,107 +2,94 @@
 {% load static %}
 
 {% block title %}
-<title>Request CBT Exam</title>
+<title>CBT Teacher Guide</title>
 {% endblock title %}
 
 {% block head %}
-<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-    .form-icon {
-        font-size: 2rem;
-        color: #007bff;
+    /* Custom overrides for extreme readability */
+    .instruction-icon { font-size: 3.5rem; color: #007bff; }
+    .card-title { font-size: 1.6rem; font-weight: 800 !important; }
+    .step-number {
+        width: 40px; height: 40px; background: #007bff; color: white;
+        border-radius: 50%; display: inline-flex; align-items: center;
+        justify-content: center; margin-right: 15px; font-weight: 900; font-size: 1.2rem;
     }
-    .card-footer-text {
-        color: #6c757d;
-        font-style: italic;
-    }
+    .logic-text { font-size: 1.15rem; line-height: 1.6; color: #2c3e50; }
+    .workflow-list li { font-size: 1.1rem; margin-bottom: 12px; font-weight: 600; }
 </style>
 {% endblock %}
 
 {% block content_body %}
 <div class="content-body">
     <div class="container-fluid">
-        <div class="row page-titles">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'cbt:cbt-home' %}">CBT Home</a></li>
-                <li class="breadcrumb-item active"><a href="javascript:void(0)">Request Exam Setup</a></li>
-            </ol>
-        </div>
-
-        <div class="row justify-content-center">
-            <div class="col-lg-8 col-md-10 mb-4">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-primary text-white text-center">
-                        <h4 class="card-title text-white mb-0">Request a CBT Exam for Your Class</h4>
+        <div class="row justify-content-center mt-4">
+            <div class="col-lg-9 col-md-11 mb-4">
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-primary text-white text-center py-3">
+                        <h3 class="card-title text-white mb-0 uppercase">HOW TO MANAGE YOUR CBT EXAMS</h3>
                     </div>
-                    <div class="card-body">
-                        {% if messages %}
-                        <div class="mb-4">
-                            {% for message in messages %}
-                            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-
-                        <div class="text-center mb-4">
-                            <i class="fas fa-pencil-ruler form-icon mb-3"></i>
-                            <p class="text-muted">Fill out the form below to submit a request to the school administration for a new CBT exam. Our team will get back to you with the next steps.</p>
-                        </div>
+                    <div class="card-body p-4">
                         
-                        <form method="post" action="{% url 'cbt:submit_request' %}">
-                            {% csrf_token %}
-                            <div class="mb-3">
-                                <label for="teacherName" class="form-label fw-bold">Your Name</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                    <input type="text" class="form-control" id="teacherName" name="teacher_name" value="{{ request.user.get_full_name|default:'' }}" readonly required>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="examSubject" class="form-label fw-bold">Subject</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-book"></i></span>
-                                    <input type="text" class="form-control" id="examSubject" name="subject" placeholder="e.g., Mathematics" required>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="examClass" class="form-label fw-bold">Class / Grade Level</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-chalkboard-teacher"></i></span>
-                                    <input type="text" class="form-control" id="examClass" name="class_level" placeholder="e.g., JSS2, SS1A" required>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="examDate" class="form-label fw-bold">Proposed Exam Date</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                                    <input type="date" class="form-control" id="examDate" name="proposed_date" required>
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <label for="additionalDetails" class="form-label fw-bold">Additional Details (Optional)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-comment-dots"></i></span>
-                                    <textarea class="form-control" id="additionalDetails" name="details" rows="4" placeholder="e.g., specific topics to cover, number of questions, etc."></textarea>
-                                </div>
-                            </div>
+                        <div class="text-center mb-5">
+                            <i class="fas fa-chalkboard-teacher instruction-icon mb-3"></i>
+                            <h2 class="fw-bold text-dark">Welcome, {{ request.user.get_full_name|upper }}</h2>
+                            <p class="fs-5 text-muted fw-bold">The system is configured based on your specific teaching profile.</p>
+                        </div>
 
-                            <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-paper-plane me-2"></i>Submit Request
-                                </button>
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h4 class="fw-black border-bottom border-primary border-3 pb-2 mb-4 text-primary text-uppercase">System Rules & Logic</h4>
+                                
+                                <div class="d-flex mb-4 align-items-start">
+                                    <div class="step-number shadow">1</div>
+                                    <div class="logic-text">
+                                        <h5 class="fw-900 text-dark mb-1">ASSIGNED STANDARDS ONLY</h5>
+                                        <p class="mb-0 fw-bold">You can <strong>ONLY</strong> create quizzes for Classes/Standards assigned to you in the staff records.</p>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex mb-4 align-items-start">
+                                    <div class="step-number shadow">2</div>
+                                    <div class="logic-text">
+                                        <h5 class="fw-900 text-dark mb-1">SUBJECTS TAUGHT</h5>
+                                        <p class="mb-0 fw-bold">The system <strong>automatically filters</strong> subjects based on what you teach. You cannot edit other teachers' subjects.</p>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex mb-4 align-items-start">
+                                    <div class="step-number shadow">3</div>
+                                    <div class="logic-text">
+                                        <h5 class="fw-900 text-dark mb-1">UNIQUENESS RULE</h5>
+                                        <p class="mb-0 fw-bold">Only <strong>ONE quiz</strong> is allowed per Subject for a specific Exam, Term, and Session to prevent duplicates.</p>
+                                    </div>
+                                </div>
                             </div>
-                        </form>
+                        </div>
+
+                        <div class="bg-light p-4 rounded-3 mb-4 border border-2">
+                            <h4 class="fw-bold mb-3 text-dark text-center"><i class="fas fa-stream me-2"></i>DEPLOYMENT WORKFLOW</h4>
+                            <ul class="list-unstyled workflow-list mb-0">
+                                <li><i class="fas fa-check-circle text-success fs-4 me-2"></i> <strong>STEP 1: SETUP</strong> — Define time, pass mark, and exam type.</li>
+                                <li><i class="fas fa-check-circle text-success fs-4 me-2"></i> <strong>STEP 2: QUESTIONS</strong> — Add and manage your question bank.</li>
+                                <li><i class="fas fa-check-circle text-success fs-4 me-2"></i> <strong>STEP 3: RESULTS</strong> — Filter student scores by Class and Exam.</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'cbt:main-view' %}" class="btn btn-primary btn-lg py-3 fs-4 fw-black shadow">
+                                <i class="fas fa-door-open me-2"></i> ENTER TEACHER DASHBOARD
+                            </a>
+                        </div>
                     </div>                   
-                    <div class="card-footer bg-light text-center">
-                    <p class="text-secondary fw-bold mb-0">
-                        Your request will be reviewed by the school administration.
-                    </p>
-                </div>
+                    
+                    <div class="card-footer bg-dark py-3 text-center">
+                        <h5 class="text-warning fw-bold mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i> 
+                            Missing a Subject or Class? Contact HR to update your profile.
+                        </h5>
+                    </div>
                 </div>
             </div>
         </div>

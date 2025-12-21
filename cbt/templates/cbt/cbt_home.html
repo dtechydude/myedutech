@@ -2,35 +2,38 @@
 {% load static %}
 
 {% block title %}
-<title>CBT & Exam Solutions</title>
+<title>CBT Portal | KwikSchools</title>
 {% endblock title %}
 
-{# Assuming 'head' block is meant to be 'css_assets' or similar for non-critical assets #}
 {% block css_assets %}
 {{ block.super }}
-<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
-<link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-    .card-cbt-solution {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        border-radius: 12px;
-        overflow: hidden;
+    /* Bolder Typography & Layout */
+    .cbt-main-title { font-size: 2.5rem; font-weight: 900; color: #1e293b; text-transform: uppercase; }
+    .cbt-subtitle { font-size: 1.25rem; font-weight: 700; color: #64748b; }
+    
+    .path-card {
+        transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+        border-radius: 20px;
+        border: 4px solid transparent;
     }
-    .card-cbt-solution:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    .path-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     }
-    .cbt-header {
-        background-color: #f7f9fc; /* Light background for the header area */
-        padding: 30px 15px;
-        border-radius: 8px;
-        margin-bottom: 25px;
-    }
-    .cbt-icon {
+    .teacher-path:hover { border-color: #3b82f6; }
+    .student-path:hover { border-color: #10b981; }
+
+    .icon-box {
+        width: 80px; height: 80px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 20px;
         font-size: 2.5rem;
-        margin-right: 15px;
-        color: #3b82f6; /* A vibrant blue */
     }
+    .text-massive { font-size: 1.5rem; font-weight: 800; line-height: 1.2; }
+    .btn-action { font-size: 1.2rem; font-weight: 800; padding: 15px 30px; border-radius: 50px; text-transform: uppercase; }
 </style>
 {% endblock css_assets %}
 
@@ -38,91 +41,86 @@
 <div class="content-body">
     <div class="container-fluid">
         
-        <div class="row page-titles mb-4">
-            <div class="col-12">                
-                <h2 class="text-dark fw-bold mt-2">
-                    <i class="fas fa-desktop cbt-icon"></i> Computer-Based Testing Portal
-                </h2>
+        <div class="row justify-content-center text-center mb-5 mt-4">
+            <div class="col-lg-10">
+                <h1 class="cbt-main-title mb-2">
+                    <i class="fas fa-laptop-code text-primary me-2"></i> Computer-Based Testing
+                </h1>
+                <p class="cbt-subtitle">Your Unified Portal for Examinations, Assessments, and Academic Excellence.</p>
+                <div class="mx-auto bg-primary mt-3" style="height: 5px; width: 100px; border-radius: 10px;"></div>
             </div>
         </div>
-        
-        <div class="row justify-content-center">
-            <div class="col-lg-10 text-center mb-5 cbt-header shadow-sm">
-                <h4 class="fw-bolder text-dark mb-3">KwikSchools Integrates with Global Platforms!</h4>
-                <p class="text-dark fs-5">Your current **KwikSchools** subscription supports seamless integration with two world-class educational tools:</p>
-                <p class="text-muted mb-0">For a dedicated, customized CBT/exam platform directly within KwikSchools, please contact our support team.</p>
-            </div>
-        </div>
-        
-        <div class="row justify-content-center">
+
+        <div class="row justify-content-center g-4">
             
-            <div class="col-xl-6 col-lg-6 col-md-10 mb-4">
-                <div class="card card-cbt-solution shadow-lg border-0 h-100">
-                    <div class="text-center p-3" style="background-color: #f0f4ff;">
-                        <img class="img-fluid" src="{% static 'pages/images/card/google_education.jpg' %}" alt="Google for Education" style="max-height: 150px; width: auto; object-fit: contain;">
-                    </div>
-                    <div class="card-body d-flex flex-column">
-                        <h4 class="card-title text-center fw-bolder text-primary mb-1">
-                            <i class="fab fa-google me-2"></i> Google For Education
-                        </h4>
-                        <p class="text-center text-success mb-3 fs-4 fw-bolder">FREE to Use</p>
-                        <p class="card-text text-center text-muted flex-grow-1">
-                            Google for Education provides a powerful platform for real-time collaboration, assessment, and test-based solutions, integrated with tools like Google Forms and Classroom.
-                        </p>
-                    </div>
-                    <div class="card-footer bg-white border-top text-center pt-4 pb-4">
-                        <p class="card-text text-dark fw-bold mb-3">Ready to set this up? Contact KwikSchools for Implementation.</p>
-                        
-                        <div class="list-group list-group-flush mb-3">
-                            <a href="tel:+23408050757634" class="list-group-item list-group-item-action text-primary fw-medium border-0">
-                                <i class="fas fa-phone me-2"></i> Call Us: +234 08050757634
-                            </a>
-                            <a href="https://wa.me/23408050757634" class="list-group-item list-group-item-action text-success fw-medium border-0" target="_blank">
-                                <i class="fab fa-whatsapp me-2"></i> WhatsApp Chat: +234 08050757634
-                            </a>
-                            <a href="mailto:info@kwikschools.com" class="list-group-item list-group-item-action text-info fw-medium border-0">
-                                <i class="fas fa-envelope me-2"></i> Email Us: contact@kwikschools.com
-                            </a>
+            <div class="col-xl-5 col-lg-6">
+                <div class="card path-card teacher-path shadow-lg h-100 overflow-hidden">
+                    <div class="card-body p-5 text-center">
+                        <div class="icon-box bg-primary text-white shadow">
+                            <i class="fas fa-chalkboard-teacher"></i>
                         </div>
-                        <small class="text-muted">We will respond to your request promptly.</small>
+                        <h2 class="text-massive text-dark mb-3">TEACHER MANAGEMENT</h2>
+                        <p class="fs-5 text-muted fw-bold mb-4">
+                            Create quizzes, manage question banks, and analyze student results with our optimized class-filtering system.
+                        </p>
+                        
+                        <div class="text-start bg-light p-4 rounded-3 mb-4 border-start border-primary border-5">
+                            <h6 class="fw-900 text-primary mb-2 uppercase">Core Controls:</h6>
+                            <ul class="list-unstyled fw-bold text-dark fs-6 mb-0">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Set Exams for Assigned Classes</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Real-time Result Filtering</li>
+                                <li><i class="fas fa-check text-success me-2"></i> Anti-Duplicate Protection</li>
+                            </ul>
+                        </div>
+
+                        <a href="{% url 'cbt:cbt_teacher_order' %}" class="btn btn-primary btn-action w-100 shadow">
+                            Teacher Dashboard <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <div class="col-xl-6 col-lg-6 col-md-10 mb-4">
-                <div class="card card-cbt-solution shadow-lg border-0 h-100">
-                    <div class="text-center p-3" style="background-color: #f0fff4;">
-                        <img class="img-fluid" src="{% static 'pages/images/card/microsoft_education.jpg' %}" alt="Microsoft Teams For Education" style="max-height: 150px; width: auto; object-fit: contain;">
-                    </div>
-                    <div class="card-body d-flex flex-column">
-                        <h4 class="card-title text-center fw-bolder text-info mb-1">
-                            <i class="fab fa-microsoft me-2"></i> Microsoft Teams For Education
-                        </h4>
-                        <p class="text-center text-success mb-3 fs-4 fw-bolder">FREE to Use</p>
-                        <p class="card-text text-center text-muted flex-grow-1">
-                            Microsoft Teams for Education provides a suite of tools like Teams and Forms for robust, collaborative assessment and test-based solutions.
-                        </p>
-                    </div>
-                    <div class="card-footer bg-white border-top text-center pt-4 pb-4">
-                        <p class="card-text text-dark fw-bold mb-3">Ready to set this up? Contact KwikSchools for Implementation.</p>
-                        
-                        <div class="list-group list-group-flush mb-3">
-                            <a href="tel:+2348050757634" class="list-group-item list-group-item-action text-primary fw-medium border-0">
-                                <i class="fas fa-phone me-2"></i> Call Us: +234 08050757634
-                            </a>
-                            <a href="https://wa.me/+23408050757634" class="list-group-item list-group-item-action text-success fw-medium border-0" target="_blank">
-                                <i class="fab fa-whatsapp me-2"></i> WhatsApp Chat: +234 08050757634
-                            </a>
-                            <a href="mailto:info@kwikschools.com" class="list-group-item list-group-item-action text-info fw-medium border-0">
-                                <i class="fas fa-envelope me-2"></i> Email Us: contact@kwikschools.com
-                            </a>
+            <div class="col-xl-5 col-lg-6">
+                <div class="card path-card student-path shadow-lg h-100 overflow-hidden">
+                    <div class="card-body p-5 text-center">
+                        <div class="icon-box bg-success text-white shadow">
+                            <i class="fas fa-user-graduate"></i>
                         </div>
-                        <small class="text-muted">We will respond to your request promptly.</small>
+                        <h2 class="text-massive text-dark mb-3">STUDENT EXAM CENTER</h2>
+                        <p class="fs-5 text-muted fw-bold mb-4">
+                            Access your scheduled examinations, track your progress, and view your performance history instantly.
+                        </p>
+
+                        <div class="text-start bg-light p-4 rounded-3 mb-4 border-start border-success border-5">
+                            <h6 class="fw-900 text-success mb-2 uppercase">Student Access:</h6>
+                            <ul class="list-unstyled fw-bold text-dark fs-6 mb-0">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> View Exams for your Class</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Auto-Saving Progress</li>
+                                <li><i class="fas fa-check text-success me-2"></i> Instant Score Release</li>
+                            </ul>
+                        </div>
+
+                        <a href="{% url 'cbt:cbt_teacher_order' %}" class="btn btn-success btn-action w-100 text-white shadow">
+                            Start Examination <i class="fas fa-pen-nib ms-2"></i>
+                        </a>
                     </div>
                 </div>
             </div>
+
         </div>
-        
+
+        <div class="row justify-content-center mt-5">
+            <div class="col-lg-8">
+                <div class="alert bg-white shadow-sm border text-center p-4 rounded-pill">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-info-circle text-primary me-2"></i> 
+                        Need custom integration for Google or Microsoft? 
+                        <a href="#" class="text-primary text-decoration-underline ms-2">Contact System Admin</a>
+                    </h5>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 {% endblock content_body %}
