@@ -1,0 +1,52 @@
+{% extends 'cbt/base.html' %}
+
+{% block title %}Create New Quiz{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Setup New Examination Quiz</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Select Examination (Standard)</label>
+                        {{ form.examination }}
+                        <div class="form-text">Only standards assigned to you are listed.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Select Subject</label>
+                        {{ form.subject }}
+                        <div class="form-text">Only subjects you teach are listed.</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Number of Questions</label>
+                            {{ form.number_of_questions }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Time (Minutes)</label>
+                            {{ form.time }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Term</label>
+                        {{ form.term }}
+                    </div>
+
+                    <hr>
+                    <button type="submit" class="btn btn-success w-100">Create Quiz & Proceed to Questions</button>
+                    <a href="{% url 'cbt:main-view' %}" class="btn btn-link w-100 text-muted">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

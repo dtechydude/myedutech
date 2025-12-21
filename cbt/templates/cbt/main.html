@@ -1,0 +1,66 @@
+{% extends 'cbt/base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold">Available Examinations</h2>
+            <p class="text-muted">Select an exam to begin. Please ensure you have a stable internet connection.</p>
+        </div>
+        {% if user.is_staff %}
+        <a href="{% url 'cbt:teacher-quiz-add' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Setup New Quiz
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    {% for quiz in quizzes %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title fw-bold text-primary">{{ quiz.examination }}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">{{ quiz.subject }}</h6>
+                <hr>
+                <ul class="list-unstyled small">
+                    <li>⏱️ <b>Duration:</b> {{ quiz.time }} Minutes</li>
+                    <li>📝 <b>Questions:</b> {{ quiz.number_of_questions }}</li>
+                    <li>🎯 <b>Pass Mark:</b> {{ quiz.required_score_to_pass }}%</li>
+                    <li>📅 <b>Term:</b> {{ quiz.term }}</li>
+                    <li>🗓️ <b>Session:</b> {{ quiz.session }}</li>
+                </ul>
+            </div>
+            
+            <div class="card-footer bg-white border-0 pb-3">
+                <a href="{% url 'cbt:quiz-view' quiz.pk %}" class="btn btn-primary w-100 mb-2">Start Examination</a>
+
+                {% if user.is_staff %}
+                    {% if quiz.examination.standard in teacher_profile.standards_assigned.all and quiz.subject in teacher_profile.subjects_taught.all %}
+                        <div class="border-top pt-2 mt-2">
+                            <small class="text-muted d-block mb-2">Teacher Controls:</small>
+                            <a href="{% url 'cbt:teacher-add-question' quiz.id %}" class="btn btn-sm btn-outline-dark w-100">
+                                ➕ Add/Manage Questions
+                            </a>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+        <div class="alert alert-info">
+            No exams are currently scheduled for your class.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% if user.is_staff %}
+    <a href="{% url 'cbt:teacher-results-view' %}" class="btn btn-info text-white">
+        📊 View Student Scores
+    </a>
+{% endif %}
+{% endblock content %}

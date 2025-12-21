@@ -1,0 +1,27 @@
+{% extends 'cbt/base.html' %}
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <h3>Questions for {{ quiz.subject }}</h3>
+        <a href="{% url 'cbt:teacher-add-question' quiz.id %}" class="btn btn-primary">+ Add More</a>
+    </div>
+    <table class="table table-hover bg-white shadow-sm">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Question</th>
+                <th>Correct Answer</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for q in questions %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ q.content|truncatewords:10 }}</td>
+                <td><span class="badge bg-success">{{ q.correct_answer }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

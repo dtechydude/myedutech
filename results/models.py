@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from users.models import Profile
 from students.models import Student
-from curriculum.models import Standard, Term, Subject
+from curriculum.models import Standard, Term, Subject, Session
 from django.conf import settings
 from django.template.defaultfilters import slugify
 from django.core.validators import MaxValueValidator, MinValueValidator 
@@ -16,12 +16,14 @@ from django.core.exceptions import ValidationError
 class Examination(models.Model):
     name = models.CharField(max_length=150, blank=True)
     standard = models.ForeignKey(Standard, on_delete=models.CASCADE, blank=True, null=True)
-    term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name='exams') # Link to Term    
+    term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name='exams') # Link to Term  
+    session = models.ForeignKey(Session, on_delete=models.CASCADE) 
+  
     date = models.DateField(null=True) 
     description = models.CharField(max_length=150, blank=True)  
 
     def __str__ (self):
-        return f'{self.name} - {self.date}'
+        return f'{self.name} - {self.standard.name} - {self.term}'
     
     class Meta:
         verbose_name = 'Examinations'
