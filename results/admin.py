@@ -22,15 +22,6 @@ class ExaminationAdmin(admin.ModelAdmin):
 
 
 
-# class ExaminationAdmin(ImportExportModelAdmin):
-       
-#     list_display=('name', 'standard', 'term')
-#     autocomplete_fields = ['standard']
-
-# # class ResultAdmin(admin.ModelAdmin):
-       
-# #     list_display=('student', 'subject', 'exam', 'score')
-
 #works well 001
 class ScoreAdmin(ImportExportModelAdmin):
        
@@ -194,9 +185,5 @@ class MidTermScoreAdmin(ImportExportModelAdmin):
 
 
 
-# admin.site.register(MarkedSheet, MarkedSheetAdmin)
-# admin.site.register(Examination, ExaminationAdmin)
-# admin.site.register(UploadCertificate, UploadCertificateAdmin)
-# admin.site.register(ExamSubject, ExamSubjectAdmin)
-# admin.site.register(Result, ResultAdmin)
+
 admin.site.register(Score, ScoreAdmin)
