@@ -30,5 +30,7 @@ urlpatterns = [
 
     path('teacher/quiz/<int:quiz_id>/questions/', cbt_views.teacher_view_questions, name='teacher-view-questions'),
     path('teacher/results/', cbt_views.teacher_results_view, name='teacher-results-view'),
+    path('results/export/csv/', cbt_views.export_results_csv, name='results-csv'),
+
 
 ]

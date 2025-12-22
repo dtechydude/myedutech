@@ -15,6 +15,8 @@ from results.models import Examination
 from .forms import TeacherQuizForm, QuestionForm
 from staff.models import Teacher
 from django.core.exceptions import PermissionDenied
+import csv
+from django.http import HttpResponse
 
 
 
@@ -97,8 +99,8 @@ def quiz_list_view(request):
     )
 
     # 2. STUDENT LOGIC
-    if hasattr(user, 'studentdetail'):
-        student_profile = user.studentdetail
+    if hasattr(user, 'student'):
+        student_profile = user.student
         if student_profile.student_status == 'active':
             student_class = student_profile.current_class
             # Filter quizzes assigned to the student's specific class
@@ -368,3 +370,53 @@ def teacher_results_view(request):
         'exams': exams,
         'standards': assigned_standards,
     })
+
+
+# CBT Results Dwonload
+@login_required
+def export_results_csv(request):
+    examination = request.GET.get('examination')
+    standard = request.GET.get('standard')
+
+    results = QuizResult.objects.select_related(
+        'user', 'quiz', 'quiz__standard'
+    )
+
+    # Apply same filters as the page
+    if examination:
+        results = results.filter(quiz__exam_id=examination)
+
+    if standard:
+        results = results.filter(quiz__standard_id=standard)
+
+    response = HttpResponse(
+        content_type='text/csv'
+    )
+    response['Content-Disposition'] = 'attachment; filename="student_CBT_results.csv"'
+
+    writer = csv.writer(response)
+
+    # CSV Header
+    writer.writerow([
+        'Student Name',
+        'Username',
+        'Class',
+        'Subject',
+        'Score (%)',
+        'Status',
+        'Date Taken'
+    ])
+
+    # CSV Rows
+    for res in results:
+        writer.writerow([
+            res.user.get_full_name() or res.user.username,
+            res.user.username,
+            res.quiz.standard.name if res.quiz.standard else '',
+            res.quiz.subject,
+            round(res.score, 1),
+            'Passed' if res.passed else 'Failed',
+            res.timestamp.strftime('%Y-%m-%d %H:%M')
+        ])
+
+    return response
