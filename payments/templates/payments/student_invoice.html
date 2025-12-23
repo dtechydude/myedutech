@@ -1,153 +1,239 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice - {{ student.first_name }} {{ student.last_name }}</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
     
     <style>
+        :root {
+            --primary-blue: #021c38;
+            --invoice-red: #dc3545;
+            --light-bg: #f4f7f6;
+        }
+
         body {
-            background-color: #f4f7f6;
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
         }
-        .invoice-container {
+
+        .invoice-card {
             max-width: 900px;
-            margin: 2rem auto;
-            background-color: #fff;
-            padding: 2rem;
+            margin: 30px auto;
+            background: #fff;
             border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid #e1e5e8;
         }
+
+        /* Header Branding */
         .invoice-header {
-            border-bottom: 2px solid #e9ecef;
-            padding-bottom: 1.0rem;
-            margin-bottom: 1.0rem;
-        }
-        .invoice-table th, .invoice-table td {
-            vertical-align: middle;
-        }
-        .invoice-summary {
-            border-top: 2px solid #e9ecef;
-            padding-top: 1.5rem;
-        }
-        .total-balance {
-            font-size: 1.2rem;
-            color: #dc3545; /* Red color for balance */
-            font-weight: bold;
-        }
-        .button-container {
-            text-align: center;
-            margin-top: 2rem;
-            display: flex; /* Makes buttons appear side-by-side */
-            justify-content: center;
-            gap: 15px; /* Adds space between buttons */
+            padding: 40px;
+            background: #fff;
+            border-bottom: 3px solid var(--primary-blue);
         }
 
-        /* NEW STYLE TO REDUCE SPACING */
-        .school-info-details p, .school-info-details h1 {
-            margin-bottom: 0.25rem; /* Reduced margin to bring lines closer */
+        .school-logo {
+            max-height: 80px;
+            margin-bottom: 10px;
         }
 
-        /* Print-specific Styles */
+        /* Status Badge for Invoices */
+        .status-badge {
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            padding: 6px 15px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        /* Professional Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 30px 40px;
+            background: #fcfcfc;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-label {
+            color: #718096;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+            display: block;
+        }
+
+        .info-value {
+            color: #2d3748;
+            font-weight: 600;
+            display: block;
+        }
+
+        /* Table Design */
+        .table-section {
+            padding: 30px 40px;
+        }
+
+        .invoice-table thead th {
+            background-color: #f8fafc;
+            color: var(--primary-blue);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            border-bottom: 2px solid #edf2f7;
+        }
+
+        .total-row {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .balance-due {
+            color: var(--invoice-red);
+            font-size: 1.4rem;
+        }
+
+        /* Print Specifics */
         @media print {
-            body {
-                background-color: #fff;
+            body { background: #fff !important; }
+            .invoice-card { 
+                box-shadow: none !important; 
+                margin: 0 !important; 
+                border: none !important;
+                width: 100% !important;
             }
-            .invoice-container {
-                box-shadow: none;
-                margin: 0;
-                padding: 0;
+            .info-grid { 
+                display: flex !important; 
+                justify-content: space-between !important; 
             }
-            .button-container {
-                display: none; /* Hide buttons when printing */
-            }
+            .info-block { width: 48% !important; }
+            .no-print { display: none !important; }
+            .invoice-header, .table-section { padding: 20px 0 !important; }
         }
     </style>
 </head>
 <body>
-    <div class="container invoice-container">
+
+<div class="container">
+    <div class="invoice-card">
         {% if error_message %}
-            <div class="alert alert-danger text-center">
-                <h4 class="alert-heading">Error Generating Invoice</h4>
-                <p>{{ error_message }}</p>
+            <div class="alert alert-danger m-4 text-center">
+                <i class="fas fa-exclamation-triangle mr-2"></i> {{ error_message }}
             </div>
         {% else %}
-            <header class="row align-items-center invoice-header">
-                <div class="col-md-6 text-start">
-                    {% if school_info.logo %}
-                        <img src="{{ school_info.logo.url }}" alt="School Logo" class="img-fluid" style="max-height: 100px;">
-                    {% else %}
-                        <h5>{{ school_info.name }}</h5>
-                    {% endif %}
-                </div>
-                <div class="col-md-6 text-end school-info-details">
-                    <h3 class="h4">{{ school_info.name }}</h3>
-                    <p class="text-muted">{{ school_info.address_line_1 }}</p>
-                    <p class="text-muted">Phone: {{ school_info.phone1 }} | Email: {{ school_info.email }}</p>
-                </div>
-            </header>
-
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <h4 class="text-primary">Invoice Details</h4>
-                    <ul class="list-unstyled">
-                        <li><strong>Invoice Date:</strong> {{ today|date:"F j, Y" }}</li>
-                        <li><strong>Session:</strong> {{ current_session.name }}</li>
-                        <li><strong>Term:</strong> {{ current_term.name }}</li>
-                    </ul>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <h4 class="text-primary">Student Details</h4>
-                    <ul class="list-unstyled">
-                        <li><strong>Name:</strong> {{ student.first_name }} {{ student.last_name }}</li>
-                        <li><strong>Student ID:</strong> {{ student.USN }}</li>
-                        <li><strong>Class:</strong> {{ student.current_class.name }}</li>
-                    </ul>
-                </div>
-            </div>
-            <p><small> <strong> NOTE:</strong> Please make payments according to the fees applicable to you either as new intake or existing student</small></p>
-
-      <div class="table-responsive">
-    <table class="table table-striped table-hover invoice-table">
-        <thead class="bg-light">
-            <tr>
-                <th>S/N</th>
-                <th>Description</th>
-                <th>Amount Due (N)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for fee in fees_breakdown %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>{{ fee.payment_category__name }}</td>
-                <td>{{ fee.amount_due|floatformat:2 }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="3" class="text-center text-muted">No fees found for this student for the current term.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<div class="row invoice-summary">
-    <div class="col-12 text-end">
-        <p class="h6"><strong>Total Due:</strong> N{{ total_due|floatformat:2 }}</p>
-        <p class="h6"><strong>Total Paid:</strong> N{{ total_paid|floatformat:2 }}</p>
-        <p class="total-balance"><strong>Balance:</strong> N{{ balance|floatformat:2 }}</p>
-    </div>
-</div>
             
-            <div class="button-container">
-                <a href="/dashboard/" class="btn btn-secondary">Back to Dashboard</a>
-                <button class="btn btn-primary" onclick="window.print()">Print / Save as PDF</button>
+            <div class="invoice-header">
+                <div class="row align-items-center">
+                    <div class="col-sm-7">
+                        {% if school_info.logo %}
+                            <img src="{{ school_info.logo.url }}" alt="School Logo" class="school-logo">
+                        {% endif %}
+                        <h2 class="h4 mb-1" style="color: var(--primary-blue); font-weight: 800;">{{ school_info.name }}</h2>
+                        <p class="text-muted small mb-0">
+                            {{ school_info.address_line_1 }}<br>
+                            Phone: {{ school_info.phone1 }} | Email: {{ school_info.email }}
+                        </p>
+                    </div>
+                    <div class="col-sm-5 text-sm-end mt-4 mt-sm-0">
+                        <h1 class="display-6 mb-1" style="color: #cbd5e0; font-weight: 800;">INVOICE</h1>
+                        <span class="status-badge {% if balance > 0 %}bg-danger text-white{% else %}bg-success text-white{% endif %}">
+                            {% if balance > 0 %}PAYMENT PENDING{% else %}FULLY PAID{% endif %}
+                        </span>
+                        <p class="mt-3 mb-0 font-weight-bold">Date: {{ today|date:"M d, Y" }}</p>
+                    </div>
+                </div>
             </div>
+
+            <div class="info-grid">
+                <div class="info-block">
+                    <span class="info-label">Student Details</span>
+                    <span class="info-value" style="font-size: 1.1rem;">{{ student.first_name }} {{ student.last_name }}</span>
+                    <span class="text-muted small">ID: {{ student.USN }}</span>
+                    <span class="d-block text-muted small">Class: {{ student.current_class.name }}</span>
+                </div>
+                <div class="info-block border-start ps-4">
+                    <span class="info-label">Academic Period</span>
+                    <span class="info-value">{{ current_session.name }}</span>
+                    <span class="info-value text-primary small">{{ current_term.name }}</span>
+                </div>
+            </div>
+
+            <div class="table-section">
+                <div class="alert alert-light border small mb-4">
+                    <i class="fas fa-info-circle text-primary me-2"></i> 
+                    <strong>NOTE:</strong> Please make payments according to the fees applicable to you (New Intake or Existing Student).
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table invoice-table">
+                        <thead>
+                            <tr>
+                                <th width="10%">S/N</th>
+                                <th>Fee Description</th>
+                                <th class="text-end">Amount Due (₦)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fee in fees_breakdown %}
+                            <tr>
+                                <td class="text-muted">{{ forloop.counter }}</td>
+                                <td class="font-weight-bold">{{ fee.payment_category__name }}</td>
+                                <td class="text-end">₦{{ fee.amount_due|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-muted">No fees assigned for this period.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-7">
+                        </div>
+                    <div class="col-md-5">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Subtotal Due:</span>
+                            <span class="font-weight-bold">₦{{ total_due|floatformat:2 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Total Paid:</span>
+                            <span class="text-success font-weight-bold">₦{{ total_paid|floatformat:2 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <span class="h6 font-weight-bold">Balance Due:</span>
+                            <span class="balance-due font-weight-bold">₦{{ balance|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center py-4 bg-light no-print">
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="/dashboard/" class="btn btn-outline-secondary px-4">
+                        <i class="fas fa-arrow-left me-2"></i> Dashboard
+                    </a>
+                    <button class="btn btn-primary px-4 shadow-sm" onclick="window.print()">
+                        <i class="fas fa-print me-2"></i> Print / Save PDF
+                    </button>
+                </div>
+            </div>
+
         {% endif %}
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

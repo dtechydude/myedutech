@@ -8,205 +8,262 @@
     <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    
     <style>
+        :root {
+            --primary-color: #021c38;
+            --accent-color: #8b0000;
+            --success-color: #28a745;
+        }
+
         body {
-            background-color: #f8f9fa;
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            color: #333;
+            background-color: #f4f7f6;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
         }
-        .receipt-container {
-            max-width: 850px;
-            margin: 2rem auto;
-            background-color: #ffffff;
-            padding: 3rem;
-            border-radius: 1rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+        .receipt-card {
+            max-width: 900px;
+            margin: 30px auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 1px solid #e1e5e8;
         }
-        .header-section {
-            display: flex;
-            align-items: center;
-            border-bottom: 2px solid #e9ecef;
-            padding-bottom: 1rem;
-            margin-bottom: 1rem;
+
+        /* Header Styling */
+        .receipt-header {
+            padding: 40px;
+            background: #fff;
+            border-bottom: 3px solid var(--primary-color);
         }
+
         .school-logo {
-            max-height: 100px;
-            width: auto;
-            margin-right: 1.5rem;
+            max-height: 80px;
+            margin-bottom: 10px;
         }
-        .school-info h3 {
+
+        .receipt-status-badge {
+            text-transform: uppercase;
+            letter-spacing: 1px;
             font-weight: 700;
-            color: #021c38;
+            padding: 8px 20px;
+            border-radius: 50px;
         }
-        .receipt-title {
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 30px 40px;
+            background: #fcfcfc;
+        }
+
+        .info-label {
+            color: #718096;
+            text-transform: uppercase;
+            font-size: 0.75rem;
             font-weight: 700;
-            color: rgb(105, 3, 3);
-            border-bottom: 2px solid #e9ecef;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1rem;
+            margin-bottom: 2px;
+            display: block;
         }
-        .section-heading {
+
+        .info-value {
+            color: #2d3748;
             font-weight: 600;
-            color: #6c757d;
-            border-bottom: 1px solid #e9ecef;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1.5rem;
         }
-        .amount-paid {
-            font-size: 2rem;
-            color: #28a745;
-            font-weight: bold;
+
+        /* Table Styling */
+        .table-section {
+            padding: 0 40px 30px;
         }
-        .table th, .table td {
-            vertical-align: middle;
+
+        .table thead th {
+            background-color: #f8fafc;
+            border-top: none;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            font-size: 0.85rem;
         }
+
+        .amount-highlight {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--success-color);
+        }
+
+        .summary-table {
+            width: 300px;
+            margin-left: auto;
+        }
+
+        /* Print Optimization */
         @media print {
-            body {
-                background-color: #fff;
+            body { background: #fff !important; margin: 0; padding: 0; }
+            .receipt-card { 
+                box-shadow: none !important; 
+                margin: 0 !important; 
+                width: 100% !important; 
+                max-width: 100% !important; 
+                border: none !important;
             }
-            .receipt-container {
-                box-shadow: none;
-                border: 1px solid #e2e8f0;
-                margin: 0;
+            .no-print { display: none !important; }
+            .info-grid { 
+                display: flex !important; 
+                justify-content: space-between !important;
+                background: transparent !important;
+                padding: 20px 0 !important;
             }
-            .no-print {
-                display: none !important;
-            }
+            .info-block { width: 45% !important; }
+            .receipt-header { padding: 20px 0 !important; }
+            .table-section { padding: 0 !important; }
+            .table-dark { background-color: #343a40 !important; color: white !important; }
+            .table-info { background-color: #d1ecf1 !important; }
+            .table-success { background-color: #d4edda !important; }
+            
+            /* Ensure colors print */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
 </head>
 <body>
 
-<div class="container receipt-container">
-    <div class="header-section">
-        <div class="text-center">
-            {% if school_info.logo %}
-                <img src="{{ school_info.logo.url }}" alt="KwikSchools" class="img-fluid school-logo">
-            {% else %}
-                <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="School Logo" class="img-fluid school-logo">
-            {% endif %}
-        </div>
-        <div class="school-info">
-            <h3 class="h4 font-weight-bold mb-0">{{ school_info.name }}</h3>
-            <p class="text-muted mb-0" style="font-size: 0.9rem;">
-               {{ school_info.address_line_1 }}<br>
-                Phone: {{ school_identity.phone1 }} | Email: {{ school_info.email }}
-            </p>
-        </div>
-    </div>
-
-    <div class="text-center mb-2">
-        <h2 class="h2 font-weight-bold receipt-title"><i class="fas fa-file-invoice me-2"></i> Payment Receipt</h2>
-        <div class="alert alert-success d-inline-block px-4 py-2" role="alert">
-            <h4 class="alert-heading h5 font-weight-bold mb-0"> Payment {{ receipt.payment.status }}</h4>
-        </div>
-    </div>
-
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <h5 class="section-heading mb-3">Receipt Details</h5>
-            <p class="mb-1"><strong>Receipt #:</strong> <span class="font-weight-bold text-info">{{ receipt.receipt_number }}</span></p>
-            <p class="mb-1"><strong>Date Issued:</strong> {{ receipt.issue_date|date:"M d, Y" }}</p>
-            <p class="mb-1"><strong>Payment Date:</strong> {{ receipt.payment.payment_date|date:"M d, Y" }}</p>
-
-            <p class="mb-1"><strong>Method:</strong> {{ receipt.payment.get_payment_method_display }}</p>
-        </div>
-        <div class="col-md-6 mt-4 mt-md-0">
-            <h5 class="section-heading mb-3">Student Information</h5>
-            <p class="mb-1"><strong>Name:</strong> {{ receipt.payment.student.first_name }} {{ receipt.payment.student.last_name }}</p>
-            <p class="mb-1"><strong>Student ID:</strong> {{ receipt.payment.student.user.username }}</p>
-            <p class="mb-1"><strong>Class:</strong> {{ receipt.payment.student.current_class|default:"N/A" }}</p>
-            <p class="mb-1"><strong>Email:</strong> {{ receipt.payment.student.user.email|default:"N/A" }}</p>
+<div class="receipt-card">
+    <div class="receipt-header">
+        <div class="row align-items-center">
+            <div class="col-sm-7">
+                {% if school_info.logo %}
+                    <img src="{{ school_info.logo.url }}" alt="Logo" class="school-logo">
+                {% else %}
+                    <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="Logo" class="school-logo">
+                {% endif %}
+                <h2 class="h4 mb-1" style="color: var(--primary-color); font-weight: 800;">{{ school_info.name }}</h2>
+                <p class="text-muted small mb-0">
+                    {{ school_info.address_line_1 }}<br>
+                    <i class="fas fa-phone-alt mr-1"></i> {{ school_identity.phone1 }} | <i class="fas fa-envelope mr-1"></i> {{ school_info.email }}
+                </p>
+            </div>
+            <div class="col-sm-5 text-sm-right mt-4 mt-sm-0">
+                <h1 class="h3 mb-2" style="color: var(--accent-color); font-weight: 800;">RECEIPT</h1>
+                <span class="badge {% if receipt.payment.status == 'Successful' or receipt.payment.status == 'paid' %}badge-success{% else %}badge-warning{% endif %} receipt-status-badge">
+                    {{ receipt.payment.status }}
+                </span>
+                <p class="mt-3 mb-0 info-value">#{{ receipt.receipt_number }}</p>
+                <p class="small text-muted">Issued: {{ receipt.issue_date|date:"M d, Y" }}</p>
+            </div>
         </div>
     </div>
 
-    <h5 class="section-heading mb-3">Current Payment Breakdown</h5>
-    <div class="table-responsive mb-5">
-        <table class="table table-bordered table-striped">
-            <thead class="thead-dark">
+    <div class="info-grid">
+        <div class="info-block">
+            <h6 class="section-heading mb-3 text-muted" style="border-bottom: 1px solid #eee; padding-bottom: 5px;">BILL TO</h6>
+            <div class="mb-2">
+                <span class="info-label">Student Name</span>
+                <span class="info-value">{{ receipt.payment.student.get_full_name }}</span>
+            </div>
+            <div class="mb-2">
+                <span class="info-label">ID / Class</span>
+                <span class="info-value">{{ receipt.payment.student.user.username }} — {{ receipt.payment.student.current_class|default:"N/A" }}</span>
+            </div>
+            <div>
+                <span class="info-label">Email</span>
+                <span class="info-value">{{ receipt.payment.student.user.email|default:"N/A" }}</span>
+            </div>
+        </div>
+        <div class="info-block border-left pl-md-4">
+            <h6 class="section-heading mb-3 text-muted" style="border-bottom: 1px solid #eee; padding-bottom: 5px;">PAYMENT DETAILS</h6>
+            <div class="mb-2">
+                <span class="info-label">Method</span>
+                <span class="info-value">{{ receipt.payment.get_payment_method_display }}</span>
+            </div>
+            <div class="mb-2">
+                <span class="info-label">Payment Date</span>
+                <span class="info-value">{{ receipt.payment.payment_date|date:"M d, Y" }}</span>
+            </div>
+            <div>
+                <span class="info-label">Session / Term</span>
+                <span class="info-value">{{ receipt.payment.session.name }} ({{ receipt.payment.term.name }})</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-section mt-4">
+        <h6 class="font-weight-bold mb-3 text-uppercase small text-muted">Current Transaction</h6>
+        <table class="table border">
+            <thead>
                 <tr>
                     <th>Description</th>
-                    <th class="text-right">Amount Paid</th>
+                    <th class="text-right">Amount</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>
-                        <h6 class="mb-0 font-weight-bold">{{ receipt.payment.payment_category.name|default:"General Payment" }}</h6>
-                        <small class="text-muted">
-                            {% if receipt.payment.term %}Term: {{ receipt.payment.term.name }}{% endif %}
-                            {% if receipt.payment.session %} | Session: {{ receipt.payment.session.name }}{% endif %}
-                        </small>
+                    <td class="py-4">
+                        <span class="font-weight-bold d-block text-dark">{{ receipt.payment.payment_category.name|default:"General Tuition Fee" }}</span>
+                        <small class="text-muted">Direct payment for {{ receipt.payment.term.name }}</small>
                     </td>
-                    <td class="text-right amount-paid">N{{ receipt.payment.amount_received|floatformat:2|default:"0.00" }}</td>
+                    <td class="text-right py-4">
+                        <span class="amount-highlight">₦{{ receipt.payment.amount_received|floatformat:2 }}</span>
+                    </td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-    <h5 class="section-heading mb-3">Invoice Summary for {{ current_session.name }} ({{ current_term.name }})</h5>
-    <div class="table-responsive mb-5">
-        <table class="table table-striped table-hover">
+    <div class="table-section">
+        <h6 class="font-weight-bold mb-3 text-uppercase small text-muted">Account Summary ({{ current_term.name }})</h6>
+        <table class="table table-sm">
             <thead class="thead-light">
-                <tr>                
-                    <th>Fee Item</th>
-                    <th class="text-right">Amount Due</th>
+                <tr>
+                    <th>Fee Breakdown</th>
+                    <th class="text-right">Due (₦)</th>
                 </tr>
             </thead>
             <tbody>
                 {% for fee in assigned_fees %}
-                <tr>                   
+                <tr>
                     <td>{{ fee.payment_category.name }}</td>
-                    <td class="text-right">N{{ fee.amount_due|floatformat:2 }}</td>
+                    <td class="text-right text-muted">{{ fee.amount_due|floatformat:2 }}</td>
                 </tr>
                 {% empty %}
-                <tr>
-                    <td colspan="2" class="text-center text-muted">No fees assigned for this period.</td>
-                </tr>
+                <tr><td colspan="2" class="text-center">No other fees recorded.</td></tr>
                 {% endfor %}
             </tbody>
             <tfoot>
-                <tr class="table-dark">
-                    <td class="font-weight-bold text-right">Total Invoice Due:</td>
-                    <td class="font-weight-bold text-right">N{{ total_invoice_due|floatformat:2 }}</td>
+                <tr class="font-weight-bold">
+                    <td class="text-right">Total Invoice:</td>
+                    <td class="text-right">₦{{ total_invoice_due|floatformat:2 }}</td>
                 </tr>
-                <tr class="table-info">
-                    <td class="font-weight-bold text-right">Total Amount Paid:</td>
-                    <td class="font-weight-bold text-right">N{{ total_invoice_paid|floatformat:2 }}</td>
+                <tr class="text-info">
+                    <td class="text-right">Total Paid to Date:</td>
+                    <td class="text-right">₦{{ total_invoice_paid|floatformat:2 }}</td>
                 </tr>
-                <tr class="table-success {% if total_invoice_balance > 0 %}table-danger{% endif %}">
-                    <td class="font-weight-bold text-right">Remaining Balance:</td>
-                    <td class="font-weight-bold text-right">
-                        N{{ total_invoice_balance|floatformat:2 }}
-                    </td>
+                <tr class="{% if total_invoice_balance > 0 %}text-danger{% else %}text-success{% endif %}" style="font-size: 1.1rem;">
+                    <td class="text-right">Balance:</td>
+                    <td class="text-right">₦{{ total_invoice_balance|floatformat:2 }}</td>
                 </tr>
             </tfoot>
         </table>
     </div>
-    <div class="text-center text-muted mb-4">
-        <p class="small mb-1">Receipt Generated By: 
-            {% if receipt.generated_by %}
-                <span class="font-weight-bold">{{ receipt.generated_by.get_full_name|default:receipt.generated_by.username }}</span>
-            {% else %}
-                <span class="font-weight-bold">System (Student Self-Service)</span>
-            {% endif %}
-        </p>
-        <p class="h5 font-weight-bold mt-3 text-primary">THANK YOU FOR YOUR PAYMENT!</p>
-        <p class="small mt-1">Please keep this receipt for your records.</p>
-    </div>
 
-    <div class="d-flex justify-content-center flex-column flex-sm-row mt-4 no-print">
-        <a href="{% url 'payments:payment_history' %}" class="btn btn-secondary btn-lg mb-2 mb-sm-0 mr-sm-2">
-            <i class="fas fa-arrow-left"></i> Back to Payment History
-        </a>
-        <button onclick="window.print()" class="btn btn-info btn-lg">
-            <i class="fas fa-print"></i> Print Receipt
-        </button>
+    <div class="text-center py-4 bg-light">
+        <p class="small text-muted mb-1">Generated by: {{ receipt.generated_by.get_full_name|default:"System" }}</p>
+        <p class="font-weight-bold mb-0" style="color: var(--primary-color);">THANK YOU FOR YOUR PATRONAGE</p>
+        <div class="mt-2 no-print">
+            <button onclick="window.print()" class="btn btn-primary px-4 shadow-sm">
+                <i class="fas fa-print mr-2"></i> Print Receipt
+            </button>
+            <a href="{% url 'payments:payment_history' %}" class="btn btn-link text-muted">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
     </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
