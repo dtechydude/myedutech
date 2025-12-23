@@ -493,24 +493,25 @@
 						</a>
 						<ul aria-expanded="false">
 							{% if user.is_superuser or user.is_staff %}
-							<li><a href="/admin/results/examination/" target="_blank">Add Exams</a></li>
-							<li><a href="/admin/results/score/" target="_blank">Enter CA & Exam Scores</a></li>
-							<li><a href="{% url 'results:report_card_list' %}">Termly Report Card</a></li>
-							<li><a href="{% url 'results:result_publications_list' %}">PUBLISH RESULTS</a></li>
+							<li><a href="{% url 'results:midterm_score_selection' %}">Enter Mid-Term Scores</a></li>
+							<li><a href="{% url 'results:student_midterm_list' %}">View Mid-Term Results</a></li>
+							<li><a href="{% url 'results:score_entry' %}">Record End-Of-Term Scores</a></li>
+							<li><a href="{% url 'results:report_card_list' %}">Termly Report Cards</a></li>
 							<li><a href="{% url 'results:session_report_card_list' %}">Annual Report Card</a></li>
+							<li><a href="{% url 'results:result_publications_list' %}">PUBLISH RESULTS</a></li>
 							<li><a href="{% url 'results:ranking_list' %}">Student's Exam Ranking</a></li>
-							<li><a href="{% url 'students:promote_individual_students' %}">Promote Students (Individual)</a></li>
 							<li><a href="{% url 'students:promote_students' %}">Promote Students (Batch) </a></li>
-
+							<li><a href="{% url 'students:promote_individual_students' %}">Promote Students (Individual)</a></li>
+							
 							
 							{% elif user.student %}
 							<li><a href="{% url 'results:student_dashboard' %}">Termly/Session Results</a></li>	
 							<li><a href="{% url 'results:student_midterm_list' %}">My Mid-Term Results</a></li>							
 
 							{% elif user.teacher %}
-							<li><a href="{% url 'results:midterm_score_selection' %}">Record Mid-Term Results</a></li>
+							<li><a href="{% url 'results:midterm_score_selection' %}">Record Mid-Term Scores</a></li>
 							<li><a href="{% url 'results:student_midterm_list' %}">View Mid-Term Results</a></li>						
-							<li><a href="{% url 'results:score_entry' %}">Record End Of Term Results</a></li>
+							<li><a href="{% url 'results:score_entry' %}">Record CA & Term Scores</a></li>
 							<li><a href="{% url 'results:report_card_list' %}">Termly Report Cards</a></li>
 							<li><a href="{% url 'results:session_report_card_list' %}">Annual Report Cards</a></li>
 							<li><a href="{% url 'results:ranking_list' %}">Student's Exam Ranking</a></li>
@@ -905,13 +906,15 @@
 							<div class="col-xl-12">
 								<div class="row">
 									<div class="col-xl-6">
-										<div class="card">
-											<div class="card-header border-0 pb-0">
-												</div>									
-											<div class="card-header border-0 pb-0">
-												<p class="fs-6"><i class="fas fa-school"></i> - {{ school_info.name }}</p>
+										<div class="card">																	
+											<!-- <div class="card-header border-0 pb-0">
 												<a href="{% url 'events:calendar' %}" class="btn btn-primary btn-sm">View School Events</a>
-											</div>
+											</div> -->
+											<div class="card-header border-0 pb-0 d-flex justify-content-center">
+											<a href="{% url 'events:calendar' %}" class="btn btn-primary btn-sm">
+												View School Events
+											</a>
+										</div>
 											<div class="card-body pb-2 loadmore-content" id="BookingContent">
 												<div class="text-center event-calender border-bottom booking-calender">
 													<input type='text' class="form-control d-none " id='datetimepicker1' />

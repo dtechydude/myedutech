@@ -294,50 +294,50 @@ def video_guides_view(request):
     video_list = [
          {
             'title': 'Smart Intro - KwikSchools',
-            'youtube_url': 'https://www.youtube.com/embed/lMgWQgFQrrY',
+            'youtube_url': 'https://www.youtube.com/watch/lMgWQgFQrrY',
             'description': 'A Smart Intro To KwikSchools.',
             'is_staff_only': False
         },
         # Add more videos here
         {
             'title': 'A KwikSchools Quick Guide',
-            'youtube_url': 'https://www.youtube.com/embed/KwjiFOwDOl4',
+            'youtube_url': 'https://www.youtube.com/watch/KwjiFOwDOl4',
             'description': 'A walk-through video on how to use the features.',
             'is_staff_only': False
         },
         {
             'title': 'Admin - School Set-Up (Admin)',
-            'youtube_url': 'https://www.youtube.com/embed/dGpsPRIlkH4',
+            'youtube_url': 'https://www.youtube.com/watch/dGpsPRIlkH4',
             'description': 'Set Up - Initial portal set up',
             'is_staff_only': True  # This video is for staff only
         },
          {
             'title': 'Admin - Payment Module 1 (Admin)',
-            'youtube_url': 'https://www.youtube.com/embed/_DeB_8i-3jc',
+            'youtube_url': 'https://www.youtube.com/watch/_DeB_8i-3jc',
             'description': 'Set Up - Payment Module',
             'is_staff_only': True  # This video is for staff only
         },
          {
             'title': 'Admin - Student Enrolment & Teachers Signup',
-            'youtube_url': 'https://www.youtube.com/embed/EHOePJXKWp0',
+            'youtube_url': 'https://www.youtube.com/watch/EHOePJXKWp0',
             'description': 'Set Up - Initial portal set up',
             'is_staff_only': True  # This video is for staff only
         },
          {
             'title': 'Admin - Assign Form Teachers To Classes',
-            'youtube_url': 'https://www.youtube.com/embed/jnm5nk58L-Q',
+            'youtube_url': 'https://www.youtube.com/watch/jnm5nk58L-Q',
             'description': 'How to assign form teachers to classes',
             'is_staff_only': True  # This video is for staff only
         },
         {
             'title': 'STUDENTS - The Student Dashboard 1',
-            'youtube_url': 'https://www.youtube.com/embed/xK9He7qwJLE',
+            'youtube_url': 'https://www.youtube.com/watch/xK9He7qwJLE',
             'description': 'Exploring the student dashboard',
             'is_staff_only': False  # This video is for staff only
         },
         {
             'title': 'TEACHERS - The Teachers Dashboard 1',
-            'youtube_url': 'https://www.youtube.com/embed/HiRL_cLb8Z8',
+            'youtube_url': 'https://www.youtube.com/watch/HiRL_cLb8Z8',
             'description': 'Exploring the teachers dashboard',
             'is_staff_only': False  # This video is for staff only
         },
@@ -353,7 +353,7 @@ def video_guides_view(request):
         visible_videos = [video for video in video_list if not video['is_staff_only']]
 
     context = {
-        'title': 'MyEduTech Video Guides',
+        'title': 'Kwikschools Video Guides',
         'videos': visible_videos,
     }
     return render(request, 'pages/video_guides.html', context)

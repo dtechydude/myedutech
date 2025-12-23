@@ -824,25 +824,6 @@ def payment_summary(request):
 
 
 
-# Placeholder for total payments report
-# @login_required
-# @user_passes_test(is_staff)
-# def total_payments_report(request):
-#     """Generates a detailed report of all payments received."""
-#     payments = Payment.objects.all().select_related(
-#         'student__user', 'payment_category', 'term', 'session'
-#     ).order_by('-payment_date')
-    
-#     paginator = Paginator(payments, 50)
-#     page_number = request.GET.get('page')
-#     page_obj = paginator.get_page(page_number)
-    
-#     context = {
-#         'title': 'Total Payments Report',
-#         'payments': page_obj,
-#     }
-#     return render(request, 'payments/total_payments_report.html', context)
-
 @login_required
 @user_passes_test(is_staff)
 # Assuming Payment, Student, Term, Session, etc., are imported correctly
