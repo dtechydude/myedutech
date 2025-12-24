@@ -13,15 +13,15 @@ app_name ='results'
 urlpatterns = [
    
     # Path for students to see a list of all terms they have results for
-    path('my_results/terms/', views.my_term_results_view, name='my_terms_list'),
+    # path('my_results/terms/', views.my_term_results_view, name='my_terms_list'),
 
     # Path for students to see detailed results for a specific term
     # This might be the one you previously called 'my_term_results_view' or similar
-    path('my_results/term/<int:term_id>/', views.my_term_results_view, name='my_term_results'),
+    # path('my_results/term/<int:term_id>/', views.my_term_results_view, name='my_term_results'),
 
     # Path for the consolidated report card for a specific term
     # path('my_results/term/<int:term_id>/report_card/', views.student_term_report_card_view, name='student_term_report_card'),
-    path('student/<int:student_id>/session/<int:session_id>/report/', views.student_session_report_view, name='student_session_report'),
+    # path('student/<int:student_id>/session/<int:session_id>/report/', views.student_session_report_view, name='student_session_report'),
 
     #working well 001
     path('score-entry/', ScoreEntryView.as_view(), name='score_entry'),

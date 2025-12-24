@@ -63,22 +63,62 @@ class ScoreEntryForm(forms.Form):
 
 
 #in progress Worked For Each Term
+# class ReportCardFilterForm(forms.Form):
+#     """
+#     Form for selecting Term and Standard to filter students for report cards.
+#     """
+#     term = forms.ModelChoiceField(
+#         queryset=Term.objects.all().order_by('-start_date'), # Order by newest term first
+#         empty_label="Select Term",
+#         required=True,
+#         widget=forms.Select(attrs={'class': 'form-control'}) # Add a class for potential styling
+#     )
+#     standard = forms.ModelChoiceField(
+#         queryset=Standard.objects.all().order_by('name'), # Order by standard name
+#         empty_label="Select Standard (Optional)", # Make it optional here for filtering all students in a term
+#         required=False,
+#         widget=forms.Select(attrs={'class': 'form-control'})
+#     )
+
+
 class ReportCardFilterForm(forms.Form):
     """
     Form for selecting Term and Standard to filter students for report cards.
+    Restricts the Standard dropdown for teachers to only their assigned class.
     """
     term = forms.ModelChoiceField(
-        queryset=Term.objects.all().order_by('-start_date'), # Order by newest term first
+        queryset=Term.objects.all().order_by('-start_date'),
         empty_label="Select Term",
         required=True,
-        widget=forms.Select(attrs={'class': 'form-control'}) # Add a class for potential styling
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
     standard = forms.ModelChoiceField(
-        queryset=Standard.objects.all().order_by('name'), # Order by standard name
-        empty_label="Select Standard (Optional)", # Make it optional here for filtering all students in a term
+        queryset=Standard.objects.all().order_by('name'),
+        empty_label="Select Standard (Optional)",
         required=False,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+
+    def __init__(self, *args, **kwargs):
+        # Pop the user object passed from the view
+        user = kwargs.pop('user', None)
+        super(ReportCardFilterForm, self).__init__(*args, **kwargs)
+
+        if user:
+            # Check if user is NOT a superuser or staff
+            if not (user.is_superuser or user.is_staff):
+                # If they are a teacher, restrict the 'standard' dropdown
+                if hasattr(user, 'teacher'):
+                    self.fields['standard'].queryset = Standard.objects.filter(
+                        form_teacher=user.teacher
+                    ).order_by('name')
+                    
+                    # Optional: Change the empty label to be more specific for teachers
+                    self.fields['standard'].empty_label = "Select Your Class"
+                else:
+                    # If for some reason a student or someone else accesses this, 
+                    # show nothing in standard to be safe
+                    self.fields['standard'].queryset = Standard.objects.none()
 
 
 #in progress for all the terms together

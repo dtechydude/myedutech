@@ -1,0 +1,731 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <title> {{ student.first_name }} {{ student.first_name }}'s Report Card - {{ term.name }}_{{ term.session }}</title>
+    <style>
+    /* Base styles for web view */
+    body {
+      background-color: #006699;
+      font-family: Arial, sans-serif;
+    }
+    .report-card-wrapper {
+      max-width: 800px;
+      margin: 20px auto;
+      background-color: white;
+      border: 1px solid #ddd;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+  .header-section {
+  text-align: center;
+  padding: 6px 10px 2px; /* reduced bottom padding */
+  margin-bottom: 2px;   /* pull next section up */
+}
+
+.header-section img {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 2px;   /* reduce gap under logo */
+}
+
+.header-section h1 {
+  font-size: 26px;
+  margin: 4px 0 1px;    /* tighter top & bottom spacing */
+  font-weight: bold;
+  color: #333366;
+}
+
+.header-section p {
+  color: #333366;
+  font-size: 13px;
+  margin: 0;            /* IMPORTANT: removes default paragraph spacing */
+  line-height: 1.2;    /* keeps text readable but compact */
+}
+.psychomotor-heading {
+  font-size: 13px;          /* smaller than h6, mobile-friendly */
+  font-weight: bold;
+  margin: 4px 0 2px;        /* compact spacing like header */
+  color: #333366;
+}
+
+.psychomotor-heading .scale {
+  font-size: 12px;           /* secondary info smaller */
+  font-weight: normal;
+  color: #666;
+  margin-left: 3px;
+}
+
+    .info-table th, .info-table td {
+      border: 1px solid grey;
+      text-align: left;
+      padding: 5px;
+      vertical-align: middle;
+      font-size: 12px;
+
+    }
+    .subject-table th, .subject-table td {
+      border: 1px solid grey;
+      text-align: center;
+      padding: 5px;
+      vertical-align: middle;
+      font-size: 12px;
+    }
+    .summary-section p, .comment-section p, .remark-table p, .remark-table strong, .remark-table span {
+      font-size: 12px;
+      margin: 0;
+    }
+    .signature-section {
+        padding: 15px;
+        text-align: center;
+    }
+    .no-print {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    /* Refined academic heading */
+.report-heading {
+    background-color: #2f2f2f !important;  /* universal neutral */
+    color: #ffffff !important;
+    padding: 8px 10px !important;
+    font-size: 20px !important;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    line-height: 1.2;
+    margin-bottom: 6px;
+
+}
+.report-subheading {
+    font-size: 13px;
+    color: #e5e7eb;
+}
+
+    }
+    /* Styles for compact grading keys */
+    .grading-keys-table {
+        margin-top: 5px;
+    }
+    .grading-keys-table th, .grading-keys-table td {
+        border: 1px solid grey;
+        padding: 5px;
+        vertical-align: top;
+        font-size: 12px;
+        text-align: left;
+    }
+    .grading-keys-table th {
+        background-color: #f2f2f2;
+        text-align: center;
+        font-size: 11px;
+    }
+    /* New styles for the 10-column behavioral table */
+    .behavioral-table td {
+        border: 1px solid grey;
+        text-align: left;
+        padding: 5px;
+        vertical-align: middle;
+        font-size: 10px;
+        width: 10%; /* Makes all columns equal width for a neat look */
+    }
+    .behavioral-summary {
+      font-size: 12px;
+      text-align: center;
+      margin-top: 10px;
+    }
+    /* Print/PDF-specific styles */
+    @media print {
+      body {
+        background-color: #fff !important;
+        -webkit-print-color-adjust: exact;
+        margin: 0;
+        padding: 0;
+      }
+      .report-card-wrapper {
+          box-shadow: none;
+          margin: 0 auto; /* Center the report card on the print page */
+      }
+      .no-print, .btn, .back-link {
+        display: none !important;
+      }
+      table, th, td {
+        border-color: #ccc !important;
+      }
+      .remark-table td, .grading-keys-table td {
+        border-style: hidden !important;
+      }
+      .grading-keys-table th, .grading-keys-table td {
+          font-size: 9px; /* Smaller font for print */
+      }
+      .behavioral-table td {
+        font-size: 9px; /* Smaller font for print */
+      }
+    }
+
+    /* ===== Enhanced Motor Ability Styling ===== */
+
+
+.behavioral-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px 4px; /* VERY compact vertical spacing */
+  margin-top: 4px;
+}
+
+/* Mobile only */
+@media (max-width: 768px) {
+  .behavioral-grid {
+    grid-template-columns: repeat(6, minmax(90px, 1fr));
+    overflow-x: auto;
+    width: max-content;
+    max-width: 100%;
+  }
+}
+@media (max-width: 768px) {
+  .behavioral-grid {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+.trait {
+  text-align: center;
+  padding: 4px 2px;
+  background: #fafafa;
+  border: 1px solid #d6d6d6;
+}
+
+.trait .label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #003366;
+  text-transform: uppercase;
+  margin-bottom: 1px;
+  line-height: 1.1;
+}
+
+.trait .score {
+  display: inline-block;
+  min-width: 22px;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #fff;
+  background: #990000;
+}
+
+/* Print */
+@media print {
+  .behavioral-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    grid-template-columns: repeat(6, 1fr) !important;
+  }
+}
+
+
+/* ===== Grading Keys – Print Lock ===== */
+@media print {
+  .grading-keys-table {
+    margin-top: 1mm;           /* physical unit for print stability */
+    width: 100%;
+  }
+
+  .grading-keys-table th,
+  .grading-keys-table td {
+    font-size: 9pt !important; /* LOCK size for A4 */
+    padding: 2pt 2pt;          /* print-friendly spacing */
+    line-height: 1.2;
+  }
+
+  .grading-keys-table th {
+    font-size: 11pt !important;
+    font-weight: bold;
+  }
+}
+
+/* ===== Remarks / Comment Section – A4 Print Lock ===== */
+@media print {
+
+  .comment-section {
+    margin: 2mm 0 !important;   /* physical spacing */
+  }
+
+  .remark-table {
+    width: 100% !important;
+    border-collapse: collapse;
+    table-layout: fixed;        /* prevents column squeeze */
+  }
+
+  .remark-table td {
+    font-size: 10pt !important; /* LOCK size for A4 */
+    line-height: 1.2 !important;
+    vertical-align: top;
+    padding: 1mm 2mm !important;
+  }
+
+  .remark-table strong {
+    font-size: 10pt !important;
+  }
+
+  .remark-table span {
+    font-size: 11pt !important;
+  }
+}
+
+/*Water Mark on the page*/
+/* ===== Watermark (School Logo) ===== */
+.report-card-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.report-card-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("{{ school_info.logo.url }}") center 30% no-repeat;
+  background-size: 320px auto;
+  opacity: 0.12;              /* subtle watermark */
+  pointer-events: none;       /* never blocks clicks */
+  z-index: 0;
+}
+
+/* Ensure content stays above watermark */
+.report-card-wrapper > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Size on normal screen (Mobile/Desktop) */
+.qr-code-small {
+    width: 80px;  /* Clearly visible on screen */
+    height: 80px;
+    margin-bottom: 5px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Size on Print Alone */
+@media print {
+    .qr-code-small {
+        width: 50px !important;  /* Much smaller on the paper */
+        height: 50px !important;
+        margin-top: 0;
+        margin-bottom: 2px;
+    }
+
+    /* Optional: Ensure the signature section doesn't take too much vertical space on paper */
+    .signature-section {
+        margin-top: 10px !important;
+    }
+}
+
+</style>
+
+  </head>
+  <body>
+<!--nice view-->
+    <div class="no-print">
+      {% comment %}
+        <a href="{% url 'results:student_report_card_detail' student.id term.id %}?download=pdf"
+            target="_blank"
+            class="btn btn-primary btn-lg">
+            Download Termly Report as PDF
+        </a>
+        {% endcomment %}
+        <a href="javascript:window.print()" class="btn btn-secondary btn-lg">
+            Print Result
+        </a>
+    </div>
+
+    <div class="report-card-wrapper">
+      <div class="header-section">
+          {% if school_identity.logo %}
+        <img src="{{ school_identity.logo.url }}" alt="School Logo" style="width: 100px; height: auto;">
+      {% else %}
+        <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo">
+      {% endif %}
+        <br>
+        <p>
+        <span style="font-size: 18px;">{% if school_identity.name %}<strong>{{ school_identity.name }}</strong> {% else %}KwikSchools Institute{% endif %}</span><br>
+      <span style="font-size: 11px;">
+          {% if school_identity.address_line_1 %}{{ school_identity.address_line_1 }}{% else %}123 School Lane{% endif %}
+          {% if school_identity.address_line_2 %}{{ school_identity.address_line_2 }}{% endif %} <br>
+          {% if school_identity.phone1 %}<strong>PHONE: </strong>{{ school_identity.phone1 }}{% endif %} </span>
+          </p>
+      </div>
+      <div class="p-2">
+
+       <h4 class="text-center report-heading">
+    STUDENT ACADEMIC REPORT
+    <span class="report-subheading">
+        {{ term.session.name|default:"N/A" }} — {{ term.name|default:"N/A" }}
+    </span>
+</h4>
+
+
+        <table class="info-table w-100 mb-3">
+          <tr>
+            <td colspan="2"><strong>NAME:</strong> {{ student.last_name|upper }} {{ student.first_name|upper }} {% if student.middle_name %}{{ student.middle_name|upper }}{% endif %}</td>
+            <td><strong>USN:</strong> {{ student.USN|default:"N/A" }}</td>
+            <td><strong>CLASS:</strong> {{ student.current_class.name|default:"N/A" }}</td>
+            <td><strong>No in Class:</strong> {{ total_students_in_class|default:"N/A" }}</td>
+            <td rowspan="2" style="width: 80px; text-align:center;">
+              {% if student.user.profile.image %}
+                  <img src="{{ student.user.profile.image_url }}" width="60" height="60" class="img-fluid">
+              {% else %}
+                  <img src="{% static 'pages/images/qr_code.jpg' %}" width="60" height="60" class="img-fluid">
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Days Sch. Opened:</strong> {{ total_school_days|default:"N/A" }}</td>
+            <td style="color: green;"><strong>Days Present:</strong> {{ days_present|default:"N/A" }}</td>
+            <td style="color:red;"><strong>Days Absent:</strong> {{ days_absent|default:"N/A" }}</td>
+            <td colspan="2"><strong>Next Term Begins:</strong> {{ next_term_start_date|date:"M d, Y"|default:"N/A" }}</td>
+          </tr>
+        </table>
+
+        <h5 class="text-center mt-2"><strong>ACADEMIC PERFORMANCE</strong></h5>
+        <div class="table-responsive">
+          <table class="subject-table table-bordered w-100">
+            <thead class="bg-light">
+              <tr>
+                <th class="text-center">S/N</th>
+                <th colspan="2" class="text-center">SUBJECT</th>
+                <th class="text-center">CA1</th>
+                <th class="text-center">CA2</th>
+                <th class="text-center">CA3</th>
+                <th class="text-center">CA (40)</th>
+                <th class="text-center">EXAM (60)</th>
+                <th class="text-center">TOTAL%</th>
+                <th class="text-center">GRADE</th>
+                <th class="text-center">REMARK</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for data in report_data %}
+              <tr>
+                <td>{{forloop.counter}}</td>
+                <td colspan="2" class="text-left">{{ data.subject }}</td>
+                <td>{{ data.ca1|floatformat:0|default:"N/A" }}</td>
+                <td>{{ data.ca2|floatformat:0|default:"N/A"}}</td>
+                <td>{{ data.ca3|floatformat:0|default:"N/A"}}</td>
+                <td>{{ data.total_ca|default:"-"|floatformat:0}}</td>
+                <td>{{ data.exam_score|default:"-"|floatformat:0 }}</td>
+                <td><strong>{% if data.total_score > 40 %}{{ data.total_score|default:"-"|floatformat:0  }} {% else %}<span style="color: red;">{{ data.total_score|default:"-"|floatformat:0  }}</span> {% endif %}</strong></td>
+                <td>{{ data.grade }}</td>
+                <td>{{ data.remark }}</td>
+
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+
+<div class="summary-section my-2">
+    <table class="w-100" style="border: 1px solid grey; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 8px; border-right: 1px solid grey; width: 50%; text-align: center; background-color: #f8f9fa;">
+                <strong style="font-size: 13px; color: #333;">OVERALL AVERAGE:</strong>
+                <span class="text-primary font-weight-bold" style="font-size: 16px; margin-left: 10px;">
+                    {% if overall_average is not None %}
+                        <i class="fas fa-chart-bar mr-1"></i>{{ overall_average|floatformat:2 }}%
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </span>
+            </td>
+            <td style="padding: 8px; width: 50%; text-align: center; background-color: #f0f8ff;">
+                <strong style="font-size: 13px; color: #333;">POSITION IN CLASS:</strong>
+                <span class="font-weight-bold" style="font-size: 16px; margin-left: 10px;">
+                    {# Using a more reliable check for position numbers #}
+                    {% if student_position_display|slice:":1" == '1' and student_position_display|slice:"1:2" != '0' and student_position_display|slice:"1:2" != '1' and student_position_display|slice:"1:2" != '2' %}
+                        <i class="fas fa-trophy mr-1" style="color: #ffc107;"></i>
+                        <span style="color: #d99f00;">{{ student_position_display }}</span>
+                    {% elif student_position_display|slice:":1" == '2' and student_position_display|slice:"1:2" == 'n' or student_position_display|slice:"1:2" == 'N' or student_position_display|slice:"1:2" == ' ' %}
+                        <i class="fas fa-medal mr-1" style="color: #adb5bd;"></i>
+                        <span style="color: #6c757d;">{{ student_position_display }}</span>
+                    {% elif student_position_display|slice:":1" == '3' %}
+                        <i class="fas fa-medal mr-1" style="color: #cd7f32;"></i>
+                        <span style="color: #a0522d;">{{ student_position_display }}</span>
+                    {% else %}
+                        <i class="fas fa-list-ol mr-1" style="color: #006699;"></i>
+                        <span style="color: #006699;">{{ student_position_display|default:"N/A" }}</span>
+                    {% endif %}
+                </span>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="text-center psychomotor-heading">
+  <strong>PSYCHOMOTOR ASSESSMENT</strong> <span class="scale">(5-Point Scale)</span>
+</div>
+
+<div class="behavioral-grid">
+
+  <div class="trait">
+    <span class="label">Honesty</span>
+    <span class="score">{{ motor_ability_score.honesty|default:"-" }}</span>
+  </div>
+
+  <div class="trait">
+    <span class="label">Politeness</span>
+    <span class="score">{{ motor_ability_score.politeness|default:"-" }}</span>
+  </div>
+
+  <div class="trait">
+    <span class="label">Neatness</span>
+    <span class="score">{{ motor_ability_score.neatness|default:"-" }}</span>
+  </div>
+
+  <div class="trait">
+    <span class="label">Cooperation</span>
+    <span class="score">{{ motor_ability_score.cooperation|default:"-" }}</span>
+  </div>
+
+  <div class="trait">
+    <span class="label">Obedience</span>
+    <span class="score">{{ motor_ability_score.obedience|default:"-" }}</span>
+  </div>
+
+  <div class="trait">
+    <span class="label">Punctuality</span>
+    <span class="score">{{ motor_ability_score.punctuality|default:"-" }}</span>
+  </div>
+<div class="trait">
+    <span class="label">Physical Ed.</span>
+    <span class="score">{{ motor_ability_score.physical_education|default:"-" }}</span>
+  </div>
+  <div class="trait">
+    <span class="label">Games</span>
+    <span class="score">{{ motor_ability_score.games|default:"-" }}</span>
+  </div>
+  <div class="trait">
+    <span class="label">Attentiveness</span>
+    <span class="score">{{ motor_ability_score.attentiveness|default:"-" }}</span>
+  </div>
+  <div class="trait">
+    <span class="label">Leadership</span>
+    <span class="score">{{ motor_ability_score.leadership|default:"-" }}</span>
+  </div>
+  <div class="trait">
+    <span class="label">Attitude</span>
+    <span class="score">{{ motor_ability_score.attitude|default:"-" }}</span>
+  </div>
+  <div class="trait">
+    <span class="label">Emotional Stability</span>
+    <span class="score">{{ motor_ability_score.emotional_stability|default:"-" }}</span>
+  </div>
+  <div class="trait">
+    <span class="label">Musical</span>
+    <span class="score">{{ motor_ability_score.musical|default:"-" }}</span>
+  </div>
+  <div class="trait">
+    <span class="label">Handwriting</span>
+    <span class="score">{{ motor_ability_score.handwriting|default:"-" }}</span>
+  </div>
+  <div class="trait">
+    <span class="label">Reading</span>
+    <span class="score">{{ motor_ability_score.reading|default:"-" }}</span>
+  </div>
+  <div class="trait">
+    <span class="label">Verbal Fluency</span>
+    <span class="score">{{ motor_ability_score.verbal_fluency|default:"-" }}</span>
+  </div>
+  <div class="trait">
+    <span class="label">Handling Tools</span>
+    <span class="score">{{ motor_ability_score.handling_tools|default:"-" }}</span>
+  </div>
+  <div class="trait">
+    <span class="label">Perseverance</span>
+    <span class="score">{{ motor_ability_score.perseverance|default:"-" }}</span>
+  </div>
+  <!-- repeat for others -->
+</div>
+
+
+<h6 class="text-center mt-2"><strong>GENERAL REMARKS</strong></h6>
+<div class="comment-section my-3">
+  <table class="w-100 remark-table" style="border-style: hidden;">
+    <tbody>
+      <tr style="border-style: hidden;">
+
+        <!-- CLASS TEACHER -->
+        <td style="border-style: hidden; padding-right: 15px; width: 50%;">
+          <strong style="
+              font-size:13px;
+              color:#990000;
+              text-decoration:underline;
+              letter-spacing:0.4px;
+          ">
+            CLASS TEACHER:
+          </strong>
+          <br>
+
+          <span style="
+              font-size:12px;
+              font-style: italic;
+              line-height:1.35;
+              color:#333;
+          ">
+            {% if overall_average is not None and overall_average > 75 %}
+              <strong style="color:#006600;">Outstanding Performance</strong>,
+              Your dedication and commitment to learning are clearly reflected in your results. Keep it up!
+
+            {% elif overall_average is not None and overall_average > 65 %}
+              <strong style="color:#004085;">Very Good Effort</strong>,
+              You have shown commendable progress. Work harder to reach the next level of excellence.
+
+            {% elif overall_average is not None and overall_average > 55 %}
+              <strong style="color:#856404;">Good Progress</strong>,
+              Academic performance is satisfactory. Greater focus on weaker subjects is advised.
+
+            {% elif overall_average is not None and overall_average > 45 %}
+              <strong style="color:#721c24;">Fair Performance</strong>,
+              A significant increase in effort and consistency is required next term.
+
+            {% elif overall_average is not None and overall_average >= 0 %}
+              <strong style="color:#990000;">Below Average Performance</strong>,
+              Immediate attention and sustained effort are necessary to improve results.
+
+            {% else %}
+              Performance data is unavailable. Please refer to subject scores.
+            {% endif %}
+          </span>
+        </td>
+
+        <!-- PRINCIPAL / HEAD TEACHER -->
+        <td style="border-style: hidden; width: 50%;">
+          <strong style="
+              font-size:13px;
+              color:#990000;
+              text-decoration:underline;
+              letter-spacing:0.4px;
+          ">
+            PRINCIPAL / HEAD TEACHER:
+          </strong>
+          <br>
+
+          <span style="
+              font-size:12px;
+              font-style: italic;
+              line-height:1.35;
+              color:#333;
+          ">
+            {% if overall_average is not None and overall_average > 75 %}
+              <strong style="color:#006600;">Outstanding Term</strong>,
+              Exceptional performance. Maintain this level of focus and excellence.
+
+            {% elif overall_average is not None and overall_average > 65 %}
+              <strong style="color:#004085;">Very Good Result</strong>,
+              A strong showing this term. Aim higher by embracing new challenges.
+
+            {% elif overall_average is not None and overall_average > 55 %}
+              <strong style="color:#856404;">Satisfactory Performance</strong>,
+              Improvement is encouraged to achieve higher academic standards.
+
+            {% elif overall_average is not None and overall_average > 45 %}
+              <strong style="color:#721c24;">Needs Improvement</strong>,
+              Increased diligence and commitment will lead to better outcomes.
+
+            {% elif overall_average is not None and overall_average >= 0 %}
+              <strong style="color:#990000;">Academic Concern</strong>,
+              A parent/guardian meeting is required to discuss necessary support.
+
+            {% else %}
+              General performance information is unavailable.
+            {% endif %}
+          </span>
+        </td>
+
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+        <h6 class="text-center mt-2"><strong>GRADING KEYS</strong></h6>
+        <div class="grading-keys-section my-2">
+            <table class="w-100 grading-keys-table">
+                <thead>
+                    <tr>
+                        <th>EXAMINATION - 100%</th>
+                        <th>PSYCHOMOTOR- 5Points</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <span style="color: #990000;">80 - 100</span><strong> A </strong>,
+                            <span style="color:#990000;">71 - 79</span><strong> B+ </strong>,
+                            <span style="color:#990000;">60 - 70</span><strong> B </strong>,
+                            <span style="color:#990000;">50 - 59</span><strong> C </strong>,
+                            <span style="color:#990000;">45 - 49</span><strong> D </strong>,
+                            <span style="color:#990000;">40 - 44</span><strong> E </strong>,
+                            <span style="color:#990000;">0 - 39</span><strong> F </strong>
+                        </td>
+                        <td>
+                            <span style="color:#990000;"><strong>5 - </strong></span><strong> Excellent </strong>,
+                            <span style="color:#990000;"><strong>4 - </strong></span><strong> Good </strong>,
+                            <span style="color:#990000;"><strong>3 - </strong></span><strong> Fair </strong>,
+                            <span style="color:#990000;"><strong>2 - </strong></span><strong> Poor </strong>,
+                            <span style="color:#990000;"><strong>1 - </strong></span><strong> Very Poor </strong>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="signature-section">
+             {% with school_data=school_info|default:school_identity %}
+                {% if school_data.signature %}
+                    <img src="{{ school_data.signature.url }}" class="signature-image" alt="Principal Signature">
+                {% else %}
+                <img src="https://bwipjs-api.metafloor.com/?bcid=qrcode&text=VERIFIED Result:{{ student.USN }}- {{ student.last_name }} {{ student.first_name }}-{{ term }}-{{school_data.name}}&scale=2"
+                 class="qr-code-small"
+                 alt="QR Verification">
+                {% endif %}
+            {% endwith %}
+
+
+          <p class="font-weight-bold">Authorized Signature <br>
+          <span class="text-muted"><small> <i>{{ school_identity.name}}</i></small></span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-center mt-5 no-print">
+    {% if user.teacher or user.is_superuser or user.is_staff %}
+    <a href="{% url 'results:report_card_list' %}{% if term %}?term={{ term.id }}{% if student.current_class %}&standard={{ student.current_class.id }}{% endif %}{% elif student.current_class %}?standard={{ student.current_class.id }}{% endif %}" class="btn btn-secondary btn-lg me-4">
+        Back to Student List
+    </a> |
+
+    <a href="{% url 'results:motor_ability_score_create_update' student.id term.id %}" class="btn btn-success btn-lg me-4">
+        <i class="bi bi-pencil-square"></i> Record Motor Ability Scores
+    </a>
+      {% elif user.student %}
+      <a href="{% url 'results:student_dashboard' %}" class="btn btn-secondary btn-lg">Back to Dashboard</a>
+    {% else %}
+      <a href="{% url '/dashboard' %}" class="btn btn-secondary btn-lg">Back to Home</a>
+
+    {% endif %}
+</div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  </body>
+</html>
