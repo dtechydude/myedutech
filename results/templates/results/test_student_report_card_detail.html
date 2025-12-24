@@ -305,6 +305,31 @@
   z-index: 1;
 }
 
+/* Size on normal screen (Mobile/Desktop) */
+.qr-code-small {
+    width: 80px;  /* Clearly visible on screen */
+    height: 80px;
+    margin-bottom: 5px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Size on Print Alone */
+@media print {
+    .qr-code-small {
+        width: 50px !important;  /* Much smaller on the paper */
+        height: 50px !important;
+        margin-top: 0;
+        margin-bottom: 2px;
+    }
+
+    /* Optional: Ensure the signature section doesn't take too much vertical space on paper */
+    .signature-section {
+        margin-top: 10px !important;
+    }
+}
+
 </style>
 
   </head>
@@ -665,12 +690,17 @@
         </div>
 
         <div class="signature-section">
-          {% if school_identity.signature %}
-        <img src="{{ school_identity.signature.url }}" alt="Signature" style="width: 120px; height: 40px;">
-        {% else %}
-        <!--<img src="{% static 'pages/images/sign.jpg' %}" alt="Signature" style="width: 100px; height: auto;">-->
-        <img src="{% static 'pages/images/qr_code.jpg' %}" width="60" height="60" class="img-fluid">
-        {% endif %}
+             {% with school_data=school_info|default:school_identity %}
+                {% if school_data.signature %}
+                    <img src="{{ school_data.signature.url }}" class="signature-image" alt="Principal Signature">
+                {% else %}
+                <img src="https://bwipjs-api.metafloor.com/?bcid=qrcode&text=VERIFIED:{{ student.USN }}-{{ term }}-{{school_data.name}}&scale=2"
+                 class="qr-code-small"
+                 alt="QR Verification">
+                {% endif %}
+            {% endwith %}
+
+
           <p class="font-weight-bold">Authorized Signature <br>
           <span class="text-muted"><small> <i>{{ school_identity.name}}</i></small></span></p>
         </div>

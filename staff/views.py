@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
+from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.urls import reverse, reverse_lazy
@@ -447,3 +448,24 @@ def teacher_signup_success(request):
         'school_identity': school_identity,
     }
     return render(request, 'staff/teacher_signup_success.html', context)
+
+
+
+class TeacherIDCardView(LoginRequiredMixin, View):
+    """
+    Displays a printable ID card for a specific teacher.
+    """
+    def get(self, request, teacher_id):
+        teacher = get_object_or_404(Teacher, id=teacher_id)
+        
+        # Retrieve school branding
+        try:
+            school_identity = SchoolIdentity.objects.first()
+        except Exception:
+            school_identity = None
+
+        context = {
+            'teacher': teacher,
+            'school_identity': school_identity,
+        }
+        return render(request, 'staff/teacher_id_card.html', context)

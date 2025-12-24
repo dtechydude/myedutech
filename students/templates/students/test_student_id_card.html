@@ -250,7 +250,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const studentId = "{{ student.USN }}";
+        const studentId = "{{ student.USN }}- {{student.last_name }} {{student.first_name }} - {{ school_info.name }}";
         if (studentId) {
             new QRCode(document.getElementById("qrcode"), {
                 text: studentId,

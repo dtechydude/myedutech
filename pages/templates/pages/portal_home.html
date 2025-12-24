@@ -420,7 +420,8 @@
 							{% if user.is_authenticated and user.student %}
 							<li><a href="{% url 'students:student-self-detail' %}">My Profile</a></li>							
 							{% endif %}
-							{% if user.teacher %}			
+							{% if user.teacher %}
+							<li><a href="{% url 'staff:teacher_id_card' user.teacher.id %}"> My ID Card</a></li>			
 							<li><a href="{% url 'staff:teacher-self-detail' %}">My Profile</a></li>
 							{% endif %}
 							
@@ -443,11 +444,10 @@
 							<li><a href="{% url 'students:graduate_students' %}">Move Students To Alumni</a></li>
 							<li><a href="{% url 'students:alumni_list' %}">GRADUATE/ALUMNI List</a></li>
 							
-							{% elif user.teacher %}							
+							{% elif user.teacher %}		
 							<li><a href="{% url 'students:student-list' %}">My Students</a></li>
 							<li><a href="{% url 'staff:my_assignments' %}">My Assigned Classes</a></li>
 							<li><a href="{% url 'students:upcoming_birthdays' %}">My Students Birthday</a></li>	
-
 							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>																	
 							
 							{% elif user.student %}	

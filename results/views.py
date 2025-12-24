@@ -4,7 +4,7 @@ from django.http import HttpResponse # Import HttpResponse
 from django.db.models import Sum, Avg, F # F object for database expressions
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse
-from django.db.models import Sum, Avg, Q, Max # Import Q for complex queries if needed
+from django.db.models import Sum, Avg, Q, Max, Avg, Min # Import Q for complex queries if needed
 from curriculum.models import Session, Term, Standard, Subject
 from attendance.models import Attendance
 from students.models import Student
@@ -1599,73 +1599,165 @@ class MidTermScoreEntryView(LoginRequiredMixin, View):
 
 
 
+# class MidTermReportCardView(LoginRequiredMixin, View):
+#     """
+#     Generates and displays a single student's Mid-Term report card.
+#     """
+#     template_name = 'results/mid_term_report_card_detail.html'
+#     # Use the same template name for the PDF unless you want a separate layout
+#     pdf_template_name = 'results/mid_term_report_card_detail.html' 
+
+#     def get(self, request, student_id, term_id, *args, **kwargs):
+#         student = get_object_or_404(Student, id=student_id)
+#         term = get_object_or_404(Term, id=term_id)
+
+#         # ---------------------------------
+#         # 1. Authorization Check (Simplified from previous steps)
+#         # ---------------------------------
+#         is_current_student = hasattr(request.user, 'student') and request.user.student.id == student_id
+#         is_staff_or_teacher = request.user.is_staff or hasattr(request.user, 'teacher')
+        
+#         if not (is_staff_or_teacher or is_current_student):
+#             return redirect('results:student_midterm_list') 
+        
+#         # ---------------------------------
+#         # 2. Data Retrieval (Using MidTermScore logic)
+#         # ---------------------------------
+        
+#         # --- CRITICAL FIX: Filter out scores where exam_total_score is None (NULL) ---
+#         midterm_scores = MidTermScore.objects.filter(
+#             student=student, 
+#             term=term,
+#             exam_total_score__isnull=False # Only fetch records that have a score entered
+#         ).select_related('subject').order_by('subject__name')
+
+#         report_data = []
+#         total_scores_sum = 0
+#         subjects_with_scores_count = 0
+        
+#         # NOTE: The loop can be simplified now that we know exam_total_score is NOT None
+#         # NOTE: You'll need to ensure get_grade and get_subject_remark are defined/imported
+#         for score in midterm_scores:
+#             current_total_score = score.exam_total_score
+            
+#             report_data.append({
+#                 'subject': score.subject.name,
+#                 'total_score': current_total_score,
+#                 'grade': get_grade(current_total_score), 
+#                 'remark': get_subject_remark(current_total_score),
+#             })
+            
+#             # Since the queryset is filtered, every score here is valid and should be counted
+#             total_scores_sum += current_total_score
+#             subjects_with_scores_count += 1
+
+#         overall_average = None
+#         # Update the default remark to reflect the change
+#         overall_remark = "No mid-term scores recorded for this term."
+        
+#         if subjects_with_scores_count > 0:
+#             overall_average = total_scores_sum / subjects_with_scores_count
+#             # NOTE: You'll need to ensure get_overall_remark is defined/imported
+#             overall_remark = get_overall_remark(overall_average)
+
+#         # Assuming SchoolIdentity is imported
+#         try:
+#             school_identity = SchoolIdentity.objects.first()
+#         except:
+#             school_identity = None
+
+
+#         context = {
+#             'student': student,
+#             'term': term,
+#             'report_data': report_data,
+#             'overall_average': overall_average, 
+#             'overall_remark': overall_remark,
+#             'school_identity': school_identity,
+#             'total_subjects_scored': subjects_with_scores_count, # Added for clarity in summary
+#         }
+
+#         # ---------------------------------
+#         # 3. PDF GENERATION LOGIC (Using the provided convention)
+#         # ---------------------------------
+#         if 'download' in request.GET and request.GET['download'] == 'pdf':
+#             # Filename for the download
+#             filename = f"{student.first_name.replace(' ', '_')}_{term.name.replace(' ', '_')}_MidTermReport.pdf"
+            
+#             # Call the conventional PDF rendering helper function
+#             pdf_response = render_to_pdf_xhtml2pdf(self.pdf_template_name, context)
+            
+#             if pdf_response:
+#                 pdf_response['Content-Disposition'] = f'attachment; filename="{filename}"'
+#                 return pdf_response
+#             else:
+#                 return HttpResponse("Error generating PDF.", status=500)
+#         # ----------------------------
+
+#         # 4. Standard HTML View
+#         return render(request, self.template_name, context)
+
+
 class MidTermReportCardView(LoginRequiredMixin, View):
-    """
-    Generates and displays a single student's Mid-Term report card.
-    """
     template_name = 'results/mid_term_report_card_detail.html'
-    # Use the same template name for the PDF unless you want a separate layout
     pdf_template_name = 'results/mid_term_report_card_detail.html' 
 
     def get(self, request, student_id, term_id, *args, **kwargs):
         student = get_object_or_404(Student, id=student_id)
         term = get_object_or_404(Term, id=term_id)
 
-        # ---------------------------------
-        # 1. Authorization Check (Simplified from previous steps)
-        # ---------------------------------
+        # Authorization
         is_current_student = hasattr(request.user, 'student') and request.user.student.id == student_id
         is_staff_or_teacher = request.user.is_staff or hasattr(request.user, 'teacher')
-        
         if not (is_staff_or_teacher or is_current_student):
             return redirect('results:student_midterm_list') 
         
-        # ---------------------------------
-        # 2. Data Retrieval (Using MidTermScore logic)
-        # ---------------------------------
-        
-        # --- CRITICAL FIX: Filter out scores where exam_total_score is None (NULL) ---
+       
+        # Get student's scores
         midterm_scores = MidTermScore.objects.filter(
             student=student, 
             term=term,
-            exam_total_score__isnull=False # Only fetch records that have a score entered
+            exam_total_score__isnull=False 
         ).select_related('subject').order_by('subject__name')
 
         report_data = []
         total_scores_sum = 0
-        subjects_with_scores_count = 0
         
-        # NOTE: The loop can be simplified now that we know exam_total_score is NOT None
-        # NOTE: You'll need to ensure get_grade and get_subject_remark are defined/imported
         for score in midterm_scores:
-            current_total_score = score.exam_total_score
-            
+            # --- New Logic: Calculate Class Statistics for this specific subject ---
+            # We filter by student__current_class to ensure we only compare with classmates
+            stats = MidTermScore.objects.filter(
+                term=term,
+                subject=score.subject,
+                student__current_class=student.current_class,
+                exam_total_score__isnull=False
+            ).aggregate(
+                class_max=Max('exam_total_score'),
+                class_min=Min('exam_total_score'),
+                class_avg=Avg('exam_total_score')
+            )
+
             report_data.append({
                 'subject': score.subject.name,
-                'total_score': current_total_score,
-                'grade': get_grade(current_total_score), 
-                'remark': get_subject_remark(current_total_score),
+                'total_score': score.exam_total_score,
+                'grade': get_grade(score.exam_total_score), 
+                'remark': get_subject_remark(score.exam_total_score),
+                'class_high': stats['class_max'],
+                'class_low': stats['class_min'],
+                'class_avg': stats['class_avg'],
             })
             
-            # Since the queryset is filtered, every score here is valid and should be counted
-            total_scores_sum += current_total_score
-            subjects_with_scores_count += 1
+            total_scores_sum += score.exam_total_score
 
-        overall_average = None
-        # Update the default remark to reflect the change
-        overall_remark = "No mid-term scores recorded for this term."
-        
-        if subjects_with_scores_count > 0:
-            overall_average = total_scores_sum / subjects_with_scores_count
-            # NOTE: You'll need to ensure get_overall_remark is defined/imported
-            overall_remark = get_overall_remark(overall_average)
+        # Summary calculations
+        subjects_with_scores_count = len(report_data)
+        overall_average = total_scores_sum / subjects_with_scores_count if subjects_with_scores_count > 0 else None
+        overall_remark = get_overall_remark(overall_average) if overall_average else "No scores recorded."
 
-        # Assuming SchoolIdentity is imported
         try:
             school_identity = SchoolIdentity.objects.first()
         except:
             school_identity = None
-
 
         context = {
             'student': student,
@@ -1674,27 +1766,17 @@ class MidTermReportCardView(LoginRequiredMixin, View):
             'overall_average': overall_average, 
             'overall_remark': overall_remark,
             'school_identity': school_identity,
-            'total_subjects_scored': subjects_with_scores_count, # Added for clarity in summary
+            'total_subjects_scored': subjects_with_scores_count,
         }
 
-        # ---------------------------------
-        # 3. PDF GENERATION LOGIC (Using the provided convention)
-        # ---------------------------------
+        # PDF and Render logic remains the same...
         if 'download' in request.GET and request.GET['download'] == 'pdf':
-            # Filename for the download
-            filename = f"{student.first_name.replace(' ', '_')}_{term.name.replace(' ', '_')}_MidTermReport.pdf"
-            
-            # Call the conventional PDF rendering helper function
+            filename = f"{student.first_name}_{term.name}_MidTerm.pdf"
             pdf_response = render_to_pdf_xhtml2pdf(self.pdf_template_name, context)
-            
             if pdf_response:
                 pdf_response['Content-Disposition'] = f'attachment; filename="{filename}"'
                 return pdf_response
-            else:
-                return HttpResponse("Error generating PDF.", status=500)
-        # ----------------------------
-
-        # 4. Standard HTML View
+        
         return render(request, self.template_name, context)
     
 

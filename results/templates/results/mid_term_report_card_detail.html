@@ -3,309 +3,279 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mid-Term Report: {{ student.get_full_name }}</title>
-    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <style>
-        /* General Body and Container Styles */
+        :root {
+            --brand-main: #002b5c;
+            --brand-accent: #c0392b;
+            --text-dark: #2c3e50;
+            --bg-light: #f4f7f6;
+        }
+
+        /* Print Settings */
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+
+        @page { size: A4; margin: 5mm; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f6f9;
-            padding: 20px 20px 80px 20px; /* Space for fixed action bar */
+            background-color: #d1d8e0;
+            font-family: 'Times New Roman', Times, serif;
+            padding-bottom: 120px;
+            margin: 0;
         }
-        .report-card-container {
-            max-width: 950px; /* Slightly wider */
+
+        /* --- Horizontal Scroll Wrapper --- */
+        .report-viewport {
             width: 100%;
+            overflow-x: auto;
+            padding: 15px 10px;
+            display: block;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .scroll-hint {
+            display: none;
+            text-align: center;
+            color: var(--brand-main);
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .report-card-container {
+            background: white;
+            width: 850px;
             margin: 0 auto;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-            padding: 30px;
+            padding: 30px 40px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-top: 6px solid var(--brand-main);
         }
 
-        /* Header Section - COMPACTED */
-        .header {
-            text-align: center;
-            padding-bottom: 10px; /* Reduced padding */
-            border-bottom: 4px solid #0056b3; /* Darker, professional blue */
-            margin-bottom: 15px; /* Reduced margin */
+        @media (max-width: 870px) {
+            .scroll-hint { display: block; }
+            body { background-color: #f0f2f5; }
         }
-        .header img.school-logo {
-            width: 75px;
-            height: 75px;
-            border-radius: 50%;
-            margin-bottom: 5px; /* Reduced margin */
-            object-fit: contain;
-            background-color: white;
-            padding: 5px;
-            border: 1px solid #ddd;
-        }
-        .header h1 {
-            font-size: 1.6rem; /* Reduced size */
-            color: #0056b3;
-            margin-bottom: 0px; /* Reduced margin */
-            font-weight: 700;
-        }
-        .header p {
-            font-size: 0.9rem; /* Reduced size */
-            color: #6c757d;
-            margin-bottom: 3px;
-        }
-        .header h3 {
-            font-size: 1.1rem; /* Reduced size */
-            color: #e67e22; /* Accent color */
-            margin-top: 5px;
+
+        /* --- Watermarks --- */
+        .watermark-text {
+            position: absolute;
+            top: 55%; left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 70pt;
+            color: rgba(0, 0, 0, 0.02);
+            pointer-events: none;
+            z-index: 0;
             text-transform: uppercase;
-            font-weight: 600;
+            font-weight: bold;
         }
 
-        /* Student/Term Info - COMPACTED */
-        .info-section {
-            border: 1px solid #cfe2ff;
-            padding: 10px; /* Reduced padding */
-            margin-bottom: 15px; /* Reduced margin */
-            background-color: #f0f4ff; /* Light blue background */
-            border-radius: 5px;
-        }
-        .info-section p {
-            margin-bottom: 3px; /* Reduced margin */
-            font-size: 0.9rem; /* Reduced font size */
-        }
-        .info-section strong {
-            color: #0056b3;
+        .watermark-logo {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 350px;
+            opacity: 0.04;
+            pointer-events: none;
         }
 
-        /* Scores Table */
-        .scores-table th {
-            background-color: #0056b3;
-            color: white;
-            font-size: 0.85rem;
-            text-align: center;
-            vertical-align: middle;
-            font-weight: 600;
-        }
-        .scores-table td {
-            font-size: 0.9rem;
-            text-align: center;
-            vertical-align: middle;
-        }
-        .scores-table .subject-name {
-            text-align: left;
-            font-weight: 500;
+        /* --- Header & Content --- */
+        .school-header { display: flex; align-items: center; margin-bottom: 15px; position: relative; z-index: 1; }
+        .logo-box img { width: 80px; height: 80px; object-fit: contain; }
+        .school-details { flex-grow: 1; padding-left: 20px; }
+        .school-details h1 { color: var(--brand-main); font-size: 22pt; font-weight: 800; margin: 0; }
+        .school-details p { margin: 0; font-size: 9pt; color: #7f8c8d; }
+
+        .report-meta-title {
+            display: flex; justify-content: space-between;
+            background: var(--bg-light) !important;
+            padding: 8px 15px;
+            border-left: 5px solid var(--brand-main);
+            margin: 15px 0;
+            font-weight: bold; font-size: 10pt;
         }
 
-        /* Summary and Signatory Section */
-        .summary-box {
-            border-top: 3px solid #e67e22;
-            padding-top: 20px;
+        .student-info-panel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .info-pill { background: #fff; border: 1px solid #e1e8ed; padding: 8px 12px; border-radius: 4px; }
+        .info-pill span { display: block; font-size: 7pt; color: #95a5a6; text-transform: uppercase; }
+        .info-pill strong { font-size: 10pt; }
+
+        /* --- Table Styling --- */
+        .scores-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; z-index: 1; position: relative; }
+        .scores-table th { background-color: var(--brand-main) !important; color: white !important; padding: 10px 5px; font-size: 8pt; text-transform: uppercase; text-align: center; }
+        .scores-table td { padding: 8px 6px; border: 1px solid #dee2e6; text-align: center; font-size: 9.5pt; }
+        .subject-name { text-align: left !important; font-weight: bold; color: var(--brand-main); }
+        .stat-cell { background-color: #f8f9fa !important; color: #666; font-size: 9pt; }
+
+        .bottom-grid { display: flex; gap: 20px; margin-top: 15px; }
+        .comment-area { flex: 2; border: 1px solid #eee; padding: 12px; border-radius: 5px; }
+        .score-summary-circle {
+            flex: 1; background: var(--brand-main) !important; color: white !important;
+            border-radius: 8px; padding: 15px; text-align: center;
+        }
+
+        /* --- Centralized Signature Section --- */
+        .signature-section {
             margin-top: 30px;
-        }
-
-        /* Signature Area - NEW CONSOLIDATED STYLE */
-        .signatory-area {
             text-align: center;
-            margin-top: 20px;
-            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         .signature-image {
-            max-width: 180px; /* Maximum width for the signature image */
-            max-height: 80px; /* Maximum height for the signature image */
-            width: auto;
-            height: auto;
-            object-fit: contain;
+            max-height: 70px;
             margin-bottom: 5px;
-            border-bottom: 1px solid #000;
-            display: inline-block;
-            padding: 5px 0;
         }
-        .signatory-label {
-            font-weight: bold;
-            display: block;
+        .qr-code {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 8px;
+        }
+        .sig-line {
+            width: 250px;
+            border-top: 1.5px solid var(--text-dark);
+            padding-top: 5px;
             margin-top: 5px;
-            color: #333;
         }
 
-        /* Fixed Action Bar for buttons (Non-Printable) */
+        /* --- Footer Action Bar --- */
         .action-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background-color: #ffffff;
-            border-top: 1px solid #dee2e6;
-            padding: 10px 0;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-            z-index: 1000;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white; padding: 15px; border-top: 1px solid #ddd; z-index: 1000;
         }
-        .action-bar .container {
-            max-width: 950px;
-            margin: 0 auto;
-            padding: 0 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .action-bar-inner { display: flex; gap: 10px; max-width: 850px; margin: 0 auto; }
+        .action-btn { flex: 1; padding: 15px; font-size: 16px; font-weight: 700; border-radius: 10px; display: flex; align-items: center; justify-content: center; text-decoration: none !important; }
+
+        @media (max-width: 600px) {
+            .action-bar-inner { flex-direction: column; }
         }
 
-        /* Print Styles */
         @media print {
-            .no-print, .action-bar {
-                display: none !important;
-            }
-            body {
-                padding: 0;
-                background-color: #fff;
-            }
-            .report-card-container {
-                width: 100%;
-                box-shadow: none;
-                margin: 0;
-                border: none;
-                padding: 10px;
-            }
+            body { background: white; padding: 0; }
+            .report-viewport { overflow: visible; padding: 0; }
+            .report-card-container { box-shadow: none; margin: 0; width: 100%; border-top: none; }
+            .no-print, .scroll-hint { display: none !important; }
         }
     </style>
 </head>
 <body>
+
+<div class="report-viewport">
+    <div class="scroll-hint no-print">
+        <i class="fas fa-arrows-alt-h"></i> Swipe left/right to view full report
+    </div>
+
     <div class="report-card-container">
+        {% with school_data=school_info|default:school_identity %}
 
-        {# --- School Header --- #}
-        <div class="header">
-            {# Prioritize school_identity if school_info is not available (standard Django context processing) #}
+        <div class="watermark-text">{{ school_data.name|default:"OFFICIAL" }}</div>
+        {% if school_data.logo %}
+            <img src="{{ school_data.logo.url }}" class="watermark-logo">
+        {% endif %}
+
+        <div class="school-header">
+            <div class="logo-box">
+                {% if school_data.logo %}<img src="{{ school_data.logo.url }}">{% endif %}
+            </div>
+            <div class="school-details">
+                <h1>{{ school_data.name|upper }}</h1>
+                <p><i class="fas fa-map-marker-alt"></i> {{ school_data.address_line_1 }}</p>
+                <p>Tel: {{ school_data.phone|default:"N/A" }} | Email: {{ school_data.email|default:"N/A" }}</p>
+            </div>
+        </div>
+        {% endwith %}
+
+        <div class="report-meta-title">
+            <span>MID-TERM PERFORMANCE REPORT</span>
+            <span>{{ term.name|upper }} | {{ term.session.name }}</span>
+        </div>
+
+        <div class="student-info-panel">
+            <div class="info-pill"><span>Student Name</span><strong>{{ student.get_full_name|upper }}</strong></div>
+            <div class="info-pill"><span>Class</span><strong>{{ student.current_class.name }}</strong></div>
+            <div class="info-pill"><span>Admission No</span><strong>{{ student.USN }}</strong></div>
+            <div class="info-pill"><span>Total Subjects</span><strong>{{ report_data|length }}</strong></div>
+            <div class="info-pill"><span>Gender</span><strong>{{ student.gender|upper }}</strong></div>
+            <div class="info-pill"><span>Issue Date</span><strong>{% now "d/m/Y" %}</strong></div>
+        </div>
+
+        <table class="scores-table">
+            <thead>
+                <tr>
+                    <th style="width: 25%;">Subject</th>
+                    <th style="width: 10%;">Score</th>
+                    <th style="width: 10%;">Grade</th>
+                    <th style="width: 10%;">High</th>
+                    <th style="width: 10%;">Low</th>
+                    <th style="width: 10%;">Avg</th>
+                    <th style="width: 25%;">Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in report_data %}
+                <tr>
+                    <td class="subject-name">{{ data.subject|upper }}</td>
+                    <td style="font-weight: bold;">{{ data.total_score|floatformat:"0" }}</td>
+                    <td>{{ data.grade }}</td>
+                    <td class="stat-cell">{{ data.class_high|floatformat:"0" }}</td>
+                    <td class="stat-cell">{{ data.class_low|floatformat:"0" }}</td>
+                    <td class="stat-cell">{{ data.class_avg|floatformat:"1" }}</td>
+                    <td style="font-size: 8pt; text-align: left; font-style: italic;">{{ data.remark }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="bottom-grid">
+            <div class="comment-area">
+                <h6 style="color:var(--brand-main); font-weight:bold; font-size:8pt;">PRINCIPAL'S COMMENT</h6>
+                <p style="font-style: italic; font-size: 9.5pt;">"{{ overall_remark|default:"Satisfactory performance. Keep it up." }}"</p>
+            </div>
+            <div class="score-summary-circle">
+                <span style="font-size: 7pt;">TERM AVERAGE</span>
+                <div style="font-size: 20pt; font-weight: 800;">{{ overall_average|floatformat:"1" }}%</div>
+            </div>
+        </div>
+
+        <div class="signature-section">
             {% with school_data=school_info|default:school_identity %}
-                {% if school_data.logo %}
-                    <img src="{{ school_data.logo.url }}" alt="School Logo" class="school-logo">
+                {% if school_data.signature %}
+                    <img src="{{ school_data.signature.url }}" class="signature-image" alt="Principal Signature">
                 {% else %}
-                    <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo" class="school-logo">
+                    <img src="https://bwipjs-api.metafloor.com/?bcid=qrcode&text=VERIFIED:{{ student.USN }}-{{ term }}-{{ school_data.name }}&scale=2" class="qr-code" alt="QR Verification">
                 {% endif %}
-                <h1>{{ school_data.name|default:"SCHOOL NAME HERE"|upper }}</h1>
-                <p>{{ school_data.address_line_1|default:"123 Main Street" }}</p>
             {% endwith %}
-            <h3>{{ term.name|upper }} - {{ term.session.name|upper }} -  MID-TERM REPORT CARD</h3>
-        </div>
-
-        {# --- Student and Term Info --- #}
-        <div class="info-section">
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Student Name:</strong> {{ student.get_full_name|upper }}</p>
-                    <p><strong>Student USN:</strong> {{ student.USN }}</p>
-                </div>
-                <div class="col-md-6 text-md-right">
-                    <p><strong>Current Class:</strong> {{ student.current_class.name }}</p>
-                    <p><strong>Term:</strong> {{ term.name }} ({{ term.session.name|default:"N/A" }})</p>
-                </div>
+            <div class="sig-line">
+                <strong style="font-size: 9pt; text-transform: uppercase;">School Administrator</strong><br>
+                <small style="color: #666; font-size: 7pt;">Digital Verification & Date: {% now "d/m/Y" %}</small>
             </div>
         </div>
 
-        {# --- Scores Detail Table --- #}
-        <h5 class="mb-2 text-secondary font-weight-bold">SUBJECT PERFORMANCE</h5>
-        <div class="table-responsive">
-            <table class="table table-bordered scores-table">
-                <thead>
-                    <tr>
-                        <th class="subject-name">Subject</th>
-                        <th>Score (100)</th>
-                        <th>Grade</th>
-                        <th>Remark</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for data in report_data %}
-                    <tr>
-                        <td class="subject-name">{{ data.subject }}</td>
-
-                        {# --- Apply text-danger to Score if Grade is 'F' --- #}
-                        <td class="{% if data.grade == 'F' %}text-danger font-weight-bold{% endif %}">
-                            {{ data.total_score|floatformat:"0" }}
-                        </td>
-
-                        {# --- Apply text-danger to Grade if Grade is 'F' --- #}
-                        <td class="{% if data.grade == 'F' %}text-danger font-weight-bold{% endif %}">
-                            {{ data.grade }}
-                        </td>
-
-                        {# --- Apply text-danger to Remark if Grade is 'F' --- #}
-                        <td class="{% if data.grade == 'F' %}text-danger font-weight-bold{% endif %}">
-                            {{ data.remark }}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-center text-danger font-weight-bold p-3">
-                            <i class="fas fa-exclamation-triangle"></i> No scored subjects found for this mid-term.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        {# --- Overall Summary and Signatories --- #}
-        <div class="row summary-box">
-            <div class="col-md-6">
-                <h5 class="text-primary font-weight-bold">OVERALL SUMMARY</h5>
-                <p><strong>Total Subjects Scored:</strong> {{ report_data|length }}</p>
-                <p><strong>Overall Average:</strong>
-                    {% if overall_average is not None %}
-                        <span class="text-success font-weight-bold">{{ overall_average|floatformat:"2" }}%</span>
-                    {% else %}
-                        <span class="text-danger font-weight-bold">N/A</span>
-                    {% endif %}
-                </p>
-                <p><strong>Class Teacher Comment:</strong>
-                    <span class="text-dark font-italic">{{ overall_remark|default:"Review pending." }}</span>
-                </p>
-            </div>
-
-            <div class="col-md-6 signatory-area">
-                {# --- CONSOLIDATED AUTHORIZED SIGNATORY --- #}
-                {% with school_data=school_info|default:school_identity %}
-                    {% if school_data.signature %}
-                        <img src="{{ school_data.signature.url }}" alt="Authorized Signature" class="signature-image">
-                        <p class="signatory-label">Authorized Signatory</p>
-                    {% else %}
-
-                        <img src="{% static 'pages/images/sign.jpg' %}" alt="Signature" style="width: 100px; height: auto;">
-
-                        <p>_________________________</p>
-                        <p class="signatory-label text-muted">Authorized Signatory (Image Missing)</p>
-                    {% endif %}
-                {% endwith %}
-                {# ------------------------------------------ #}
-            </div>
-        </div>
-
-        {# --- Footer --- #}
-        <div class="text-center mt-4 pt-3 border-top border-light">
-            <small class="text-muted">
-                This is a Mid-Term Report and does not reflect final term performance or promotion status.
-            </small>
-        </div>
-
-    </div>
-
-    {# --- Fixed Action Bar (Back, PDF, Print) --- #}
-    <div class="action-bar no-print">
-        <div class="container d-flex justify-content-between align-items-center">
-
-            {# 1. BACK BUTTON #}
-            <a href="{% url 'results:student_midterm_list' %}" class="btn btn-outline-secondary shadow-sm">
-                <i class="fas fa-arrow-left"></i> Back to Results
-            </a>
-
-            {# 2. ACTION BUTTONS #}
-            <div class="d-flex">
-                <button class="btn btn-info shadow-sm" onclick="window.print()">
-                    <i class="fas fa-print"></i> Print/Save
-                </button>
-                <!--<a href="?download=pdf" class="btn btn-primary ml-3 shadow-sm" target="_blank">-->
-                <!--    <i class="fas fa-file-pdf"></i> Download PDF-->
-                <!--</a>-->
-            </div>
+        <div style="text-align: center; margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px;">
+            <small style="color: #999; font-size: 7.5pt;">This mid-term report is an official record generated by the school portal.</small>
         </div>
     </div>
+</div>
+
+<div class="action-bar no-print">
+    <div class="action-bar-inner">
+        <a href="{% url 'results:student_midterm_list' %}" class="btn btn-outline-secondary action-btn">
+            <i class="fas fa-arrow-left mr-2"></i> Back
+        </a>
+        <button class="btn btn-primary action-btn" onclick="window.print()">
+            <i class="fas fa-print mr-2"></i> Print Report
+        </button>
+    </div>
+</div>
+
 </body>
 </html>

@@ -1,0 +1,357 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff ID: {{ teacher.first_name }} {{ teacher.last_name }}</title>
+
+<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+:root {
+    --brand-primary: #1a2a3a;
+    --brand-accent: #b8860b;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background: #f0f2f5;
+    min-height: 100vh;
+    margin: 0;
+    padding: 15px;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ================= CARD ================= */
+.id-card {
+    width: 100%;
+    max-width: 560px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #ddd;
+}
+
+/* ================= WATERMARK ================= */
+.watermark-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    transform: rotate(-25deg);
+    display: flex;
+    flex-wrap: wrap;
+    padding: 30px;
+    user-select: none;
+}
+
+.watermark-text {
+    font-size: 11px;
+    font-weight: 800;
+    color: rgba(0,0,0,0.08);
+    margin: 14px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* ================= HEADER ================= */
+.card-header {
+    background: var(--brand-primary);
+    min-height: 85px;
+    padding: 15px 20px;
+    border-bottom: 4px solid var(--brand-accent);
+    display: flex;
+    align-items: center;
+    z-index: 5;
+    position: relative;
+}
+
+.school-logo {
+    width: 55px;
+    height: 55px;
+    background: #fff;
+    border-radius: 50%;
+    padding: 6px;
+    object-fit: contain;
+    margin-right: 15px;
+}
+
+.header-text h2 {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.header-text p {
+    font-size: 0.65rem;
+    color: #cfd8dc;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+/* ================= CONTENT ================= */
+.card-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding: 20px;
+    z-index: 5;
+    position: relative;
+    align-items: center;
+}
+
+.photo-column {
+    flex: 0 0 120px;
+}
+
+.profile-img {
+    width: 100%;
+    height: 145px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 3px solid #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.info-column {
+    flex: 1;
+    min-width: 180px;
+}
+
+.staff-name {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--brand-primary);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    border-bottom: 2px solid #eee;
+    display: inline-block;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 12px;
+}
+
+.label-cell {
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: #777;
+    text-transform: uppercase;
+}
+
+.value-cell {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #333;
+    text-transform: uppercase;
+}
+
+/* ================= QR ================= */
+.qr-column {
+    width: 80px;
+    display: flex;
+    justify-content: center;
+}
+
+/* ================= FOOTER ================= */
+.card-footer {
+    background: var(--brand-primary);
+    color: #fff;
+    text-align: center;
+    padding: 8px 10px;
+    font-size: 0.55rem;
+    font-weight: bold;
+    letter-spacing: 0.8px;
+    z-index: 5;
+    position: relative;
+}
+
+.card-footer span {
+    color: var(--brand-accent);
+    display: block;
+    margin-top: 2px;
+    letter-spacing: normal;
+}
+
+/* ================= BUTTONS ================= */
+.no-print {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+/* ================= MOBILE ================= */
+@media (max-width: 480px) {
+    .card-content {
+        padding: 15px;
+    }
+    .photo-column {
+        flex: 0 0 100px;
+    }
+    .profile-img {
+        height: 125px;
+    }
+}
+
+/* ================= PRINT ================= */
+/*@media print {*/
+/*    body {*/
+/*        background: #fff;*/
+/*        padding: 0;*/
+/*    }*/
+/*    .no-print {*/
+/*        display: none !important;*/
+/*    }*/
+/*    .id-card {*/
+/*        box-shadow: none;*/
+/*        border: 1px solid #000;*/
+/*        margin: 0 auto;*/
+/*        print-color-adjust: exact;*/
+/*        -webkit-print-color-adjust: exact;*/
+/*    }*/
+/*}*/
+@media print {
+    @page {
+        size: auto;
+        margin: 10mm 0 0 0; /* Prevent top cut-off */
+    }
+
+    body {
+        background: #fff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        min-height: auto !important;
+        overflow: hidden !important;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+
+    .id-card {
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+        margin: 0 auto !important;
+        page-break-after: avoid !important;
+        page-break-before: avoid !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+
+
+</style>
+</head>
+
+<body>
+
+<div class="id-card">
+
+    <div class="watermark-overlay">
+        {% with name=school_info.name|default:"KWIKSCHOOLS" %}
+            {% for i in "12345678901234567890" %}
+                <div class="watermark-text">{{ name }}</div>
+            {% endfor %}
+        {% endwith %}
+    </div>
+
+    <div class="card-header">
+        {% if school_identity.logo %}
+            <img src="{{ school_info.logo.url }}" class="school-logo">
+        {% else %}
+            <div class="school-logo d-flex align-items-center justify-content-center">
+                <i class="fas fa-school"></i>
+            </div>
+        {% endif %}
+        <div class="header-text">
+            <h2>{{ school_info.name|default:"Institution Name" }}</h2>
+            <p>Staff Identification Card</p>
+        </div>
+    </div>
+
+    <div class="card-content">
+
+        <div class="photo-column">
+            {% if teacher.user.profile.image %}
+                <img src="{{ teacher.user.profile.image_url }}" class="profile-img">
+            {% else %}
+                <div class="profile-img d-flex align-items-center justify-content-center bg-light">
+                    <i class="fas fa-user-circle fa-4x text-muted"></i>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="info-column">
+            <div class="staff-name">{{ teacher.first_name }} {{ teacher.last_name }}</div>
+
+            <div class="details-grid">
+                <div class="label-cell">Staff ID</div>
+                <div class="value-cell">{{ teacher.user.username }}</div>
+
+                <div class="label-cell">Role</div>
+                <div class="value-cell">{{ teacher.get_staff_role_display|default:"Staff" }}</div>
+
+                <div class="label-cell">Dept</div>
+                <div class="value-cell">{{ teacher.dept.name|default:"General" }}</div>
+
+                <div class="label-cell">Joined</div>
+                <div class="value-cell">{{ teacher.date_employed|date:"F Y" }}</div>
+            </div>
+        </div>
+
+        <div class="qr-column">
+            <div id="qrcode"></div>
+        </div>
+    </div>
+
+    <div class="card-footer">
+        {{ school_identity.name|default:"INSTITUTION" }} PERSONNEL IDENTITY
+        <span>IF FOUND, CONTACT: {{ school_info.phone1|default:"ADMIN OFFICE" }}</span>
+    </div>
+</div>
+
+<div class="no-print">
+    <a href="/dashboard" class="btn btn-secondary px-4">
+        <i class="fas fa-tachometer-alt mr-1"></i> Dashboard
+    </a>
+    <button onclick="window.print()" class="btn btn-dark px-4">
+        <i class="fas fa-print mr-1"></i> Print
+    </button>
+</div>
+
+<script>
+window.onload = function () {
+    const sid = "{{ teacher.user.username }}- {{ school_info.name }}";
+    if (sid) {
+        new QRCode(document.getElementById("qrcode"), {
+            text: "VERIFY:" + sid,
+            width: 75,
+            height: 75,
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    }
+};
+</script>
+
+</body>
+</html>
