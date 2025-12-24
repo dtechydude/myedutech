@@ -187,7 +187,7 @@
                 {% if school_data.logo %}<img src="{{ school_data.logo.url }}">{% endif %}
             </div>
             <div class="school-details">
-                <h1>{{ school_data.name|upper }}</h1>
+                <h4>{{ school_data.name|upper }}</h4>
                 <p><i class="fas fa-map-marker-alt"></i> {{ school_data.address_line_1 }}</p>
                 <p>Tel: {{ school_data.phone|default:"N/A" }} | Email: {{ school_data.email|default:"N/A" }}</p>
             </div>
