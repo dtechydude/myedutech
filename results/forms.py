@@ -62,24 +62,6 @@ class ScoreEntryForm(forms.Form):
         return cleaned_data
 
 
-#in progress Worked For Each Term
-# class ReportCardFilterForm(forms.Form):
-#     """
-#     Form for selecting Term and Standard to filter students for report cards.
-#     """
-#     term = forms.ModelChoiceField(
-#         queryset=Term.objects.all().order_by('-start_date'), # Order by newest term first
-#         empty_label="Select Term",
-#         required=True,
-#         widget=forms.Select(attrs={'class': 'form-control'}) # Add a class for potential styling
-#     )
-#     standard = forms.ModelChoiceField(
-#         queryset=Standard.objects.all().order_by('name'), # Order by standard name
-#         empty_label="Select Standard (Optional)", # Make it optional here for filtering all students in a term
-#         required=False,
-#         widget=forms.Select(attrs={'class': 'form-control'})
-#     )
-
 
 class ReportCardFilterForm(forms.Form):
     """
@@ -121,26 +103,6 @@ class ReportCardFilterForm(forms.Form):
                     self.fields['standard'].queryset = Standard.objects.none()
 
 
-#in progress for all the terms together
-# schools/forms.py
-# ... (Your existing forms like ScoreEntryForm, ReportCardFilterForm) ...
-
-# class SessionReportCardFilterForm(forms.Form):
-#     """
-#     Form for selecting Session and Standard to filter students for annual report cards.
-#     """
-#     session = forms.ModelChoiceField(
-#         queryset=Session.objects.all().order_by('-start_date'), # Order by newest session first
-#         empty_label="Select Session",
-#         required=True,
-#         widget=forms.Select(attrs={'class': 'form-control'})
-#     )
-#     standard = forms.ModelChoiceField(
-#         queryset=Standard.objects.all().order_by('name'),
-#         empty_label="Select Standard (Optional)",
-#         required=False,
-#         widget=forms.Select(attrs={'class': 'form-control'})
-#     )
 
 class SessionReportCardFilterForm(forms.Form):
     """
