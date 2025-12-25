@@ -22,6 +22,7 @@ from django.template.loader import render_to_string # Import render_to_string
 from curriculum.models import SchoolIdentity
 from transport.context_processors import school_identity as school_identity_processor
 from django.core.paginator import Paginator
+import csv
 
 # For PDF generation using django-wkhtmltopdf
 # from wkhtmltopdf.views import PDFTemplateResponse # Import this
@@ -873,34 +874,199 @@ class MotorAbilityScoreCreateUpdateView(LoginRequiredMixin, TeacherRequiredMixin
 
 
 
+# class ClassRankingView(LoginRequiredMixin, View):
+#     template_name = 'results/class_ranking.html'
+
+#     def get(self, request, standard_id, term_id, *args, **kwargs):
+#         standard = get_object_or_404(Standard, id=standard_id)
+#         term = get_object_or_404(Term, id=term_id)
+
+#         students_in_class = Student.objects.filter(current_class=standard)
+
+#         # --- Overall Ranking Logic ---
+#         overall_ranking_data = []
+
+#         for student in students_in_class:
+#             scores = Score.objects.filter(student=student, term=term, total_score__isnull=False)
+
+#             total_scores_sum = scores.aggregate(total=Sum('total_score'))['total'] or 0
+#             subjects_with_scores_count = scores.count()
+
+#             overall_average = total_scores_sum / subjects_with_scores_count if subjects_with_scores_count > 0 else 0
+
+#             overall_ranking_data.append({
+#                 'student': student,
+#                 'overall_average': overall_average,
+#             })
+
+#         # Sort and assign ranks for the overall ranking
+#         overall_ranking_data.sort(key=lambda x: x['overall_average'], reverse=True)
+
+#         current_rank = 0
+#         last_average = -1
+#         for i, data in enumerate(overall_ranking_data):
+#             if data['overall_average'] != last_average:
+#                 current_rank = i + 1
+#             data['rank'] = current_rank
+#             last_average = data['overall_average']
+
+#         # --- Refactored Subject-Specific Ranking Logic ---
+#         subject_ranking_data = {}
+
+#         # Dynamically get all subjects for which students in this class have scores.
+#         # This is the key change to avoid the Subject->Standard link.
+#         all_subjects_in_class = Score.objects.filter(
+#             student__in=students_in_class,
+#             term=term,
+#             total_score__isnull=False
+#         ).values('subject__name', 'subject_id').distinct().order_by('subject__name')
+
+#         for subject_info in all_subjects_in_class:
+#             subject_scores = []
+
+#             for student in students_in_class:
+#                 score = Score.objects.filter(
+#                     student=student,
+#                     term=term,
+#                     subject_id=subject_info['subject_id']
+#                 ).first()
+
+#                 if score and score.total_score is not None:
+#                     subject_scores.append({
+#                         'student': student,
+#                         'total_score': score.total_score,
+#                     })
+
+#             # Sort and assign ranks for the current subject
+#             subject_scores.sort(key=lambda x: x['total_score'], reverse=True)
+
+#             current_rank_subject = 0
+#             last_score_subject = -1
+#             for i, data in enumerate(subject_scores):
+#                 if data['total_score'] != last_score_subject:
+#                     current_rank_subject = i + 1
+#                 data['rank'] = current_rank_subject
+#                 last_score_subject = data['total_score']
+
+#             subject_ranking_data[subject_info['subject__name']] = subject_scores
+
+#         context = {
+#             'standard': standard,
+#             'term': term,
+#             'overall_ranking_data': overall_ranking_data,
+#             'subject_ranking_data': subject_ranking_data,
+#         }
+
+#         return render(request, self.template_name, context)
+
+# CLASS EXAM
+
+# class ClassRankingView(LoginRequiredMixin, View):
+#     template_name = 'results/class_ranking.html'
+
+#     def get(self, request, standard_id, term_id, *args, **kwargs):
+#         standard = get_object_or_404(Standard, id=standard_id)
+#         term = get_object_or_404(Term, id=term_id)
+#         students_in_class = Student.objects.filter(current_class=standard)
+
+#         # --- Overall Ranking Logic (KEEPING YOUR ORIGINAL LOGIC) ---
+#         overall_ranking_data = []
+#         for student in students_in_class:
+#             scores = Score.objects.filter(student=student, term=term, total_score__isnull=False)
+#             total_scores_sum = scores.aggregate(total=Sum('total_score'))['total'] or 0
+#             subjects_with_scores_count = scores.count()
+#             overall_average = total_scores_sum / subjects_with_scores_count if subjects_with_scores_count > 0 else 0
+#             overall_ranking_data.append({
+#                 'student': student,
+#                 'overall_average': overall_average,
+#             })
+
+#         overall_ranking_data.sort(key=lambda x: x['overall_average'], reverse=True)
+#         current_rank = 0
+#         last_average = -1
+#         for i, data in enumerate(overall_ranking_data):
+#             if data['overall_average'] != last_average:
+#                 current_rank = i + 1
+#             data['rank'] = current_rank
+#             last_average = data['overall_average']
+
+#         # --- CSV EXPORT LOGIC ---
+#         if request.GET.get('export') == 'csv':
+#             response = HttpResponse(content_type='text/csv')
+#             filename = f"Ranking_{standard.name}_{term.name}.csv".replace(" ", "_")
+#             response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            
+#             writer = csv.writer(response)
+#             writer.writerow(['Position', 'Student Name', 'Admission No', 'Overall Average (%)'])
+            
+#             for row in overall_ranking_data:
+#                 writer.writerow([
+#                     row['rank'], 
+#                     row['student'].user.get_full_name(), 
+#                     row['student'].USN, # Assuming this field exists
+#                     f"{row['overall_average']:.2f}"
+#                 ])
+#             return response
+
+#         # --- Subject-Specific Ranking (KEEPING YOUR ORIGINAL LOGIC) ---
+#         subject_ranking_data = {}
+#         all_subjects_in_class = Score.objects.filter(
+#             student__in=students_in_class,
+#             term=term,
+#             total_score__isnull=False
+#         ).values('subject__name', 'subject_id').distinct().order_by('subject__name')
+
+#         for subject_info in all_subjects_in_class:
+#             subject_scores = []
+#             for student in students_in_class:
+#                 score = Score.objects.filter(
+#                     student=student,
+#                     term=term,
+#                     subject_id=subject_info['subject_id']
+#                 ).first()
+#                 if score and score.total_score is not None:
+#                     subject_scores.append({'student': student, 'total_score': score.total_score})
+
+#             subject_scores.sort(key=lambda x: x['total_score'], reverse=True)
+#             current_rank_subject = 0
+#             last_score_subject = -1
+#             for i, data in enumerate(subject_scores):
+#                 if data['total_score'] != last_score_subject:
+#                     current_rank_subject = i + 1
+#                 data['rank'] = current_rank_subject
+#                 last_score_subject = data['total_score']
+#             subject_ranking_data[subject_info['subject__name']] = subject_scores
+
+#         context = {
+#             'standard': standard,
+#             'term': term,
+#             'overall_ranking_data': overall_ranking_data,
+#             'subject_ranking_data': subject_ranking_data,
+#         }
+#         return render(request, self.template_name, context)
+
+
 class ClassRankingView(LoginRequiredMixin, View):
     template_name = 'results/class_ranking.html'
 
     def get(self, request, standard_id, term_id, *args, **kwargs):
         standard = get_object_or_404(Standard, id=standard_id)
         term = get_object_or_404(Term, id=term_id)
-
         students_in_class = Student.objects.filter(current_class=standard)
 
         # --- Overall Ranking Logic ---
         overall_ranking_data = []
-
         for student in students_in_class:
             scores = Score.objects.filter(student=student, term=term, total_score__isnull=False)
-
             total_scores_sum = scores.aggregate(total=Sum('total_score'))['total'] or 0
             subjects_with_scores_count = scores.count()
-
             overall_average = total_scores_sum / subjects_with_scores_count if subjects_with_scores_count > 0 else 0
-
             overall_ranking_data.append({
                 'student': student,
                 'overall_average': overall_average,
             })
 
-        # Sort and assign ranks for the overall ranking
         overall_ranking_data.sort(key=lambda x: x['overall_average'], reverse=True)
-
         current_rank = 0
         last_average = -1
         for i, data in enumerate(overall_ranking_data):
@@ -909,11 +1075,19 @@ class ClassRankingView(LoginRequiredMixin, View):
             data['rank'] = current_rank
             last_average = data['overall_average']
 
-        # --- Refactored Subject-Specific Ranking Logic ---
-        subject_ranking_data = {}
+        # --- EXPORT LOGIC: OVERALL ---
+        if request.GET.get('export') == 'csv' and not request.GET.get('subject_id'):
+            response = HttpResponse(content_type='text/csv')
+            filename = f"Overall_Ranking_{standard.name}_{term.name}.csv".replace(" ", "_")
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            writer = csv.writer(response)
+            writer.writerow(['Position', 'Student Name', 'USN', 'Overall Average (%)'])
+            for row in overall_ranking_data:
+                writer.writerow([row['rank'], row['student'].user.get_full_name(), row['student'].USN, f"{row['overall_average']:.2f}"])
+            return response
 
-        # Dynamically get all subjects for which students in this class have scores.
-        # This is the key change to avoid the Subject->Standard link.
+        # --- Subject-Specific Ranking Logic ---
+        subject_ranking_data = {}
         all_subjects_in_class = Score.objects.filter(
             student__in=students_in_class,
             term=term,
@@ -922,23 +1096,16 @@ class ClassRankingView(LoginRequiredMixin, View):
 
         for subject_info in all_subjects_in_class:
             subject_scores = []
-
             for student in students_in_class:
                 score = Score.objects.filter(
                     student=student,
                     term=term,
                     subject_id=subject_info['subject_id']
                 ).first()
-
                 if score and score.total_score is not None:
-                    subject_scores.append({
-                        'student': student,
-                        'total_score': score.total_score,
-                    })
+                    subject_scores.append({'student': student, 'total_score': score.total_score})
 
-            # Sort and assign ranks for the current subject
             subject_scores.sort(key=lambda x: x['total_score'], reverse=True)
-
             current_rank_subject = 0
             last_score_subject = -1
             for i, data in enumerate(subject_scores):
@@ -946,8 +1113,23 @@ class ClassRankingView(LoginRequiredMixin, View):
                     current_rank_subject = i + 1
                 data['rank'] = current_rank_subject
                 last_score_subject = data['total_score']
+            
+            # --- EXPORT LOGIC: SPECIFIC SUBJECT ---
+            # This triggers if the button for a specific subject is clicked
+            if request.GET.get('export') == 'csv' and request.GET.get('subject_id') == str(subject_info['subject_id']):
+                response = HttpResponse(content_type='text/csv')
+                filename = f"{subject_info['subject__name']}_Ranking_{standard.name}_{term}.csv".replace(" ", "_")
+                response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                writer = csv.writer(response)
+                writer.writerow(['Position', 'Student Name', 'USN', 'Score (%)'])
+                for item in subject_scores:
+                    writer.writerow([item['rank'], item['student'].user.get_full_name(), item['student'].USN, item['total_score']])
+                return response
 
-            subject_ranking_data[subject_info['subject__name']] = subject_scores
+            subject_ranking_data[subject_info['subject__name']] = {
+                'id': subject_info['subject_id'], # Added ID to help the template
+                'scores': subject_scores
+            }
 
         context = {
             'standard': standard,
@@ -955,7 +1137,6 @@ class ClassRankingView(LoginRequiredMixin, View):
             'overall_ranking_data': overall_ranking_data,
             'subject_ranking_data': subject_ranking_data,
         }
-
         return render(request, self.template_name, context)
 
 
@@ -964,7 +1145,7 @@ class StandardsAndTermsListView(LoginRequiredMixin, View):
     Displays a list of all standards and terms, allowing users to select
     a combination to view class rankings.
     """
-    template_name = 'results/standards_and_terms_list.html'
+    template_name = 'results/ranking_standard_and_terms_list.html'
 
     def get(self, request, *args, **kwargs):
         # Fetch all standards and terms

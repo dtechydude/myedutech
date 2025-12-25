@@ -5,7 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ student.full_name }}'s Annual Report Card - {{ session.name }}</title>
+    <title>{{ student.last_name }} {{ student.first_name }}'s Annual Report Card - {{ session.name }}</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     
     <style>
@@ -188,7 +189,7 @@
             </div>
             <div class="header-details">
                 <h1>{{ school_info.name|default:"Kwikschools"|upper }}</h1>
-                <p>{{ school_info.address_line_1 }} <br> {{ school_info.address_line_1 }}</p>
+                <p>{{ school_info.address_line_1 }} <br> {{ school_info.address_line_2 }}</p>
                 <p>Tel: {{ school_info.phone1 }} | Email: {{ school_info.email }}</p>
             </div>
             <div class="student-photo-box">
@@ -216,9 +217,9 @@
                         {% if avg > 49 %}
                             <span class="badge badge-success" style="font-weight: bold; font-size: 12px;">PROMOTED!</span>
                         {% elif avg > 39 %}
-                            <span class="badge badge-warning">Promoted On Trial</span>
+                            <span class="badge badge-warning" style="font-weight: bold; font-size: 12px;">Promoted On Trial</span>
                         {% else %}
-                            <span class="badge badge-danger">Not Promoted</span>
+                            <span class="badge badge-danger" style="font-weight: bold; font-size: 12px;">Not Promoted</span>
                         {% endif %}
                     {% endwith %}
 
@@ -236,8 +237,8 @@
                         <th rowspan="2" style="width:35px;">S/N</th>
                         <th rowspan="2" class="text-left">SUBJECTS</th>
                         <th colspan="{{ terms_in_session|length }}">TERMLY SCORES (100)</th>
-                        <th rowspan="2">CUM.(300)</th>
-                        <th rowspan="2">AVG%</th>
+                        <th rowspan="2">CUM.</th>
+                        <th rowspan="2">AVG %</th>
                         <th rowspan="2">GRADE</th>
                         <th rowspan="2" style="width: 25%;">SUBJECT REMARK</th>
                     </tr>
@@ -346,7 +347,7 @@
 
     <div class="no-print text-center my-4">
         {% if user.is_superuser or user.is_staff or user.teacher%}
-        <a href="{% url 'results:session_report_card_list' %}" class="btn btn-secondary px-5">Back to Dashboard</a>
+        <a href="{% url 'results:session_report_card_list' %}" class="btn btn-secondary px-5">Back to Report List</a>
         {% else %}
         <a href="/dashboard" class="btn btn-secondary px-5">Back to Dashboard</a>
         {% endif %}
