@@ -125,6 +125,23 @@ class ReportCardFilterForm(forms.Form):
 # schools/forms.py
 # ... (Your existing forms like ScoreEntryForm, ReportCardFilterForm) ...
 
+# class SessionReportCardFilterForm(forms.Form):
+#     """
+#     Form for selecting Session and Standard to filter students for annual report cards.
+#     """
+#     session = forms.ModelChoiceField(
+#         queryset=Session.objects.all().order_by('-start_date'), # Order by newest session first
+#         empty_label="Select Session",
+#         required=True,
+#         widget=forms.Select(attrs={'class': 'form-control'})
+#     )
+#     standard = forms.ModelChoiceField(
+#         queryset=Standard.objects.all().order_by('name'),
+#         empty_label="Select Standard (Optional)",
+#         required=False,
+#         widget=forms.Select(attrs={'class': 'form-control'})
+#     )
+
 class SessionReportCardFilterForm(forms.Form):
     """
     Form for selecting Session and Standard to filter students for annual report cards.
@@ -141,6 +158,26 @@ class SessionReportCardFilterForm(forms.Form):
         required=False,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+
+    def __init__(self, *args, **kwargs):
+        # Extract the user passed from the view
+        user = kwargs.pop('user', None)
+        super(SessionReportCardFilterForm, self).__init__(*args, **kwargs)
+
+        if user:
+            # Check if user is a teacher (not superuser or staff)
+            if not (user.is_superuser or user.is_staff):
+                if hasattr(user, 'teacher'):
+                    # Filter the standard dropdown to only show the teacher's assigned class
+                    self.fields['standard'].queryset = Standard.objects.filter(
+                        form_teacher=user.teacher
+                    ).order_by('name')
+                    
+                    # Update label to reflect the restriction
+                    self.fields['standard'].empty_label = "Select Your Assigned Class"
+                else:
+                    # Fallback for users with no teacher profile
+                    self.fields['standard'].queryset = Standard.objects.none()
 
 
 class MotorAbilityScoreForm(forms.ModelForm):

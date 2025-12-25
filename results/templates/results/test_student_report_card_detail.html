@@ -23,9 +23,8 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
 
-    /* ADJUSTED HEADER CSS FOR HORIZONTAL LAYOUT */
     .header-section {
-      display: flex; /* Makes items side-by-side */
+      display: flex; 
       align-items: center; 
       justify-content: center;
       padding: 8px 15px;
@@ -50,7 +49,6 @@
       margin: 0;
       font-weight: bold;
       color: #333366;
-      /* text-transform: uppercase; */
     }
     .header-info-container p {
       color: #333366;
@@ -59,7 +57,6 @@
       line-height: 1.2;
     }
 
-    /* REST OF YOUR ORIGINAL CSS UNCHANGED */
     .psychomotor-heading {
       font-size: 13px;
       font-weight: bold;
@@ -72,6 +69,22 @@
       color: #666;
       margin-left: 3px;
     }
+
+    /* SCROLL FIX FOR MOBILE */
+    .psychomotor-outer-container {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .behavioral-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px 4px;
+      margin-top: 4px;
+      min-width: 600px; /* Ensures grid maintains shape on mobile to trigger scroll */
+    }
+
     .info-table th, .info-table td {
       border: 1px solid grey;
       text-align: left;
@@ -128,12 +141,7 @@
         text-align: center;
         font-size: 11px;
     }
-    .behavioral-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 6px 4px;
-      margin-top: 4px;
-    }
+    
     .trait {
       text-align: center;
       padding: 4px 2px;
@@ -154,6 +162,7 @@
     }
     .report-card-wrapper > * { position: relative; z-index: 1; }
     .qr-code-small { width: 80px; height: 80px; margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto; }
+    
     @media print {
       body { background-color: #fff !important; -webkit-print-color-adjust: exact; margin: 0; padding: 0; }
       .report-card-wrapper { box-shadow: none; margin: 0 auto; }
@@ -161,6 +170,7 @@
       table, th, td { border-color: #ccc !important; }
       .remark-table td, .grading-keys-table td { border-style: hidden !important; }
       .qr-code-small { width: 50px !important; height: 50px !important; }
+      .behavioral-grid { min-width: 100% !important; }
     }
     </style>
   </head>
@@ -293,25 +303,27 @@
           <strong>PSYCHOMOTOR ASSESSMENT</strong> <span class="scale">(5-Point Scale)</span>
         </div>
 
-        <div class="behavioral-grid">
-          <div class="trait"><span class="label">Honesty</span><span class="score">{{ motor_ability_score.honesty|default:"-" }}</span></div>
-          <div class="trait"><span class="label">Politeness</span><span class="score">{{ motor_ability_score.politeness|default:"-" }}</span></div>
-          <div class="trait"><span class="label">Neatness</span><span class="score">{{ motor_ability_score.neatness|default:"-" }}</span></div>
-          <div class="trait"><span class="label">Cooperation</span><span class="score">{{ motor_ability_score.cooperation|default:"-" }}</span></div>
-          <div class="trait"><span class="label">Obedience</span><span class="score">{{ motor_ability_score.obedience|default:"-" }}</span></div>
-          <div class="trait"><span class="label">Punctuality</span><span class="score">{{ motor_ability_score.punctuality|default:"-" }}</span></div>
-          <div class="trait"><span class="label">Physical Ed.</span><span class="score">{{ motor_ability_score.physical_education|default:"-" }}</span></div>
-          <div class="trait"><span class="label">Games</span><span class="score">{{ motor_ability_score.games|default:"-" }}</span></div>
-          <div class="trait"><span class="label">Attentiveness</span><span class="score">{{ motor_ability_score.attentiveness|default:"-" }}</span></div>
-          <div class="trait"><span class="label">Leadership</span><span class="score">{{ motor_ability_score.leadership|default:"-" }}</span></div>
-          <div class="trait"><span class="label">Attitude</span><span class="score">{{ motor_ability_score.attitude|default:"-" }}</span></div>
-          <div class="trait"><span class="label">Emotional Stability</span><span class="score">{{ motor_ability_score.emotional_stability|default:"-" }}</span></div>
-          <div class="trait"><span class="label">Musical</span><span class="score">{{ motor_ability_score.musical|default:"-" }}</span></div>
-          <div class="trait"><span class="label">Handwriting</span><span class="score">{{ motor_ability_score.handwriting|default:"-" }}</span></div>
-          <div class="trait"><span class="label">Reading</span><span class="score">{{ motor_ability_score.reading|default:"-" }}</span></div>
-          <div class="trait"><span class="label">Verbal Fluency</span><span class="score">{{ motor_ability_score.verbal_fluency|default:"-" }}</span></div>
-          <div class="trait"><span class="label">Handling Tools</span><span class="score">{{ motor_ability_score.handling_tools|default:"-" }}</span></div>
-          <div class="trait"><span class="label">Perseverance</span><span class="score">{{ motor_ability_score.perseverance|default:"-" }}</span></div>
+        <div class="psychomotor-outer-container">
+            <div class="behavioral-grid">
+              <div class="trait"><span class="label">Honesty</span><span class="score">{{ motor_ability_score.honesty|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Politeness</span><span class="score">{{ motor_ability_score.politeness|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Neatness</span><span class="score">{{ motor_ability_score.neatness|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Cooperation</span><span class="score">{{ motor_ability_score.cooperation|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Obedience</span><span class="score">{{ motor_ability_score.obedience|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Punctuality</span><span class="score">{{ motor_ability_score.punctuality|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Physical Ed.</span><span class="score">{{ motor_ability_score.physical_education|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Games</span><span class="score">{{ motor_ability_score.games|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Attentiveness</span><span class="score">{{ motor_ability_score.attentiveness|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Leadership</span><span class="score">{{ motor_ability_score.leadership|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Attitude</span><span class="score">{{ motor_ability_score.attitude|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Emotional Stability</span><span class="score">{{ motor_ability_score.emotional_stability|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Musical</span><span class="score">{{ motor_ability_score.musical|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Handwriting</span><span class="score">{{ motor_ability_score.handwriting|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Reading</span><span class="score">{{ motor_ability_score.reading|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Verbal Fluency</span><span class="score">{{ motor_ability_score.verbal_fluency|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Handling Tools</span><span class="score">{{ motor_ability_score.handling_tools|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Perseverance</span><span class="score">{{ motor_ability_score.perseverance|default:"-" }}</span></div>
+            </div>
         </div>
 
         <h6 class="text-center mt-2"><strong>GENERAL REMARKS</strong></h6>
