@@ -27,7 +27,7 @@
       display: flex; 
       align-items: center; 
       justify-content: center;
-      padding: 8px 15px;
+      padding: 5px 10px;
       border-bottom: 1px solid #eee;
     }
     .header-logo-container {
@@ -57,6 +57,14 @@
       line-height: 1.2;
     }
 
+    /* SCROLL FIX FOR STUDENT INFO TABLE */
+    .info-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 5px;
+    }
+
     .psychomotor-heading {
       font-size: 13px;
       font-weight: bold;
@@ -70,7 +78,7 @@
       margin-left: 3px;
     }
 
-    /* SCROLL FIX FOR MOBILE */
+    /* SCROLL FIX FOR PSYCHOMOTOR */
     .psychomotor-outer-container {
         width: 100%;
         overflow-x: auto;
@@ -82,7 +90,7 @@
       grid-template-columns: repeat(6, 1fr);
       gap: 6px 4px;
       margin-top: 4px;
-      min-width: 600px; /* Ensures grid maintains shape on mobile to trigger scroll */
+      min-width: 600px; 
     }
 
     .info-table th, .info-table td {
@@ -92,6 +100,14 @@
       vertical-align: middle;
       font-size: 12px;
     }
+
+    /* Force the info table to maintain width on mobile to trigger scroll */
+    @media (max-width: 600px) {
+        .info-table {
+            min-width: 750px;
+        }
+    }
+
     .subject-table th, .subject-table td {
       border: 1px solid grey;
       text-align: center;
@@ -171,6 +187,7 @@
       .remark-table td, .grading-keys-table td { border-style: hidden !important; }
       .qr-code-small { width: 50px !important; height: 50px !important; }
       .behavioral-grid { min-width: 100% !important; }
+      .info-table { min-width: 100% !important; }
     }
     </style>
   </head>
@@ -206,27 +223,29 @@
             <span class="report-subheading">{{ term.session.name|default:"N/A" }} — {{ term.name|default:"N/A" }}</span>
         </h4>
 
-        <table class="info-table w-100 mb-3">
-          <tr>
-            <td colspan="2"><strong>NAME:</strong> {{ student.last_name|upper }} {{ student.first_name|upper }} {% if student.middle_name %}{{ student.middle_name|upper }}{% endif %}</td>
-            <td><strong>USN:</strong> {{ student.USN|default:"N/A" }}</td>
-            <td><strong>CLASS:</strong> {{ student.current_class.name|default:"N/A" }}</td>
-            <td><strong>No in Class:</strong> {{ total_students_in_class|default:"N/A" }}</td>
-            <td rowspan="2" style="width: 80px; text-align:center;">
-              {% if student.user.profile.image %}
-                  <img src="{{ student.user.profile.image_url }}" width="60" height="60" class="img-fluid">
-              {% else %}
-                  <img src="{% static 'pages/images/qr_code.jpg' %}" width="60" height="60" class="img-fluid">
-              {% endif %}
-            </td>
-          </tr>
-          <tr>
-            <td><strong>Days Sch. Opened:</strong> {{ total_school_days|default:"N/A" }}</td>
-            <td style="color: green;"><strong>Days Present:</strong> {{ days_present|default:"N/A" }}</td>
-            <td style="color:red;"><strong>Days Absent:</strong> {{ days_absent|default:"N/A" }}</td>
-            <td colspan="2"><strong>Next Term Begins:</strong> {{ next_term_start_date|date:"M d, Y"|default:"N/A" }}</td>
-          </tr>
-        </table>
+        <div class="info-table-wrapper">
+            <table class="info-table w-100 mb-3">
+              <tr>
+                <td colspan="2"><strong>NAME:</strong> {{ student.last_name|upper }} {{ student.first_name|upper }} {% if student.middle_name %}{{ student.middle_name|upper }}{% endif %}</td>
+                <td><strong>USN:</strong> {{ student.USN|default:"N/A" }}</td>
+                <td><strong>CLASS:</strong> {{ student.current_class.name|default:"N/A" }}</td>
+                <td><strong>No in Class:</strong> {{ total_students_in_class|default:"N/A" }}</td>
+                <td rowspan="2" style="width: 80px; text-align:center;">
+                  {% if student.user.profile.image %}
+                      <img src="{{ student.user.profile.image_url }}" width="60" height="60" class="img-fluid">
+                  {% else %}
+                      <img src="{% static 'pages/images/qr_code.jpg' %}" width="60" height="60" class="img-fluid">
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Days Sch. Opened:</strong> {{ total_school_days|default:"N/A" }}</td>
+                <td style="color: green;"><strong>Days Present:</strong> {{ days_present|default:"N/A" }}</td>
+                <td style="color:red;"><strong>Days Absent:</strong> {{ days_absent|default:"N/A" }}</td>
+                <td colspan="2"><strong>Next Term Begins:</strong> {{ next_term_start_date|date:"M d, Y"|default:"N/A" }}</td>
+              </tr>
+            </table>
+        </div>
 
         <h5 class="text-center mt-2"><strong>ACADEMIC PERFORMANCE</strong></h5>
         <div class="table-responsive">
@@ -408,8 +427,10 @@
     <a href="{% url 'results:motor_ability_score_create_update' student.id term.id %}" class="btn btn-success btn-lg me-4"><i class="bi bi-pencil-square"></i> Record Motor Ability Scores</a>
       {% elif user.student %}
       <a href="{% url 'results:student_dashboard' %}" class="btn btn-secondary btn-lg">Back to Dashboard</a>
-    {% else %}
-      <a href="{% url '/dashboard' %}" class="btn btn-secondary btn-lg">Back to Home</a>
+      {% elif user.parent %}
+      <a href="{% url 'students:parent-dashboard' %}" class="btn btn-secondary btn-lg">Parent Dashboard</a>
+      {% else %}     
+      <a href="/dashboard" class="btn btn-secondary btn-lg">Back to Home</a>
     {% endif %}
     </div>
 

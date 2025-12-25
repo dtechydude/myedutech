@@ -55,7 +55,7 @@
         .watermark img { width: 450px; height: auto; filter: grayscale(100%); }
 
         /* HEADER */
-        .header-container {
+        /* .header-container {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -78,7 +78,71 @@
             justify-content: center;
             overflow: hidden;
             background: #f8f9fa;
+        } */
+
+
+        .header-container {
+            display: flex;
+            align-items: center;
+            /* Changed from space-between to center to bring items inward */
+            justify-content: center;
+            /* This gap controls the distance between logo, details, and photo */
+            gap: 50px;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+            position: relative;
+            z-index: 1;
         }
+
+        .header-logo img {
+            max-height: 80px;
+            width: auto;
+            /* Ensures logo doesn't shrink on small screens */
+            flex-shrink: 0;
+        }
+
+        .header-details {
+            /* Removed flex-grow: 1 to stop it from filling all available space */
+            text-align: center;
+            /* Reduced padding */
+            padding: 0 5px;
+        }
+
+        .header-details h1 {
+            font-size: 20px; /* Slightly smaller for better mobile fit */
+            font-weight: bold;
+            color: #333366;
+            margin: 0;
+        }
+
+        .header-details p {
+            font-size: 11px; /* Slightly smaller for mobile */
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .student-photo-box {
+            width: 80px; /* Reduced slightly to save horizontal space */
+            height: 80px;
+            border: 1px solid #333366;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #f8f9fa;
+            flex-shrink: 0; /* Ensures photo doesn't shrink */
+        }
+
+        /* Mobile specific tweak */
+        @media (max-width: 480px) {
+            .header-container {
+                gap: 8px; /* Even tighter gap on very small screens */
+            }
+            .header-details h1 {
+                font-size: 16px;
+            }
+        }
+
 
         .report-heading {
             background: #333366 !important;
@@ -348,6 +412,9 @@
     <div class="no-print text-center my-4">
         {% if user.is_superuser or user.is_staff or user.teacher%}
         <a href="{% url 'results:session_report_card_list' %}" class="btn btn-secondary px-5">Back to Report List</a>
+        
+        {% elif user.parent%}
+        <a href="{% url 'students:parent-dashboard' %}" class="btn btn-secondary btn-lg">Parent Dashboard</a>
         {% else %}
         <a href="/dashboard" class="btn btn-secondary px-5">Back to Dashboard</a>
         {% endif %}

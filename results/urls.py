@@ -43,6 +43,17 @@ urlpatterns = [
      ResultPermissionGatekeeperView.as_view(), # <-- Must use the gatekeeper
      name='student_report_card_detail'),
 
+     # PARENT RESULTS ACCESS
+    path('parent/mid-term/<int:student_id>/<int:term_id>/', 
+     views.ParentMidTermReportView.as_view(), name='parent_mid_term_report'),
+
+    path('parent/termly-report/<int:student_id>/<int:term_id>/', 
+     views.ParentTermlyReportView.as_view(), 
+     name='parent_termly_report'),
+
+    path('parent/session-report/<int:student_id>/<int:session_id>/', 
+     views.ParentSessionReportView.as_view(), name='parent_session_report'),
+
 
     # # Placeholder for a home page (create templates/home.html)
     # path('', TemplateView.as_view(template_name='home.html'), name='home'), 
@@ -57,14 +68,14 @@ urlpatterns = [
     # path('enter-motor-ability/<int:student_id>/<int:term_id>/', views.MotorAbilityScoreCreateUpdateView.as_view(), name='enter_motor_ability_score'),
     path('student/<int:student_id>/term/<int:term_id>/motor-ability-score/', views.MotorAbilityScoreCreateUpdateView.as_view(), name='motor_ability_score_create_update'),
 
-    path('parent_session_report_card/<int:student_id>/<int:session_id>/', views.parent_session_report_card_detail, name='parent_session_report_card_detail'),
+    # path('parent_session_report_card/<int:student_id>/<int:session_id>/', views.parent_session_report_card_detail, name='parent_session_report_card_detail'),
 
     #parent to check results
     # path('parent/report-cards/<int:student_id>/<int:term_id>/', views.ParentReportCardView.as_view(), name='parent_report_card_detail'),
-    path('parent/report-cards/<int:student_id>/<int:term_id>/', views.ParentReportCardView.as_view(), name='parent_report_card_detail'),
+    # path('parent/report-cards/<int:student_id>/<int:term_id>/', views.ParentReportCardView.as_view(), name='parent_report_card_detail'),
     
     # New URL for session report card
-    path('parent/session-report-cards/<int:student_id>/<int:session_id>/', views.ParentSessionReportCardView.as_view(), name='parent_session_report_card_detail'),
+    # path('parent/session-report-cards/<int:student_id>/<int:session_id>/', views.ParentSessionReportCardView.as_view(), name='parent_session_report_card_detail'),
     # ... other URL patterns
 
 

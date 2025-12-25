@@ -238,7 +238,7 @@
 
         <div class="bottom-grid">
             <div class="comment-area">
-                <h6 style="color:var(--brand-main); font-weight:bold; font-size:8pt;">PRINCIPAL'S COMMENT</h6>
+                <h6 style="color:var(--brand-main); font-weight:bold; font-size:8pt;">GENERAL REMARK</h6>
                 <p style="font-style: italic; font-size: 9.5pt;">"{{ overall_remark|default:"Satisfactory performance. Keep it up." }}"</p>
             </div>
             <div class="score-summary-circle">
@@ -269,9 +269,15 @@
 
 <div class="action-bar no-print">
     <div class="action-bar-inner">
-        <a href="{% url 'results:student_midterm_list' %}" class="btn btn-outline-secondary action-btn">
-            <i class="fas fa-arrow-left mr-2"></i> Back
+        {% if user.parent %}
+      <a href="{% url 'students:parent-dashboard' %}" class="btn btn-secondary btn-lg">
+            <i class="fas fa-arrow-left mr-2"></i> Parent Dashboard
         </a>
+        {% else%}
+        <a href="{% url 'results:student_midterm_list' %}" class="btn btn-outline-secondary action-btn">
+            <i class="fas fa-arrow-left mr-2"></i> Back To List
+        </a>
+        {% endif %}
         <button class="btn btn-primary action-btn" onclick="window.print()">
             <i class="fas fa-print mr-2"></i> Print Report
         </button>

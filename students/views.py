@@ -847,22 +847,15 @@ def assign_classgroup_to_students_view(request):
 
 
 
-
+# PARENT DASHBOARD
 @login_required
 def parent_dashboard(request):
-    """
-    Shows a dashboard for parents listing their children, reports, and fee summary.
-    All model imports are kept local to prevent circular import issues.
-    """
-    # --- START: LOCAL IMPORTS (To prevent circular import issues) ---
     from .models import Parent, Student
     from curriculum.models import Session, Term
     from payments.models import StudentFeeAssignment, Payment
     from django.db.models import Sum
     from decimal import Decimal
-    # --- END: LOCAL IMPORTS ---
 
-    # 1. Fetch Parent and Children
     try:
         parent = Parent.objects.get(user=request.user)
         children = Student.objects.filter(parent=parent).prefetch_related('scores__term')
@@ -870,26 +863,29 @@ def parent_dashboard(request):
         children = []
     
     children_with_reports = []
-    
-    # Fetch all terms/sessions for report card links
     all_terms = Term.objects.all().order_by('id') 
     all_sessions = Session.objects.all().order_by('id')
     
-    # Get current session and term for display context
     current_session = Session.objects.filter(is_current=True).order_by('-name').first()
     current_term = Term.objects.filter(session=current_session, is_current=True).order_by('-start_date').first()
 
     for child in children:
+        # Fetch individual invoices and receipts for this child
+        invoices = StudentFeeAssignment.objects.filter(student=child).order_by('-id')
+        # receipts = Payment.objects.filter(student=child).order_by('-date_paid')
+        receipts = Payment.objects.filter(student=child).order_by('-payment_date')
+
         child_data = {
             'child': child,
             'termly_reports': [],
             'session_reports': [],
+            'invoices': invoices, # Added
+            'receipts': receipts, # Added
             'grand_payment_summary': {}, 
             'current_term': current_term,
             'current_session': current_session,
         }
         
-        # Report Card Logic (Preserved)
         for term in all_terms:
             if child.scores.filter(term=term).exists():
                 child_data['termly_reports'].append(term)
@@ -898,29 +894,15 @@ def parent_dashboard(request):
             if child.scores.filter(term__session=session).exists():
                 child_data['session_reports'].append(session)
         
-        # --- START: DEFINITIVE CORRECTED AGGREGATED PAYMENT SUMMARY LOGIC ---
-        
-        # 1. Calculate Total Fees Due: Sum 'amount_due' from all fee assignments.
-        total_due_agg = StudentFeeAssignment.objects.filter(
-            student=child
-        ).aggregate(total_due=Sum('amount_due'))
-
+        # Financial aggregation
+        total_due_agg = StudentFeeAssignment.objects.filter(student=child).aggregate(total_due=Sum('amount_due'))
         total_due = total_due_agg.get('total_due') or Decimal('0.00')
 
-        # 2. Calculate Total Paid So Far: Using the direct 'student' Foreign Key on the Payment model.
-        # This bypasses the complex join to StudentFeeAssignment that was causing issues.
-        total_paid_agg = Payment.objects.filter(
-            student=child
-        ).aggregate(
-            total_paid=Sum('amount_received')
-        )
-        
+        total_paid_agg = Payment.objects.filter(student=child).aggregate(total_paid=Sum('amount_received'))
         total_paid = total_paid_agg.get('total_paid') or Decimal('0.00')
 
-        # 3. Calculate the overall balance
         total_balance = total_due - total_paid
 
-        # 4. Attach the grand summary to child_data
         child_data['grand_payment_summary'] = {
             'total_due': total_due,
             'total_paid': total_paid, 
@@ -928,13 +910,9 @@ def parent_dashboard(request):
             'is_paid': total_balance <= 0
         }
         
-        # --- END: DEFINITIVE CORRECTED AGGREGATED PAYMENT SUMMARY LOGIC ---
-
         children_with_reports.append(child_data)
         
-    context = {
-        'children_with_reports': children_with_reports,
-    }
+    context = {'children_with_reports': children_with_reports}
     return render(request, 'students/parent_dashboard.html', context)
 
 

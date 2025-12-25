@@ -6,196 +6,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parent Dashboard</title>
+    <title>Parent Dashboard | {{ school_info.name }}</title>
     <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
-
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    
     <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .card-header.bg-primary {
-            background-color: #007bff !important;
-        }
-        .text-info {
-            color: #17a2b8 !important;
-        }
-        .btn-success {
-            background-color: #28a745;
-            border-color: #28a745;
-        }
-        .btn-info {
-            background-color: #17a2b8;
-            border-color: #17a2b8;
-        }
-        .badge-success {
-            background-color: #28a745;
-        }
-        .badge-danger {
-            background-color: #dc3545;
-        }
-        .navbar-brand img {
-            max-height: 40px;
-        }
-        /* Custom style for better emphasis on financial numbers */
-        .financial-number {
-            font-size: 1.1em;
-        }
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; }
+        .card { border: none; border-radius: 12px; }
+        .card-header.bg-primary { background: linear-gradient(135deg, #007bff, #0056b3) !important; border-radius: 12px 12px 0 0; }
+        .nav-tabs .nav-link { border: none; font-weight: 600; color: #6c757d; }
+        .nav-tabs .nav-link.active { color: #007bff; border-bottom: 3px solid #007bff; background: transparent; }
+        .financial-stat { padding: 15px; border-radius: 8px; background: #fff; border: 1px solid #eef0f2; }
+        .btn-payment { background-color: #28a745; color: white; font-weight: 600; }
+        .btn-payment:hover { background-color: #218838; color: white; }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-    <div class="container-fluid">
-        {% if school_info %}
-            <a class="navbar-brand" href="#">
-                {% if school_info.logo %}
-                    <img src="{{ school_info.logo.url }}" alt="{{ school_info.name }}">
-                {% else %}
-                    {{ school_info.name }}
-                {% endif %}
-                    {{ school_info.name }}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="#">
+            {% if school_info.logo %}<img src="{{ school_info.logo.url }}" height="35" class="mr-2">{% endif %}
+            {{ school_info.name }}
+        </a>
+        <div class="ml-auto">
+            <a href="{% url 'payments:notify_payment' %}" class="btn btn-payment btn-sm mr-2">
+                <i class="fas fa-plus-circle mr-1"></i> Submit Payment Proof
             </a>
-        {% endif %}
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item active">
-                    <a class="nav-link" href="{% url 'pages:portal-home' %}">Go To Dashboard <span class="sr-only">(current)</span></a>
-                </li>
-                <li class="nav-item">
-                    {% if user.is_authenticated and user.is_staff %}
-                    <a class="nav-link" href="{% url 'payments:payment_history' %}">Payment History</a>
-                    {% endif %}
-                </li>
-            </ul>
+            <a href="{% url 'pages:portal-home' %}" class="btn btn-outline-light btn-sm">Portal Home</a>
         </div>
     </div>
 </nav>
 
-<div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card shadow-sm mb-4">
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="font-weight-bold">Parent Dashboard</h1>
+        <p class="text-muted">Academic performance and financial standing of your children</p>
+    </div>
+
+    {% if children_with_reports %}
+        {% for child_data in children_with_reports %}
+            <div class="card shadow-sm mb-5">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-child mr-2"></i> {{ child_data.child.get_full_name }}</h4>
+                    <span class="badge badge-light">USN: {{ child_data.child.USN }}</span>
+                </div>
+
                 <div class="card-body">
-                    
-                    <h2 class="text-center mb-4">Parent Dashboard <br> <small>My Children Info</small></h2>
-                    
-                    {% if children_with_reports %}
-                        {% for child_data in children_with_reports %}
-                            <div class="card shadow-sm mb-4">
-                                <div class="card-header bg-primary text-white">
-                                    <h3 class="mb-0">{{ child_data.child.get_full_name }}</h3>
+                    <div class="row mb-4">
+                        <div class="col-md-6"><strong>Class:</strong> <span class="text-primary">{{ child_data.child.current_class }}</span></div>
+                        <div class="col-md-6"><strong>Teacher:</strong> {{ child_data.child.get_form_teacher|default:"Not Assigned" }}</div>
+                    </div>
+
+                    {% with summary=child_data.grand_payment_summary %}
+                    <div class="row text-center mb-4">
+                        <div class="col-md-4">
+                            <div class="financial-stat">
+                                <small class="text-muted d-block">TOTAL BILLED</small>
+                                <span class="h5 font-weight-bold">₦{{ summary.total_due|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="financial-stat">
+                                <small class="text-muted d-block">TOTAL PAID</small>
+                                <span class="h5 font-weight-bold text-success">₦{{ summary.total_paid|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="financial-stat">
+                                <small class="text-muted d-block">BALANCE</small>
+                                <span class="h5 font-weight-bold text-danger">₦{{ summary.total_balance|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endwith %}
+
+                    <ul class="nav nav-tabs" id="tab-{{ child_data.child.id }}" role="tablist">
+                        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#res-{{ child_data.child.id }}">Academic</a></li>
+                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#inv-{{ child_data.child.id }}">Invoices</a></li>
+                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#rec-{{ child_data.child.id }}">Receipts</a></li>
+                    </ul>
+
+                    <div class="tab-content pt-4">
+                        <div class="tab-pane fade show active" id="res-{{ child_data.child.id }}">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h6 class="font-weight-bold text-muted">MID-TERM SCORES</h6>
+                                    <div class="list-group list-group-flush mb-4">
+                                        {% for term in child_data.termly_reports %}
+                                            <a href="{% url 'results:parent_mid_term_report' student_id=child_data.child.id term_id=term.id %}" class="list-group-item list-group-item-action d-flex justify-content-between small">
+                                                {{ term.name }} <i class="fas fa-eye text-primary"></i>
+                                            </a>
+                                        {% endfor %}
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <div class="row mb-3">
-                                        <div class="col-md-6">
-                                            <p class="font-weight-bold">Class: <span class="text-info">{{ child_data.child.current_class }}</span></p>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <p class="font-weight-bold">Form Teacher: <span class="text-info">{{ child_data.child.get_form_teacher }}</span></p>
-                                        </div>
-                                    </div>
-                                    <hr>
-
-                                    {% with summary=child_data.grand_payment_summary %}
-                                    <h4 class="mb-3">
-                                        Overall Fee Summary 
-                                        <small class="text-muted">(All assigned fees)</small>
-                                    </h4>
-                                    
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered table-sm">
-                                            <thead class="thead-light">
-                                                <tr>
-                                                    <th>Total Fees Due</th>
-                                                    <th>Total Paid So Far</th>
-                                                    <th>Outstanding Balance</th>
-                                                    <th>Overall Status</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td><span class="font-weight-bold text-dark financial-number">N{{ summary.total_due|floatformat:2 }}</span></td>
-                                                    <td><span class="text-success financial-number">N{{ summary.total_paid|floatformat:2 }}</span></td>
-                                                    <td><span class="{% if summary.is_paid %}text-success{% else %}text-danger{% endif %} font-weight-bold financial-number">N{{ summary.total_balance|floatformat:2 }}</span></td>
-                                                    <td>
-                                                        {% if summary.total_due == 0 %}
-                                                            <span class="badge badge-secondary">No Fees Assigned</span>
-                                                        {% elif summary.is_paid %}
-                                                            <span class="badge badge-success">CLEARED</span>
-                                                        {% else %}
-                                                            <span class="badge badge-danger">OUTSTANDING</span>
-                                                        {% endif %}
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <div class="text-right">
-                                        <a href="{% url 'payments:payment_history' %}?student={{ child_data.child.id }}" class="btn btn-info mt-3">View Detailed Payment History</a>
-                                        {# CORRECTED LINK: Passes the specific child's ID to the notification form #}
-                                        <a href="{% url 'payments:notify_payment' %}?student={{ child_data.child.id }}" class="btn btn-success mt-3">Notify New Payment</a>
-                                    </div>
-                                    {% endwith %}
-                                    <hr>
-
-                                    <h4 class="mb-3" id="report-cards-section">Report Cards</h4>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <div class="card">
-                                                <div class="card-header">
-                                                    <h5 class="mb-0">Termly Reports</h5>
-                                                </div>
-                                                <ul class="list-group list-group-flush">
-                                                    {% for term in child_data.termly_reports %}
-                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                            {{ term.name }} ({{ term.session.name }})
-                                                            <a href="{% url 'results:parent_report_card_detail' student_id=child_data.child.id term_id=term.id %}" class="btn btn-sm btn-info">View Report</a>
-                                                        </li>
-                                                    {% empty %}
-                                                        <li class="list-group-item text-muted">No termly reports found.</li>
-                                                    {% endfor %}
-                                                </ul>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <div class="card">
-                                                <div class="card-header">
-                                                    <h5 class="mb-0">Session Reports</h5>
-                                                </div>
-                                                <ul class="list-group list-group-flush">
-                                                    {% for session in child_data.session_reports %}
-                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                            {{ session.name }}
-                                                            <a href="{% url 'results:parent_session_report_card_detail' student_id=child_data.child.id session_id=session.id %}" class="btn btn-sm btn-info">View Report</a>
-                                                        </li>
-                                                    {% empty %}
-                                                        <li class="list-group-item text-muted">No session reports found.</li>
-                                                    {% endfor %}
-                                                </ul>
-                                            </div>
-                                        </div>
+                               <div class="col-md-4">
+                                <h6 class="font-weight-bold text-muted">FULL TERMLY REPORTS</h6>
+                                <div class="list-group list-group-flush mb-4">
+                                    {% for term in child_data.termly_reports %}
+                                        <a href="{% url 'results:parent_termly_report' student_id=child_data.child.id term_id=term.id %}" 
+                                        class="list-group-item list-group-item-action d-flex justify-content-between small">
+                                            {{ term.name }} Card <i class="fas fa-file-invoice text-success"></i>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                                <div class="col-md-4">
+                                    <h6 class="font-weight-bold text-muted">ANNUAL (SESSION)</h6>
+                                    <div class="list-group list-group-flush">
+                                        {% for session in child_data.session_reports %}
+                                            <a href="{% url 'results:parent_session_report' student_id=child_data.child.id session_id=session.id %}" class="list-group-item list-group-item-action d-flex justify-content-between small">
+                                                {{ session.name }} <span class="badge badge-info">View</span>
+                                            </a>
+                                        {% endfor %}
                                     </div>
                                 </div>
                             </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="alert alert-info text-center mt-4" role="alert">
-                            <p class="mb-0"><i class="fa fa-info-circle"></i> You do not have any children associated with your account. Please contact the school administration if you believe this is an error.</p>
                         </div>
-                    {% endif %}
+
+                        <div class="tab-pane fade" id="inv-{{ child_data.child.id }}">
+                            <table class="table table-sm">
+                                <thead><tr><th>Fee</th><th>Term</th><th class="text-right">Amount</th></tr></thead>
+                                <tbody>
+                                    {% for inv in child_data.invoices %}
+                                    <tr>
+                                        <td>{{ inv.fee_type.name }}</td>
+                                        <td>{{ inv.term.name }}</td>
+                                        <td class="text-right">₦{{ inv.amount_due|floatformat:2 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <div class="text-right"><a href="{% url 'payments:student_invoice' student_id=child_data.child.id %}" class="btn btn-sm btn-link">View Detailed Statement</a></div>
+                        </div>
+
+                        <div class="tab-pane fade" id="rec-{{ child_data.child.id }}">
+                            <table class="table table-sm">
+                                <thead><tr><th>Date</th><th>Ref</th><th class="text-right">Amount</th><th>Action</th></tr></thead>
+                                <tbody>
+                                    {% for receipt in child_data.receipts %}
+                                    <tr>
+                                        <td>{{ receipt.payment_date|date:"d M Y" }}</td>
+                                        <td><small>{{ receipt.transaction_id|default:"-" }}</small></td>
+                                        <td class="text-right text-success font-weight-bold">₦{{ receipt.amount_received|floatformat:2 }}</td>
+                                        <td>
+                                            <a href="{% url 'payments:payment_receipt' receipt_pk=receipt.id %}" class="btn btn-xs btn-outline-info p-0 px-1">View</a>
+                                            <a href="{% url 'payments:receipt_pdf' receipt_id=receipt.id %}" class="text-danger ml-2"><i class="fas fa-file-pdf"></i></a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-light text-center border shadow-sm">No children are currently linked to your profile.</div>
+    {% endif %}
 </div>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
