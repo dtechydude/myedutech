@@ -492,14 +492,14 @@
 							<span class="nav-text">EXAMS & RESULTS</span>
 						</a>
 						<ul aria-expanded="false">
-							{% if user.is_superuser or user.is_staff %}
-							<li><a href="{% url 'results:midterm_score_selection' %}">Enter Mid-Term Scores</a></li>
-							<li><a href="{% url 'results:student_midterm_list' %}">View Mid-Term Results</a></li>
+							{% if user.is_superuser or user.is_staff %}							
 							<li><a href="{% url 'results:score_entry' %}">Record End-Of-Term Scores</a></li>
 							<li><a href="{% url 'results:report_card_list' %}">Termly Report Cards</a></li>
-							<li><a href="{% url 'results:session_report_card_list' %}">Annual Report Card</a></li>
-							<li><a href="{% url 'results:result_publications_list' %}">PUBLISH RESULTS</a></li>
 							<li><a href="{% url 'results:ranking_list' %}">Student's Exam Ranking</a></li>
+							<li><a href="{% url 'results:result_publications_list' %}">PUBLISH TERM RESULTS</a></li>
+							<li><a href="{% url 'results:session_report_card_list' %}">Annual Report CardS</a></li>
+							<li><a href="{% url 'results:midterm_score_selection' %}">Enter Mid-Term Scores</a></li>
+							<li><a href="{% url 'results:student_midterm_list' %}">View Mid-Term Results</a></li>
 							<li><a href="{% url 'students:promote_students' %}">Promote Students (Batch) </a></li>
 							<li><a href="{% url 'students:promote_individual_students' %}">Promote Students (Individual)</a></li>
 							
@@ -508,13 +508,13 @@
 							<li><a href="{% url 'results:student_dashboard' %}">Termly/Session Results</a></li>	
 							<li><a href="{% url 'results:student_midterm_list' %}">My Mid-Term Results</a></li>							
 
-							{% elif user.teacher %}
-							<li><a href="{% url 'results:midterm_score_selection' %}">Record Mid-Term Scores</a></li>
-							<li><a href="{% url 'results:student_midterm_list' %}">View Mid-Term Results</a></li>						
+							{% elif user.teacher %}												
 							<li><a href="{% url 'results:score_entry' %}">Record CA & Term Scores</a></li>
 							<li><a href="{% url 'results:report_card_list' %}">Termly Report Cards</a></li>
 							<li><a href="{% url 'results:session_report_card_list' %}">Annual Report Cards</a></li>
 							<li><a href="{% url 'results:ranking_list' %}">Student's Exam Ranking</a></li>
+							<li><a href="{% url 'results:midterm_score_selection' %}">Record Mid-Term Scores</a></li>
+							<li><a href="{% url 'results:student_midterm_list' %}">View Mid-Term Results</a></li>	
  					
 							{% endif %}						
 
@@ -530,23 +530,22 @@
 						<ul aria-expanded="false">
 							<li><a href="{% url 'staff:teacher_user_signup'%}">Signup Teacher</a></li>
 							<li><a href="{% url 'staff:teacher-list' %}">All Teachers</a></li>
-							<li><a href="{% url 'staff:assign_form_teacher' %}">Assign FormTeacher(HEAD)</a></li> 
+							<li><a href="{% url 'staff:assign_form_teacher' %}">Assign FormTeacher-HEAD</a></li> 
 							<li><a href="{% url 'staff:assign_form_teacher_to_classgroup' %}">Assign FormTeacher To CLASSGROUP</a></li>
 							<li><a href="{% url 'staff:teacher_assignments' %}">Teacher's Subj./Classes</a></li>
 							<li><a href="{% url 'staff:cbv_all_teachers_student_counts' %}">Teacher's Students Count</a></li>
-							<li><a href="{% url 'curriculum:form_teachers_head' %}">FormTeachers (HEAD)</a></li>
+							<li><a href="{% url 'curriculum:form_teachers_head' %}">FormTeachers List</a></li>
 							<li><a href="{% url 'curriculum:classgroup_form_teachers' %}">ClassGroup FormTeachers</a></li>
 
 						</ul>
 					</li>
 					{% endif %}
-					{% if user.is_authenticated and not user.parent %}
 
-					{% if user.is_authenticated and user.is_superuser or user.is_staff or user.student %}
+					{% if user.is_authenticated and user.is_superuser or user.is_staff or user.student or user.parent %}
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
 							<span class="nav-text">PAYMENTS & FEES</span>
-						</a>{% endif %}						
+						</a>					
 						<ul aria-expanded="false"> 
 							
 							{% if user.is_superuser or user.is_staff %}		
@@ -558,10 +557,9 @@
 							<li><a href="/admin/payments/payment/" target="_blank">Make Payment For Students</a></li>
 							<li><a href="/admin/payments/bankdetail/" target="_blank">Add/Edit BANK INFO</a></li>
 							<li><a href="/admin/payments/paymentcategory/" target="_blank">Add/Edit PAYMENT TYPE</a></li>
-									
-							
+															
 							{% endif %}							
-							{% if user.student or user.is_superuser or user.is_staff %}	
+							{% if user.student or user.parent or user.is_superuser or user.is_staff %}	
 							<li><a href="{% url 'payments:payment_chart_list' %}">Fees Chart List</a></li>						
 							<li><a href="{% url 'pages:help-center' %}">Payment Instruction</a></li>
 							<li><a href="{% url 'pages:bank-detail' %}">School Account Details</a></li>
@@ -572,8 +570,7 @@
 							<li><a href="{% url 'payments:payment_history' %}">My Payment History</a></li>	
 							<li><a href="{% url 'payments:notify_payment' %}">Make New Payment</a></li>
 							<li><a href="{% url 'payments:my-notifications' %}">My Payment Notifications</a></li>	
-	
-																		
+																			
 							</li>		
 							{% endif %}						
 							
@@ -651,6 +648,36 @@
 					</ul>
 					</li>
 						{% endif %}
+
+						{% if user.is_authenticated and user.is_superuser or user.is_staff %}
+						<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
+							<i class="flaticon-013-checkmark"></i>
+								<span class="nav-text">INTEGRATIONS</span>
+							</a>
+							<ul aria-expanded="false">
+								<li><a href="#">Integration Page</a></li>								
+							</ul>
+						</li>
+						{% endif %}
+						{% if user.is_authenticated and user.is_superuser or user.is_staff or user.student or user.teacher %}
+						<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
+								<i class="flaticon-013-checkmark"></i>
+									<span class="nav-text">AI TOOLS</span>
+								</a>
+								{% endif %}	
+								{% if user.is_authenticated and user.is_superuser or user.is_staff %}
+								<ul aria-expanded="false">
+									<li><a href="#">School AI Tools</a></li>
+									{% if user.is_authenticated and user.is_superuser or user.student %}					
+									<li><a href="#">Student AI Tools</a></li>
+									{% endif %}	
+									{% if user.is_authenticated and user.is_superuser or user.teacher %}
+									<li><a href="#">Teachers AI Tools</a></li>
+									{% endif %}			
+								</ul>
+							</li>
+							{% endif %}
+					
 						<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 							<i class="flaticon-013-checkmark"></i>
 								<span class="nav-text">HELP CENTER</span>
@@ -676,8 +703,7 @@
 
 							</ul>
 					</li>
-					{% endif %}	
-					
+					{% endif %}							
 					
 						<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 							<i class="flaticon-013-checkmark"></i>

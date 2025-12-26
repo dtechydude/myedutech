@@ -66,7 +66,8 @@ INSTALLED_APPS = [
     'embed_video',
     'djrichtextfield',
     'tinymce',
-    'django_cleanup.apps.CleanupConfig'
+    'django_cleanup.apps.CleanupConfig',
+    'anymail',
 
 ]
 
@@ -199,17 +200,19 @@ DEFAULT_FROM_EMAIL = 'no-reply@yourdomain.com'
 # EMAIL_HOST_PASSWORD = 'oert qkpu unec rpqq'
 
 
-#SENDGRID EMAIL SETTING
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.sendgrid.net' # Example for SendGrid
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'your_sendgrid_username'
-EMAIL_HOST_PASSWORD = 'your_sendgrid_password'
-DEFAULT_FROM_EMAIL = 'noreply@your-school-app.com'
-ADMIN_EMAIL = 'admin@your-school-app.com' # Or a list of admin emails
+# WORKING EMAIL SETTINGS
+# 1. Anymail settings
+ANYMAIL = {
+    "SENDGRID_API_KEY": "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",
+}
+EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
 
+# 2. Global Email settings
+# This MUST match the email you verified in SendGrid
+DEFAULT_FROM_EMAIL = "Kwikschools <contact@kwikschools.com>" 
+SERVER_EMAIL = "contact@kwikschools.com" # For error logs
 
+# ============================================================
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 CRISPY_TEMPLATE_PACK = 'bootstrap4'

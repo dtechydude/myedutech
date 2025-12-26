@@ -55,8 +55,10 @@
 
                 <div class="card-body">
                     <div class="row mb-4">
-                        <div class="col-md-6"><strong>Class:</strong> <span class="text-primary">{{ child_data.child.current_class }}</span></div>
-                        <div class="col-md-6"><strong>Teacher:</strong> {{ child_data.child.get_form_teacher|default:"Not Assigned" }}</div>
+                        <div class="col-md-4"><strong>Class:</strong> <span class="text-primary">{{ child_data.child.current_class }}</span></div>
+                        <div class="col-md-8"><strong>Teacher:</strong> {{ child_data.child.get_form_teacher|default:"Not Assigned" }} - <strong>Phone:</strong> {{ child_data.child.get_form_teacher.phone_home|default:"Not Assigned" }}
+                        - <strong>Email:</strong>   {{ child_data.child.get_form_teacher.user.email|default:"Not Assigned" }}
+                        </div>
                     </div>
 
                     {% with summary=child_data.grand_payment_summary %}
