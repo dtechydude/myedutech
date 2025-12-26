@@ -150,7 +150,7 @@ def user_logout(request):
     # Redirect to a new URL. You have a few options:
     
     # Option 1: Redirect to the homepage
-    return redirect('users:logout_success')  # Assumes you have a URL named 'home'
+    return redirect('logout_success')  # Assumes you have a URL named 'home'
 
 
 def logout_success(request):
@@ -223,7 +223,7 @@ def enroll_student(request):
                 request.session['temp_user_id'] = user.id
                 
                 messages.success(request, 'User created successfully! Now, please provide the student details.')
-                return redirect('users:enroll_student_details')  # Redirect to the next step
+                return redirect('enroll_student_details')  # Redirect to the next step
 
         elif 'student_submit' in request.POST:
             if 'temp_user_id' in request.session:
@@ -232,7 +232,7 @@ def enroll_student(request):
                     user = User.objects.get(id=user_id)
                 except User.DoesNotExist:
                     messages.error(request, 'An error occurred. Please restart the enrollment process.')
-                    return redirect('users:enroll_student')
+                    return redirect('enroll_student')
                 
                 # Bind the student form to the request data
                 student_form = StudentEnrollmentForm(request.POST)
@@ -248,7 +248,7 @@ def enroll_student(request):
                     del request.session['temp_user_id']
 
                     messages.success(request, f'Student {student.get_full_name()} has been successfully enrolled!')
-                    return redirect('users:some_success_page') # Redirect to a success page
+                    return redirect('some_success_page') # Redirect to a success page
 
     return render(request, 'users/enroll_student.html', {
         'user_form': user_form,
@@ -260,14 +260,14 @@ def enroll_student(request):
 def enroll_student_details(request):
     if 'temp_user_id' not in request.session:
         messages.error(request, 'Invalid session. Please start the enrollment process from the beginning.')
-        return redirect('users:enroll_student')
+        return redirect('enroll_student')
     
     user_id = request.session['temp_user_id']
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
         messages.error(request, 'User not found. Please restart the enrollment process.')
-        return redirect('users:enroll_student')
+        return redirect('enroll_student')
 
     student_form = StudentEnrollmentForm(request.POST or None, initial={'USN': user.username})
 
@@ -289,7 +289,7 @@ def enroll_student_details(request):
             del request.session['temp_user_id']
             
             messages.success(request, f'Student {student.get_full_name()} has been successfully enrolled!')
-            return redirect('users:success_page')
+            return redirect('success_page')
     
     return render(request, 'users/enroll_student_details.html', {
         'student_form': student_form,

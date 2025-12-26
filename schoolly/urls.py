@@ -12,7 +12,7 @@ from django.views.generic import TemplateView # For a simple placeholder home pa
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('pages.urls', namespace='pages')),
-    path('users/', include('users.urls', namespace='users')),
+    path('users/', include('users.urls')),
     path('students/', include('students.urls', namespace='students')), 
     path('staff/', include('staff.urls', namespace='staff')),
     path('results/', include('results.urls', namespace='results')),

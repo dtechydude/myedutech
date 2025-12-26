@@ -6,7 +6,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import reverse_lazy
 
 
-app_name ='users'
+# app_name ='users'
 
 urlpatterns = [
     path('', auth_views.LoginView.as_view(template_name='users/login.html'), name="login"),

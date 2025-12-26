@@ -135,7 +135,7 @@
                                                     {% if user.teacher or user.staff %}
 													<!-- <a href="#" class="btn btn-primary mb-1 me-1">Edit Employment</a>  -->
 													<!-- <a href="#" class="btn btn-primary mb-1" data-bs-toggle="modal" data-bs-target="#sendMessageModal">Edit Profile</a> -->
-                                                    <a href="{% url 'users:profile' %}" class="btn btn-primary mb-1">Edit Profile</a>
+                                                    <a href="{% url 'profile' %}" class="btn btn-primary mb-1">Edit Profile</a>
                                                     {% elif user.is_superuser or user.staff %}
                                                     <a href="/admin/users/profile/" class="btn btn-primary mb-1">Edit Profile From Admin</a>
                                                     {% endif %}
