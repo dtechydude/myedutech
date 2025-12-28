@@ -67,7 +67,7 @@ INSTALLED_APPS = [
     'djrichtextfield',
     'tinymce',
     'django_cleanup.apps.CleanupConfig',
-    'anymail',
+
 
 ]
 
@@ -181,36 +181,55 @@ LOGIN_REDIRECT_URL = 'pages:portal-home' # Redirect students to their dashboard 
 LOGOUT_REDIRECT_URL = '/' # Redirect to home page after logout (or login page)
 LOGIN_URL = '/users/login/' # URL name of your login page
 
-# Email settings for the CBT app
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'no-reply@yourdomain.com'
-ADMIN_EMAIL = 'admin@kwikschools.com'
+# # Email settings for the CBT app
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# DEFAULT_FROM_EMAIL = 'no-reply@kwikschools.com'
+# ADMIN_EMAIL = 'contact@kwikschools.com'
 
-ADMIN_EMAIL = 'contact@kwikschools.com'
-DEFAULT_FROM_EMAIL = 'no-reply@yourdomain.com'
+# Switch back to the standard SMTP backend
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-# # Email Settings
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = 'kwikschools@gmail.com'
+EMAIL_HOST_PASSWORD = 'fsme syad fqgx cdqp'  # Paste your 16-digit App Password here
+
+# Note: Gmail will often overwrite the "From" address to your Gmail address
+DEFAULT_FROM_EMAIL = 'kwikschools@gmail.com'
+
+
+
+
+# # EMAIL SETTINGS FOR SMTP2GO
+# # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' 
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'   #== USED FOR TESTING
+
+# # 2. SMTP2GO Connection Details
+# EMAIL_HOST = 'mail.smtp2go.com'
+# # EMAIL_HOST = 'mail-eu.smtp2go.com'
+# EMAIL_PORT = 2525  # You can also use 587 or 8025
 # EMAIL_USE_TLS = True
-# # EMAIL_HOST_USER = 'dtechydude@gmail.com'
-# EMAIL_HOST_USER = 'schoollyapp@gmail.com'
-# # EMAIL_HOST_PASSWORD = 'eawtvpskkrujiwgo'
-# EMAIL_HOST_PASSWORD = 'oert qkpu unec rpqq'
+# EMAIL_HOST_USER = 'kwikschools' # This is usually your email or a specific SMTP user
+# EMAIL_HOST_PASSWORD = 'Christ4ALL@1971'
 
+# # 3. This must be a VERIFIED sender in your SMTP2GO dashboard
+# DEFAULT_FROM_EMAIL = 'contact@kwikschools.com'
 
-# WORKING EMAIL SETTINGS
-# 1. Anymail settings
-ANYMAIL = {
-    "SENDGRID_API_KEY": "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",
-}
-EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
+# # WORKING EMAIL SETTINGS
+# # 1. Anymail settings
+# ANYMAIL = {
+#     # "SENDGRID_API_KEY": "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",
+#     "SMTP2GO_API_KEYapi": "879A5AD399F5415C848EA37EF7204F04"
+# }
+# # EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
+# EMAIL_BACKEND = "anymail.backends.smtp2go.EmailBackend"  # for SMTP2GO
 
-# 2. Global Email settings
-# This MUST match the email you verified in SendGrid
-DEFAULT_FROM_EMAIL = "Kwikschools <contact@kwikschools.com>" 
-SERVER_EMAIL = "contact@kwikschools.com" # For error logs
+# # 2. Global Email settings
+# # This MUST match the email you verified in SendGrid
+# DEFAULT_FROM_EMAIL = "Kwikschools <contact@kwikschools.com>" 
+# SERVER_EMAIL = "contact@kwikschools.com" # For error logs
 
 # ============================================================
 
@@ -264,4 +283,21 @@ TINYMCE = {
         "custom_undo_redo_levels": 10,
         "extended_valid_elements": "script[language|type|src|charset],img[*]", # Example: allow script and img attributes
     }
+}
+
+
+
+
+CKEDITOR_5_CONFIGS = {
+    'extends': {
+        'toolbar': [
+            'heading', '|', 'bold', 'italic', 'link', 'underline', 'strikethrough',
+            '|', 'bulletedList', 'numberedList', 'blockQuote',
+            '|', 'insertImage', 'mediaEmbed', 'sourceEditing', '|', 'undo', 'redo'
+        ],
+        'image': {
+            'toolbar': ['imageTextAlternative', '|', 'imageStyle:alignLeft', 'imageStyle:alignCenter', 'imageStyle:alignRight'],
+            'styles': ['alignLeft', 'alignCenter', 'alignRight']
+        },
+    },
 }

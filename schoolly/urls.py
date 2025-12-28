@@ -25,7 +25,8 @@ urlpatterns = [
     path('events/', include('events.urls', namespace='events')),
 
        
-       
+    # Add this line below to fix the NoReverseMatch error
+    path("ckeditor5/", include('django_ckeditor_5.urls'), name="ck_editor_5_upload_file"),
 
 
     # Placeholder for a home page (create templates/home.html)

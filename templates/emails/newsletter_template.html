@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+        <h1 style="color: #007bff; text-align: center;">{{ school_info.name }} Updates</h1>
+        <hr>
+        <div style="padding: 10px 0;">
+            {{ message|safe }}
+        </div>
+        <hr>
+        <footer style="font-size: 12px; color: #777; text-align: center;">
+            <p>You are receiving this because you are a registered member of our school portal.</p>
+            <p>&copy; {% now "Y" %} {{ school_info.name }}</p>
+            <p style="font-size: 12px; color: #999;">
+                Don't want these emails? <a href="https://yourportal.com/unsubscribe/">Unsubscribe here</a>.
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

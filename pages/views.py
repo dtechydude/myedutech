@@ -18,6 +18,10 @@ from django.views.generic import  DetailView
 import csv
 from django.http import HttpResponse
 from datetime import date, timedelta
+from django.core.mail import send_mass_mail, EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from .models import Newsletter
 
 
 # Create your views here.
@@ -357,3 +361,42 @@ def video_guides_view(request):
         'videos': visible_videos,
     }
     return render(request, 'pages/video_guides.html', context)
+
+
+# NEWSLETTER LOGIC
+
+def send_newsletter_task(newsletter_id):
+    newsletter = Newsletter.objects.get(id=newsletter_id)
+    subject = newsletter.subject
+    
+    # 1. Determine the Recipients
+    users = User.objects.filter(is_active=True)
+    
+    if newsletter.target_audience == 'PARENTS':
+        users = users.filter(parent__isnull=False)
+    elif newsletter.target_audience == 'STUDENTS':
+        users = users.filter(student__isnull=False)
+    elif newsletter.target_audience == 'STAFF':
+        users = users.filter(teacher__isnull=False)
+    elif newsletter.target_audience == 'ADMINS':
+        users = users.filter(is_staff=True)
+    
+    recipient_list = users.values_list('email', flat=True)
+
+    # 2. Prepare the Email Template
+    # You can reuse a professional wrapper template
+    html_content = render_to_string('emails/newsletter_template.html', {
+        'message': newsletter.message,
+        'subject': newsletter.subject,
+    })
+    text_content = strip_tags(newsletter.message)
+
+    # 3. Send via Anymail (Efficiently)
+    for email in recipient_list:
+        if email:
+            msg = EmailMultiAlternatives(subject, text_content, None, [email])
+            msg.attach_alternative(html_content, "text/html")
+            msg.send()
+
+    newsletter.sent = True
+    newsletter.save()
