@@ -31,11 +31,11 @@
                 </a>
             </div>
             <div class="text-center mb-4">                
-                {% if school_identity and school_identity.logo %}
-                    <img src="{{ school_identity.logo.url }}" alt="{{ school_identity.school_name }} Logo" class="mb-3" style="height: 60px;">
+                {% if school_info %}
+                    <img src="{{ school_info.logo.url }}" alt="{{ school_info.name }} Logo" class="mb-3" style="height: 60px;">
                 {% endif %}
                 <h3 class="text-3xl fw-bold mb-0">
-                    {% if school_identity %}{{ school_identity.name }}{% else %}Student Enrollment{% endif %}
+                    {% if school_info %}{{ school_info.name }}{% else %}Student Enrollment{% endif %}
                 </h3>
                 <p class="text-muted mt-2">ENROLL NEW STUDENT <br> Step 1 of 2: Create a user account</p>
             </div>

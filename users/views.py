@@ -13,6 +13,9 @@ from curriculum.models import SchoolIdentity
 from django.contrib.auth.views import LoginView
 from django.urls import reverse_lazy
 from students.models import Parent
+
+from django.contrib.auth import views as auth_views
+from django.db.utils import OperationalError, ProgrammingError
 # Create your views here.
 
 # Enrollment of new student
@@ -332,3 +335,22 @@ class CustomLoginView(LoginView):
         
         # If not a parent, use the default redirect URL
         return super().get_success_url()
+    
+
+
+
+class SafePasswordResetView(auth_views.PasswordResetView):
+    template_name = 'users/password_reset.html'
+    email_template_name = 'registration/password_reset_email_text.txt'
+    html_email_template_name = 'registration/password_reset_email.html'
+
+    def get_extra_email_context(self):
+        context = super().get_extra_email_context() or {}
+
+        try:
+            context['school_info'] = SchoolIdentity.objects.first()
+        except (OperationalError, ProgrammingError):
+            # Table does not exist yet (before migration)
+            context['school_info'] = None
+
+        return context
