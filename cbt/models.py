@@ -28,6 +28,9 @@ class Quiz(models.Model):
                 name='unique_quiz_per_exam_context'
             )
         ]
+    class Meta:
+        verbose_name = "Quiz"
+        verbose_name_plural = "Quizzes"
     
     # Keep these as properties so your existing code 
     # (like quiz.exam_name) still works!
@@ -48,7 +51,8 @@ class Quiz(models.Model):
         qs = list(self.question_set.all())
         random.shuffle(qs)
         return qs[:self.number_of_questions]
-    
+
+
 class QuizAttempt(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
