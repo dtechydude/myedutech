@@ -10,7 +10,7 @@ from .views import SafePasswordResetView
 
 # app_name ='users'
 # We fetch the school data once here or inside the view
-school_data = SchoolIdentity.objects.first()
+# school_data = SchoolIdentity.objects.first()
 
 urlpatterns = [
     path('', auth_views.LoginView.as_view(template_name='users/login.html'), name="login"),
@@ -29,9 +29,7 @@ urlpatterns = [
     path('logout/', user_views.user_logout, name='user_logout'),
     path('logout-success/', user_views.logout_success, name='logout_success'),
 
-    
-    # path('password-reset/', auth_views.PasswordResetView.as_view(template_name='users/password_reset.html'), name="password_reset"),
-    # path('password-reset/', auth_views.PasswordResetView.as_view(template_name='users/password_reset.html', success_url = reverse_lazy('password_reset_done')), name="password_reset"),
+   
     # THIS WAS WORKING OOOO JUST DISTURBINT IN MIGRATION
     # path('password-reset/', 
     #  auth_views.PasswordResetView.as_view(
