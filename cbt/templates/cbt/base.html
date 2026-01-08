@@ -33,7 +33,7 @@
                 <div class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}
                         <span class="nav-link text-light">Welcome, {{ user.username }}</span>
-                        <a class="nav-link btn btn-outline-danger btn-sm ms-2" href="{% url 'users:user_logout' %}">Logout</a>
+                        <a class="nav-link btn btn-outline-danger btn-sm ms-2" href="{% url 'user_logout' %}">Logout</a>
                     {% endif %}
                     
                     {# ===== Admin / Staff Back Link ===== #}        
