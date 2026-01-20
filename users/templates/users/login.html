@@ -15,15 +15,23 @@
 	<meta name="description" content="KwikSchools: KwikSchools-School Mgt System" />
 	<meta property="og:title" content="KwikSchools: KwikSchools-School Mgt System" />
 	<meta property="og:description" content="KwikSchools : KwikSchools-School Mgt System" />
-	<!-- <meta property="og:image" content="https://travl.dexignlab.com/xhtml/social-image.png" /> -->
 	<meta name="format-detection" content="telephone=no">
-	
-	<!-- PAGE TITLE HERE -->
+
 	<title>KwikSchools Login</title>
-	
-	<!-- FAVICONS ICON -->
+
 	<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png'%}" style="width: 30px; height: 30px;" />
     <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+
+    <style>
+        .auth-footer {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            font-size: 0.8rem;
+            text-align: center;
+            color: #6e6e6e;
+        }
+    </style>
 </head>
 
 {% block content %}
@@ -43,24 +51,26 @@
                                         <a href="https://kwikschools.com"><img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="" style="width: auto; height: 100px;"></a>
                                         {% endif %}
 									</div>
-                                    <h4 class="text-center mb-4"> <a href="https://kwikschools.com"><small>By: kwikSchools EdTech</small> </a><br>LOGIN TO YOUR ACCOUNT </h4>
+                                    <h4 class="text-center mb-4">LOGIN TO YOUR ACCOUNT </h4>
                                     <form  action ="" method="POST">
                                         {% csrf_token %}
                                         <div class="mb-3">
                                             {{ form|crispy }}
-                                            <!-- <label class="mb-1"><strong>Email</strong></label>
-                                            <input type="email" class="form-control" value="hello@example.com"> -->
                                         </div>
-                                                                              
+
                                         <div class="text-center">
                                             <button type="submit" class="btn btn-primary btn-block">Login To Your Account</button>
                                         </div>
                                     </form>
                                     <div class="new-account mt-3">
-                                        <!-- <p>Back To: <a class="text-primary" href="#">> School Page - </a> -->
+                                        <p class="mb-1 text-center">
                                             <span><a class="text-secondary" href="{% url 'password_reset' %}"> Forgot Password? Reset here</a></span>
                                         </p>
                                     </div>
+
+                                    <footer class="auth-footer">
+                                        <p class="mb-0">POWERED BY: <a href="https://kwikschools.com"> KwikSchools EdTech</a></p>
+                                    </footer>
                                 </div>
                             </div>
                         </div>
@@ -71,10 +81,6 @@
     </div>
     {% endblock content %}
 
-    <!--**********************************
-        Scripts
-    ***********************************-->
-    <!-- Required vendors -->
     {% block script %}
     <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
     <script src="{% static 'pages/js/custom.min.js' %}"></script>
