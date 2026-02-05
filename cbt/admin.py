@@ -46,8 +46,8 @@ class QuestionAdmin(ImportExportModelAdmin):
 @admin.register(Quiz)
 class QuizAdmin(admin.ModelAdmin):
     # Use function names instead of property names to avoid E108 error
-    list_display = ['get_exam_name', 'get_subject_name', 'term', 'number_of_questions', 'time']
-    list_filter = ['term', 'subject']
+    list_display = ['get_exam_name', 'get_subject_name', 'term', 'number_of_questions', 'time', 'standard']
+    list_filter = ['term', 'subject', 'standard']
     search_fields = ['examination__name', 'subject__name']
 
     # Helper function to display linked Examination Name

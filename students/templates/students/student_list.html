@@ -106,9 +106,10 @@
                                                 <th>Class</th>
                                                 <th>Gender</th>
                                                 <th>Mobile</th>
-                                                <th>Adm.Date</th>
+                                                <th>Adm.Date</th>  
+                                                <th>ID Card</th>                                              
+                                                <th>Sch. Bus</th>                                                
                                                 <th>View/Edit</th>
-                                                <th>Bus Enrollment</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -123,17 +124,24 @@
                                                 <!-- <td>M.COM., P.H.D.</td> -->
                                                 <td><strong>{{ s.guardian_phone }}</strong></a></td>
                                                 <td>{{ s.date_admitted }}</td>
+                                                 <td>                                                    
+                                                    <a href="{% url 'students:student_id_card' s.id %}"
+                                                    target="_blank"
+                                                    class="btn btn-sm btn-outline-primary ml-2">
+                                                        ID Card
+                                                    </a>
+                                                </td>                                                
+                                                <td>
+                                                    <a href="{% url 'transport:enroll_or_pay_redirect' student_id=s.USN %}" class="btn btn-sm btn-primary">
+                                                        <i class="fas fa-bus"></i> Enroll
+                                                    </a>
+                                                </td>                                              
                                                 <td>
 													<div class="d-flex">
 														<a href="{% url 'students:student-detail' s.USN %}" class="btn btn-success me-1">View</a>
 														<a href="{% url 'students:student-update' s.USN %}" class="btn btn-warning">Edit</a>
 													</div>
 												</td> 
-                                                <td>
-                                                    <a href="{% url 'transport:enroll_or_pay_redirect' student_id=s.USN %}" class="btn btn-sm btn-primary">
-                                                        <i class="fas fa-bus"></i> Enroll / Pay
-                                                    </a>
-                                                </td>
                                                 {% endfor %}
                                             </tr>
                                            
