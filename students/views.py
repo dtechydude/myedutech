@@ -583,6 +583,23 @@ class StudentIDCardView(LoginRequiredMixin, View):
         }
         return render(request, 'students/test_student_id_card.html', context)
 
+# Bulk Print ID CArd
+class BulkStudentIDCardView(LoginRequiredMixin, View):
+    def get(self, request):
+        class_id = request.GET.get('class')
+        students = Student.objects.select_related('current_class')
+
+        if class_id:
+            students = students.filter(current_class_id=class_id)
+
+        return render(request, 'students/bulk_id_cards.html', {
+            'students': students,
+            'classes': Standard.objects.all(),
+            'selected_class': class_id,
+            'school_identity': SchoolIdentity.objects.first(),
+        })
+
+
 
 # Student Promotion Logic
 def is_authorized_to_promote(user):

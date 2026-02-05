@@ -436,6 +436,7 @@
 							{% if user.is_superuser or user.is_staff %}
 							<li><a href="{% url 'enroll_student' %}">Enroll Student</a></li>
 							<li><a href="{% url 'students:student-list' %}">All CURRENT Students</a></li>
+							<li><a href="{% url 'students:bulk_student_id_cards' %}">Print Bulk Students ID</a></li>
 							<li><a href="{% url 'students:boarder-list' %}">All Boarders</a></li>
 							<li><a href="{% url 'students:student-in-class' %}">No. In Class</a></li>
 							<li><a href="{% url 'students:assign_classgroup_to_students' %}">Assign Students To ClassGroup</a></li>

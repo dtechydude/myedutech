@@ -1,0 +1,254 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ID Card Production - {{ school_identity.name }}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+        body {
+            margin: 0;
+            background: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+        }
+
+        @page {
+            size: A4 portrait;
+            margin: 8mm;
+        }
+
+        /* WEB UI ELEMENTS */
+        .page-header {
+            background: #fff;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+
+        .no-print { max-width: 1000px; margin: 0 auto 30px; }
+
+        /* PRINT GRID */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 86mm);
+            grid-auto-rows: 54mm;
+            gap: 3.5mm 8mm;
+            justify-content: center;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        /* THE ID CARD */
+        .id-card {
+            width: 86mm;
+            height: 54mm;
+            background: #fff;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            break-inside: avoid;
+        }
+
+        /* DYNAMIC PAGE BREAKING (Safe from NoneType Error) */
+        {% if request.GET.per_page == "6" %}
+            .id-card:nth-child(6n) { page-break-after: always; }
+        {% elif request.GET.per_page == "8" %}
+            .id-card:nth-child(8n) { page-break-after: always; }
+        {% elif request.GET.per_page == "12" %}
+            .id-card:nth-child(12n) { page-break-after: always; }
+        {% else %}
+            .id-card:nth-child(10n) { page-break-after: always; }
+        {% endif %}
+
+        /* WATERMARK */
+        .watermark-container {
+            position: absolute;
+            top: 55%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%; display: flex; justify-content: center; align-items: center;
+            pointer-events: none; z-index: 1;
+        }
+        .watermark-logo { width: 100px; height: auto; opacity: 0.15; filter: grayscale(100%); }
+        .watermark-text { transform: rotate(-30deg); font-size: 1.4rem; font-weight: 900; color: rgba(0, 0, 0, 0.08); white-space: nowrap; text-transform: uppercase; }
+
+        /* CARD HEADER */
+        .card-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #fff; padding: 6px 12px; display: flex; align-items: center; gap: 10px;
+            border-bottom: 2px solid #ca8a04; position: relative; z-index: 10;
+        }
+        .card-logo { width: 32px; height: 32px; background: #fff; border-radius: 4px; padding: 2px; object-fit: contain; }
+        .header-content { line-height: 1.1; }
+        .s-name { font-size: 0.65rem; font-weight: 800; display: block; text-transform: uppercase; }
+        .s-addr { font-size: 0.42rem; font-weight: 400; opacity: 0.85; display: block; }
+
+        /* CARD BODY */
+        .card-body { flex: 1; padding: 10px 12px; display: flex; gap: 12px; position: relative; z-index: 10; }
+        .photo-side { width: 70px; flex-shrink: 0; }
+        .student-photo { width: 70px; height: 85px; object-fit: cover; border-radius: 4px; border: 1.5px solid #0f172a; }
+        .content-main { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .student-name { font-size: 0.9rem; font-weight: 800; color: #0f172a; text-transform: uppercase; margin-bottom: 2px; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px; }
+        .details-wrapper { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 4px; }
+        .info-row { display: flex; font-size: 0.65rem; margin-bottom: 2px; }
+        .info-label { width: 45px; font-weight: 700; color: #64748b; }
+        .info-val { font-weight: 600; color: #000; }
+
+        .qr-side { width: 48px; height: 48px; flex-shrink: 0; display: flex; align-items: flex-start; }
+        .qr-wrapper { background: #fff; padding: 1px; border: 1px solid #e2e8f0; }
+
+        .card-footer {
+            background: #0f172a; color: #fff; font-size: 0.44rem; padding: 4px;
+            text-align: center; font-weight: 600; position: relative; z-index: 10;
+        }
+
+        @media print {
+            body { background: #fff; }
+            .no-print, .page-header { display: none !important; }
+            .id-card { box-shadow: none; border: 1px solid #000; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="page-header">
+    <div class="school-info-top">
+        <h4 class="mb-0">{{ school_identity.name|default:"KWIKSCHOOLS" }}</h4>
+    </div>
+    <a href="/dashboard" class="btn btn-sm btn-outline-secondary font-weight-bold">← Back to Dashboard</a>
+</div>
+
+<div class="no-print container">
+    <div class="card p-3 border-0 shadow-sm">
+        <form method="get" class="form-row justify-content-center align-items-center">
+            <div class="col-auto">
+                <label class="mr-2 font-weight-bold text-secondary">Filter Class:</label>
+                <select name="class" class="form-control form-control-sm" style="min-width: 150px;">
+                    <option value="">All Classes</option>
+                    {% for c in classes %}
+                        <option value="{{ c.id }}" {% if request.GET.class == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-auto">
+                <label class="mr-2 font-weight-bold text-secondary">Cards Per Page:</label>
+                <select name="per_page" class="form-control form-control-sm">
+                    <option value="10" {% if request.GET.per_page == "10" or not request.GET.per_page %}selected{% endif %}>10 Cards</option>
+                    <option value="8" {% if request.GET.per_page == "8" %}selected{% endif %}>8 Cards</option>
+                    <option value="6" {% if request.GET.per_page == "6" %}selected{% endif %}>6 Cards</option>
+                    <option value="12" {% if request.GET.per_page == "12" %}selected{% endif %}>12 Cards</option>
+                </select>
+            </div>
+
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary btn-sm px-4">Filter</button>
+                <button type="button" onclick="window.print()" class="btn btn-dark btn-sm px-4 ml-2">Print Now</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="cards-grid">
+{% for student in students %}
+    <div class="id-card">
+        
+        <div class="watermark-container">
+            {% if school_identity.logo %}
+                <img src="{{ school_identity.logo.url }}" class="watermark-logo">
+            {% else %}
+                <div class="watermark-text">{{ school_identity.name }}</div>
+            {% endif %}
+        </div>
+
+        <div class="card-header">
+            {% if school_identity.logo %}
+                <img src="{{ school_info.logo.url }}" class="card-logo">
+            {% else %}
+                <div class="card-logo bg-light"></div>
+            {% endif %}
+            <div class="header-content">
+                <span class="s-name">{{ school_info.name|default:"SCHOOL NAME" }}</span>
+                <span class="s-addr">{{ school_info.address_line_1|default:"School Address Line, City" }}, 
+                    {{ school_info.address_line_2|default:"School Address Line, City" }}
+
+                </span>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="photo-side">
+                {% if student.user.profile.image %}
+                    <img src="{{ student.user.profile.image.url }}" class="student-photo">
+                {% else %}
+                    <div class="student-photo bg-light d-flex align-items-center justify-content-center">
+                        <span style="font-size:0.5rem; color:#94a3b8;">PHOTO</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="content-main">
+                <div class="student-name">{{ student.get_full_name }}</div>
+                
+                <div class="details-wrapper">
+                    <div class="info-details">
+                        <div class="info-row"><span class="info-label">USN:</span><span class="info-val">{{ student.USN }}</span></div>
+                        <div class="info-row"><span class="info-label">CLASS:</span><span class="info-val">{{ student.current_class.name }}</span></div>
+                        <div class="info-row"><span class="info-label">SEX:</span><span class="info-val">{{ student.gender }}</span></div>
+                    </div>
+
+                    <div class="qr-side">
+                        <div class="qr-wrapper">
+                            <div class="qr-target" data-qr="ID:{{ student.USN }}|{{ student.get_full_name }}|{{ school_identity.name }}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            VALID FOR CURRENT SESSION • PROPERTY OF {{ school_identity.name|default:"THE SCHOOL" }}
+        </div>
+    </div>
+{% endfor %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const targets = document.querySelectorAll('.qr-target');
+    
+    // Batch process QR codes to ensure they appear on every page during print
+    let index = 0;
+    function generateBatch() {
+        const limit = Math.min(index + 10, targets.length);
+        for (; index < limit; index++) {
+            const el = targets[index];
+            new QRCode(el, {
+                text: el.getAttribute('data-qr'),
+                width: 46,
+                height: 46,
+                colorDark : "#0f172a",
+                colorLight : "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+        if (index < targets.length) {
+            setTimeout(generateBatch, 50);
+        }
+    }
+    generateBatch();
+});
+</script>
+
+</body>
+</html>

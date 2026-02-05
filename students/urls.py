@@ -31,6 +31,8 @@ urlpatterns = [
     path('upcoming_birthdays/', students_views.upcoming_birthdays_view, name='upcoming_birthdays'),
 
     path('student/id-card/<int:student_id>/', students_views.StudentIDCardView.as_view(), name='student_id_card'),
+    #Bulk Print ID Card
+    path('students/id-cards/bulk/', students_views.BulkStudentIDCardView.as_view(), name='bulk_student_id_cards'),
     path('promote-students/', students_views.promote_students_view, name='promote_students'),
     path('promote-individual-students/', students_views.promote_individual_students_view, name='promote_individual_students'),
     path('assign-classgroup-to-students/', students_views.assign_classgroup_to_students_view, name='assign_classgroup_to_students'),
