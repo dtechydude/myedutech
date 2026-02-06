@@ -4,97 +4,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Select Score Entry Parameters</title>
-    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+    <title>Score Entry Selection</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        body { background-color: #f4f6f9; min-height: 100vh; display: flex; flex-direction: column; }
-        .container { max-width: 700px; flex-grow: 1; margin-top: 50px; }
-        .card { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
-        .btn-entry { background-color: #ffc107; border-color: #ffc107; color: #343a40; font-weight: bold; }
-        footer { background-color: #343a44; color: #ccc; padding: 15px 0; margin-top: 30px; }
+        body { background-color: #f8f9fc; min-height: 100vh; font-family: 'Nunito', sans-serif; }
+        .container { max-width: 600px; margin-top: 50px; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15); }
+        .card-header { background-color: #4e73df; color: white; border-top-left-radius: 15px; border-top-right-radius: 15px; font-weight: bold; }
+        .form-control-lg { border-radius: 10px; font-size: 1rem; }
+        .btn-proceed { background-color: #1cc88a; border: none; color: white; font-weight: 700; padding: 12px; border-radius: 10px; width: 100%; transition: all 0.3s; }
+        .btn-proceed:hover { background-color: #17a673; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h4 text-primary font-weight-bold">
-            {% if school_info %}{{ school_info.name }}{% else %}Score Entry Portal{% endif %}
-        </h1>
-        <a href="/dashboard/" class="btn btn-outline-secondary btn-sm shadow-sm">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        <h4 class="text-dark font-weight-bold mb-0">Score Entry Portal</h4>
+        <a href="{% url 'pages:portal-home' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-home"></i> Home
         </a>
     </div>
 
-    <div class="card shadow-lg border-0">
-        <div class="card-header bg-primary text-white text-center">
-            <h5 class="mb-0"><i class="fas fa-keyboard mr-2"></i> Select Parameters for Score Entry</h5>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card">
+        <div class="card-header text-center py-3">
+            <i class="fas fa-filter mr-2"></i> Select Entry Parameters
         </div>
-        <div class="card-body">
-            
-            <p class="text-muted text-center mb-4">You are entering scores for **{{ assigned_class.name }}**.</p>
-
-            <form method="get" id="score-entry-form">
-                <input type="hidden" name="class_id" value="{{ assigned_class.id }}">
-
-                <div class="form-group">
-                    <label for="id_subject"><i class="fas fa-book-open mr-2 text-info"></i> Subject:</label>
-                    <select id="id_subject" name="subject_id" class="form-control form-control-lg" required>
-                        <option value="">-- Choose Subject --</option>
-                        {% for subject in available_subjects %}
-                            <option value="{{ subject.id }}">{{ subject.name }}</option>
+        <div class="card-body p-4">
+            <form id="selection-form">
+                <div class="form-group mb-4">
+                    <label class="text-xs font-weight-bold text-primary text-uppercase mb-1">Assigned Class</label>
+                    <select id="id_class" class="form-control form-control-lg" required>
+                        <option value="">-- Select Class --</option>
+                        {% for std in available_classes %}
+                            <option value="{{ std.id }}">{{ std.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label for="id_term"><i class="fas fa-calendar-alt mr-2 text-success"></i> Term:</label>
-                    <select id="id_term" name="term_id" class="form-control form-control-lg" required>
-                        <option value="">-- Choose Term --</option>
+                <div class="form-group mb-4">
+                    <label class="text-xs font-weight-bold text-primary text-uppercase mb-1">Assigned Subject</label>
+                    <select id="id_subject" class="form-control form-control-lg" required>
+                        <option value="">-- Select Subject --</option>
+                        {% for sub in available_subjects %}
+                            <option value="{{ sub.id }}">{{ sub.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label class="text-xs font-weight-bold text-primary text-uppercase mb-1">Academic Term</label>
+                    <select id="id_term" class="form-control form-control-lg" required>
                         {% for term in available_terms %}
-                            <option value="{{ term.id }}">{{ term.name }} ({{ term.session.name }})</option>
+                            <option value="{{ term.id }}" {% if term.is_current %}selected{% endif %}>
+                                {{ term.name }} ({{ term.session.name }})
+                            </option>
                         {% endfor %}
                     </select>
+                    {% if not available_terms %}
+                        <small class="text-danger">No active term found.</small>
+                    {% endif %}
                 </div>
-                
-                <div class="mt-4">
-                    <button type="button" class="btn btn-entry btn-lg btn-block shadow" onclick="redirectToScoreEntry()">
-                        <i class="fas fa-arrow-right"></i> Proceed to Entry Form
-                    </button>
-                </div>
+
+                <button type="button" class="btn btn-proceed mt-3" onclick="handleNavigation()">
+                    Proceed to Score Sheet <i class="fas fa-chevron-right ml-2"></i>
+                </button>
             </form>
-            
         </div>
     </div>
 </div>
 
-<footer class="text-center">
-    <div class="container">
-        <p class="mb-0 small">&copy; {% now "Y" %} {{ school_info.name|default:"School Management System" }} | All Rights Reserved.</p>
-    </div>
-</footer>
-
 <script>
-    function redirectToScoreEntry() {
+    function handleNavigation() {
+        const classId = document.getElementById('id_class').value;
         const subjectId = document.getElementById('id_subject').value;
         const termId = document.getElementById('id_term').value;
-        const classId = document.querySelector('input[name="class_id"]').value;
-        
-        if (subjectId && termId) {
-            // Dynamic URL construction using the three required parameters
-            const url = "{% url 'results:midterm_score_entry' class_id=0 subject_id=0 term_id=0 %}".replace('/0/0/0/', `/${classId}/${subjectId}/${termId}/`);
-            window.location.href = url;
+
+        if (classId && subjectId && termId) {
+            // This builds the URL based on your results:midterm_score_entry path
+            // Format: /results/midterm/entry/class_id/subject_id/term_id/
+            let entryUrl = "{% url 'results:midterm_score_entry' class_id=0 subject_id=0 term_id=0 %}";
+            
+            // Cleanly replace the placeholder '0/0/0' with actual IDs
+            entryUrl = entryUrl.replace('0/0/0', `${classId}/${subjectId}/${termId}`);
+            
+            window.location.href = entryUrl;
         } else {
-            alert('Please select both a Subject and a Term to continue.');
+            alert("Please ensure all parameters are selected before proceeding.");
         }
     }
 </script>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 </body>

@@ -1404,59 +1404,188 @@ class ResultPermissionGatekeeperView(View):
 
 
 # MID-TERM RESULTS VIEW
+# class MidTermScoreEntryView(LoginRequiredMixin, View):
+#     """
+#     Allows the assigned class teacher or Admin to enter/update Mid-Term Scores
+#     for all students in a specific class and subject for a term.
+#     """
+#     template_name = 'results/midterm_score_entry.html'
+
+#     def dispatch(self, request, *args, **kwargs):
+#         # 1. Permission Check: Only Teachers/Admins/Staff can access this
+#         if not (hasattr(request.user, 'teacher') or request.user.is_staff):
+#             messages.error(request, "You do not have permission to enter scores.")
+#             return redirect('pages:portal-home')
+#         return super().dispatch(request, *args, **kwargs)
+
+#     def get_formset_class(self, **kwargs):
+#         # Ensure MidTermScoreForm is the custom form designed to return None for empty input
+#         return modelformset_factory(
+#             MidTermScore,
+#             form=MidTermScoreForm, # Use the custom form
+#             extra=0,
+#             fields=('exam_total_score',)
+#         )
+
+#     def get(self, request, class_id, subject_id, term_id):
+#         # Object retrieval (Standard, Subject, Term)
+#         assigned_class = get_object_or_404(Standard, id=class_id)
+#         subject = get_object_or_404(Subject, id=subject_id)
+#         term = get_object_or_404(Term, id=term_id)
+
+#         # 2. Teacher-specific Authorization Check (Bypassed if user is staff/superuser)
+#         if hasattr(request.user, 'teacher') and not request.user.is_staff:
+#             teacher = request.user.teacher
+
+#             # Check if the teacher is assigned as Form Teacher to this class
+#             is_form_teacher = assigned_class in teacher.form_class.all()
+#             # Check if the teacher teaches this subject
+#             teaches_subject = subject in teacher.subjects_taught.all()
+
+#             if not (is_form_teacher and teaches_subject):
+#                 messages.error(request, f"You are not authorized to enter scores for {subject.name} in {assigned_class.name}.")
+#                 return redirect('results:teacher_dashboard')
+
+#         # Get students in the class
+#         students = Student.objects.filter(current_class=assigned_class).order_by('last_name')
+
+#         # --- Placeholder Creation Logic ---
+#         existing_student_ids = MidTermScore.objects.filter(student__in=students, subject=subject, term=term).values_list('student_id', flat=True)
+#         for student in students:
+#             if student.id not in existing_student_ids:
+#                 # CRITICAL: exam_total_score MUST be created as None, not 0, to indicate 'not taken'
+#                 MidTermScore.objects.create(student=student, subject=subject, term=term, exam_total_score=None)
+
+#         # Get the scores (including the newly created placeholders)
+#         queryset = MidTermScore.objects.filter(
+#             student__in=students,
+#             subject=subject,
+#             term=term
+#         ).select_related('student').order_by('student__last_name')
+
+#         MidTermScoreFormSet = self.get_formset_class()
+#         formset = MidTermScoreFormSet(queryset=queryset)
+
+#         context = {
+#             'formset': formset,
+#             'assigned_class': assigned_class,
+#             'subject': subject,
+#             'term': term,
+#             'students': students,
+#         }
+#         return render(request, self.template_name, context)
+
+#     def post(self, request, class_id, subject_id, term_id):
+#         # Object retrieval (Standard, Subject, Term)
+#         assigned_class = get_object_or_404(Standard, id=class_id)
+#         subject = get_object_or_404(Subject, id=subject_id)
+#         term = get_object_or_404(Term, id=term_id)
+
+#         # Re-run authorization check (omitted for brevity, assuming models are accessible)
+
+#         students = Student.objects.filter(current_class=assigned_class)
+#         queryset = MidTermScore.objects.filter(
+#             student__in=students,
+#             subject=subject,
+#             term=term
+#         ).select_related('student').order_by('student__last_name')
+
+#         MidTermScoreFormSet = self.get_formset_class()
+#         formset = MidTermScoreFormSet(request.POST, queryset=queryset)
+
+#         if formset.is_valid():
+
+#             instances_to_save = []
+#             instances_to_delete = []
+
+#             for form in formset:
+#                 if form.has_changed():
+#                     instance = form.save(commit=False)
+#                     score_value = form.cleaned_data.get('exam_total_score')
+
+#                     # --- CRITICAL FIX: Custom save logic to delete blank entries ---
+#                     if score_value is None:
+#                         # If the score is cleared (None) and a record exists (instance.pk), mark for deletion.
+#                         if instance.pk:
+#                             instances_to_delete.append(instance)
+#                         # If it's a new instance with a None score, we ignore it (no save needed).
+#                     else:
+#                         # Score is 0 or positive, so we save/update it.
+#                         instances_to_save.append(instance)
+
+#             # 1. Save valid, non-empty instances (including those with score 0)
+#             for instance in instances_to_save:
+#                 instance.save()
+
+#             # 2. Delete instances where the score was explicitly cleared (treat as 'not taken')
+#             for instance in instances_to_delete:
+#                 instance.delete()
+
+#             # --- NEW SUCCESS REDIRECT LOGIC ---
+#             # Redirect to the dedicated success page instead of back to entry page
+#             return redirect('results:midterm_score_success',
+#                             class_id=class_id,
+#                             subject_id=subject_id,
+#                             term_id=term_id)
+#             # ----------------------------------
+
+#         context = {
+#             'formset': formset,
+#             'assigned_class': assigned_class,
+#             'subject': subject,
+#             'term': term,
+#             'students': students.order_by('last_name'),
+#         }
+#         messages.error(request, "There was an error in the score entry. Please check the scores entered.")
+#         return render(request, self.template_name, context)
+
 class MidTermScoreEntryView(LoginRequiredMixin, View):
-    """
-    Allows the assigned class teacher or Admin to enter/update Mid-Term Scores
-    for all students in a specific class and subject for a term.
-    """
     template_name = 'results/midterm_score_entry.html'
 
     def dispatch(self, request, *args, **kwargs):
-        # 1. Permission Check: Only Teachers/Admins/Staff can access this
         if not (hasattr(request.user, 'teacher') or request.user.is_staff):
             messages.error(request, "You do not have permission to enter scores.")
             return redirect('pages:portal-home')
         return super().dispatch(request, *args, **kwargs)
 
     def get_formset_class(self, **kwargs):
-        # Ensure MidTermScoreForm is the custom form designed to return None for empty input
         return modelformset_factory(
             MidTermScore,
-            form=MidTermScoreForm, # Use the custom form
+            form=MidTermScoreForm,
             extra=0,
             fields=('exam_total_score',)
         )
 
     def get(self, request, class_id, subject_id, term_id):
-        # Object retrieval (Standard, Subject, Term)
         assigned_class = get_object_or_404(Standard, id=class_id)
         subject = get_object_or_404(Subject, id=subject_id)
         term = get_object_or_404(Term, id=term_id)
 
-        # 2. Teacher-specific Authorization Check (Bypassed if user is staff/superuser)
+        # --- UPDATED AUTHORIZATION LOGIC ---
         if hasattr(request.user, 'teacher') and not request.user.is_staff:
             teacher = request.user.teacher
 
-            # Check if the teacher is assigned as Form Teacher to this class
-            is_form_teacher = assigned_class in teacher.form_class.all()
-            # Check if the teacher teaches this subject
+            # Check if the teacher is assigned to this specific Class
+            is_assigned_to_class = assigned_class in teacher.standards_assigned.all()
+            # Check if the teacher is assigned to this specific Subject
             teaches_subject = subject in teacher.subjects_taught.all()
 
-            if not (is_form_teacher and teaches_subject):
+            # Logic: Teacher must be assigned to BOTH the class and the subject
+            if not (is_assigned_to_class and teaches_subject):
                 messages.error(request, f"You are not authorized to enter scores for {subject.name} in {assigned_class.name}.")
                 return redirect('results:teacher_dashboard')
+        # ------------------------------------
 
-        # Get students in the class
         students = Student.objects.filter(current_class=assigned_class).order_by('last_name')
 
-        # --- Placeholder Creation Logic ---
-        existing_student_ids = MidTermScore.objects.filter(student__in=students, subject=subject, term=term).values_list('student_id', flat=True)
+        existing_student_ids = MidTermScore.objects.filter(
+            student__in=students, subject=subject, term=term
+        ).values_list('student_id', flat=True)
+
         for student in students:
             if student.id not in existing_student_ids:
-                # CRITICAL: exam_total_score MUST be created as None, not 0, to indicate 'not taken'
                 MidTermScore.objects.create(student=student, subject=subject, term=term, exam_total_score=None)
 
-        # Get the scores (including the newly created placeholders)
         queryset = MidTermScore.objects.filter(
             student__in=students,
             subject=subject,
@@ -1476,12 +1605,17 @@ class MidTermScoreEntryView(LoginRequiredMixin, View):
         return render(request, self.template_name, context)
 
     def post(self, request, class_id, subject_id, term_id):
-        # Object retrieval (Standard, Subject, Term)
         assigned_class = get_object_or_404(Standard, id=class_id)
         subject = get_object_or_404(Subject, id=subject_id)
         term = get_object_or_404(Term, id=term_id)
 
-        # Re-run authorization check (omitted for brevity, assuming models are accessible)
+        # --- RE-RUN UPDATED AUTHORIZATION LOGIC IN POST ---
+        if hasattr(request.user, 'teacher') and not request.user.is_staff:
+            teacher = request.user.teacher
+            if not (assigned_class in teacher.standards_assigned.all() and subject in teacher.subjects_taught.all()):
+                messages.error(request, "Unauthorized action.")
+                return redirect('results:teacher_dashboard')
+        # --------------------------------------------------
 
         students = Student.objects.filter(current_class=assigned_class)
         queryset = MidTermScore.objects.filter(
@@ -1494,7 +1628,6 @@ class MidTermScoreEntryView(LoginRequiredMixin, View):
         formset = MidTermScoreFormSet(request.POST, queryset=queryset)
 
         if formset.is_valid():
-
             instances_to_save = []
             instances_to_delete = []
 
@@ -1503,31 +1636,22 @@ class MidTermScoreEntryView(LoginRequiredMixin, View):
                     instance = form.save(commit=False)
                     score_value = form.cleaned_data.get('exam_total_score')
 
-                    # --- CRITICAL FIX: Custom save logic to delete blank entries ---
                     if score_value is None:
-                        # If the score is cleared (None) and a record exists (instance.pk), mark for deletion.
                         if instance.pk:
                             instances_to_delete.append(instance)
-                        # If it's a new instance with a None score, we ignore it (no save needed).
                     else:
-                        # Score is 0 or positive, so we save/update it.
                         instances_to_save.append(instance)
 
-            # 1. Save valid, non-empty instances (including those with score 0)
             for instance in instances_to_save:
                 instance.save()
 
-            # 2. Delete instances where the score was explicitly cleared (treat as 'not taken')
             for instance in instances_to_delete:
                 instance.delete()
 
-            # --- NEW SUCCESS REDIRECT LOGIC ---
-            # Redirect to the dedicated success page instead of back to entry page
             return redirect('results:midterm_score_success',
                             class_id=class_id,
                             subject_id=subject_id,
                             term_id=term_id)
-            # ----------------------------------
 
         context = {
             'formset': formset,
@@ -1538,7 +1662,6 @@ class MidTermScoreEntryView(LoginRequiredMixin, View):
         }
         messages.error(request, "There was an error in the score entry. Please check the scores entered.")
         return render(request, self.template_name, context)
-
 
 
 
@@ -1714,59 +1837,46 @@ class StudentMidTermListView(LoginRequiredMixin, View):
 
 class MidTermScoreSelectionView(LoginRequiredMixin, View):
     """
-    Provides a form for the teacher to select the Subject and Term
-    before navigating to the MidTermScoreEntryView, restricted to their
-    assigned form class and the current term.
+    Allows teachers to select from their assigned classes and subjects
+    to enter mid-term scores.
     """
     template_name = 'results/midterm_score_selection.html'
 
     def get(self, request):
         user = request.user
 
-        # 1. Authorization Check (Must be a Teacher or Staff)
+        # 1. Authorization Check
         if not (hasattr(user, 'teacher') or user.is_staff):
             messages.error(request, "Access denied. You must be a teacher or administrator.")
             return redirect('pages:portal-home')
 
-        teacher = user.teacher
+        # Staff/Admins see everything; Teachers see only their assignments
+        if user.is_staff:
+            available_classes = Standard.objects.all().order_by('name')
+            available_subjects = Subject.objects.all().order_by('name')
+        else:
+            teacher = user.teacher
+            # Get all classes assigned to this teacher
+            available_classes = teacher.standards_assigned.all().order_by('name')
+            # Get all subjects assigned to this teacher
+            available_subjects = teacher.subjects_taught.all().order_by('name')
 
-        # 2. Get Assigned Class (Using the confirmed reverse relationship)
+        # 2. Safety Check: Ensure they have assignments
+        if not available_classes.exists() or not available_subjects.exists():
+            messages.warning(request, "You do not have any classes or subjects assigned to you for score entry.")
+            return redirect('pages:portal-home')
+
+        # 3. Get the Current Term
         try:
-            # teacher.form_class.get() fetches the Standard object linked as the form teacher
-            assigned_class = teacher.form_class.get()
-        except ObjectDoesNotExist:
-            assigned_class = None
-        except Exception:
-            # Fallback for errors like multiple classes assigned (shouldn't happen)
-            assigned_class = teacher.form_class.first()
-
-        if not assigned_class:
-            messages.warning(request, "You are not assigned as a Form Teacher to any class and cannot enter scores.")
-            return redirect('pages:portal-home') # Or another appropriate landing page
-
-        # 3. Get Available Subjects
-        # Filters to subjects the teacher is assigned to teach.
-        available_subjects = teacher.subjects_taught.all().order_by('name')
-
-        # 4. FIX: Get ONLY the Current Term
-        try:
-            # This is the line that fetches only the current term
             available_terms = [Term.objects.get(is_current=True)]
-        except ObjectDoesNotExist:
-            messages.error(request, "Error: No current active academic term is configured.")
+        except Term.DoesNotExist:
+            messages.error(request, "No active academic term found. Please contact the administrator.")
             available_terms = []
 
-        # Check if any subjects are available to prevent empty dropdowns
-        if not available_subjects.exists():
-             messages.warning(request, f"You are assigned as the Form Teacher for {assigned_class.name}, but are not assigned to teach any subjects. Cannot enter scores.")
-             return redirect('pages:portal-home')
-
-
         context = {
-            'assigned_class': assigned_class,
+            'available_classes': available_classes,
             'available_subjects': available_subjects,
             'available_terms': available_terms,
-            # Pass school_info context if you have a context processor, otherwise fetch it manually if needed.
         }
 
         return render(request, self.template_name, context)
