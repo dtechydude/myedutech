@@ -475,7 +475,9 @@
 						</a>
 						<ul aria-expanded="false">
 							{% if user.is_superuser or user.is_staff %}
-							<li><a href="/admin/attendance/attendance/" target="_blank">Mark Attendance</a></li>
+							<li><a href="/admin/attendance/attendance/" target="_blank">Take Attendance-MANUAL</a></li>
+							<li><a href="{% url 'attendance:attendance_scanner' %}"><i class="fas fa-qrcode"></i><span>Take Attendance-SCANNING</span></a>
+							</li>
 							{% elif user.teacher %}
 							<li><a href="{% url 'attendance:take_daily_attendance' %}">Mark Attendance</a></li>
 							{% endif %}							

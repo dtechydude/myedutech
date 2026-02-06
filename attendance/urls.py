@@ -27,4 +27,10 @@ urlpatterns = [
     path('my/detail/', views.self_attendance_detail, name='self-attendance-detail'),
 
     # path('attendance-success/', views.attendance_success, name='attendance_success'), # If you still want a separate success page
+
+  # ATTENDANCE SCANNING
+    path('scanner/', views.attendance_scanner_view, name='attendance_scanner'),
+    path('scan/<str:usn>/', views.scan_attendance_ajax, name='scan_attendance_ajax'),
+
+
 ]

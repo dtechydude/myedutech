@@ -107,6 +107,7 @@
                                                 <th>Phone</th>
                                                 <th>Email</th>
                                                 <th>Emp.Date</th>
+                                                <th>ID Card</th>
                                                 <th>Action</th>                                               
                                             </tr>
                                         </thead>
@@ -122,6 +123,13 @@
                                                 <td>{{ ts.user.email }}</td>
                                                 <td><a href="javascript:void(0);"><strong>{{ ts.date_employed | date:"d/m/Y" }}</strong></a></td>
                                                 <!-- <td><a href="javascript:void(0);"><strong>info@example.com</strong></a></td> -->
+                                                 <td>                                                    
+                                                    <a href="{% url 'staff:teacher_id_card' ts.id %}"
+                                                    target="_blank"
+                                                    class="btn btn-sm btn-outline-primary ml-2">
+                                                        ID Card
+                                                    </a>
+                                                </td>      
                                                 <td>                                              
                                                         <div class="d-flex">
                                                             <a href="{% url 'staff:teacher-detail' ts.id %}" class="btn btn-success me-1">View</a>

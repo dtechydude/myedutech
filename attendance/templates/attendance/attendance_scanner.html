@@ -1,0 +1,177 @@
+{% load static %}
+<script src="https://unpkg.com/html5-qrcode"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+
+<style>
+    :root { --primary-bg: #f4f7fe; --card-bg: #ffffff; }
+    body { 
+        background-color: var(--primary-bg); 
+        font-family: sans-serif; 
+        overflow: hidden; /* Prevent accidental scrolling */
+        height: 100vh;
+    }
+
+    /* Fixed Top Header */
+    .app-header { 
+        background: #1e293b; 
+        color: white; 
+        padding: 15px; 
+        text-align: center;
+        border-bottom-left-radius: 20px;
+        border-bottom-right-radius: 20px;
+    }
+
+    /* RESULT MESSAGE AT THE TOP (Overlays the header) */
+    #result-message { 
+        position: fixed; 
+        top: 10px; 
+        left: 50%; 
+        transform: translateX(-50%); 
+        width: 95%; 
+        max-width: 450px; 
+        z-index: 9999; 
+        border-radius: 12px; 
+        padding: 15px; 
+        font-weight: 700; 
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+        from { top: -60px; opacity: 0; }
+        to { top: 10px; opacity: 1; }
+    }
+
+    .main-content {
+        padding: 10px;
+        max-width: 500px;
+        margin: auto;
+    }
+
+    .stat-overlay-card { 
+        background: var(--card-bg); 
+        border-radius: 15px; 
+        padding: 12px; 
+        display: flex; 
+        justify-content: space-around; 
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+        margin-bottom: 10px; 
+    }
+
+    .stat-value { font-size: 1.5rem; font-weight: 800; display: block; line-height: 1; }
+    .stat-label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; }
+    
+    /* Scanner Container - Adjusted for vertical height */
+    .scanner-wrapper { 
+        background: #000; 
+        border-radius: 20px; 
+        overflow: hidden; 
+        position: relative; 
+        border: 3px solid #fff; 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    #reader { width: 100% !important; border: none !important; }
+    
+    #scan-log { 
+        background: #e2e8f0; 
+        display: inline-block; 
+        padding: 4px 12px; 
+        border-radius: 15px; 
+        font-size: 0.75rem; 
+        margin-top: 10px; 
+    }
+</style>
+
+<div id="result-message" class="alert d-none"></div>
+
+<div class="app-header">
+    <h6 class="mb-0 font-weight-bold">Attendance Scanner</h6>
+    <small class="opacity-75">{% now "D, d M" %}</small>
+</div>
+
+<div class="main-content">
+    <div class="stat-overlay-card">
+        <div class="text-center">
+            <span id="count-present" class="stat-value text-success">{{ present_count }}</span>
+            <span class="stat-label">Present</span>
+        </div>
+        <div style="width: 1px; height: 30px; background: #eee;"></div>
+        <div class="text-center">
+            <span class="stat-value text-dark">{{ total_students }}</span>
+            <span class="stat-label">Total</span>
+        </div>
+    </div>
+
+    <div class="scanner-wrapper">
+        <div id="reader"></div>
+    </div>
+
+    <div class="text-center">
+        <div id="scan-log">Detecting Camera...</div>
+    </div>
+</div>
+
+<script>
+    let isProcessing = false;
+    const html5QrCode = new Html5Qrcode("reader");
+    const rawUrl = "{% url 'attendance:scan_attendance_ajax' '00000' %}";
+
+    function onScanSuccess(decodedText) {
+        if (isProcessing) return;
+        isProcessing = true;
+
+        document.getElementById('scan-log').innerText = "Processing...";
+        if (navigator.vibrate) navigator.vibrate(80);
+
+        let usn = decodedText.trim().split('-')[0].trim(); 
+        const finalUrl = rawUrl.replace('00000', usn);
+
+        fetch(finalUrl)
+        .then(res => res.json())
+        .then(data => {
+            const msg = document.getElementById('result-message');
+            // Reset classes and set success/danger
+            msg.className = `alert d-block alert-${data.status === 'success' ? 'success' : 'danger'}`;
+            msg.innerText = data.message;
+            msg.classList.remove('d-none');
+
+            if (data.status === 'success') {
+                document.getElementById('count-present').innerText = data.present_count;
+            }
+
+            // Hide message after 2.5 seconds
+            setTimeout(() => {
+                msg.classList.add('d-none');
+                isProcessing = false; 
+                document.getElementById('scan-log').innerText = "Ready for next scan";
+            }, 2500);
+        })
+        .catch(() => {
+            isProcessing = false;
+            document.getElementById('scan-log').innerText = "Network Error";
+        });
+    }
+
+    // High compatibility config
+    const config = { 
+        fps: 10, 
+        qrbox: { width: 220, height: 220 }, 
+        aspectRatio: 1.0 
+    };
+
+    function startScanner() {
+        html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
+        .then(() => { document.getElementById('scan-log').innerText = "Back Camera Active"; })
+        .catch(() => {
+            html5QrCode.start({ facingMode: "user" }, config, onScanSuccess)
+            .then(() => { document.getElementById('scan-log').innerText = "Standard Camera Active"; })
+            .catch(() => { document.getElementById('scan-log').innerText = "Camera Error"; });
+        });
+    }
+
+    startScanner();
+</script>
+

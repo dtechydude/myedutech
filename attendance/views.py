@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.forms import modelformset_factory
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import transaction
 from django.utils import timezone
 from django.contrib import messages # Import messages for error handling
@@ -13,6 +13,9 @@ from decimal import Decimal
 from .forms import AttendanceDateForm, AttendanceForm, AttendanceReportForm # Import new forms
 import json
 from django.http import HttpResponseForbidden, Http404
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import logging
 
 
 
@@ -501,3 +504,57 @@ def self_attendance_detail(request):
         context['error'] = f"An unexpected error occurred: {e}"
     
     return render(request, 'attendance/student_attendance_detail.html', context)
+
+
+# Scan Attendance ID
+
+@login_required
+def attendance_scanner_view(request):
+    today = timezone.now().date()
+    total_students = Student.objects.count()
+    present_count = Attendance.objects.filter(date=today, present=True).count()
+    
+    return render(request, 'attendance/attendance_scanner.html', {
+        'total_students': total_students,
+        'present_count': present_count,
+    })
+
+
+
+@csrf_exempt
+@login_required
+def scan_attendance_ajax(request, usn):
+    # Clean the USN (remove spaces and convert to uppercase to match DB)
+    clean_usn = usn.strip()
+    
+    try:
+        # We use __iexact to ignore case (e.g., 'student036' vs 'STUDENT036')
+        # student = Student.objects.get(USN__iexact=clean_usn)
+        student = Student.objects.get(USN__iexact=usn.strip())
+        today = timezone.now().date()
+
+        attendance, created = Attendance.objects.get_or_create(
+            student=student,
+            date=today,
+            defaults={'present': True}
+        )
+
+        if not created and not attendance.present:
+            attendance.present = True
+            attendance.save()
+
+        # Get updated count for the UI
+        current_present = Attendance.objects.filter(date=today, present=True).count()
+
+        return JsonResponse({
+            'status': 'success', 
+            'message': f'{student.get_full_name()} marked Present',
+            'present_count': current_present
+        })
+        
+    except Student.DoesNotExist:
+        # This tells us exactly what USN the server tried to find
+        return JsonResponse({
+            'status': 'error', 
+            'message': f'ID "{clean_usn}" not found in database.'
+        }, status=200) # Use 200 so our JS handles the error message nicely
