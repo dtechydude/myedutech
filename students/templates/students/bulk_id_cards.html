@@ -23,7 +23,7 @@
             margin: 8mm;
         }
 
-        /* WEB UI ELEMENTS */
+        /* ================= WEB HEADER ================= */
         .page-header {
             background: #fff;
             padding: 1rem 2rem;
@@ -34,9 +34,12 @@
             margin-bottom: 20px;
         }
 
-        .no-print { max-width: 1000px; margin: 0 auto 30px; }
+        .no-print {
+            max-width: 1000px;
+            margin: 0 auto 30px;
+        }
 
-        /* PRINT GRID */
+        /* ================= CARD GRID ================= */
         .cards-grid {
             display: grid;
             grid-template-columns: repeat(2, 86mm);
@@ -47,7 +50,7 @@
             print-color-adjust: exact !important;
         }
 
-        /* THE ID CARD */
+        /* ================= ID CARD ================= */
         .id-card {
             width: 86mm;
             height: 54mm;
@@ -61,7 +64,7 @@
             break-inside: avoid;
         }
 
-        /* DYNAMIC PAGE BREAKING (Safe from NoneType Error) */
+        /* ================= PAGE BREAK CONTROL ================= */
         {% if request.GET.per_page == "6" %}
             .id-card:nth-child(6n) { page-break-after: always; }
         {% elif request.GET.per_page == "8" %}
@@ -72,51 +75,160 @@
             .id-card:nth-child(10n) { page-break-after: always; }
         {% endif %}
 
-        /* WATERMARK */
+        /* ================= WATERMARK ================= */
         .watermark-container {
             position: absolute;
-            top: 55%; left: 50%;
+            top: 55%;
+            left: 50%;
             transform: translate(-50%, -50%);
-            width: 100%; display: flex; justify-content: center; align-items: center;
-            pointer-events: none; z-index: 1;
+            width: 100%;
+            text-align: center;
+            pointer-events: none;
+            z-index: 1;
         }
-        .watermark-logo { width: 100px; height: auto; opacity: 0.15; filter: grayscale(100%); }
-        .watermark-text { transform: rotate(-30deg); font-size: 1.4rem; font-weight: 900; color: rgba(0, 0, 0, 0.08); white-space: nowrap; text-transform: uppercase; }
 
-        /* CARD HEADER */
+        .watermark-logo {
+            width: 100px;
+            opacity: 0.12;
+            filter: grayscale(100%);
+        }
+
+        .watermark-text {
+            transform: rotate(-30deg);
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: rgba(0,0,0,0.08);
+            text-transform: uppercase;
+        }
+
+        /* ================= CARD HEADER ================= */
         .card-header {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: #fff; padding: 6px 12px; display: flex; align-items: center; gap: 10px;
-            border-bottom: 2px solid #ca8a04; position: relative; z-index: 10;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #fff;
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #ca8a04;
+            z-index: 10;
         }
-        .card-logo { width: 32px; height: 32px; background: #fff; border-radius: 4px; padding: 2px; object-fit: contain; }
-        .header-content { line-height: 1.1; }
-        .s-name { font-size: 0.65rem; font-weight: 800; display: block; text-transform: uppercase; }
-        .s-addr { font-size: 0.42rem; font-weight: 400; opacity: 0.85; display: block; }
 
-        /* CARD BODY */
-        .card-body { flex: 1; padding: 10px 12px; display: flex; gap: 12px; position: relative; z-index: 10; }
-        .photo-side { width: 70px; flex-shrink: 0; }
-        .student-photo { width: 70px; height: 85px; object-fit: cover; border-radius: 4px; border: 1.5px solid #0f172a; }
-        .content-main { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-        .student-name { font-size: 0.9rem; font-weight: 800; color: #0f172a; text-transform: uppercase; margin-bottom: 2px; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px; }
-        .details-wrapper { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 4px; }
-        .info-row { display: flex; font-size: 0.65rem; margin-bottom: 2px; }
-        .info-label { width: 45px; font-weight: 700; color: #64748b; }
-        .info-val { font-weight: 600; color: #000; }
+        .card-logo {
+            width: 32px;
+            height: 32px;
+            background: #fff;
+            border-radius: 4px;
+            padding: 2px;
+            object-fit: contain;
+        }
 
-        .qr-side { width: 48px; height: 48px; flex-shrink: 0; display: flex; align-items: flex-start; }
-        .qr-wrapper { background: #fff; padding: 1px; border: 1px solid #e2e8f0; }
+        .s-name {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
 
+        .s-addr {
+            font-size: 0.42rem;
+            opacity: 0.85;
+        }
+
+        /* ================= CARD BODY ================= */
+        .card-body {
+            flex: 1;
+            padding: 10px 12px;
+            display: flex;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .photo-side {
+            width: 70px;
+            flex-shrink: 0;
+        }
+
+        .student-photo {
+            width: 70px;
+            height: 85px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1.5px solid #0f172a;
+        }
+
+        .content-main {
+            flex: 1;
+        }
+
+        .student-name {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #0f172a;
+            text-transform: uppercase;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 4px;
+        }
+
+        .info-row {
+            font-size: 0.65rem;
+            margin-bottom: 2px;
+        }
+
+        .info-label {
+            font-weight: 700;
+            color: #64748b;
+            margin-right: 4px;
+        }
+
+        .qr-side {
+            width: 48px;
+        }
+
+        /* ================= FOOTER ================= */
         .card-footer {
-            background: #0f172a; color: #fff; font-size: 0.44rem; padding: 4px;
-            text-align: center; font-weight: 600; position: relative; z-index: 10;
+            background: #0f172a;
+            color: #fff;
+            font-size: 0.44rem;
+            padding: 4px;
+            text-align: center;
+            font-weight: 600;
+            z-index: 10;
         }
 
+        /* ================= MOBILE VIEW ================= */
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+                padding: 0 12px;
+            }
+
+            .id-card {
+                transform: scale(1.2);
+                transform-origin: top center;
+                margin-bottom: 30px;
+            }
+        }
+
+        /* ================= PRINT VIEW (FIXED) ================= */
         @media print {
             body { background: #fff; }
-            .no-print, .page-header { display: none !important; }
-            .id-card { box-shadow: none; border: 1px solid #000; }
+
+            .no-print,
+            .page-header {
+                display: none !important;
+            }
+
+            .cards-grid {
+                grid-template-columns: repeat(2, 86mm) !important;
+                gap: 3.5mm 8mm !important;
+                justify-content: center !important;
+            }
+
+            .id-card {
+                transform: none !important;
+                width: 86mm !important;
+                height: 54mm !important;
+            }
         }
     </style>
 </head>
@@ -124,18 +236,16 @@
 <body>
 
 <div class="page-header">
-    <div class="school-info-top">
-        <h4 class="mb-0">{{ school_identity.name|default:"KWIKSCHOOLS" }}</h4>
-    </div>
-    <a href="/dashboard" class="btn btn-sm btn-outline-secondary font-weight-bold">← Back to Dashboard</a>
+    <h4 class="mb-0">{{ school_identity.name|default:"SCHOOL NAME" }}</h4>
+    <a href="/dashboard" class="btn btn-sm btn-outline-secondary">← Back to Dashboard</a>
 </div>
 
 <div class="no-print container">
-    <div class="card p-3 border-0 shadow-sm">
+    <div class="card p-3 shadow-sm border-0">
         <form method="get" class="form-row justify-content-center align-items-center">
             <div class="col-auto">
-                <label class="mr-2 font-weight-bold text-secondary">Filter Class:</label>
-                <select name="class" class="form-control form-control-sm" style="min-width: 150px;">
+                <label class="font-weight-bold mr-2">Filter Class</label>
+                <select name="class" class="form-control form-control-sm">
                     <option value="">All Classes</option>
                     {% for c in classes %}
                         <option value="{{ c.id }}" {% if request.GET.class == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
@@ -144,18 +254,18 @@
             </div>
 
             <div class="col-auto">
-                <label class="mr-2 font-weight-bold text-secondary">Cards Per Page:</label>
+                <label class="font-weight-bold mr-2">Cards Per Page</label>
                 <select name="per_page" class="form-control form-control-sm">
-                    <option value="10" {% if request.GET.per_page == "10" or not request.GET.per_page %}selected{% endif %}>10 Cards</option>
-                    <option value="8" {% if request.GET.per_page == "8" %}selected{% endif %}>8 Cards</option>
-                    <option value="6" {% if request.GET.per_page == "6" %}selected{% endif %}>6 Cards</option>
-                    <option value="12" {% if request.GET.per_page == "12" %}selected{% endif %}>12 Cards</option>
+                    <option value="10">10</option>
+                    <option value="8">8</option>
+                    <option value="6">6</option>
+                    <option value="12">12</option>
                 </select>
             </div>
 
             <div class="col-auto">
-                <button type="submit" class="btn btn-primary btn-sm px-4">Filter</button>
-                <button type="button" onclick="window.print()" class="btn btn-dark btn-sm px-4 ml-2">Print Now</button>
+                <button class="btn btn-primary btn-sm px-4">Apply</button>
+                <button type="button" onclick="window.print()" class="btn btn-dark btn-sm px-4 ml-2">Print</button>
             </div>
         </form>
     </div>
@@ -163,92 +273,62 @@
 
 <div class="cards-grid">
 {% for student in students %}
-    <div class="id-card">
-        
-        <div class="watermark-container">
-            {% if school_identity.logo %}
-                <img src="{{ school_identity.logo.url }}" class="watermark-logo">
-            {% else %}
-                <div class="watermark-text">{{ school_identity.name }}</div>
-            {% endif %}
-        </div>
+<div class="id-card">
 
-        <div class="card-header">
-            {% if school_identity.logo %}
-                <img src="{{ school_info.logo.url }}" class="card-logo">
-            {% else %}
-                <div class="card-logo bg-light"></div>
-            {% endif %}
-            <div class="header-content">
-                <span class="s-name">{{ school_info.name|default:"SCHOOL NAME" }}</span>
-                <span class="s-addr">{{ school_info.address_line_1|default:"School Address Line, City" }}, 
-                    {{ school_info.address_line_2|default:"School Address Line, City" }}
+    <div class="watermark-container">
+        {% if school_identity.logo %}
+            <img src="{{ school_identity.logo.url }}" class="watermark-logo">
+        {% else %}
+            <div class="watermark-text">{{ school_identity.name }}</div>
+        {% endif %}
+    </div>
 
-                </span>
-            </div>
-        </div>
-
-        <div class="card-body">
-            <div class="photo-side">
-                {% if student.user.profile.image %}
-                    <img src="{{ student.user.profile.image.url }}" class="student-photo">
-                {% else %}
-                    <div class="student-photo bg-light d-flex align-items-center justify-content-center">
-                        <span style="font-size:0.5rem; color:#94a3b8;">PHOTO</span>
-                    </div>
-                {% endif %}
-            </div>
-
-            <div class="content-main">
-                <div class="student-name">{{ student.get_full_name }}</div>
-                
-                <div class="details-wrapper">
-                    <div class="info-details">
-                        <div class="info-row"><span class="info-label">USN:</span><span class="info-val">{{ student.USN }}</span></div>
-                        <div class="info-row"><span class="info-label">CLASS:</span><span class="info-val">{{ student.current_class.name }}</span></div>
-                        <div class="info-row"><span class="info-label">SEX:</span><span class="info-val">{{ student.gender }}</span></div>
-                    </div>
-
-                    <div class="qr-side">
-                        <div class="qr-wrapper">
-                            <div class="qr-target" data-qr="ID:{{ student.USN }}|{{ student.get_full_name }}|{{ school_identity.name }}"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card-footer">
-            VALID FOR CURRENT SESSION • PROPERTY OF {{ school_identity.name|default:"THE SCHOOL" }}
+    <div class="card-header">
+        {% if school_identity.logo %}
+            <img src="{{ school_identity.logo.url }}" class="card-logo">
+        {% endif %}
+        <div>
+            <div class="s-name">{{ school_identity.name }}</div>
+            <div class="s-addr">{{ school_identity.address_line_1 }}</div>
         </div>
     </div>
+
+    <div class="card-body">
+        <div class="photo-side">
+            {% if student.user.profile.image %}
+                <img src="{{ student.user.profile.image.url }}" class="student-photo">
+            {% endif %}
+        </div>
+
+        <div class="content-main">
+            <div class="student-name">{{ student.get_full_name }}</div>
+            <div class="info-row"><span class="info-label">USN:</span>{{ student.USN }}</div>
+            <div class="info-row"><span class="info-label">CLASS:</span>{{ student.current_class.name }}</div>
+            <div class="info-row"><span class="info-label">SEX:</span>{{ student.gender }}</div>
+        </div>
+
+        <div class="qr-side">
+            <div class="qr-target" data-qr="{{ student.USN }}"></div>
+        </div>
+    </div>
+
+    <div class="card-footer">
+        PROPERTY OF {{ school_identity.name }}
+    </div>
+
+</div>
 {% endfor %}
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const targets = document.querySelectorAll('.qr-target');
-    
-    // Batch process QR codes to ensure they appear on every page during print
-    let index = 0;
-    function generateBatch() {
-        const limit = Math.min(index + 10, targets.length);
-        for (; index < limit; index++) {
-            const el = targets[index];
-            new QRCode(el, {
-                text: el.getAttribute('data-qr'),
-                width: 46,
-                height: 46,
-                colorDark : "#0f172a",
-                colorLight : "#ffffff",
-                correctLevel: QRCode.CorrectLevel.M
-            });
-        }
-        if (index < targets.length) {
-            setTimeout(generateBatch, 50);
-        }
-    }
-    generateBatch();
+    document.querySelectorAll('.qr-target').forEach(el => {
+        new QRCode(el, {
+            text: el.dataset.qr,
+            width: 46,
+            height: 46
+        });
+    });
 });
 </script>
 
