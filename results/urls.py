@@ -112,6 +112,11 @@ urlpatterns = [
     path('result-publications/', views.result_publications_list, name='result_publications_list'),
     path('result-publications/toggle/<int:pk>/', views.toggle_publication_status, name='toggle_publication_status'),
     path('result-publications/bulk/', views.bulk_update_publications, name='bulk_update_publications'),
+
+    # Result Broadsheet
+    path('broadsheet/select/', views.BroadsheetSelectionView.as_view(), name='broadsheet_select'),
+    path('class-broadsheet/<int:class_id>/<int:term_id>/', views.ClassBroadsheetView.as_view(), name='class_broadsheet'),
+
 ]
 
 

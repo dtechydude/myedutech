@@ -4,26 +4,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Score Entry Selection</title>
+    <title>Score Entry Selection | {{ school_info.name|default:"Portal" }}</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        body { background-color: #f8f9fc; min-height: 100vh; font-family: 'Nunito', sans-serif; }
-        .container { max-width: 600px; margin-top: 50px; }
+        body { background-color: #f8f9fc; min-height: 100vh; font-family: 'Nunito', sans-serif; display: flex; flex-direction: column; }
+        .container { max-width: 600px; margin-top: 50px; flex: 1; }
         .card { border: none; border-radius: 15px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15); }
         .card-header { background-color: #4e73df; color: white; border-top-left-radius: 15px; border-top-right-radius: 15px; font-weight: bold; }
         .form-control-lg { border-radius: 10px; font-size: 1rem; }
         .btn-proceed { background-color: #1cc88a; border: none; color: white; font-weight: 700; padding: 12px; border-radius: 10px; width: 100%; transition: all 0.3s; }
         .btn-proceed:hover { background-color: #17a673; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .school-name { color: #4e73df; font-weight: 800; text-transform: uppercase; }
+        footer { background: #fff; padding: 20px 0; border-top: 1px solid #e3e6f0; margin-top: 50px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="text-dark font-weight-bold mb-0">Score Entry Portal</h4>
-        <a href="{% url 'pages:portal-home' %}" class="btn btn-sm btn-outline-secondary">
-            <i class="fas fa-home"></i> Home
+        <h5 class="school-name mb-0">
+            {% if school_info %}{{ school_info.name }}{% else %}Score Entry Portal{% endif %}
+        </h5>
+        <a href="/dashboard/" class="btn btn-sm btn-outline-secondary shadow-sm">
+            <i class="fas fa-tachometer-alt"></i> Back to Dashboard
         </a>
     </div>
 
@@ -84,6 +89,14 @@
     </div>
 </div>
 
+<footer class="text-center text-muted">
+    <div class="container my-auto">
+        <div class="copyright text-center my-auto">
+            <span>&copy; {% now "Y" %} {{ school_info.name|default:"School Management System" }} | By:Kwikschools.</span>
+        </div>
+    </div>
+</footer>
+
 <script>
     function handleNavigation() {
         const classId = document.getElementById('id_class').value;
@@ -91,13 +104,8 @@
         const termId = document.getElementById('id_term').value;
 
         if (classId && subjectId && termId) {
-            // This builds the URL based on your results:midterm_score_entry path
-            // Format: /results/midterm/entry/class_id/subject_id/term_id/
             let entryUrl = "{% url 'results:midterm_score_entry' class_id=0 subject_id=0 term_id=0 %}";
-            
-            // Cleanly replace the placeholder '0/0/0' with actual IDs
             entryUrl = entryUrl.replace('0/0/0', `${classId}/${subjectId}/${termId}`);
-            
             window.location.href = entryUrl;
         } else {
             alert("Please ensure all parameters are selected before proceeding.");

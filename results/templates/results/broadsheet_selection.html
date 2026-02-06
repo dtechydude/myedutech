@@ -1,0 +1,163 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- ✅ CRITICAL FOR MOBILE FULLSCREEN -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>
+        Broadsheet Selection |
+        {% if school_info %}{{ school_info.name }}{% else %}Portal{% endif %}
+    </title>
+
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+
+    <style>
+        body {
+            background: #f4f7f6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            flex: 1;
+            padding-top: 30px;
+            padding-bottom: 30px;
+        }
+
+        .card {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .school-name {
+            color: #4e73df;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        footer {
+            background: #fff;
+            padding: 15px 0;
+            border-top: 1px solid #e3e6f0;
+        }
+
+        /* ✅ Mobile Enhancements */
+        @media (max-width: 576px) {
+            .container {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+
+            .school-name {
+                font-size: 1rem;
+            }
+
+            .card-body {
+                padding: 1.5rem;
+            }
+
+            .btn-lg {
+                font-size: 1rem;
+                padding: 0.75rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <h1 class="h5 school-name mb-2 mb-md-0 text-uppercase">
+            {% if school_info %}{{ school_info.name }}{% else %}School Portal{% endif %}
+        </h1>
+
+        <a href="/dashboard/" class="btn btn-outline-secondary btn-sm shadow-sm mt-2 mt-md-0">
+            <i class="fas fa-tachometer-alt"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Card -->
+    <div class="row justify-content-center">
+        <div class="col-12 col-sm-10 col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-invoice mr-2"></i>
+                        Generate Class Broadsheet
+                    </h5>
+                </div>
+
+                <div class="card-body">
+                    <form id="selectionForm">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Select Class</label>
+                            <select id="class_id" class="form-control form-control-lg" required>
+                                <option value="">-- Choose Class --</option>
+                                {% for c in classes %}
+                                    <option value="{{ c.id }}">{{ c.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="font-weight-bold">Select Term</label>
+                            <select id="term_id" class="form-control form-control-lg" required>
+                                <option value="">-- Choose Term --</option>
+                                {% for t in terms %}
+                                    <option value="{{ t.id }}">
+                                        {{ t.name }} ({{ t.session.name }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <button
+                            type="button"
+                            onclick="viewBroadsheet()"
+                            class="btn btn-primary btn-block btn-lg shadow"
+                        >
+                            View Broadsheet
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="text-center text-muted">
+    <div class="container">
+        <span>
+            &copy; {% now "Y" %}
+            {{ school_info.name|default:"School Management System" }}
+            | By Kwikschools.
+        </span>
+    </div>
+</footer>
+
+<script>
+    function viewBroadsheet() {
+        const cId = document.getElementById('class_id').value;
+        const tId = document.getElementById('term_id').value;
+
+        if (cId && tId) {
+            window.location.href = `/results/class-broadsheet/${cId}/${tId}/`;
+        } else {
+            alert("Please select both fields.");
+        }
+    }
+</script>
+
+</body>
+</html>

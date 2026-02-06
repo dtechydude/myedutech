@@ -24,6 +24,7 @@ from transport.context_processors import school_identity as school_identity_proc
 from django.core.paginator import Paginator
 import csv
 
+
 # For PDF generation using django-wkhtmltopdf
 # from wkhtmltopdf.views import PDFTemplateResponse # Import this
 from django.conf import settings # To access MEDIA_ROOT/STATIC_ROOT if needed for CSS/images
@@ -2133,3 +2134,85 @@ class ParentTermlyReportView(LoginRequiredMixin, View):
         }
         
         return render(request, self.template_name, context)
+
+
+
+
+
+# Result Broadsheet View
+
+# 1. PAGE TO SELECT CLASS AND TERM
+class BroadsheetSelectionView(LoginRequiredMixin, UserPassesTestMixin, View):
+    template_name = 'results/broadsheet_selection.html'
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def get(self, request):
+        context = {
+            'classes': Standard.objects.all().order_by('name'),
+            'terms': Term.objects.all().order_by('-id'),
+        }
+        return render(request, self.template_name, context)
+
+# 2. THE ACTUAL BROADSHEET GENERATOR
+class ClassBroadsheetView(LoginRequiredMixin, UserPassesTestMixin, View):
+    template_name = 'results/class_broadsheet.html'
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def get(self, request, class_id, term_id):
+        standard = get_object_or_404(Standard, id=class_id)
+        term = get_object_or_404(Term, id=term_id)
+        
+        students = Student.objects.filter(current_class=standard).order_by('last_name')
+        subject_ids = Score.objects.filter(student__current_class=standard, term=term).values_list('subject_id', flat=True).distinct()
+        subjects = Subject.objects.filter(id__in=subject_ids).order_by('name')
+
+        broadsheet_data = []
+        for student in students:
+            student_scores = {}
+            row_total = 0
+            count = 0
+            scores = Score.objects.filter(student=student, term=term)
+            
+            for sub in subjects:
+                score_obj = scores.filter(subject=sub).first()
+                if score_obj:
+                    total = score_obj.total_score or 0
+                    student_scores[sub.id] = {
+                        'ca': (score_obj.ca1 or 0) + (score_obj.ca2 or 0) + (score_obj.ca3 or 0),
+                        'exam': score_obj.exam_score or 0,
+                        'total': total
+                    }
+                    row_total += total
+                    count += 1
+                else:
+                    student_scores[sub.id] = {'ca': 0, 'exam': 0, 'total': 0}
+
+            broadsheet_data.append({
+                'student': student,
+                'scores': student_scores,
+                'total_sum': row_total,
+                'average': row_total / count if count > 0 else 0
+            })
+
+        broadsheet_data = sorted(broadsheet_data, key=lambda x: x['average'], reverse=True)
+
+        if 'export' in request.GET:
+            return self.export_csv(standard, term, subjects, broadsheet_data)
+
+        return render(request, self.template_name, {
+            'standard': standard, 'term': term, 'subjects': subjects, 'broadsheet_data': broadsheet_data
+        })
+
+    def export_csv(self, standard, term, subjects, broadsheet_data):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="Broadsheet_{standard.name}.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['S/N', 'Name'] + [f"{s.name} (TOT)" for s in subjects] + ['Total', 'Avg', 'Rank'])
+        for i, row in enumerate(broadsheet_data, 1):
+            scores = [row['scores'][s.id]['total'] for s in subjects]
+            writer.writerow([i, row['student'].get_full_name()] + scores + [row['total_sum'], round(row['average'], 2), i])
+        return response
