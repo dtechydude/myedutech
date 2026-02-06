@@ -1162,201 +1162,6 @@ class StandardsAndTermsListView(LoginRequiredMixin, View):
         return render(request, self.template_name, context)
 
 
-# Parent Dashboard Termly REport Card View
-
-# class ParentReportCardView(LoginRequiredMixin, View):
-#     def get(self, request, student_id, term_id, *args, **kwargs):
-#         try:
-#             parent = Parent.objects.get(user=request.user)
-#         except Parent.DoesNotExist:
-#             return redirect('pages:portal-home')
-
-#         student = get_object_or_404(Student, id=student_id, parent=parent)
-#         term = get_object_or_404(Term, id=term_id)
-
-#         scores = Score.objects.filter(student=student, term=term).select_related('subject')
-
-#         motor_ability_fields = {}
-#         try:
-#             motor_ability = MotorAbilityScore.objects.get(student=student, term=term)
-
-#             for field in MotorAbilityScore._meta.fields:
-#                 if field.name not in ['id', 'student', 'term']:
-#                     label = field.verbose_name.replace('_', ' ').title()
-#                     motor_ability_fields[label] = getattr(motor_ability, field.name)
-
-#         except MotorAbilityScore.DoesNotExist:
-#             motor_ability = None
-
-#         context = {
-#             'student': student,
-#             'term': term,
-#             'scores': scores,
-#             'motor_ability': motor_ability,
-#             'motor_ability_fields': motor_ability_fields,
-#             # Use the imported function to get the school identity data
-#             'school_identity': school_identity_processor(request).get('school_identity'),
-#         }
-#         return render(request, 'results/parent_report_card_template.html', context)
-
-
-
-# # Parent view student results
-# class ParentSessionReportCardView(LoginRequiredMixin, View):
-#     template_name = 'results/parent_session_report_card.html'
-
-#     def get(self, request, student_id, session_id):
-#         try:
-#             parent = Parent.objects.get(user=request.user)
-#             student = get_object_or_404(Student, id=student_id, parent=parent)
-#         except (Parent.DoesNotExist, Student.DoesNotExist):
-#             # Unauthorized access attempt
-#             return render(request, 'unauthorized_access.html', status=403)
-
-#         session = get_object_or_404(Session, id=session_id)
-
-#         # Get all scores for the student within the specified session
-#         scores_in_session = Score.objects.filter(
-#             student=student,
-#             term__session=session
-#         ).order_by('subject__name')
-
-#         context = {
-#             'student': student,
-#             'session': session,
-#             'scores': scores_in_session,
-#         }
-#         return render(request, self.template_name, context)
-
-
-# @login_required
-# def parent_report_card_detail(request, student_id, term_id):
-#     student = get_object_or_404(Student, id=student_id)
-#     term = get_object_or_404(Term, id=term_id)
-
-#     # Check for user authorization (parent or staff)
-#     authorized = False
-#     if request.user.is_staff:
-#         authorized = True
-#     elif hasattr(student, 'parent'):
-#         try:
-#             parent = Parent.objects.get(user=request.user)
-#             if student.parent == parent:
-#                 authorized = True
-#         except Parent.DoesNotExist:
-#             pass
-#     # Add a check for the student themselves
-#     if hasattr(student, 'user') and request.user == student.user:
-#         authorized = True
-
-#     if not authorized:
-#         messages.warning(request, "You are not authorized to view this report card.")
-#         return redirect('students:parent-dashboard')
-
-#     scores = Score.objects.filter(student=student, term=term).select_related('subject')
-
-#     motor_ability = None
-#     try:
-#         motor_ability = MotorAbilityScore.objects.get(student=student, term=term)
-#     except MotorAbilityScore.DoesNotExist:
-#         pass
-
-#     # Fetch SchoolIdentity
-#     try:
-#         school_identity = SchoolIdentity.objects.first()
-#     except SchoolIdentity.DoesNotExist:
-#         school_identity = None
-
-#     context = {
-#         'student': student,
-#         'term': term,
-#         'scores': scores,
-#         'motor_ability': motor_ability,
-#         'school_identity': school_identity, # Add school_identity to the context
-#     }
-#     return render(request, 'results/parent_report_card_detail.html', context)
-
-# @login_required
-# def parent_session_report_card_detail(request, student_id, session_id):
-#     student = get_object_or_404(Student, id=student_id)
-#     session = get_object_or_404(Session, id=session_id)
-
-#     # Authorization logic
-#     authorized = False
-#     if request.user.is_staff:
-#         authorized = True
-#     elif hasattr(student, 'parent'):
-#         try:
-#             parent = Parent.objects.get(user=request.user)
-#             if student.parent == parent:
-#                 authorized = True
-#         except Parent.DoesNotExist:
-#             pass
-#     if hasattr(student, 'user') and request.user == student.user:
-#         authorized = True
-
-#     if not authorized:
-#         messages.warning(request, "You are not authorized to view this report card.")
-#         return redirect('students:parent-dashboard')
-
-#     # Get all terms for the given session
-#     terms_in_session = Term.objects.filter(session=session)
-
-#     # Aggregate scores for the student across all terms in the session
-#     scores = Score.objects.filter(
-#         student=student,
-#         term__in=terms_in_session
-#     ).values(
-#         'subject__name'
-#     ).annotate(
-#         total_score__avg=Avg('total_score')
-#     ).order_by('subject__name')
-
-#     # Simple grading logic (you can customize this)
-#     for score in scores:
-#         avg_score = score['total_score__avg']
-#         if avg_score >= 70:
-#             score['grade'] = 'A'
-#             score['remarks'] = 'Excellent'
-#         elif avg_score >= 60:
-#             score['grade'] = 'B'
-#             score['remarks'] = 'Good'
-#         elif avg_score >= 50:
-#             score['grade'] = 'C'
-#             score['remarks'] = 'Fair'
-#         elif avg_score >= 40:
-#             score['grade'] = 'D'
-#             score['remarks'] = 'Pass'
-#         else:
-#             score['grade'] = 'F'
-#             score['remarks'] = 'Fail'
-
-#     # Fetch motor ability for the session (simple average or most recent)
-#     motor_ability = MotorAbilityScore.objects.filter(
-#         student=student,
-#         term__in=terms_in_session
-#     ).aggregate(
-#         honesty=Avg('honesty'),
-#         politeness=Avg('politeness'),
-#         punctuality=Avg('punctuality'),
-#         attendance=Avg('attendance')
-#     )
-
-#     # Fetch SchoolIdentity
-#     try:
-#         school_identity = SchoolIdentity.objects.first()
-#     except SchoolIdentity.DoesNotExist:
-#         school_identity = None
-
-#     context = {
-#         'student': student,
-#         'session': session,
-#         'scores': scores,
-#         'motor_ability': motor_ability,
-#         'school_identity': school_identity,
-#     }
-#     return render(request, 'results/parent_session_report_card.html', context)
-
 
 # Result Publication View
 class ResultPermissionGatekeeperView(View):
@@ -1762,6 +1567,81 @@ class MidTermReportCardView(LoginRequiredMixin, View):
 
 
 # Mid Term List
+# class StudentMidTermListView(LoginRequiredMixin, View):
+#     template_name = 'results/student_midterm_list.html'
+
+#     def get(self, request):
+#         is_student = hasattr(request.user, 'student')
+#         is_teacher = hasattr(request.user, 'teacher')
+#         is_admin = request.user.is_staff or request.user.is_superuser
+
+#         # 1. Authorization Check
+#         if not (is_student or is_teacher or is_admin):
+#             messages.error(request, "Access denied.")
+#             return redirect('pages:portal-home')
+
+#         context = {}
+#         report_data = []
+
+#         # 2. Filtering Logic
+#         if is_student:
+#             student = request.user.student
+#             context['current_user_type'] = 'student'
+#             context['student'] = student
+
+#             queryset = Term.objects.filter(
+#                 midtermscore__student=student
+#             ).values('id', 'name', 'session__name').distinct()
+
+#             for report in queryset:
+#                 report_data.append({
+#                     'term_id': report['id'],
+#                     'term_name': report['name'],
+#                     'session_name': report['session__name'],
+#                     'student_id': student.id,
+#                 })
+
+#         # --- COMBINED TEACHER & ADMIN LOGIC ---
+#         elif is_admin or is_teacher:
+#             context['current_user_type'] = 'admin' if is_admin else 'teacher'
+
+#             # Base Queryset
+#             scores_qs = MidTermScore.objects.all()
+
+#             # If NOT admin (meaning they are a teacher), filter by their class
+#             if not is_admin:
+#                 try:
+#                     assigned_class = request.user.teacher.form_class.get()
+#                 except:
+#                     assigned_class = request.user.teacher.form_class.first()
+
+#                 if not assigned_class:
+#                     messages.warning(request, "No assigned class found.")
+#                     return render(request, self.template_name, {'available_reports': []})
+
+#                 context['assigned_class'] = assigned_class
+#                 scores_qs = scores_qs.filter(student__current_class=assigned_class)
+
+#             # Get Unique Student + Term combinations
+#             queryset = scores_qs.values(
+#                 'student', 'term', 'term__name', 'term__session__name',
+#                 'student__first_name', 'student__last_name', 'student__current_class__name'
+#             ).annotate(dummy_id=Max('id')).order_by('-term__session__name', 'student__last_name')
+
+#             for report in queryset:
+#                 report_data.append({
+#                     'term_id': report['term'],
+#                     'term_name': report['term__name'],
+#                     'session_name': report['term__session__name'],
+#                     'student_id': report['student'],
+#                     'student_name': f"{report['student__first_name']} {report['student__last_name']} ({report['student__current_class__name']})",
+#                 })
+
+#         context['available_reports'] = report_data
+#         return render(request, self.template_name, context)
+
+
+# Mid Term List with filtering
 class StudentMidTermListView(LoginRequiredMixin, View):
     template_name = 'results/student_midterm_list.html'
 
@@ -1770,7 +1650,6 @@ class StudentMidTermListView(LoginRequiredMixin, View):
         is_teacher = hasattr(request.user, 'teacher')
         is_admin = request.user.is_staff or request.user.is_superuser
 
-        # 1. Authorization Check
         if not (is_student or is_teacher or is_admin):
             messages.error(request, "Access denied.")
             return redirect('pages:portal-home')
@@ -1778,46 +1657,61 @@ class StudentMidTermListView(LoginRequiredMixin, View):
         context = {}
         report_data = []
 
-        # 2. Filtering Logic
+        # Get filter parameters from GET request
+        selected_class_id = request.GET.get('class')
+        selected_term_id = request.GET.get('term')
+
+        # --- STUDENT VIEW ---
         if is_student:
             student = request.user.student
             context['current_user_type'] = 'student'
             context['student'] = student
 
-            queryset = Term.objects.filter(
-                midtermscore__student=student
-            ).values('id', 'name', 'session__name').distinct()
+            queryset = Term.objects.filter(midtermscore__student=student).distinct()
+            if selected_term_id:
+                queryset = queryset.filter(id=selected_term_id)
 
             for report in queryset:
                 report_data.append({
-                    'term_id': report['id'],
-                    'term_name': report['name'],
-                    'session_name': report['session__name'],
+                    'term_id': report.id,
+                    'term_name': report.name,
+                    'session_name': report.session.name,
                     'student_id': student.id,
                 })
 
-        # --- COMBINED TEACHER & ADMIN LOGIC ---
+        # --- TEACHER & ADMIN VIEW ---
         elif is_admin or is_teacher:
             context['current_user_type'] = 'admin' if is_admin else 'teacher'
 
-            # Base Queryset
-            scores_qs = MidTermScore.objects.all()
-
-            # If NOT admin (meaning they are a teacher), filter by their class
+            # Teacher assigned class
+            assigned_class = None
             if not is_admin:
                 try:
                     assigned_class = request.user.teacher.form_class.get()
                 except:
                     assigned_class = request.user.teacher.form_class.first()
-
                 if not assigned_class:
                     messages.warning(request, "No assigned class found.")
-                    return render(request, self.template_name, {'available_reports': []})
-
+                    context['available_reports'] = []
+                    return render(request, self.template_name, context)
                 context['assigned_class'] = assigned_class
+
+            # Base Queryset
+            scores_qs = MidTermScore.objects.all()
+
+            # Filter by teacher's class
+            if assigned_class:
                 scores_qs = scores_qs.filter(student__current_class=assigned_class)
 
-            # Get Unique Student + Term combinations
+            # Filter by selected class (admin only)
+            if is_admin and selected_class_id:
+                scores_qs = scores_qs.filter(student__current_class__id=selected_class_id)
+
+            # Filter by term
+            if selected_term_id:
+                scores_qs = scores_qs.filter(term__id=selected_term_id)
+
+            # Unique student + term combinations
             queryset = scores_qs.values(
                 'student', 'term', 'term__name', 'term__session__name',
                 'student__first_name', 'student__last_name', 'student__current_class__name'
@@ -1832,8 +1726,17 @@ class StudentMidTermListView(LoginRequiredMixin, View):
                     'student_name': f"{report['student__first_name']} {report['student__last_name']} ({report['student__current_class__name']})",
                 })
 
+            # For filter dropdowns
+            context['all_classes'] = Standard.objects.all()
+            context['all_terms'] = Term.objects.all()
+
         context['available_reports'] = report_data
+        context['selected_class_id'] = selected_class_id
+        context['selected_term_id'] = selected_term_id
+
         return render(request, self.template_name, context)
+
+
 
 
 class MidTermScoreSelectionView(LoginRequiredMixin, View):
@@ -2019,52 +1922,233 @@ def bulk_update_publications(request):
 
 # PARENT LOGIC FOR RESULTS
 #parent midterm results access
+
 class ParentMidTermReportView(LoginRequiredMixin, View):
     template_name = 'results/mid_term_report_card_detail.html'
 
     def get(self, request, student_id, term_id):
         student = get_object_or_404(Student, id=student_id)
-        
+
         # Security check
         if not hasattr(request.user, 'parent') or student not in request.user.parent.children.all():
             raise PermissionDenied("Access denied.")
 
         term = get_object_or_404(Term, id=term_id)
-        scores = Score.objects.filter(student=student, term=term)
-        
-        # FETCH SCHOOL IDENTITY HERE
-        school_identity = SchoolIdentity.objects.first() 
+
+        # Fetch all midterm scores for this student and term
+        scores = MidTermScore.objects.select_related('subject').filter(
+            student=student,
+            term=term
+        )
+
+        school_identity = SchoolIdentity.objects.first()
+
+        # Prepare report data with grading & class stats
+        report_data = []
+        total_sum = 0
+        subject_count = 0
+
+        for score in scores:
+            exam_score = float(score.exam_total_score or 0)
+            total_sum += exam_score
+            subject_count += 1
+
+            # Compute grade (simple example, adjust grading scale)
+            if exam_score >= 70:
+                grade = 'A'
+            elif exam_score >= 60:
+                grade = 'B'
+            elif exam_score >= 50:
+                grade = 'C'
+            elif exam_score >= 40:
+                grade = 'D'
+            else:
+                grade = 'F'
+
+            # Compute class stats for this subject
+            subject_scores = MidTermScore.objects.filter(
+                term=term,
+                subject=score.subject
+            )
+
+            class_high = subject_scores.aggregate(Max('exam_total_score'))['exam_total_score__max'] or 0
+            class_low = subject_scores.aggregate(Min('exam_total_score'))['exam_total_score__min'] or 0
+            class_avg = subject_scores.aggregate(Avg('exam_total_score'))['exam_total_score__avg'] or 0
+
+            # Remarks based on score
+            if exam_score >= 70:
+                remark = 'Excellent'
+            elif exam_score >= 60:
+                remark = 'Very Good'
+            elif exam_score >= 50:
+                remark = 'Good'
+            elif exam_score >= 40:
+                remark = 'Fair'
+            else:
+                remark = 'Needs Improvement'
+
+            report_data.append({
+                'subject': score.subject.name,
+                'total_score': exam_score,
+                'grade': grade,
+                'class_high': class_high,
+                'class_low': class_low,
+                'class_avg': class_avg,
+                'remark': remark,
+            })
+
+        overall_average = (total_sum / subject_count) if subject_count else 0
 
         context = {
             'student': student,
             'term': term,
-            'scores': scores,
-            'report_type': 'Mid-Term',
-            'school_identity': school_identity, # Add this line
+            'report_data': report_data,
+            'overall_average': overall_average,
+            'overall_remark': 'Satisfactory performance. Keep it up.',
+            'school_identity': school_identity,
         }
-        return render(request, self.template_name, context)
-    
 
-# Parent Session Report Access
+        return render(request, self.template_name, context)
+
+
+# # Parent Session Report Access
+# class ParentSessionReportView(LoginRequiredMixin, View):
+#     template_name = 'results/session_report_card_detail.html'
+
+#     def get(self, request, student_id, session_id):
+#         student = get_object_or_404(Student, id=student_id)
+        
+#         if not hasattr(request.user, 'parent') or student not in request.user.parent.children.all():
+#             raise PermissionDenied("Access denied: This student is not linked to your account.")
+
+#         session = get_object_or_404(Session, id=session_id)
+#         scores = Score.objects.filter(student=student, term__session=session)
+
+#         context = {
+#             'student': student,
+#             'session': session,
+#             'scores': scores,
+#             'report_type': 'Annual Session Report',
+#         }
+#         return render(request, self.template_name, context)
+
+
 class ParentSessionReportView(LoginRequiredMixin, View):
     template_name = 'results/session_report_card_detail.html'
 
-    def get(self, request, student_id, session_id):
+    def get(self, request, student_id, session_id, *args, **kwargs):
+        # Fetch student
         student = get_object_or_404(Student, id=student_id)
-        
+
+        # Parent authorization check
         if not hasattr(request.user, 'parent') or student not in request.user.parent.children.all():
             raise PermissionDenied("Access denied: This student is not linked to your account.")
 
+        # Fetch session
         session = get_object_or_404(Session, id=session_id)
-        scores = Score.objects.filter(student=student, term__session=session)
+        terms_in_session = session.terms.all().order_by('start_date')
+
+        if not terms_in_session.exists():
+            messages.warning(request, f"No terms defined for {session.name}.")
+            return redirect(request.META.get('HTTP_REFERER', 'session_report_card_list'))
+
+        # Aggregate scores per subject, counting only terms with data
+        subject_cumulative_data = Score.objects.filter(
+            student=student,
+            term__in=terms_in_session
+        ).values('subject__name', 'subject__id').annotate(
+            cumulative_total_score=Sum('total_score'),
+            active_term_count=Count('term', filter=Q(total_score__isnull=False))
+        ).order_by('subject__name')
+
+        report_data = []
+        overall_effective_average_sum = 0
+        subjects_counted_for_overall_average = 0
+
+        for item in subject_cumulative_data:
+            subject_id = item['subject__id']
+            subject_name = item['subject__name']
+            cumulative_score_raw = item['cumulative_total_score']
+            active_term_count = item['active_term_count']
+
+            # Individual term scores for table display
+            term_scores_for_subject = {}
+            for term in terms_in_session:
+                try:
+                    score_inst = Score.objects.get(student=student, subject__id=subject_id, term=term)
+                    term_scores_for_subject[term.name] = score_inst.total_score if score_inst.total_score is not None else 'N/A'
+                except Score.DoesNotExist:
+                    term_scores_for_subject[term.name] = 'N/A'
+
+            # Subject average based on active terms only
+            effective_subject_average = None
+            if cumulative_score_raw is not None and active_term_count > 0:
+                effective_subject_average = cumulative_score_raw / active_term_count
+                overall_effective_average_sum += effective_subject_average
+                subjects_counted_for_overall_average += 1
+
+            report_data.append({
+                'subject': subject_name,
+                'term_scores': term_scores_for_subject,
+                'cumulative_total_score': f"{cumulative_score_raw:.2f}" if cumulative_score_raw is not None else 'N/A',
+                'effective_subject_average': f"{effective_subject_average:.2f}" if effective_subject_average is not None else 'N/A',
+                'grade': get_grade(effective_subject_average),
+                'remark': get_subject_remark(effective_subject_average),
+            })
+
+        # Overall session average
+        overall_session_average = None
+        overall_remark = "No scores recorded for this session."
+        if subjects_counted_for_overall_average > 0:
+            overall_session_average = overall_effective_average_sum / subjects_counted_for_overall_average
+            overall_remark = get_overall_remark(overall_session_average)
+
+        # Motor/Behavioral aggregation
+        motor_ability_scores = MotorAbilityScore.objects.filter(student=student, term__session=session)
+        agg_motor = motor_ability_scores.aggregate(
+            avg_honesty=Avg('honesty'), avg_politeness=Avg('politeness'),
+            avg_neatness=Avg('neatness'), avg_cooperation=Avg('cooperation'),
+            avg_obedience=Avg('obedience'), avg_attentiveness=Avg('attentiveness'),
+            avg_punctuality=Avg('punctuality'), avg_perseverance=Avg('perseverance'),
+            avg_emotional_stability=Avg('emotional_stability'), avg_attitude=Avg('attitude'),
+            avg_leadership=Avg('leadership'), avg_physical_education=Avg('physical_education'),
+            avg_games=Avg('games'), avg_musical=Avg('musical'),
+            avg_handwriting=Avg('handwriting'), avg_reading=Avg('reading'),
+            avg_verbal_fluency=Avg('verbal_fluency'), avg_handling_tools=Avg('handling_tools'),
+        )
+        processed_motor = {k: (round(min(v, 5)) if v is not None else 0) for k, v in agg_motor.items()}
+
+        # Attendance
+        attendance_records = Attendance.objects.filter(
+            student=student,
+            date__gte=session.start_date,
+            date__lte=session.end_date
+        )
+        total_school_days = attendance_records.count()
+        days_present = attendance_records.filter(present=True).count()
+        days_absent = attendance_records.filter(present=False).count()
+
+        # School info
+        school_identity = SchoolIdentity.objects.first()
+        next_session = Session.objects.filter(start_date__gt=session.end_date).order_by('start_date').first()
 
         context = {
             'student': student,
             'session': session,
-            'scores': scores,
-            'report_type': 'Annual Session Report',
+            'terms_in_session': terms_in_session,
+            'report_data': report_data,
+            'overall_session_average': f"{overall_session_average:.2f}" if overall_session_average is not None else 'N/A',
+            'overall_remark': overall_remark,
+            'aggregated_motor_abilities': processed_motor,
+            'school_identity': school_identity,
+            'total_school_days': total_school_days,
+            'days_present': days_present,
+            'days_absent': days_absent,
+            'next_session_start_date': next_session.start_date if next_session else None,
         }
+
         return render(request, self.template_name, context)
+
 
 # Parent Termly Report Access    
 class ParentTermlyReportView(LoginRequiredMixin, View):
