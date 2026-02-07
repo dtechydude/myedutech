@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 from .views import (
-    ScoreEntryView, ScoreEntrySuccessView, MidTermScoreEntryView, MidTermReportCardView, StudentMidTermListView, MidTermScoreSelectionView, MidTermScoreSuccessView,
+    ScoreEntryView, ScoreEntrySuccessView, MidTermScoreEntryView, MidTermReportCardView, StudentMidTermListView, MidTermScoreSelectionView, MidTermScoreSuccessView, BroadsheetSelectionView,
     ReportCardListView, StudentReportCardView, StudentDashboardView, SessionReportCardListView, StudentSessionReportCardView, ClassRankingView, StandardsAndTermsListView, ResultPermissionGatekeeperView # Import new views
 )
 
@@ -112,7 +112,10 @@ urlpatterns = [
     path('result-publications/', views.result_publications_list, name='result_publications_list'),
     path('result-publications/toggle/<int:pk>/', views.toggle_publication_status, name='toggle_publication_status'),
     path('result-publications/bulk/', views.bulk_update_publications, name='bulk_update_publications'),
-
+    
+    # session result publication
+    path('session-publication-control/', views.SessionPublicationControlView.as_view(), name='session_pub_control'),
+    
     # Result Broadsheet
     path('broadsheet/select/', views.BroadsheetSelectionView.as_view(), name='broadsheet_select'),
     path('class-broadsheet/<int:class_id>/<int:term_id>/', views.ClassBroadsheetView.as_view(), name='class_broadsheet'),

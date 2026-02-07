@@ -15,7 +15,7 @@ from django.views import View
 from django.db import transaction
 from django.core.exceptions import ValidationError, ObjectDoesNotExist, PermissionDenied
 from django.forms import formset_factory, modelformset_factory
-from .models import Score, MotorAbilityScore, MidTermScore, ResultPublication
+from .models import Score, MotorAbilityScore, MidTermScore, ResultPublication, SessionResultStatus
 from .forms import ScoreEntryForm, ReportCardFilterForm, SessionReportCardFilterForm, MotorAbilityScoreForm, MidTermScoreForm # Import new form
 from .utils import get_grade, get_subject_remark, get_overall_remark # Import helper functions
 from django.template.loader import render_to_string # Import render_to_string
@@ -757,7 +757,119 @@ class StudentSessionReportCardView(LoginRequiredMixin, View):
 
 
 
-# ... (your existing imports) ...
+# Student Session Report Publication
+
+class SessionPublicationControlView(LoginRequiredMixin, UserPassesTestMixin, View):
+    template_name = 'results/session_publication_control.html'
+
+    def test_func(self):
+        # Only Staff/Superusers can manage publication
+        return self.request.user.is_staff
+
+    def get(self, request):
+        class_id = request.GET.get('class_id')
+        session_id = request.GET.get('session_id')
+        
+        students_data = []
+        if class_id and session_id:
+            class_obj = get_object_or_404(Standard, id=class_id)
+            # Fetch all students in the selected class
+            student_list = Student.objects.filter(current_class=class_obj).order_by('last_name')
+            
+            for student in student_list:
+                # get_or_create ensures a record exists for every student in the session
+                status_obj, created = SessionResultStatus.objects.get_or_create(
+                    student=student, 
+                    session_id=session_id
+                )
+                students_data.append({
+                    'id': student.id,
+                    'name': student.get_full_name(),
+                    'is_published': status_obj.is_published
+                })
+
+        context = {
+            'classes': Standard.objects.all().order_by('name'),
+            'sessions': Session.objects.all().order_by('-id'),
+            'students': students_data,
+            'selected_class': class_id,
+            'selected_session': session_id,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        session_id = request.POST.get('session_id')
+        class_id = request.POST.get('class_id')
+        
+        # 'published_students' only contains IDs of CHECKED boxes
+        published_ids = request.POST.getlist('published_students')
+        
+        # 'all_student_ids' contains EVERY student ID currently visible on the page
+        all_shown_ids = request.POST.getlist('all_student_ids')
+
+        if not session_id or not all_shown_ids:
+            messages.error(request, "Selection error: No data found to update.")
+            return redirect(f"{request.path}?class_id={class_id}&session_id={session_id}")
+
+        # STEP 1: RESET everything in the current view to False
+        # This handles the "Unchecking" logic
+        SessionResultStatus.objects.filter(
+            student_id__in=all_shown_ids, 
+            session_id=session_id
+        ).update(is_published=False)
+
+        # STEP 2: SET only the checked ones to True
+        if published_ids:
+            SessionResultStatus.objects.filter(
+                student_id__in=published_ids, 
+                session_id=session_id
+            ).update(is_published=True)
+
+        messages.success(request, f"Successfully updated results publication for the selected class.")
+        return redirect(f"{request.path}?class_id={class_id}&session_id={session_id}")
+
+
+
+# class StudentDashboardView(LoginRequiredMixin, View):
+#     template_name = 'results/student_dashboard.html'
+
+#     def get(self, request, *args, **kwargs):
+#         if hasattr(request.user, 'student'):
+#             student = request.user.student
+
+#             # Get terms for which the student has scores (for termly reports)
+#             terms_with_scores = Term.objects.filter(score__student=student).distinct().order_by('-start_date')
+
+#             # --- ADD THESE DEBUG PRINTS ---
+#             print(f"\n--- Debugging StudentDashboard for Student ID: {student.id} ---")
+#             if not terms_with_scores.exists():
+#                 print("No terms with scores found for this student.")
+#             else:
+#                 print("Terms found with scores:")
+#                 for term_obj in terms_with_scores:
+#                     print(f"  Term ID: {term_obj.id}, Name: '{term_obj.name}'")
+#                     if term_obj.id is None or term_obj.id == '':
+#                         print(f"  !!! WARNING: Term ID is None or empty for Term: {term_obj.name} !!!")
+#             print("---------------------------------------------------\n")
+#             # --- END DEBUG PRINTS ---
+
+#             # Get sessions for which the student has scores (for annual reports)
+#             sessions_with_filter = Q(terms__score__student=student)
+#             sessions_with_scores = Session.objects.filter(sessions_with_filter).distinct().order_by('-start_date')
+
+#             context = {
+#                 'student': student,
+#                 'terms': terms_with_scores,
+#                 'sessions': sessions_with_scores,
+#             }
+#             return render(request, self.template_name, context)
+#         else:
+#             messages.error(request, "Your user account is not linked to a student profile. Please contact administration.")
+#             return redirect('home')
+
+
+from django.db.models import Q
+from .models import SessionResultStatus 
 
 class StudentDashboardView(LoginRequiredMixin, View):
     template_name = 'results/student_dashboard.html'
@@ -766,36 +878,40 @@ class StudentDashboardView(LoginRequiredMixin, View):
         if hasattr(request.user, 'student'):
             student = request.user.student
 
-            # Get terms for which the student has scores (for termly reports)
-            terms_with_scores = Term.objects.filter(score__student=student).distinct().order_by('-start_date')
+            # 1. RESTORE ORIGINAL TERMLY LOGIC
+            # This allows your existing termly publication logic to handle things.
+            # (If your previous termly logic was just "if they have scores", this brings it back)
+            terms_with_scores = Term.objects.filter(
+                score__student=student
+            ).distinct().order_by('-start_date')
 
-            # --- ADD THESE DEBUG PRINTS ---
-            print(f"\n--- Debugging StudentDashboard for Student ID: {student.id} ---")
-            if not terms_with_scores.exists():
-                print("No terms with scores found for this student.")
-            else:
-                print("Terms found with scores:")
-                for term_obj in terms_with_scores:
-                    print(f"  Term ID: {term_obj.id}, Name: '{term_obj.name}'")
-                    if term_obj.id is None or term_obj.id == '':
-                        print(f"  !!! WARNING: Term ID is None or empty for Term: {term_obj.name} !!!")
-            print("---------------------------------------------------\n")
-            # --- END DEBUG PRINTS ---
+            # 2. APPLY NEW SESSION (ANNUAL) LOGIC SEPARATELY
+            # We only filter the sessions based on the new SessionResultStatus table.
+            published_session_ids = SessionResultStatus.objects.filter(
+                student=student, 
+                is_published=True
+            ).values_list('session_id', flat=True)
 
-            # Get sessions for which the student has scores (for annual reports)
-            sessions_with_filter = Q(terms__score__student=student)
-            sessions_with_scores = Session.objects.filter(sessions_with_filter).distinct().order_by('-start_date')
+            sessions_with_scores = Session.objects.filter(
+                id__in=published_session_ids, # Only published ones
+                terms__score__student=student # That have scores
+            ).distinct().order_by('-start_date')
+
+            # --- Debugging ---
+            print(f"\n--- Dashboard Logic Sync ---")
+            print(f"Terms Visible: {terms_with_scores.count()}")
+            print(f"Sessions (Annual) Published: {sessions_with_scores.count()}")
+            print("-----------------------------\n")
 
             context = {
                 'student': student,
-                'terms': terms_with_scores,
-                'sessions': sessions_with_scores,
+                'terms': terms_with_scores,    # Termly links (Restored)
+                'sessions': sessions_with_scores, # Annual links (Controlled)
             }
             return render(request, self.template_name, context)
         else:
-            messages.error(request, "Your user account is not linked to a student profile. Please contact administration.")
-            return redirect('home')
-
+            messages.error(request, "Your account is not linked to a student profile.")
+            return redirect('portal-home')
 
 # The new view with form_teacher ability to enter motor ability record
 # In your results/views.py
@@ -873,179 +989,6 @@ class MotorAbilityScoreCreateUpdateView(LoginRequiredMixin, TeacherRequiredMixin
             }
             return render(request, self.template_name, context)
 
-
-
-
-# class ClassRankingView(LoginRequiredMixin, View):
-#     template_name = 'results/class_ranking.html'
-
-#     def get(self, request, standard_id, term_id, *args, **kwargs):
-#         standard = get_object_or_404(Standard, id=standard_id)
-#         term = get_object_or_404(Term, id=term_id)
-
-#         students_in_class = Student.objects.filter(current_class=standard)
-
-#         # --- Overall Ranking Logic ---
-#         overall_ranking_data = []
-
-#         for student in students_in_class:
-#             scores = Score.objects.filter(student=student, term=term, total_score__isnull=False)
-
-#             total_scores_sum = scores.aggregate(total=Sum('total_score'))['total'] or 0
-#             subjects_with_scores_count = scores.count()
-
-#             overall_average = total_scores_sum / subjects_with_scores_count if subjects_with_scores_count > 0 else 0
-
-#             overall_ranking_data.append({
-#                 'student': student,
-#                 'overall_average': overall_average,
-#             })
-
-#         # Sort and assign ranks for the overall ranking
-#         overall_ranking_data.sort(key=lambda x: x['overall_average'], reverse=True)
-
-#         current_rank = 0
-#         last_average = -1
-#         for i, data in enumerate(overall_ranking_data):
-#             if data['overall_average'] != last_average:
-#                 current_rank = i + 1
-#             data['rank'] = current_rank
-#             last_average = data['overall_average']
-
-#         # --- Refactored Subject-Specific Ranking Logic ---
-#         subject_ranking_data = {}
-
-#         # Dynamically get all subjects for which students in this class have scores.
-#         # This is the key change to avoid the Subject->Standard link.
-#         all_subjects_in_class = Score.objects.filter(
-#             student__in=students_in_class,
-#             term=term,
-#             total_score__isnull=False
-#         ).values('subject__name', 'subject_id').distinct().order_by('subject__name')
-
-#         for subject_info in all_subjects_in_class:
-#             subject_scores = []
-
-#             for student in students_in_class:
-#                 score = Score.objects.filter(
-#                     student=student,
-#                     term=term,
-#                     subject_id=subject_info['subject_id']
-#                 ).first()
-
-#                 if score and score.total_score is not None:
-#                     subject_scores.append({
-#                         'student': student,
-#                         'total_score': score.total_score,
-#                     })
-
-#             # Sort and assign ranks for the current subject
-#             subject_scores.sort(key=lambda x: x['total_score'], reverse=True)
-
-#             current_rank_subject = 0
-#             last_score_subject = -1
-#             for i, data in enumerate(subject_scores):
-#                 if data['total_score'] != last_score_subject:
-#                     current_rank_subject = i + 1
-#                 data['rank'] = current_rank_subject
-#                 last_score_subject = data['total_score']
-
-#             subject_ranking_data[subject_info['subject__name']] = subject_scores
-
-#         context = {
-#             'standard': standard,
-#             'term': term,
-#             'overall_ranking_data': overall_ranking_data,
-#             'subject_ranking_data': subject_ranking_data,
-#         }
-
-#         return render(request, self.template_name, context)
-
-# CLASS EXAM
-
-# class ClassRankingView(LoginRequiredMixin, View):
-#     template_name = 'results/class_ranking.html'
-
-#     def get(self, request, standard_id, term_id, *args, **kwargs):
-#         standard = get_object_or_404(Standard, id=standard_id)
-#         term = get_object_or_404(Term, id=term_id)
-#         students_in_class = Student.objects.filter(current_class=standard)
-
-#         # --- Overall Ranking Logic (KEEPING YOUR ORIGINAL LOGIC) ---
-#         overall_ranking_data = []
-#         for student in students_in_class:
-#             scores = Score.objects.filter(student=student, term=term, total_score__isnull=False)
-#             total_scores_sum = scores.aggregate(total=Sum('total_score'))['total'] or 0
-#             subjects_with_scores_count = scores.count()
-#             overall_average = total_scores_sum / subjects_with_scores_count if subjects_with_scores_count > 0 else 0
-#             overall_ranking_data.append({
-#                 'student': student,
-#                 'overall_average': overall_average,
-#             })
-
-#         overall_ranking_data.sort(key=lambda x: x['overall_average'], reverse=True)
-#         current_rank = 0
-#         last_average = -1
-#         for i, data in enumerate(overall_ranking_data):
-#             if data['overall_average'] != last_average:
-#                 current_rank = i + 1
-#             data['rank'] = current_rank
-#             last_average = data['overall_average']
-
-#         # --- CSV EXPORT LOGIC ---
-#         if request.GET.get('export') == 'csv':
-#             response = HttpResponse(content_type='text/csv')
-#             filename = f"Ranking_{standard.name}_{term.name}.csv".replace(" ", "_")
-#             response['Content-Disposition'] = f'attachment; filename="{filename}"'
-            
-#             writer = csv.writer(response)
-#             writer.writerow(['Position', 'Student Name', 'Admission No', 'Overall Average (%)'])
-            
-#             for row in overall_ranking_data:
-#                 writer.writerow([
-#                     row['rank'], 
-#                     row['student'].user.get_full_name(), 
-#                     row['student'].USN, # Assuming this field exists
-#                     f"{row['overall_average']:.2f}"
-#                 ])
-#             return response
-
-#         # --- Subject-Specific Ranking (KEEPING YOUR ORIGINAL LOGIC) ---
-#         subject_ranking_data = {}
-#         all_subjects_in_class = Score.objects.filter(
-#             student__in=students_in_class,
-#             term=term,
-#             total_score__isnull=False
-#         ).values('subject__name', 'subject_id').distinct().order_by('subject__name')
-
-#         for subject_info in all_subjects_in_class:
-#             subject_scores = []
-#             for student in students_in_class:
-#                 score = Score.objects.filter(
-#                     student=student,
-#                     term=term,
-#                     subject_id=subject_info['subject_id']
-#                 ).first()
-#                 if score and score.total_score is not None:
-#                     subject_scores.append({'student': student, 'total_score': score.total_score})
-
-#             subject_scores.sort(key=lambda x: x['total_score'], reverse=True)
-#             current_rank_subject = 0
-#             last_score_subject = -1
-#             for i, data in enumerate(subject_scores):
-#                 if data['total_score'] != last_score_subject:
-#                     current_rank_subject = i + 1
-#                 data['rank'] = current_rank_subject
-#                 last_score_subject = data['total_score']
-#             subject_ranking_data[subject_info['subject__name']] = subject_scores
-
-#         context = {
-#             'standard': standard,
-#             'term': term,
-#             'overall_ranking_data': overall_ranking_data,
-#             'subject_ranking_data': subject_ranking_data,
-#         }
-#         return render(request, self.template_name, context)
 
 
 class ClassRankingView(LoginRequiredMixin, View):

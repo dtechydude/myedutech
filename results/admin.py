@@ -1,11 +1,13 @@
 from doctest import Example
 from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
-from results.models import Examination, Score, MotorAbilityScore, MidTermScore, ResultPublication
+from results.models import Examination, Score, MotorAbilityScore, MidTermScore, ResultPublication, SessionResultStatus
 from curriculum.models import Term
 # add this because of the cbt
 from django.utils.html import format_html
 from django.urls import reverse
+
+
 
 
 @admin.register(Examination)
@@ -183,7 +185,17 @@ class MidTermScoreAdmin(ImportExportModelAdmin):
         # Only allow staff/superusers to delete records
         return request.user.is_staff or request.user.is_superuser
 
-
-
+@admin.register(SessionResultStatus)
+class SessionResultStatusAdmin(admin.ModelAdmin):
+    # This adds the search bar and filter sidebar you need
+    list_display = ['student', 'session', 'get_class', 'is_published']
+    list_filter = ['session', 'student__current_class', 'is_published']
+    search_fields = ['student__first_name', 'student__last_name', 'student__admission_number']
+    list_editable = ['is_published'] # Edit checkboxes directly from the list!
+    
+    # Helper to show the class in the list
+    def get_class(self, obj):
+        return obj.student.current_class
+    get_class.short_description = 'Class'
 
 admin.site.register(Score, ScoreAdmin)

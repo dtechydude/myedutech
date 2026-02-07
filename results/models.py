@@ -249,3 +249,17 @@ class MidTermScore(models.Model):
     
     # Note: No custom save or clean logic needed as it's a single score with built-in validators.
     # The total score is the exam_total_score itself.
+
+
+class SessionResultStatus(models.Model):
+    # Changed 'on_submit' to 'on_delete'
+    student = models.ForeignKey('students.Student', on_delete=models.CASCADE)
+    session = models.ForeignKey('curriculum.Session', on_delete=models.CASCADE)
+    is_published = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('student', 'session')
+        verbose_name_plural = "Session Result Statuses"
+
+    def __str__(self):
+        return f"{self.student.get_full_name()} - {self.session.name} - Published: {self.is_published}"

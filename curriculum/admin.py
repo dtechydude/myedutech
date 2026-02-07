@@ -8,6 +8,7 @@ from django import forms
 from django.db import transaction
 from import_export.admin import ImportExportModelAdmin
 from payments.models import StudentFeeAssignment, ClassFeeTemplate, PaymentCategory 
+from results.models import SessionResultStatus
 
 class ClassFeeTemplateForm(forms.Form):
     fee_template = forms.ModelChoiceField(
@@ -34,11 +35,23 @@ class SchoolIdentityAdmin(admin.ModelAdmin):
     list_display = ('name', 'phone1', 'email')
     exclude = ['slug',]
 
-class SessionAdmin(ImportExportModelAdmin):
+
+# Session Report Card Admin
+
+
+@admin.register(Session)
+class SessionAdmin(admin.ModelAdmin):
     list_display = ('name', 'start_date', 'end_date', 'is_current')
     exclude = ['slug']
     # ADDED: This fixes the autocomplete error.
     search_fields = ['name',]
+
+
+# class SessionAdmin(ImportExportModelAdmin):
+#     list_display = ('name', 'start_date', 'end_date', 'is_current')
+#     exclude = ['slug']
+#     # ADDED: This fixes the autocomplete error.
+#     search_fields = ['name',]
 
 @admin.register(Standard)
 class StandardAdmin(ImportExportModelAdmin):
@@ -130,7 +143,7 @@ class ClassFeeTemplateAdmin(ImportExportModelAdmin):
 
 
 
-admin.site.register(Session, SessionAdmin)
+# admin.site.register(Session, SessionAdmin)
 admin.site.register(ClassGroup, ClassGroupAdmin)
 admin.site.register(Subject, SubjectAdmin)
 admin.site.register(ELearningSubject, ELearningSubjectAdmin)

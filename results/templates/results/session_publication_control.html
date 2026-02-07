@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publication Manager | {{ school_info.name|default:"School Portal" }}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fc; font-family: 'Nunito', sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
+        .navbar-brand { font-weight: 800; color: #4e73df !important; text-transform: uppercase; }
+        .main-container { flex: 1; padding: 30px 15px; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1); }
+        .status-badge { font-size: 0.75rem; padding: 5px 10px; border-radius: 20px; }
+        .sticky-action-bar { position: sticky; bottom: 0; background: white; padding: 15px; border-top: 1px solid #e3e6f0; box-shadow: 0 -5px 10px rgba(0,0,0,0.05); z-index: 1000; }
+        footer { background: #fff; padding: 20px 0; border-top: 1px solid #e3e6f0; margin-top: auto; }
+        .table-hover tbody tr:hover { background-color: #f1f3f9; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-shield-alt mr-2"></i> {{ school_info.name|default:"ADMIN PORTAL" }}
+        </a>
+        <a href="/dashboard/" class="btn btn-outline-secondary btn-sm shadow-sm">
+            <i class="fas fa-tachometer-alt mr-1"></i> Dashboard
+        </a>
+    </div>
+</nav>
+
+<div class="container main-container">
+    <div class="mb-4">
+        <h3 class="h4 text-gray-800 font-weight-bold">Cumulative Result Publication Control</h3>
+        <p class="text-muted small">Toggle visibility of session report cards for students and parents.</p>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow mb-4">
+        <div class="card-body p-4">
+            <form method="GET" class="row align-items-end">
+                <div class="col-md-5 mb-2">
+                    <label class="small font-weight-bold text-uppercase text-primary">Class Filter</label>
+                    <select name="class_id" class="form-control border-primary" required>
+                        <option value="">-- Select Class --</option>
+                        {% for c in classes %}
+                        <option value="{{ c.id }}" {% if selected_class == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-5 mb-2">
+                    <label class="small font-weight-bold text-uppercase text-primary">Academic Session</label>
+                    <select name="session_id" class="form-control border-primary" required>
+                        <option value="">-- Select Session --</option>
+                        {% for s in sessions %}
+                        <option value="{{ s.id }}" {% if selected_session == s.id|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-sync-alt"></i> Load List</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if students %}
+    <div class="card shadow">
+        <div class="card-header py-3 bg-light d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Student Records ({{ students|length }})</h6>
+            <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" id="select-all">
+                <label class="custom-control-label font-weight-bold" for="select-all">Select All</label>
+            </div>
+        </div>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="class_id" value="{{ selected_class }}">
+            <input type="hidden" name="session_id" value="{{ selected_session }}">
+            
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr class="text-center text-uppercase small text-muted">
+                            <th width="100">Publish</th>
+                            <th class="text-left">Full Name</th>
+                            <th width="150">Current Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in students %}
+                        <tr>
+                            <td class="text-center">
+                                <input type="hidden" name="all_student_ids" value="{{ s.id }}">
+                                
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" name="published_students" value="{{ s.id }}" 
+                                           class="custom-control-input student-checkbox" id="check_{{ s.id }}"
+                                           {% if s.is_published %}checked{% endif %}>
+                                    <label class="custom-control-label" for="check_{{ s.id }}"></label>
+                                </div>
+                            </td>
+                            <td class="align-middle font-weight-bold text-dark">{{ s.name }}</td>
+                            <td class="text-center align-middle">
+                                {% if s.is_published %}
+                                <span class="badge badge-success status-badge"><i class="fas fa-check-circle mr-1"></i> Published</span>
+                                {% else %}
+                                <span class="badge badge-secondary status-badge"><i class="fas fa-times-circle mr-1"></i> Hidden</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="sticky-action-bar text-right">
+                <button type="submit" class="btn btn-success btn-lg px-5 shadow rounded-pill">
+                    <i class="fas fa-save mr-2"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+    {% else %}
+    <div class="text-center py-5 bg-white rounded shadow-sm">
+        <i class="fas fa-users-slash fa-3x text-light mb-3"></i>
+        <p class="text-muted">Please filter by Class and Session to manage results.</p>
+    </div>
+    {% endif %}
+</div>
+
+<footer>
+    <div class="container text-center">
+        <small class="text-muted">&copy; {% now "Y" %} {{ school_info.name|default:"Portal" }} | Results Management System</small>
+    </div>
+</footer>
+
+<script>
+    // Logic for Select All checkbox
+    document.getElementById('select-all').onclick = function() {
+        let checkboxes = document.querySelectorAll('.student-checkbox');
+        for (let checkbox of checkboxes) {
+            checkbox.checked = this.checked;
+        }
+    }
+</script>
+
+</body>
+</html>
