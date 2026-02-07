@@ -830,47 +830,6 @@ class SessionPublicationControlView(LoginRequiredMixin, UserPassesTestMixin, Vie
 
 
 
-# class StudentDashboardView(LoginRequiredMixin, View):
-#     template_name = 'results/student_dashboard.html'
-
-#     def get(self, request, *args, **kwargs):
-#         if hasattr(request.user, 'student'):
-#             student = request.user.student
-
-#             # Get terms for which the student has scores (for termly reports)
-#             terms_with_scores = Term.objects.filter(score__student=student).distinct().order_by('-start_date')
-
-#             # --- ADD THESE DEBUG PRINTS ---
-#             print(f"\n--- Debugging StudentDashboard for Student ID: {student.id} ---")
-#             if not terms_with_scores.exists():
-#                 print("No terms with scores found for this student.")
-#             else:
-#                 print("Terms found with scores:")
-#                 for term_obj in terms_with_scores:
-#                     print(f"  Term ID: {term_obj.id}, Name: '{term_obj.name}'")
-#                     if term_obj.id is None or term_obj.id == '':
-#                         print(f"  !!! WARNING: Term ID is None or empty for Term: {term_obj.name} !!!")
-#             print("---------------------------------------------------\n")
-#             # --- END DEBUG PRINTS ---
-
-#             # Get sessions for which the student has scores (for annual reports)
-#             sessions_with_filter = Q(terms__score__student=student)
-#             sessions_with_scores = Session.objects.filter(sessions_with_filter).distinct().order_by('-start_date')
-
-#             context = {
-#                 'student': student,
-#                 'terms': terms_with_scores,
-#                 'sessions': sessions_with_scores,
-#             }
-#             return render(request, self.template_name, context)
-#         else:
-#             messages.error(request, "Your user account is not linked to a student profile. Please contact administration.")
-#             return redirect('home')
-
-
-from django.db.models import Q
-from .models import SessionResultStatus 
-
 class StudentDashboardView(LoginRequiredMixin, View):
     template_name = 'results/student_dashboard.html'
 
@@ -1150,144 +1109,6 @@ class ResultPermissionGatekeeperView(View):
         return redirect('pages:portal-home')
 
 
-
-
-# MID-TERM RESULTS VIEW
-# class MidTermScoreEntryView(LoginRequiredMixin, View):
-#     """
-#     Allows the assigned class teacher or Admin to enter/update Mid-Term Scores
-#     for all students in a specific class and subject for a term.
-#     """
-#     template_name = 'results/midterm_score_entry.html'
-
-#     def dispatch(self, request, *args, **kwargs):
-#         # 1. Permission Check: Only Teachers/Admins/Staff can access this
-#         if not (hasattr(request.user, 'teacher') or request.user.is_staff):
-#             messages.error(request, "You do not have permission to enter scores.")
-#             return redirect('pages:portal-home')
-#         return super().dispatch(request, *args, **kwargs)
-
-#     def get_formset_class(self, **kwargs):
-#         # Ensure MidTermScoreForm is the custom form designed to return None for empty input
-#         return modelformset_factory(
-#             MidTermScore,
-#             form=MidTermScoreForm, # Use the custom form
-#             extra=0,
-#             fields=('exam_total_score',)
-#         )
-
-#     def get(self, request, class_id, subject_id, term_id):
-#         # Object retrieval (Standard, Subject, Term)
-#         assigned_class = get_object_or_404(Standard, id=class_id)
-#         subject = get_object_or_404(Subject, id=subject_id)
-#         term = get_object_or_404(Term, id=term_id)
-
-#         # 2. Teacher-specific Authorization Check (Bypassed if user is staff/superuser)
-#         if hasattr(request.user, 'teacher') and not request.user.is_staff:
-#             teacher = request.user.teacher
-
-#             # Check if the teacher is assigned as Form Teacher to this class
-#             is_form_teacher = assigned_class in teacher.form_class.all()
-#             # Check if the teacher teaches this subject
-#             teaches_subject = subject in teacher.subjects_taught.all()
-
-#             if not (is_form_teacher and teaches_subject):
-#                 messages.error(request, f"You are not authorized to enter scores for {subject.name} in {assigned_class.name}.")
-#                 return redirect('results:teacher_dashboard')
-
-#         # Get students in the class
-#         students = Student.objects.filter(current_class=assigned_class).order_by('last_name')
-
-#         # --- Placeholder Creation Logic ---
-#         existing_student_ids = MidTermScore.objects.filter(student__in=students, subject=subject, term=term).values_list('student_id', flat=True)
-#         for student in students:
-#             if student.id not in existing_student_ids:
-#                 # CRITICAL: exam_total_score MUST be created as None, not 0, to indicate 'not taken'
-#                 MidTermScore.objects.create(student=student, subject=subject, term=term, exam_total_score=None)
-
-#         # Get the scores (including the newly created placeholders)
-#         queryset = MidTermScore.objects.filter(
-#             student__in=students,
-#             subject=subject,
-#             term=term
-#         ).select_related('student').order_by('student__last_name')
-
-#         MidTermScoreFormSet = self.get_formset_class()
-#         formset = MidTermScoreFormSet(queryset=queryset)
-
-#         context = {
-#             'formset': formset,
-#             'assigned_class': assigned_class,
-#             'subject': subject,
-#             'term': term,
-#             'students': students,
-#         }
-#         return render(request, self.template_name, context)
-
-#     def post(self, request, class_id, subject_id, term_id):
-#         # Object retrieval (Standard, Subject, Term)
-#         assigned_class = get_object_or_404(Standard, id=class_id)
-#         subject = get_object_or_404(Subject, id=subject_id)
-#         term = get_object_or_404(Term, id=term_id)
-
-#         # Re-run authorization check (omitted for brevity, assuming models are accessible)
-
-#         students = Student.objects.filter(current_class=assigned_class)
-#         queryset = MidTermScore.objects.filter(
-#             student__in=students,
-#             subject=subject,
-#             term=term
-#         ).select_related('student').order_by('student__last_name')
-
-#         MidTermScoreFormSet = self.get_formset_class()
-#         formset = MidTermScoreFormSet(request.POST, queryset=queryset)
-
-#         if formset.is_valid():
-
-#             instances_to_save = []
-#             instances_to_delete = []
-
-#             for form in formset:
-#                 if form.has_changed():
-#                     instance = form.save(commit=False)
-#                     score_value = form.cleaned_data.get('exam_total_score')
-
-#                     # --- CRITICAL FIX: Custom save logic to delete blank entries ---
-#                     if score_value is None:
-#                         # If the score is cleared (None) and a record exists (instance.pk), mark for deletion.
-#                         if instance.pk:
-#                             instances_to_delete.append(instance)
-#                         # If it's a new instance with a None score, we ignore it (no save needed).
-#                     else:
-#                         # Score is 0 or positive, so we save/update it.
-#                         instances_to_save.append(instance)
-
-#             # 1. Save valid, non-empty instances (including those with score 0)
-#             for instance in instances_to_save:
-#                 instance.save()
-
-#             # 2. Delete instances where the score was explicitly cleared (treat as 'not taken')
-#             for instance in instances_to_delete:
-#                 instance.delete()
-
-#             # --- NEW SUCCESS REDIRECT LOGIC ---
-#             # Redirect to the dedicated success page instead of back to entry page
-#             return redirect('results:midterm_score_success',
-#                             class_id=class_id,
-#                             subject_id=subject_id,
-#                             term_id=term_id)
-#             # ----------------------------------
-
-#         context = {
-#             'formset': formset,
-#             'assigned_class': assigned_class,
-#             'subject': subject,
-#             'term': term,
-#             'students': students.order_by('last_name'),
-#         }
-#         messages.error(request, "There was an error in the score entry. Please check the scores entered.")
-#         return render(request, self.template_name, context)
-
 class MidTermScoreEntryView(LoginRequiredMixin, View):
     template_name = 'results/midterm_score_entry.html'
 
@@ -1505,83 +1326,6 @@ class MidTermReportCardView(LoginRequiredMixin, View):
                 return pdf_response
 
         return render(request, self.template_name, context)
-
-
-
-
-# Mid Term List
-# class StudentMidTermListView(LoginRequiredMixin, View):
-#     template_name = 'results/student_midterm_list.html'
-
-#     def get(self, request):
-#         is_student = hasattr(request.user, 'student')
-#         is_teacher = hasattr(request.user, 'teacher')
-#         is_admin = request.user.is_staff or request.user.is_superuser
-
-#         # 1. Authorization Check
-#         if not (is_student or is_teacher or is_admin):
-#             messages.error(request, "Access denied.")
-#             return redirect('pages:portal-home')
-
-#         context = {}
-#         report_data = []
-
-#         # 2. Filtering Logic
-#         if is_student:
-#             student = request.user.student
-#             context['current_user_type'] = 'student'
-#             context['student'] = student
-
-#             queryset = Term.objects.filter(
-#                 midtermscore__student=student
-#             ).values('id', 'name', 'session__name').distinct()
-
-#             for report in queryset:
-#                 report_data.append({
-#                     'term_id': report['id'],
-#                     'term_name': report['name'],
-#                     'session_name': report['session__name'],
-#                     'student_id': student.id,
-#                 })
-
-#         # --- COMBINED TEACHER & ADMIN LOGIC ---
-#         elif is_admin or is_teacher:
-#             context['current_user_type'] = 'admin' if is_admin else 'teacher'
-
-#             # Base Queryset
-#             scores_qs = MidTermScore.objects.all()
-
-#             # If NOT admin (meaning they are a teacher), filter by their class
-#             if not is_admin:
-#                 try:
-#                     assigned_class = request.user.teacher.form_class.get()
-#                 except:
-#                     assigned_class = request.user.teacher.form_class.first()
-
-#                 if not assigned_class:
-#                     messages.warning(request, "No assigned class found.")
-#                     return render(request, self.template_name, {'available_reports': []})
-
-#                 context['assigned_class'] = assigned_class
-#                 scores_qs = scores_qs.filter(student__current_class=assigned_class)
-
-#             # Get Unique Student + Term combinations
-#             queryset = scores_qs.values(
-#                 'student', 'term', 'term__name', 'term__session__name',
-#                 'student__first_name', 'student__last_name', 'student__current_class__name'
-#             ).annotate(dummy_id=Max('id')).order_by('-term__session__name', 'student__last_name')
-
-#             for report in queryset:
-#                 report_data.append({
-#                     'term_id': report['term'],
-#                     'term_name': report['term__name'],
-#                     'session_name': report['term__session__name'],
-#                     'student_id': report['student'],
-#                     'student_name': f"{report['student__first_name']} {report['student__last_name']} ({report['student__current_class__name']})",
-#                 })
-
-#         context['available_reports'] = report_data
-#         return render(request, self.template_name, context)
 
 
 # Mid Term List with filtering
@@ -1954,28 +1698,6 @@ class ParentMidTermReportView(LoginRequiredMixin, View):
         return render(request, self.template_name, context)
 
 
-# # Parent Session Report Access
-# class ParentSessionReportView(LoginRequiredMixin, View):
-#     template_name = 'results/session_report_card_detail.html'
-
-#     def get(self, request, student_id, session_id):
-#         student = get_object_or_404(Student, id=student_id)
-        
-#         if not hasattr(request.user, 'parent') or student not in request.user.parent.children.all():
-#             raise PermissionDenied("Access denied: This student is not linked to your account.")
-
-#         session = get_object_or_404(Session, id=session_id)
-#         scores = Score.objects.filter(student=student, term__session=session)
-
-#         context = {
-#             'student': student,
-#             'session': session,
-#             'scores': scores,
-#             'report_type': 'Annual Session Report',
-#         }
-#         return render(request, self.template_name, context)
-
-
 class ParentSessionReportView(LoginRequiredMixin, View):
     template_name = 'results/session_report_card_detail.html'
 
@@ -2161,8 +1883,6 @@ class ParentTermlyReportView(LoginRequiredMixin, View):
         }
         
         return render(request, self.template_name, context)
-
-
 
 
 

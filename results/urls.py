@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 from .views import (
-    ScoreEntryView, ScoreEntrySuccessView, MidTermScoreEntryView, MidTermReportCardView, StudentMidTermListView, MidTermScoreSelectionView, MidTermScoreSuccessView, BroadsheetSelectionView,
+    ScoreEntryView, ScoreEntrySuccessView, MidTermScoreEntryView, MidTermReportCardView, StudentMidTermListView, MidTermScoreSelectionView, MidTermScoreSuccessView, BroadsheetSelectionView, SessionPublicationControlView,
     ReportCardListView, StudentReportCardView, StudentDashboardView, SessionReportCardListView, StudentSessionReportCardView, ClassRankingView, StandardsAndTermsListView, ResultPermissionGatekeeperView # Import new views
 )
 

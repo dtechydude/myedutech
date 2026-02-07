@@ -200,8 +200,14 @@ class Student(models.Model):
     # def __str__(self):
     #     return f'{self.first_name} - {self.last_name}'
     
+    # def get_full_name(self):
+    #     return f"{self.last_name} {self.first_name} {self.middle_name}"
+
     def get_full_name(self):
-        return f"{self.last_name} {self.first_name} {self.middle_name}"
+    # Filter out None, empty strings, or whitespace-only strings
+        names = [self.last_name, self.first_name, self.middle_name]
+        full_name = " ".join(filter(None, names))
+        return full_name.strip()
     
     def __str__(self):
         return self.get_full_name()
