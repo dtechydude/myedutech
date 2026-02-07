@@ -109,12 +109,19 @@ class Teacher(models.Model):
     def __str__(self):
         return f'{self.first_name} - {self.last_name}'
     
+    # def get_full_name(self):
+    #     """
+    #     Returns the teachers's full name.
+    #     """
+    #     return f"{self.user.first_name} - {self.middle_name} - {self.user.last_name}"
+
     def get_full_name(self):
-        """
-        Returns the teachers's full name.
-        """
-        return f"{self.user.first_name} - {self.middle_name} - {self.user.last_name}"
-    
+   
+        names = [self.user.last_name, self.user.first_name, self.middle_name]
+        full_name = " ".join(filter(None, names))
+        return full_name.strip()
+ 
+        
     class Meta:
         ordering = ['last_name']
         
