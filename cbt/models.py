@@ -47,8 +47,8 @@ class Quiz(models.Model):
                 name='unique_quiz_per_exam_context'
             )
         ]
-        verbose_name = "Quiz"
-        verbose_name_plural = "Quizzes"
+        verbose_name = "CBT Exam"
+        verbose_name_plural = "CBT Exams"
 
     @property
     def exam_name(self):
@@ -142,6 +142,10 @@ class Question(models.Model):
         else:
             return student_answer.strip().lower() == self.correct_answer.strip().lower()
 
+    class Meta:
+        verbose_name = "CBT Question"
+        verbose_name_plural = "CBT Questions"
+
 
 
 class Answer(models.Model):
@@ -159,3 +163,7 @@ class QuizResult(models.Model):
     score = models.FloatField()
     passed = models.BooleanField()
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "CBT Result"
+        verbose_name_plural = "CBT Results"
