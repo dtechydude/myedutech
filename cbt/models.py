@@ -7,33 +7,49 @@ from django.utils import timezone
 from datetime import timedelta
 import re
 
+
+
 class Quiz(models.Model):
-    # exam_name = models.CharField(max_length=120)
-    # subject_name = models.CharField(max_length=120)
     examination = models.ForeignKey(Examination, on_delete=models.CASCADE, null=True)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, null=True)
-    term = models.CharField(max_length=50, choices=[('First', 'First'), ('Second', 'Second'), ('Third', 'Third')])
-    session = models.ForeignKey(Session, on_delete=models.CASCADE, null=True, blank=True,related_name='cbt_session')
+    term = models.CharField(
+        max_length=50,
+        choices=[('First', 'First'), ('Second', 'Second'), ('Third', 'Third')]
+    )
+    session = models.ForeignKey(
+        Session,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='cbt_session'
+    )
     number_of_questions = models.IntegerField()
     time = models.IntegerField(help_text="Duration in minutes")
     required_score_to_pass = models.IntegerField(help_text="Percentage (e.g., 50)")
     standard = models.ForeignKey(Standard, on_delete=models.CASCADE, related_name='cbt_exams')
-    active = models.BooleanField(default=False) # Add this line
+    active = models.BooleanField(default=False)
+
+    # 🔹 NEW FIELDS (availability control)
+    start_date = models.DateField(help_text="Date exam becomes available")
+    end_date = models.DateField(help_text="Date exam expires")
+    start_time = models.TimeField(help_text="Daily opening time")
+    end_time = models.TimeField(help_text="Daily closing time")
+    # start_date = models.DateField(null=True, blank=True, help_text="Date exam becomes available")
+    # end_date = models.DateField(null=True, blank=True, help_text="Date exam expires")
+    # start_time = models.TimeField(null=True, blank=True, help_text="Daily opening time")
+    # end_time = models.TimeField(null=True, blank=True, help_text="Daily closing time")
+
 
     class Meta:
-        # This prevents duplicate subjects for the same exam context
         constraints = [
             models.UniqueConstraint(
-                fields=['examination', 'subject', 'term', 'session'], 
+                fields=['examination', 'subject', 'term', 'session'],
                 name='unique_quiz_per_exam_context'
             )
         ]
-    class Meta:
         verbose_name = "Quiz"
         verbose_name_plural = "Quizzes"
-    
-    # Keep these as properties so your existing code 
-    # (like quiz.exam_name) still works!
+
     @property
     def exam_name(self):
         return self.examination.name if self.examination else "Unnamed Exam"
@@ -47,10 +63,10 @@ class Quiz(models.Model):
 
     def get_questions(self):
         import random
-        # This fetches questions related to this quiz
         qs = list(self.question_set.all())
         random.shuffle(qs)
         return qs[:self.number_of_questions]
+
 
 
 class QuizAttempt(models.Model):

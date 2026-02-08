@@ -84,42 +84,94 @@ def submit_cbt_request(request):
 
 # CBT Logics
 
+# @login_required
+# def quiz_list_view(request):
+#     user = request.user
+#     teacher_profile = None
+    
+#     # 1. Start with an optimized QuerySet (Fixes the Slowness)
+#     # We join the related tables now so the template doesn't have to later
+#     quizzes_qs = Quiz.objects.select_related(
+#         'examination', 
+#         'subject', 
+#         'examination__standard', 
+#         'session'
+#     )
+
+#     # 2. STUDENT LOGIC
+#     if hasattr(user, 'student'):
+#         student_profile = user.student
+#         if student_profile.student_status == 'active':
+#             student_class = student_profile.current_class
+#             # Filter quizzes assigned to the student's specific class
+#             quizzes = quizzes_qs.filter(standard=student_class, active=True)
+#         else:
+#             quizzes = Quiz.objects.none()
+    
+#     # 3. STAFF/TEACHER LOGIC
+#     elif user.is_staff:
+#         try:
+#             # We prefetch the standards/subjects so the button-check in the template is instant
+#             teacher_profile = Teacher.objects.prefetch_related(
+#                 'standards_assigned', 
+#                 'subjects_taught'
+#             ).get(user=user)
+#             quizzes = quizzes_qs.filter(active=True)
+#         except Teacher.DoesNotExist:
+#             quizzes = quizzes_qs.filter(active=True)
+    
+#     else:
+#         quizzes = Quiz.objects.none()
+
+#     return render(request, 'cbt/main.html', {
+#         'quizzes': quizzes,
+#         'teacher_profile': teacher_profile
+#     })
+
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+
 @login_required
 def quiz_list_view(request):
     user = request.user
     teacher_profile = None
-    
-    # 1. Start with an optimized QuerySet (Fixes the Slowness)
-    # We join the related tables now so the template doesn't have to later
+
+    today = timezone.localdate()
+    now = timezone.localtime().time()
+
     quizzes_qs = Quiz.objects.select_related(
-        'examination', 
-        'subject', 
-        'examination__standard', 
+        'examination',
+        'subject',
+        'examination__standard',
         'session'
+    ).filter(
+        active=True,
+        start_date__lte=today,
+        end_date__gte=today,
+        start_time__lte=now,
+        end_time__gte=now
     )
 
-    # 2. STUDENT LOGIC
+    # STUDENT LOGIC
     if hasattr(user, 'student'):
         student_profile = user.student
         if student_profile.student_status == 'active':
             student_class = student_profile.current_class
-            # Filter quizzes assigned to the student's specific class
-            quizzes = quizzes_qs.filter(standard=student_class, active=True)
+            quizzes = quizzes_qs.filter(standard=student_class)
         else:
             quizzes = Quiz.objects.none()
-    
-    # 3. STAFF/TEACHER LOGIC
+
+    # STAFF / TEACHER LOGIC
     elif user.is_staff:
         try:
-            # We prefetch the standards/subjects so the button-check in the template is instant
             teacher_profile = Teacher.objects.prefetch_related(
-                'standards_assigned', 
+                'standards_assigned',
                 'subjects_taught'
             ).get(user=user)
-            quizzes = quizzes_qs.filter(active=True)
+            quizzes = quizzes_qs
         except Teacher.DoesNotExist:
-            quizzes = quizzes_qs.filter(active=True)
-    
+            quizzes = quizzes_qs
+
     else:
         quizzes = Quiz.objects.none()
 
@@ -127,7 +179,6 @@ def quiz_list_view(request):
         'quizzes': quizzes,
         'teacher_profile': teacher_profile
     })
-
 
 
 @login_required
