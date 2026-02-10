@@ -38,7 +38,6 @@ from django.contrib.admin.views.decorators import staff_member_required
 
 
 
-
 # Displays all students
 @login_required
 def student_list(request):
@@ -217,60 +216,6 @@ def graduate_students_view(request):
     return redirect('students:graduate_students')
 
 
-# @user_passes_test(is_authorized_staff)
-# def alumni_list_view(request):
-#     queryset = Student.objects.filter(student_status='graduated').select_related('current_class', 'graduated_session')
-#     sessions = Session.objects.all().order_by('-start_date')
-#     standards = Standard.objects.filter(name__iexact='Alumni') | Standard.objects.exclude(name__iexact='Alumni')  # for filter if needed
-
-#     # filtering
-#     session_id = request.GET.get('session')
-#     class_id = request.GET.get('class')
-#     year = request.GET.get('year')
-#     q = request.GET.get('q')
-
-#     if session_id:
-#         queryset = queryset.filter(graduated_session__id=session_id)
-#     if class_id:
-#         # Assuming GraduationRecord is related via 'graduation_records' on Student
-#         queryset = queryset.filter(graduation_records__graduated_class__id=class_id)
-#     if year:
-#         # Filtering by year is correct
-#         queryset = queryset.filter(graduation_records__date_graduated__year=year)
-#     if q:
-#         queryset = queryset.filter(
-#             # adjust fields as appropriate
-#             models.Q(first_name__icontains=q) |
-#             models.Q(last_name__icontains=q) |
-#             models.Q(USN__icontains=q)
-#         )
-
-#     queryset = queryset.distinct().order_by('-graduation_records__date_graduated', 'last_name')
-
-#     # pagination
-#     paginator = Paginator(queryset, 25)
-#     page = request.GET.get('page')
-#     alumni_page = paginator.get_page(page)
-
-#     # years for filter - CORRECTED LINE
-#     # GraduationRecord.objects.dates() returns a QuerySet of datetime objects
-#     date_objects = GraduationRecord.objects.dates('date_graduated', 'year', order='DESC')
-#     # Use a list comprehension to extract the 'year' attribute from each datetime object
-#     years = [date_obj.year for date_obj in date_objects] 
-
-#     return render(request, 'students/alumni_list.html', {
-#         'alumni': alumni_page,
-#         'sessions': sessions,
-#         'years': years,
-#         'standards': standards,
-#         'q': q,
-#     })
-
-from django.contrib.auth.decorators import user_passes_test
-from django.core.paginator import Paginator
-from django.db import models
-from django.http import HttpResponse
-import csv
 
 @user_passes_test(is_authorized_staff)
 def alumni_list_view(request):
