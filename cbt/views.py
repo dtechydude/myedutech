@@ -17,6 +17,9 @@ from staff.models import Teacher
 from django.core.exceptions import PermissionDenied
 import csv
 from django.http import HttpResponse
+from django.utils import timezone
+from django.db.models import Q
+from curriculum.models import Standard
 
 
 
@@ -128,8 +131,6 @@ def submit_cbt_request(request):
 #         'teacher_profile': teacher_profile
 #     })
 
-from django.contrib.auth.decorators import login_required
-from django.utils import timezone
 
 @login_required
 def quiz_list_view(request):
@@ -385,36 +386,87 @@ def teacher_view_questions(request, quiz_id):
     })
 
 
+# @login_required
+# def teacher_results_view(request):
+#     # 1. Get the teacher profile
+#     teacher = get_object_or_404(Teacher, user=request.user)
+    
+#     # 2. Get filters from the GET request (from the search form)
+#     exam_id = request.GET.get('examination')
+#     standard_id = request.GET.get('standard')
+
+#     # 3. Base queryset: only show results for standards/classes assigned to this teacher
+#     # We use select_related to join User, Quiz, and Exam tables in ONE query for speed
+#     results = QuizResult.objects.filter(
+#         quiz__standard__in=teacher.standards_assigned.all()
+#     ).select_related(
+#         'user', 
+#         'quiz', 
+#         'quiz__examination', 
+#         'quiz__subject'
+#     ).order_by('-timestamp')
+
+#     # 4. Apply Filters
+#     if exam_id:
+#         results = results.filter(quiz__examination_id=exam_id)
+#     if standard_id:
+#         results = results.filter(quiz__standard_id=standard_id)
+
+#     # 5. Data for the dropdown filters in the template
+#     # Only show exams/standards that this teacher is actually in charge of
+#     assigned_standards = teacher.standards_assigned.all()
+#     exams = Examination.objects.filter(standard__in=assigned_standards).distinct()
+
+#     return render(request, 'cbt/teacher_results.html', {
+#         'results': results,
+#         'exams': exams,
+#         'standards': assigned_standards,
+#     })
+
+
+
 @login_required
 def teacher_results_view(request):
-    # 1. Get the teacher profile
-    teacher = get_object_or_404(Teacher, user=request.user)
-    
-    # 2. Get filters from the GET request (from the search form)
+    user = request.user
+
+    # 1. Base queryset (staff & superuser can see everything)
+    if user.is_staff or user.is_superuser:
+        results = QuizResult.objects.select_related(
+            'user',
+            'quiz',
+            'quiz__examination',
+            'quiz__subject'
+        ).order_by('-timestamp')
+
+        assigned_standards = Standard.objects.all()
+        exams = Examination.objects.all()
+
+    else:
+        # 2. Normal teacher flow (UNCHANGED logic)
+        teacher = get_object_or_404(Teacher, user=user)
+
+        results = QuizResult.objects.filter(
+            quiz__standard__in=teacher.standards_assigned.all()
+        ).select_related(
+            'user',
+            'quiz',
+            'quiz__examination',
+            'quiz__subject'
+        ).order_by('-timestamp')
+
+        assigned_standards = teacher.standards_assigned.all()
+        exams = Examination.objects.filter(
+            standard__in=assigned_standards
+        ).distinct()
+
+    # 3. Apply filters (shared by both)
     exam_id = request.GET.get('examination')
     standard_id = request.GET.get('standard')
 
-    # 3. Base queryset: only show results for standards/classes assigned to this teacher
-    # We use select_related to join User, Quiz, and Exam tables in ONE query for speed
-    results = QuizResult.objects.filter(
-        quiz__standard__in=teacher.standards_assigned.all()
-    ).select_related(
-        'user', 
-        'quiz', 
-        'quiz__examination', 
-        'quiz__subject'
-    ).order_by('-timestamp')
-
-    # 4. Apply Filters
     if exam_id:
         results = results.filter(quiz__examination_id=exam_id)
     if standard_id:
         results = results.filter(quiz__standard_id=standard_id)
-
-    # 5. Data for the dropdown filters in the template
-    # Only show exams/standards that this teacher is actually in charge of
-    assigned_standards = teacher.standards_assigned.all()
-    exams = Examination.objects.filter(standard__in=assigned_standards).distinct()
 
     return render(request, 'cbt/teacher_results.html', {
         'results': results,

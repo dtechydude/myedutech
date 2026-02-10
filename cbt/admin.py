@@ -45,14 +45,17 @@ class QuestionResource(resources.ModelResource):
 #     list_filter = ('quiz', 'question_type')
 #     search_fields = ('content', 'quiz__examination__name')
 
-class QuestionAdminForm(forms.ModelForm):
-    content = forms.CharField(
-        widget=CKEditor5Widget(config_name='extends')
-    )
 
+class QuestionAdminForm(forms.ModelForm):
     class Meta:
         model = Question
         fields = "__all__"
+        labels = {
+            "content": "Question Text",
+        }
+        widgets = {
+            "content": CKEditor5Widget(config_name="extends"),
+        }
 
 @admin.register(Question)
 class QuestionAdmin(ImportExportModelAdmin):
