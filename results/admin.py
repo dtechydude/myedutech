@@ -12,7 +12,7 @@ from django.urls import reverse
 
 @admin.register(Examination)
 class ExaminationAdmin(admin.ModelAdmin):
-    list_display = ['name', 'session', 'term', 'view_quizzes_link']
+    list_display = ['name', 'session', 'standard', 'term', 'view_quizzes_link']
 
     def view_quizzes_link(self, obj):
         # This creates a URL to the Quiz Admin filtered by this specific Examination ID

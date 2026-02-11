@@ -7,27 +7,42 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django import forms
 from django_ckeditor_5.widgets import CKEditor5Widget
+from django.utils.html import format_html
+from django.utils.text import Truncator
+from django.utils.html import strip_tags
+
 
 # --- 1. RESOURCE FOR CSV IMPORT/EXPORT ---
-class QuestionResource(resources.ModelResource):
-    # This allows you to type the Examination Name in your CSV 'quiz' column
-    quiz = fields.Field(
-        column_name='quiz',
-        attribute='quiz',
-        widget=ForeignKeyWidget(Quiz, 'examination__name')
-    )
+# class QuestionResource(resources.ModelResource):
+#     # This allows you to type the Examination Name in your CSV 'quiz' column
+#     quiz = fields.Field(
+#         column_name='quiz',
+#         attribute='quiz',
+#         widget=ForeignKeyWidget(Quiz, 'examination__name')
+#     )
 
-    class Meta:
-        model = Question
-        fields = ('id', 'quiz', 'content', 'question_type', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_answer', 'image_url')
-        export_order = fields
+#     class Meta:
+#         model = Question
+#         fields = ('id', 'quiz', 'content', 'question_type', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_answer', 'image_url')
+#         export_order = fields
 
 
-# --- 2. QUESTION ADMIN ---
+# class QuestionAdminForm(forms.ModelForm):
+#     class Meta:
+#         model = Question
+#         fields = "__all__"
+#         labels = {
+#             "content": "Question Text",
+#         }
+#         widgets = {
+#             "content": CKEditor5Widget(config_name="extends"),
+#         }
+
 # @admin.register(Question)
 # class QuestionAdmin(ImportExportModelAdmin):
 #     resource_class = QuestionResource
-    
+#     form = QuestionAdminForm
+
 #     fieldsets = (
 #         ('General Information', {
 #             'fields': ('quiz', 'content', 'question_type', 'image_url')
@@ -40,10 +55,36 @@ class QuestionResource(resources.ModelResource):
 #             'fields': ('correct_answer',),
 #         }),
 #     )
-#     # Using 'quiz' here works because 'quiz' is still a direct ForeignKey on Question
+
 #     list_display = ('content', 'quiz', 'question_type', 'correct_answer')
 #     list_filter = ('quiz', 'question_type')
 #     search_fields = ('content', 'quiz__examination__name')
+
+
+
+class QuestionResource(resources.ModelResource):
+    # This allows you to type the Examination Name in your CSV 'quiz' column
+    quiz = fields.Field(
+        column_name='quiz',
+        attribute='quiz',
+        widget=ForeignKeyWidget(Quiz, 'examination__name')
+    )
+
+    class Meta:
+        model = Question
+        fields = (
+            'id',
+            'quiz',
+            'content',
+            'question_type',
+            'option_a',
+            'option_b',
+            'option_c',
+            'option_d',
+            'correct_answer',
+            'image_url'
+        )
+        export_order = fields
 
 
 class QuestionAdminForm(forms.ModelForm):
@@ -56,6 +97,7 @@ class QuestionAdminForm(forms.ModelForm):
         widgets = {
             "content": CKEditor5Widget(config_name="extends"),
         }
+
 
 @admin.register(Question)
 class QuestionAdmin(ImportExportModelAdmin):
@@ -75,11 +117,16 @@ class QuestionAdmin(ImportExportModelAdmin):
         }),
     )
 
-    list_display = ('content', 'quiz', 'question_type', 'correct_answer')
+    # ✅ Clean preview (removes HTML tags and truncates)
+    list_display = ('formatted_content', 'quiz', 'question_type', 'correct_answer')
     list_filter = ('quiz', 'question_type')
     search_fields = ('content', 'quiz__examination__name')
 
+    def formatted_content(self, obj):
+        clean_text = strip_tags(obj.content)
+        return Truncator(clean_text).chars(100)
 
+    formatted_content.short_description = "Question Text"
 
 
 # --- 3. QUIZ ADMIN (The Fix for E108) ---

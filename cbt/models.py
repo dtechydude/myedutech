@@ -59,7 +59,7 @@ class Quiz(models.Model):
         return self.subject.name if self.subject else "Unnamed Subject"
 
     def __str__(self):
-        return f"{self.exam_name} - {self.subject_name}"
+        return f"{self.exam_name} - {self.subject_name} - {self.standard.name}"
 
     def get_questions(self):
         import random
