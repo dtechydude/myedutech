@@ -242,7 +242,7 @@ class QuizAdmin(admin.ModelAdmin):
 @admin.register(QuizResult)
 class QuizResultAdmin(ImportExportModelAdmin):
     list_display = ['user', 'quiz', 'score', 'passed', 'timestamp']
-    list_filter = ['passed', 'quiz', 'timestamp']
+    list_filter = ['passed', 'quiz',  'quiz__standard', 'quiz__session',  'timestamp']
     readonly_fields = ['user', 'quiz', 'score', 'passed', 'timestamp']
 
     def has_add_permission(self, request):
