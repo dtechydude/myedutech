@@ -22,6 +22,129 @@ from django.db.models import Q, F
 from curriculum.models import Standard
 
 
+import csv
+from django.http import HttpResponse
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics
+from reportlab.platypus import ListFlowable, ListItem
+from reportlab.platypus import Table
+from reportlab.platypus import TableStyle
+from reportlab.platypus import KeepTogether
+from reportlab.platypus import HRFlowable
+from reportlab.platypus import PageBreak
+from reportlab.platypus import Image
+from reportlab.platypus import Frame
+from reportlab.platypus import BaseDocTemplate
+from reportlab.platypus import FrameBreak
+from reportlab.platypus import NextPageTemplate
+from reportlab.platypus import PageTemplate
+from reportlab.platypus import Indenter
+from reportlab.platypus import Flowable
+from reportlab.platypus import Preformatted
+from reportlab.platypus import XPreformatted
+from reportlab.platypus import LongTable
+from reportlab.platypus import ListFlowable
+from reportlab.platypus import ListItem
+from reportlab.platypus import Paragraph
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import Spacer
+from reportlab.lib.units import inch
+from reportlab.platypus import Table
+from reportlab.platypus import TableStyle
+from reportlab.lib import colors
+
+
+@login_required
+def export_questions(request, quiz_id, export_type):
+    user = request.user
+    teacher = None if user.is_superuser or user.is_staff else get_object_or_404(Teacher, user=user)
+
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+
+    # Security check
+    if not (user.is_superuser or user.is_staff):
+        if quiz.examination.standard not in teacher.standards_assigned.all():
+            messages.error(request, "Access Denied.")
+            return redirect('cbt:main-view')
+
+    questions = quiz.question_set.all()
+
+    # ================= CSV EXPORT =================
+    if export_type == "csv":
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="{quiz.subject}_questions.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow([
+            "Question",
+            "Question Type",
+            "Option A",
+            "Option B",
+            "Option C",
+            "Option D",
+            "Correct Answer",
+        ])
+
+        for q in questions:
+            writer.writerow([
+                q.content,
+                q.question_type,
+                q.option_a,
+                q.option_b,
+                q.option_c,
+                q.option_d,
+                q.correct_answer,
+            ])
+
+        return response
+
+    # ================= PDF EXPORT =================
+    elif export_type == "pdf":
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{quiz.subject}_questions.pdf"'
+
+        doc = SimpleDocTemplate(response, pagesize=A4)
+        elements = []
+        styles = getSampleStyleSheet()
+
+        title = Paragraph(
+            f"<b>{quiz.subject} - {quiz.examination}</b>",
+            styles['Heading2']
+        )
+        elements.append(title)
+        elements.append(Spacer(1, 0.3 * inch))
+
+        for index, q in enumerate(questions, start=1):
+            question_text = Paragraph(f"<b>Q{index}:</b> {q.content}", styles['Normal'])
+            elements.append(question_text)
+            elements.append(Spacer(1, 0.1 * inch))
+
+            if q.question_type == "MCQ":
+                elements.append(Paragraph(f"A. {q.option_a}", styles['Normal']))
+                elements.append(Paragraph(f"B. {q.option_b}", styles['Normal']))
+                elements.append(Paragraph(f"C. {q.option_c}", styles['Normal']))
+                elements.append(Paragraph(f"D. {q.option_d}", styles['Normal']))
+                elements.append(Spacer(1, 0.1 * inch))
+
+            elements.append(
+                Paragraph(f"<b>Correct Answer:</b> {q.correct_answer}", styles['Normal'])
+            )
+            elements.append(Spacer(1, 0.3 * inch))
+
+        doc.build(elements)
+        return response
+
+    return redirect('cbt:main-view')
+
+
+
 
 # Create your views here.
 @login_required
@@ -375,20 +498,73 @@ def teacher_add_question(request, quiz_id=None):
 
 
 # TEACHER VIEW QUESTIONS
-@login_required
-def teacher_view_questions(request, quiz_id):
-    quiz = get_object_or_404(Quiz, id=quiz_id)
-    # Re-using the security check logic
-    teacher = get_object_or_404(Teacher, user=request.user)
-    if quiz.examination.standard not in teacher.standards_assigned.all():
-        messages.error(request, "Access Denied.")
-        return redirect('cbt:main-view')
 
-    questions = quiz.question_set.all()
+@login_required
+def teacher_view_questions(request, quiz_id=None):
+    user = request.user
+    teacher = None if user.is_superuser or user.is_staff else get_object_or_404(Teacher, user=user)
+
+    # Filter quizzes based on access
+    if user.is_superuser or user.is_staff:
+        quizzes = Quiz.objects.all().select_related('subject', 'examination', 'standard')
+    else:
+        quizzes = Quiz.objects.filter(
+            examination__standard__in=teacher.standards_assigned.all()
+        ).select_related('subject', 'examination', 'standard')
+
+    selected_quiz = None
+    questions = None
+
+    # ✅ FIX: support both URL param and GET param
+    quiz_id = quiz_id or request.GET.get('quiz_id')
+
+    if quiz_id:
+        selected_quiz = get_object_or_404(Quiz, id=quiz_id)
+
+        # Restrict access for normal teachers
+        if not (user.is_superuser or user.is_staff) and \
+           selected_quiz.examination.standard not in teacher.standards_assigned.all():
+            messages.error(request, "Access Denied.")
+            return redirect('cbt:main-view')
+
+        questions = selected_quiz.question_set.all()
+
     return render(request, 'cbt/teacher_view_questions.html', {
-        'quiz': quiz,
-        'questions': questions
+        'quizzes': quizzes,
+        'selected_quiz': selected_quiz,
+        'questions': questions,
     })
+
+
+# @login_required
+# def teacher_view_questions(request):
+#     teacher = None
+
+#     # Allow superuser and staff to see all quizzes
+#     if request.user.is_superuser or request.user.is_staff:
+#         quizzes = Quiz.objects.all().order_by('subject')
+#     else:
+#         teacher = get_object_or_404(Teacher, user=request.user)
+#         quizzes = Quiz.objects.filter(
+#             examination__standard__in=teacher.standards_assigned.all()
+#         ).order_by('subject')
+
+#     selected_quiz = None
+#     questions = None
+
+#     quiz_id = request.GET.get('quiz_id')
+
+#     if quiz_id:
+#         selected_quiz = get_object_or_404(Quiz, id=quiz_id)
+#         questions = selected_quiz.question_set.all()
+
+#     context = {
+#         'quizzes': quizzes,
+#         'selected_quiz': selected_quiz,
+#         'questions': questions,
+#     }
+
+#     return render(request, 'cbt/teacher_view_questions.html', context)
 
 
 @login_required

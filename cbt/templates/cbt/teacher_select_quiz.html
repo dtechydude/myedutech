@@ -29,10 +29,14 @@
                                         </span>
                                     </p>
                                 </div>
-                                <div class="mt-2 text-center">
+                                <div class="mt-2 text-center d-grid gap-2">
                                     <a href="{% url 'cbt:teacher-add-question-quiz' quiz.id %}" 
                                        class="btn btn-success btn-sm w-100">
                                         <i class="bi bi-plus-circle me-1"></i> Add Questions
+                                    </a>
+                                    <a href="{% url 'cbt:teacher-view-questions' quiz.id %}" 
+                                       class="btn btn-primary btn-sm w-100">
+                                        <i class="bi bi-eye me-1"></i> View Questions
                                     </a>
                                 </div>
                             </div>

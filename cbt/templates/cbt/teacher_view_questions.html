@@ -1,27 +1,66 @@
 {% extends 'cbt/base.html' %}
+
 {% block content %}
-<div class="container">
-    <div class="d-flex justify-content-between mb-3">
-        <h3>Questions for {{ quiz.subject }}</h3>
-        <a href="{% url 'cbt:teacher-add-question' quiz.id %}" class="btn btn-primary">+ Add More</a>
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">View Questions : {{ selected_quiz.subject }} - {{ selected_quiz.examination }}</h5>
+            <span>Total Quizzes: {{ quizzes|length }}</span>
+        </div>
+
+        <div class="card-body">
+         
+            {% if selected_quiz %}
+            <div class="mb-3 d-flex gap-2">
+                <a href="{% url 'cbt:export-questions' selected_quiz.id 'csv' %}" 
+                class="btn btn-outline-primary btn-sm">
+                    Download CSV
+                </a>
+
+                <a href="{% url 'cbt:export-questions' selected_quiz.id 'pdf' %}" 
+                class="btn btn-outline-danger btn-sm">
+                    Download PDF
+                </a>
+            </div>
+
+                <h6 class="mt-3 mb-2 text-success">
+                    Quiz: {{ selected_quiz.subject }} - {{ selected_quiz.examination }}
+                    ({{ selected_quiz.question_set.count }} existing questions)
+                </h6>
+
+                {% if questions %}
+                    <ul class="list-group mb-3">
+                        {% for question in questions %}
+                        <li class="list-group-item">
+                            <strong>Q{{ forloop.counter }}:</strong> {{ question.content|safe }}
+                            {% if question.question_type == 'MCQ' %}
+                                <div class="mt-1">
+                                    <span class="badge bg-primary me-1">A: {{ question.option_a }}</span>
+                                    <span class="badge bg-primary me-1">B: {{ question.option_b }}</span>
+                                    <span class="badge bg-primary me-1">C: {{ question.option_c }}</span>
+                                    <span class="badge bg-primary me-1">D: {{ question.option_d }}</span>
+                                </div>
+                            {% endif %}
+                            <div class="mt-1">
+                                <span class="badge bg-success">Correct: {{ question.correct_answer }}</span>
+                                {% if question.image_url %}
+                                    <a href="{{ question.direct_image_url }}" target="_blank" class="badge bg-info text-dark">Image</a>
+                                {% endif %}
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No questions have been added for this quiz yet.</p>
+                {% endif %}
+            {% endif %}              
+
+            <div class="d-flex gap-2">
+                <a href="{% url 'cbt:teacher-add-question'%}"> <button  class="btn btn-primary">Back To Question List</button></a>
+            
+            
+        </div>                     
+        </div>
     </div>
-    <table class="table table-hover bg-white shadow-sm">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Question</th>
-                <th>Correct Answer</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for q in questions %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>{{ q.content|truncatewords:10 }}</td>
-                <td><span class="badge bg-success">{{ q.correct_answer }}</span></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
 </div>
 {% endblock %}
