@@ -23,7 +23,7 @@ class Quiz(models.Model):
         blank=True,
         related_name='cbt_session'
     )
-    number_of_questions = models.IntegerField()
+    number_of_questions = models.IntegerField(default=0)
     time = models.IntegerField(help_text="Duration in minutes")
     required_score_to_pass = models.IntegerField(help_text="Percentage (e.g., 50)")
     standard = models.ForeignKey(Standard, on_delete=models.CASCADE, related_name='cbt_exams')
@@ -57,6 +57,10 @@ class Quiz(models.Model):
     @property
     def subject_name(self):
         return self.subject.name if self.subject else "Unnamed Subject"
+
+    # @property
+    # def standard_name(self):
+    #     return self.standard.name if self.standard else "Unnamed Standard"
 
     def __str__(self):
         return f"{self.exam_name} - {self.subject_name} - {self.standard.name}"
@@ -111,7 +115,7 @@ class Question(models.Model):
     )
 
     def __str__(self):
-        return f"{self.quiz.exam_name} - {self.content[:50]}"
+        return f"{self.quiz.exam_name} - {self.quiz.standard.name} - {self.content[:50]}"
 
     @property
     def direct_image_url(self):

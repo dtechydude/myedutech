@@ -37,7 +37,7 @@
                     {% endif %}
                     
                     {# ===== Admin / Staff Back Link ===== #}        
-                    {% if request.user.is_superuser or request.user.is_staff %}
+                    {% if request.user.is_superuser or request.user.is_staff or request.user.teacher %}
                     <div class="d-flex justify-content-end mb-3 mt-2">
                         <a href="/dashboard"
                         class="btn btn-outline-primary fw-bold rounded-pill px-4 shadow-sm">

@@ -12,13 +12,13 @@ from django.conf import settings
 from django.http import JsonResponse
 from .models import Quiz, Question, Answer, QuizResult, QuizAttempt
 from results.models import Examination
-from .forms import TeacherQuizForm, QuestionForm
+from .forms import AdminQuizForm, QuestionForm
 from staff.models import Teacher
 from django.core.exceptions import PermissionDenied
 import csv
 from django.http import HttpResponse
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, F
 from curriculum.models import Standard
 
 
@@ -86,51 +86,6 @@ def submit_cbt_request(request):
 
 
 # CBT Logics
-
-# @login_required
-# def quiz_list_view(request):
-#     user = request.user
-#     teacher_profile = None
-    
-#     # 1. Start with an optimized QuerySet (Fixes the Slowness)
-#     # We join the related tables now so the template doesn't have to later
-#     quizzes_qs = Quiz.objects.select_related(
-#         'examination', 
-#         'subject', 
-#         'examination__standard', 
-#         'session'
-#     )
-
-#     # 2. STUDENT LOGIC
-#     if hasattr(user, 'student'):
-#         student_profile = user.student
-#         if student_profile.student_status == 'active':
-#             student_class = student_profile.current_class
-#             # Filter quizzes assigned to the student's specific class
-#             quizzes = quizzes_qs.filter(standard=student_class, active=True)
-#         else:
-#             quizzes = Quiz.objects.none()
-    
-#     # 3. STAFF/TEACHER LOGIC
-#     elif user.is_staff:
-#         try:
-#             # We prefetch the standards/subjects so the button-check in the template is instant
-#             teacher_profile = Teacher.objects.prefetch_related(
-#                 'standards_assigned', 
-#                 'subjects_taught'
-#             ).get(user=user)
-#             quizzes = quizzes_qs.filter(active=True)
-#         except Teacher.DoesNotExist:
-#             quizzes = quizzes_qs.filter(active=True)
-    
-#     else:
-#         quizzes = Quiz.objects.none()
-
-#     return render(request, 'cbt/main.html', {
-#         'quizzes': quizzes,
-#         'teacher_profile': teacher_profile
-#     })
-
 
 @login_required
 def quiz_list_view(request):
@@ -286,80 +241,128 @@ def save_quiz_view(request, pk):
     
 
 
+
 @login_required
-def teacher_add_quiz(request):
-    # 1. Fetch the teacher profile
-    try:
-        teacher = Teacher.objects.get(user=request.user)
-    except Teacher.DoesNotExist:
-        messages.error(request, "Access Denied. You must be a registered teacher.")
+def admin_add_quiz(request):
+    """
+    Only accessible to superuser or staff.
+    Admin creates quizzes for teachers to add questions to.
+    """
+    # 1️⃣ Access Control
+    if not request.user.is_staff and not request.user.is_superuser:
+        messages.error(request, "Access Denied: Only admin/staff can create quizzes.")
         return redirect('cbt:main-view')
 
     if request.method == 'POST':
-        # Pass the teacher instance to the form for filtered querysets
-        form = TeacherQuizForm(request.POST, teacher=teacher) 
-        
+        form = AdminQuizForm(request.POST)
+
         if form.is_valid():
-            # 2. Create the object but don't save to DB yet (commit=False)
             quiz = form.save(commit=False)
-            
-            # 3. Fill in mandatory fields to prevent IntegrityError
-            quiz.required_score_to_pass = 50  # Default pass mark
-            quiz.active = True               # Make it active immediately
-            
-            # 4. Pull session and standard from the selected Examination object
-            # This ensures the quiz is correctly categorized in the database
+
+            # Auto-fill system fields
             quiz.session = quiz.examination.session
             quiz.standard = quiz.examination.standard
-            
-            # 5. Final Save to Database
-            quiz.save()
-            
-            # 6. Redirect to Question Creation page instead of the list
-            messages.success(request, f"Quiz for {quiz.subject} created! Now, add your questions below.")
-            return redirect('cbt:teacher-add-question', quiz_id=quiz.id)
-            
-    else:
-        # GET request: provide an empty form filtered by teacher's access
-        form = TeacherQuizForm(teacher=teacher)
+            quiz.number_of_questions = 0  # Start at 0 questions
 
-    return render(request, 'cbt/teacher_add_quiz.html', {
-        'form': form,
-        'teacher': teacher
+            # Prevent duplicates using get_or_create
+            quiz_obj, created = Quiz.objects.get_or_create(
+                examination=quiz.examination,
+                subject=quiz.subject,
+                term=quiz.term,
+                session=quiz.session,
+                defaults={
+                    "required_score_to_pass": 50,
+                    "active": True,
+                    "standard": quiz.standard,
+                    "number_of_questions": 0,
+                }
+            )
+
+            if not created:
+                messages.warning(
+                    request,
+                    "A quiz already exists for this Examination, Subject, Term, and Session. "
+                    "You can continue adding questions below."
+                )
+            else:
+                messages.success(
+                    request,
+                    f"Quiz for {quiz_obj.subject} created successfully! Now, add questions."
+                )
+
+            # Redirect to add question page (teacher/admin can add)
+            return redirect('cbt:teacher-add-question', quiz_id=quiz_obj.id)
+
+    else:
+        form = AdminQuizForm()
+
+    return render(request, 'cbt/admin_add_quiz.html', {
+        'form': form
     })
 
+
+
 @login_required
-def teacher_add_question(request, quiz_id):
-    # 1. Get the Quiz
+def teacher_add_question(request, quiz_id=None):
+    """
+    Teachers can see a list of quizzes and add questions to assigned quizzes.
+    Staff and superuser can add to any quiz.
+    """
+    user = request.user
+
+    # 1️⃣ No quiz_id → show quiz selection page
+    if not quiz_id:
+        teacher = None
+        try:
+            teacher = Teacher.objects.get(user=user)
+        except Teacher.DoesNotExist:
+            pass
+
+        if user.is_staff or user.is_superuser:
+            quizzes = Quiz.objects.all()
+        elif teacher:
+            quizzes = Quiz.objects.filter(
+                subject__in=teacher.subjects_taught.all(),
+                examination__standard__in=teacher.standards_assigned.all()
+            )
+        else:
+            messages.error(request, "Access Denied.")
+            return redirect('cbt:main-view')
+
+        return render(request, "cbt/teacher_select_quiz.html", {"quizzes": quizzes})
+
+    # 2️⃣ quiz_id provided → go to add question form
     quiz = get_object_or_404(Quiz, id=quiz_id)
-    
-    # 2. Get the Teacher Profile
-    try:
-        teacher = Teacher.objects.get(user=request.user)
-    except Teacher.DoesNotExist:
-        raise PermissionDenied("You must be a registered teacher to access this.")
 
-    # 3. SECURITY CHECK: Validate Standard and Subject
-    # We check if the quiz's standard and subject are in the teacher's allowed lists
-    is_authorized_standard = quiz.examination.standard in teacher.standards_assigned.all()
-    is_authorized_subject = quiz.subject in teacher.subjects_taught.all()
+    # Security check for teachers
+    if not (user.is_staff or user.is_superuser):
+        try:
+            teacher = Teacher.objects.get(user=user)
+        except Teacher.DoesNotExist:
+            raise PermissionDenied("You must be a registered teacher.")
 
-    if not (is_authorized_standard and is_authorized_subject):
-        messages.error(request, "Access Denied: You are not assigned to this Class or Subject.")
-        return redirect('cbt:main-view')
+        is_authorized_standard = quiz.examination.standard in teacher.standards_assigned.all()
+        is_authorized_subject = quiz.subject in teacher.subjects_taught.all()
+        if not (is_authorized_standard and is_authorized_subject):
+            messages.error(request, "Access Denied: You are not assigned to this Class or Subject.")
+            return redirect('cbt:main-view')
 
-    # 4. Handle Form Processing
+    # 3️⃣ Handle form submission
     if request.method == 'POST':
         form = QuestionForm(request.POST)
         if form.is_valid():
             question = form.save(commit=False)
             question.quiz = quiz
             question.save()
-            
-            messages.success(request, "Question added!")
-            
+
+            # Update quiz question count
+            Quiz.objects.filter(id=quiz.id).update(number_of_questions=F('number_of_questions') + 1)
+
+            messages.success(request, "Question added successfully!")
+
             if 'add_another' in request.POST:
-                return redirect('cbt:teacher-add-question', quiz_id=quiz.id)
+                return redirect('cbt:teacher-add-question-quiz', quiz_id=quiz.id)
+
             return redirect('cbt:main-view')
     else:
         form = QuestionForm()
@@ -370,6 +373,8 @@ def teacher_add_question(request, quiz_id):
     })
 
 
+
+# TEACHER VIEW QUESTIONS
 @login_required
 def teacher_view_questions(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id)
@@ -384,45 +389,6 @@ def teacher_view_questions(request, quiz_id):
         'quiz': quiz,
         'questions': questions
     })
-
-
-# @login_required
-# def teacher_results_view(request):
-#     # 1. Get the teacher profile
-#     teacher = get_object_or_404(Teacher, user=request.user)
-    
-#     # 2. Get filters from the GET request (from the search form)
-#     exam_id = request.GET.get('examination')
-#     standard_id = request.GET.get('standard')
-
-#     # 3. Base queryset: only show results for standards/classes assigned to this teacher
-#     # We use select_related to join User, Quiz, and Exam tables in ONE query for speed
-#     results = QuizResult.objects.filter(
-#         quiz__standard__in=teacher.standards_assigned.all()
-#     ).select_related(
-#         'user', 
-#         'quiz', 
-#         'quiz__examination', 
-#         'quiz__subject'
-#     ).order_by('-timestamp')
-
-#     # 4. Apply Filters
-#     if exam_id:
-#         results = results.filter(quiz__examination_id=exam_id)
-#     if standard_id:
-#         results = results.filter(quiz__standard_id=standard_id)
-
-#     # 5. Data for the dropdown filters in the template
-#     # Only show exams/standards that this teacher is actually in charge of
-#     assigned_standards = teacher.standards_assigned.all()
-#     exams = Examination.objects.filter(standard__in=assigned_standards).distinct()
-
-#     return render(request, 'cbt/teacher_results.html', {
-#         'results': results,
-#         'exams': exams,
-#         'standards': assigned_standards,
-#     })
-
 
 
 @login_required
@@ -504,6 +470,9 @@ def export_results_csv(request):
         'Student Name',
         'Username',
         'Class',
+        'Examination',
+        'Term',
+        'Session',
         'Subject',
         'Score (%)',
         'Status',
@@ -516,6 +485,11 @@ def export_results_csv(request):
             res.user.get_full_name() or res.user.username,
             res.user.username,
             res.quiz.standard.name if res.quiz.standard else '',
+            res.quiz.examination.name if res.quiz.examination.name else '',
+            res.quiz.term if res.quiz.term else '',
+            res.quiz.session.name if res.quiz.session.name else '',
+
+
             res.quiz.subject,
             round(res.score, 1),
             'Passed' if res.passed else 'Failed',

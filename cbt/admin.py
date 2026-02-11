@@ -13,54 +13,6 @@ from django.utils.html import strip_tags
 
 
 # --- 1. RESOURCE FOR CSV IMPORT/EXPORT ---
-# class QuestionResource(resources.ModelResource):
-#     # This allows you to type the Examination Name in your CSV 'quiz' column
-#     quiz = fields.Field(
-#         column_name='quiz',
-#         attribute='quiz',
-#         widget=ForeignKeyWidget(Quiz, 'examination__name')
-#     )
-
-#     class Meta:
-#         model = Question
-#         fields = ('id', 'quiz', 'content', 'question_type', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_answer', 'image_url')
-#         export_order = fields
-
-
-# class QuestionAdminForm(forms.ModelForm):
-#     class Meta:
-#         model = Question
-#         fields = "__all__"
-#         labels = {
-#             "content": "Question Text",
-#         }
-#         widgets = {
-#             "content": CKEditor5Widget(config_name="extends"),
-#         }
-
-# @admin.register(Question)
-# class QuestionAdmin(ImportExportModelAdmin):
-#     resource_class = QuestionResource
-#     form = QuestionAdminForm
-
-#     fieldsets = (
-#         ('General Information', {
-#             'fields': ('quiz', 'content', 'question_type', 'image_url')
-#         }),
-#         ('Multiple Choice Options', {
-#             'description': "Fill these only if question type is MCQ.",
-#             'fields': ('option_a', 'option_b', 'option_c', 'option_d'),
-#         }),
-#         ('Correct Answer', {
-#             'fields': ('correct_answer',),
-#         }),
-#     )
-
-#     list_display = ('content', 'quiz', 'question_type', 'correct_answer')
-#     list_filter = ('quiz', 'question_type')
-#     search_fields = ('content', 'quiz__examination__name')
-
-
 
 class QuestionResource(resources.ModelResource):
     # This allows you to type the Examination Name in your CSV 'quiz' column
@@ -119,7 +71,7 @@ class QuestionAdmin(ImportExportModelAdmin):
 
     # ✅ Clean preview (removes HTML tags and truncates)
     list_display = ('formatted_content', 'quiz', 'question_type', 'correct_answer')
-    list_filter = ('quiz', 'question_type')
+    list_filter = ('quiz', 'question_type', 'quiz__standard__name', 'quiz__subject__name')
     search_fields = ('content', 'quiz__examination__name')
 
     def formatted_content(self, obj):
@@ -130,24 +82,6 @@ class QuestionAdmin(ImportExportModelAdmin):
 
 
 # --- 3. QUIZ ADMIN (The Fix for E108) ---
-# @admin.register(Quiz)
-# class QuizAdmin(admin.ModelAdmin):
-#     # Use function names instead of property names to avoid E108 error
-#     list_display = ['get_exam_name', 'get_subject_name', 'term', 'number_of_questions', 'time', 'standard']
-#     list_filter = ['term', 'subject', 'standard']
-#     search_fields = ['examination__name', 'subject__name']
-
-#     # Helper function to display linked Examination Name
-#     def get_exam_name(self, obj):
-#         return obj.examination.name if obj.examination else "No Exam Linked"
-#     get_exam_name.short_description = 'Exam Name'
-
-#     # Helper function to display linked Subject Name
-#     def get_subject_name(self, obj):
-#         return obj.subject.name if obj.subject else "No Subject Linked"
-#     get_subject_name.short_description = 'Subject Name'
-
-
 
 @admin.register(Quiz)
 class QuizAdmin(admin.ModelAdmin):

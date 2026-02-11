@@ -22,8 +22,14 @@ urlpatterns = [
     
     # 2. New Teacher Views (Placed before <pk> to avoid routing conflicts)
     path('cbt/', cbt_views.quiz_list_view, name='main-view'),
-    path('teacher/add-quiz/', cbt_views.teacher_add_quiz, name='teacher-quiz-add'),
-    path('teacher/quiz/<int:quiz_id>/add-question/', cbt_views.teacher_add_question, name='teacher-add-question'),
+    path('teacher/add-quiz/', cbt_views.admin_add_quiz, name='teacher-quiz-add'),
+
+    # Teacher sees list of quizzes
+    path('teacher/add-question/', cbt_views.teacher_add_question, name='teacher-add-question'),
+
+    # Teacher/admin clicks a specific quiz → add question form
+    path('teacher/quiz/<int:quiz_id>/add-question/', cbt_views.teacher_add_question, name='teacher-add-question-quiz'),
+
     path('<pk>/', cbt_views.quiz_detail_view, name='quiz-view'),
     path('<pk>/data/', cbt_views.quiz_data_view, name='quiz-data-view'),
     path('<pk>/save/', cbt_views.save_quiz_view, name='save-view'),
