@@ -210,6 +210,55 @@ def submit_cbt_request(request):
 
 # CBT Logics
 
+# @login_required
+# def quiz_list_view(request):
+#     user = request.user
+#     teacher_profile = None
+
+#     today = timezone.localdate()
+#     now = timezone.localtime().time()
+
+#     quizzes_qs = Quiz.objects.select_related(
+#         'examination',
+#         'subject',
+#         'examination__standard',
+#         'session'
+#     ).filter(
+#         active=True,
+#         start_date__lte=today,
+#         end_date__gte=today,
+#         start_time__lte=now,
+#         end_time__gte=now
+#     )
+
+#     # STUDENT LOGIC
+#     if hasattr(user, 'student'):
+#         student_profile = user.student
+#         if student_profile.student_status == 'active':
+#             student_class = student_profile.current_class
+#             quizzes = quizzes_qs.filter(standard=student_class)
+#         else:
+#             quizzes = Quiz.objects.none()
+
+#     # STAFF / TEACHER LOGIC
+#     elif user.is_staff:
+#         try:
+#             teacher_profile = Teacher.objects.prefetch_related(
+#                 'standards_assigned',
+#                 'subjects_taught'
+#             ).get(user=user)
+#             quizzes = quizzes_qs
+#         except Teacher.DoesNotExist:
+#             quizzes = quizzes_qs
+
+#     else:
+#         quizzes = Quiz.objects.none()
+
+#     return render(request, 'cbt/main.html', {
+#         'quizzes': quizzes,
+#         'teacher_profile': teacher_profile
+#     })
+
 @login_required
 def quiz_list_view(request):
     user = request.user
@@ -218,6 +267,7 @@ def quiz_list_view(request):
     today = timezone.localdate()
     now = timezone.localtime().time()
 
+    # Base Active Quiz Filter (DO NOT TOUCH – your timing logic remains)
     quizzes_qs = Quiz.objects.select_related(
         'examination',
         'subject',
@@ -231,25 +281,32 @@ def quiz_list_view(request):
         end_time__gte=now
     )
 
-    # STUDENT LOGIC
+    # ================= STUDENT =================
     if hasattr(user, 'student'):
         student_profile = user.student
+
         if student_profile.student_status == 'active':
             student_class = student_profile.current_class
             quizzes = quizzes_qs.filter(standard=student_class)
         else:
             quizzes = Quiz.objects.none()
 
-    # STAFF / TEACHER LOGIC
-    elif user.is_staff:
-        try:
-            teacher_profile = Teacher.objects.prefetch_related(
-                'standards_assigned',
-                'subjects_taught'
-            ).get(user=user)
-            quizzes = quizzes_qs
-        except Teacher.DoesNotExist:
-            quizzes = quizzes_qs
+    # ================= STAFF / ADMIN =================
+    elif user.is_staff and not hasattr(user, 'teacher'):
+        # Admin or staff without teacher profile
+        quizzes = quizzes_qs
+
+    # ================= TEACHER =================
+    elif hasattr(user, 'teacher'):
+        teacher_profile = Teacher.objects.prefetch_related(
+            'standards_assigned',
+            'subjects_taught'
+        ).get(user=user)
+
+        quizzes = quizzes_qs.filter(
+            standard__in=teacher_profile.standards_assigned.all(),
+            subject__in=teacher_profile.subjects_taught.all()
+        )
 
     else:
         quizzes = Quiz.objects.none()
@@ -260,11 +317,11 @@ def quiz_list_view(request):
     })
 
 
+
 @login_required
 def quiz_detail_view(request, pk):
     quiz = get_object_or_404(Quiz, pk=pk)
     return render(request, 'cbt/quiz.html', {'obj': quiz})
-
 
 
 @login_required

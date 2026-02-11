@@ -12,7 +12,7 @@
             </p>
         </div>
         {% if user.is_staff %}
-        <a href="{% url 'cbt:teacher-quiz-add' %}" class="btn btn-success">
+        <a href="/admin/cbt/quiz/" class="btn btn-success">
             <i class="fas fa-plus"></i> Setup New Quiz
         </a>
         {% endif %}
@@ -49,7 +49,7 @@
                     Start Examination
                 </a>
 
-                {% if user.is_staff %}
+                {% if user.is_staff or user.teacher %}
                     {% if quiz.examination.standard in teacher_profile.standards_assigned.all and quiz.subject in teacher_profile.subjects_taught.all %}
                         <div class="border-top pt-2 mt-2">
                             <small class="text-muted d-block mb-2">
