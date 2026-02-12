@@ -259,7 +259,7 @@ class SessionResultStatus(models.Model):
 
     class Meta:
         unique_together = ('student', 'session')
-        verbose_name_plural = "Session Result Statuses"
+        verbose_name_plural = "Session Result Status"
 
     def __str__(self):
         return f"{self.student.get_full_name()} - {self.session.name} - Published: {self.is_published}"

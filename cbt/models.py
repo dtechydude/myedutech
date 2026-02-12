@@ -75,9 +75,20 @@ class Quiz(models.Model):
 
 class QuizAttempt(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    quiz = models.ForeignKey('Quiz', on_delete=models.CASCADE)
     start_time = models.DateTimeField(auto_now_add=True)
     completed = models.BooleanField(default=False)
+
+    # ✅ NEW FIELDS (Safe Cancel System)
+    cancelled = models.BooleanField(default=False)
+    cancelled_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='cancelled_attempts'
+    )
+    cancelled_at = models.DateTimeField(null=True, blank=True)
 
     def get_time_left(self):
         """Calculates remaining time in seconds"""
@@ -85,6 +96,8 @@ class QuizAttempt(models.Model):
         remaining = expiry_time - timezone.now()
         return max(0, int(remaining.total_seconds()))
 
+    def __str__(self):
+        return f"{self.user.username} - {self.quiz}"
 
 
 class Question(models.Model):
@@ -160,14 +173,17 @@ class Answer(models.Model):
     def __str__(self):
         return f"{self.question.text} - {self.text}"
 
+
+
+
 class QuizResult(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
-    # Add related_name here
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cbt_results') 
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cbt_results')
     score = models.FloatField()
-    passed = models.BooleanField()
+    passed = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        verbose_name = "CBT Result"
-        verbose_name_plural = "CBT Results"
+    cancelled = models.BooleanField(default=False)  # ✅ NEW FIELD
+
+    def __str__(self):
+        return f"{self.user} - {self.quiz} ({self.score}%)"

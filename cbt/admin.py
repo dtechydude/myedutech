@@ -2,7 +2,7 @@ from django.contrib import admin
 from import_export import resources, fields
 from import_export.admin import ImportExportModelAdmin
 from import_export.widgets import ForeignKeyWidget
-from .models import Quiz, Question, QuizResult
+from .models import Quiz, Question, QuizResult, QuizAttempt
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django import forms
@@ -10,6 +10,8 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 from django.utils.html import format_html
 from django.utils.text import Truncator
 from django.utils.html import strip_tags
+from django.utils import timezone
+
 
 
 # --- 1. RESOURCE FOR CSV IMPORT/EXPORT ---
@@ -156,18 +158,6 @@ class QuizAdmin(admin.ModelAdmin):
         return obj.subject.name if obj.subject else "No Subject Linked"
     get_subject_name.short_description = 'Subject Name'
 
-    # def is_currently_available(self, obj):
-    #     today = timezone.localdate()
-    #     now = timezone.localtime().time()
-
-    #     return (
-    #         obj.active and
-    #         obj.start_date <= today <= obj.end_date and
-    #         obj.start_time <= now <= obj.end_time
-    #     )
-
-    # is_currently_available.boolean = True
-    # is_currently_available.short_description = "Available Now"
 
     def is_currently_available(self, obj):
     # If availability fields are not yet set, treat as NOT available
@@ -237,15 +227,227 @@ class QuizAdmin(admin.ModelAdmin):
         return readonly
 
 
-
-# --- 4. RESULTS ADMIN ---
 @admin.register(QuizResult)
 class QuizResultAdmin(ImportExportModelAdmin):
-    list_display = ['user', 'quiz', 'score', 'passed', 'timestamp']
-    list_filter = ['passed', 'quiz',  'quiz__standard', 'quiz__session',  'timestamp']
-    readonly_fields = ['user', 'quiz', 'score', 'passed', 'timestamp']
 
-    def has_add_permission(self, request):
-        return False
-    
+    list_display = (
+        'user',
+        'quiz',
+        'score',
+        'passed',
+        'cancelled',
+        'timestamp'
+    )
 
+    list_filter = (
+        'quiz',
+        'passed',
+        'cancelled',
+        'timestamp'
+    )
+
+    search_fields = (
+        'user__username',
+        'quiz__subject__name'
+    )
+
+    list_editable = ('cancelled',)
+
+    readonly_fields = (
+        'user',
+        'quiz',
+        'score',
+        'passed',
+        'timestamp'
+    )
+
+    actions = ['cancel_results_and_reset_attempt']
+
+    def cancel_results_and_reset_attempt(self, request, queryset):
+        updated = 0
+
+        for result in queryset:
+            if not result.cancelled:
+                result.cancelled = True
+                result.save()
+
+                # ✅ ALSO reset attempts
+                QuizAttempt.objects.filter(
+                    user=result.user,
+                    quiz=result.quiz
+                ).update(
+                    cancelled=True,
+                    completed=False
+                )
+
+                updated += 1
+
+        self.message_user(
+            request,
+            f"{updated} result(s) cancelled and attempts reset successfully."
+        )
+
+    cancel_results_and_reset_attempt.short_description = (
+        "Cancel Result & Reset Attempt (Allow Retake)"
+    )
+
+
+
+# @admin.register(QuizAttempt)
+# class QuizAttemptAdmin(admin.ModelAdmin):
+#     list_display = (
+#         'user',
+#         'quiz',
+#         'start_time',
+#         'completed',
+#         'time_left_display'
+#     )
+#     list_filter = ('completed', 'quiz')
+#     search_fields = ('user__username', 'quiz__subject__name')
+#     actions = ['reset_attempt']
+
+#     def time_left_display(self, obj):
+#         return obj.get_time_left()
+#     time_left_display.short_description = "Time Left (seconds)"
+
+#     def reset_attempt(self, request, queryset):
+#         """
+#         Admin action to cancel attempts so user can retake.
+#         """
+#         count = queryset.count()
+#         queryset.delete()
+#         self.message_user(request, f"{count} attempt(s) successfully cancelled.")
+
+#     reset_attempt.short_description = "Cancel selected attempts (Allow retake)"
+
+
+
+# @admin.register(QuizAttempt)
+# class QuizAttemptAdmin(admin.ModelAdmin):
+#     list_display = (
+#         'user',
+#         'quiz',
+#         'start_time',
+#         'completed',
+#         'cancelled',
+#         'time_left_display',
+#     )
+
+#     list_filter = (
+#         'completed',
+#         'cancelled',
+#         'quiz',
+#     )
+
+#     search_fields = (
+#         'user__username',
+#         'user__first_name',
+#         'user__last_name',
+#         'quiz__subject__name',
+#     )
+
+#     actions = ['cancel_attempts']
+
+#     readonly_fields = (
+#         'start_time',
+#         'cancelled_at',
+#         'cancelled_by',
+#     )
+
+#     def time_left_display(self, obj):
+#         if obj.cancelled:
+#             return "Cancelled"
+#         return obj.get_time_left()
+#     time_left_display.short_description = "Time Left (seconds)"
+
+#     def cancel_attempts(self, request, queryset):
+#         """
+#         Admin action to safely cancel attempts
+#         without deleting history.
+#         """
+#         updated_count = 0
+
+#         for attempt in queryset:
+#             if not attempt.cancelled:
+#                 attempt.cancelled = True
+#                 attempt.completed = False
+#                 attempt.cancelled_by = request.user
+#                 attempt.cancelled_at = timezone.now()
+#                 attempt.save()
+#                 updated_count += 1
+
+#         self.message_user(
+#             request,
+#             f"{updated_count} attempt(s) successfully cancelled. Students can now retake."
+#         )
+
+#     cancel_attempts.short_description = "Cancel selected attempts (Allow Retake)"
+
+
+@admin.register(QuizAttempt)
+class QuizAttemptAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'user',
+        'quiz',
+        'start_time',
+        'completed',
+        'cancelled',
+        'time_left_display',
+    )
+
+    list_filter = (
+        'completed',
+        'cancelled',
+        'quiz',
+    )
+
+    search_fields = (
+        'user__username',
+        'user__first_name',
+        'user__last_name',
+        'quiz__subject__name',
+    )
+
+    actions = ['cancel_attempts']
+
+    readonly_fields = (
+        'start_time',
+        'cancelled_at',
+        'cancelled_by',
+    )
+
+    def time_left_display(self, obj):
+        if obj.cancelled:
+            return "Cancelled"
+        return obj.get_time_left()
+
+    time_left_display.short_description = "Time Left (seconds)"
+
+    def cancel_attempts(self, request, queryset):
+        updated_count = 0
+
+        for attempt in queryset:
+            if not attempt.cancelled:
+                attempt.cancelled = True
+                attempt.completed = False
+                attempt.cancelled_by = request.user
+                attempt.cancelled_at = timezone.now()
+                attempt.save()
+
+                # ✅ ALSO cancel related result
+                QuizResult.objects.filter(
+                    user=attempt.user,
+                    quiz=attempt.quiz
+                ).update(cancelled=True)
+
+                updated_count += 1
+
+        self.message_user(
+            request,
+            f"{updated_count} attempt(s) cancelled and result reset. Students can now retake."
+        )
+
+    cancel_attempts.short_description = (
+        "Cancel selected attempts (Allow Retake)"
+    )

@@ -210,55 +210,6 @@ def submit_cbt_request(request):
 
 # CBT Logics
 
-# @login_required
-# def quiz_list_view(request):
-#     user = request.user
-#     teacher_profile = None
-
-#     today = timezone.localdate()
-#     now = timezone.localtime().time()
-
-#     quizzes_qs = Quiz.objects.select_related(
-#         'examination',
-#         'subject',
-#         'examination__standard',
-#         'session'
-#     ).filter(
-#         active=True,
-#         start_date__lte=today,
-#         end_date__gte=today,
-#         start_time__lte=now,
-#         end_time__gte=now
-#     )
-
-#     # STUDENT LOGIC
-#     if hasattr(user, 'student'):
-#         student_profile = user.student
-#         if student_profile.student_status == 'active':
-#             student_class = student_profile.current_class
-#             quizzes = quizzes_qs.filter(standard=student_class)
-#         else:
-#             quizzes = Quiz.objects.none()
-
-#     # STAFF / TEACHER LOGIC
-#     elif user.is_staff:
-#         try:
-#             teacher_profile = Teacher.objects.prefetch_related(
-#                 'standards_assigned',
-#                 'subjects_taught'
-#             ).get(user=user)
-#             quizzes = quizzes_qs
-#         except Teacher.DoesNotExist:
-#             quizzes = quizzes_qs
-
-#     else:
-#         quizzes = Quiz.objects.none()
-
-#     return render(request, 'cbt/main.html', {
-#         'quizzes': quizzes,
-#         'teacher_profile': teacher_profile
-#     })
-
 @login_required
 def quiz_list_view(request):
     user = request.user
@@ -324,31 +275,48 @@ def quiz_detail_view(request, pk):
     return render(request, 'cbt/quiz.html', {'obj': quiz})
 
 
+
 @login_required
 def quiz_data_view(request, pk):
     quiz = get_object_or_404(Quiz, pk=pk)
     user = request.user
-    
-    # 1. Prevent access if the user has already submitted this quiz
-    if QuizResult.objects.filter(user=user, quiz=quiz).exists():
-        return JsonResponse({'error': 'You have already completed this examination.'}, status=403)
 
-    # 2. Track the Attempt (to keep the timer consistent across refreshes)
-    attempt, created = QuizAttempt.objects.get_or_create(
-        user=user, 
-        quiz=quiz, 
-        completed=False
-    )
-    
-    # 3. Format the questions for the JS frontend
+    # 1️⃣ Block if user already has a VALID completed result
+    existing_result = QuizResult.objects.filter(
+        user=user,
+        quiz=quiz,
+        cancelled=False
+    ).exists()
+
+    if existing_result:
+        return JsonResponse(
+            {'error': 'You have already completed this examination.'},
+            status=403
+        )
+
+    # 2️⃣ Check for existing active attempt (not cancelled)
+    attempt = QuizAttempt.objects.filter(
+        user=user,
+        quiz=quiz,
+        completed=False,
+        cancelled=False
+    ).first()
+
+    # 3️⃣ If no valid attempt exists, create a new one
+    if not attempt:
+        attempt = QuizAttempt.objects.create(
+            user=user,
+            quiz=quiz
+        )
+
+    # 4️⃣ Format the questions for the JS frontend
     questions = []
     for q in quiz.get_questions():
         questions.append({
             'id': q.id,
-            'text': q.content, 
+            'text': q.content,
             'type': q.question_type,
-            # THE FIX: This calls the direct_image_url property from your model
-            'image': q.direct_image_url, 
+            'image': q.direct_image_url,
             'options': {
                 'A': q.option_a,
                 'B': q.option_b,
@@ -356,69 +324,78 @@ def quiz_data_view(request, pk):
                 'D': q.option_d,
             } if q.question_type == 'MCQ' else None
         })
-    
-    # 4. Return the data and the calculated time remaining
+
+    # 5️⃣ Return data + time remaining
     return JsonResponse({
         'data': questions,
-        'time_left': attempt.get_time_left(), 
+        'time_left': attempt.get_time_left(),
     })
 
 
+    
 @login_required
 def save_quiz_view(request, pk):
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         quiz = get_object_or_404(Quiz, pk=pk)
         user = request.user
-        
-        if QuizResult.objects.filter(quiz=quiz, user=user).exists():
+
+        # Block if valid (non-cancelled) result already exists
+        existing_result = QuizResult.objects.filter(
+            quiz=quiz,
+            user=user,
+            cancelled=False
+        ).exists()
+
+        if existing_result:
             return JsonResponse({'error': 'Already submitted'}, status=400)
 
         data = request.POST
-        # We don't need data.lists() anymore if we loop through questions
-        # as it's safer to pull from the DB than trust the POST keys
-        
         score = 0
         results = []
-        questions = quiz.get_questions() # Get the same questions sent to the user
+        questions = quiz.get_questions()
 
         for q in questions:
-            # Get the answer submitted for this specific question ID
-            student_answer = data.get(str(q.id)) 
-            
+            student_answer = data.get(str(q.id))
             is_correct = False
+
             if student_answer:
-                # Use the helper method we created in the Question model
                 if q.check_answer(student_answer):
                     score += 1
                     is_correct = True
-            
-            # Record the result for this question
+
             results.append({
-                'question': q.content, # Updated field name from 'text' to 'content'
+                'question': q.content,
                 'correct': q.correct_answer,
                 'answered': student_answer if student_answer else "No Answer",
                 'is_correct': is_correct
             })
 
-        # Calculate score percentage
         multiplier = 100 / quiz.number_of_questions
         final_score = score * multiplier
         passed = final_score >= quiz.required_score_to_pass
 
-        # Save the result
+        # ✅ Save Result
         QuizResult.objects.create(
-            quiz=quiz, 
-            user=user, 
-            score=final_score, 
+            quiz=quiz,
+            user=user,
+            score=final_score,
             passed=passed
         )
 
+        # ✅ IMPORTANT: Mark active attempt as completed
+        QuizAttempt.objects.filter(
+            user=user,
+            quiz=quiz,
+            completed=False,
+            cancelled=False
+        ).update(completed=True)
+
         return JsonResponse({
-            'passed': passed, 
-            'score': round(final_score, 2), 
+            'passed': passed,
+            'score': round(final_score, 2),
             'results': results
         })
-    
+
 
 
 
@@ -593,36 +570,6 @@ def teacher_view_questions(request, quiz_id=None):
     })
 
 
-# @login_required
-# def teacher_view_questions(request):
-#     teacher = None
-
-#     # Allow superuser and staff to see all quizzes
-#     if request.user.is_superuser or request.user.is_staff:
-#         quizzes = Quiz.objects.all().order_by('subject')
-#     else:
-#         teacher = get_object_or_404(Teacher, user=request.user)
-#         quizzes = Quiz.objects.filter(
-#             examination__standard__in=teacher.standards_assigned.all()
-#         ).order_by('subject')
-
-#     selected_quiz = None
-#     questions = None
-
-#     quiz_id = request.GET.get('quiz_id')
-
-#     if quiz_id:
-#         selected_quiz = get_object_or_404(Quiz, id=quiz_id)
-#         questions = selected_quiz.question_set.all()
-
-#     context = {
-#         'quizzes': quizzes,
-#         'selected_quiz': selected_quiz,
-#         'questions': questions,
-#     }
-
-#     return render(request, 'cbt/teacher_view_questions.html', context)
-
 
 @login_required
 def teacher_results_view(request):
@@ -666,6 +613,15 @@ def teacher_results_view(request):
         results = results.filter(quiz__examination_id=exam_id)
     if standard_id:
         results = results.filter(quiz__standard_id=standard_id)
+
+    # ✅ 4. ADD RETAKE DETECTION (NEW ADDITION)
+    for res in results:
+        attempt_count = QuizResult.objects.filter(
+            user=res.user,
+            quiz=res.quiz
+        ).count()
+
+        res.is_retake = attempt_count > 1
 
     return render(request, 'cbt/teacher_results.html', {
         'results': results,

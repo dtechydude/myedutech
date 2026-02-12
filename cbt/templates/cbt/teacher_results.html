@@ -33,7 +33,7 @@
                                 selected
                             {% endif %}
                         >
-                            {{ exam.name }}
+                            {{ exam.name }}-{{ exam.term }} - {{ exam.session }}
                         </option>
                     {% endfor %}
                 </select>
@@ -86,6 +86,7 @@
                     <th>Subject</th>
                     <th>Score</th>
                     <th>Status</th>
+                    <th>Retaken</th>
                     <th>Date Taken</th>
                 </tr>
             </thead>
@@ -113,13 +114,27 @@
                             </span>
                         {% endif %}
                     </td>
+
+                    <!-- NEW RETAKE COLUMN -->
+                    <td>
+                        {% if res.is_retake %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-redo"></i> Yes
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary">
+                                First Attempt
+                            </span>
+                        {% endif %}
+                    </td>
+
                     <td class="text-muted small">
                         {{ res.timestamp|date:"M d, Y | H:i" }}
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="text-center py-5 text-muted">
+                    <td colspan="6" class="text-center py-5 text-muted">
                         <i class="fas fa-info-circle fa-2x mb-3 d-block"></i>
                         No student results found matching your criteria.
                     </td>
