@@ -3,87 +3,146 @@
 {% block content %}
 <div class="container mt-4">
     <div class="card shadow">
+
         <div class="card-header bg-success text-white">
             <h5 class="mb-0">Select a Quiz (Exam) to Add Questions</h5>
         </div>
-        <div class="card-body p-3" style="max-height: 75vh; overflow-y: auto;">
-            {% if quizzes %}
-                <div class="row g-3">
-                    {% for quiz in quizzes %}
-                    <div class="col-sm-6 col-md-4 col-lg-3">
-                        <div class="card h-100 border-success shadow-sm quiz-card" style="transition: transform 0.2s;">
-                            <div class="card-body d-flex flex-column justify-content-between">
-                                <div>
-                                    <h6 class="card-title quiz-subject mb-2">
-                                       ({{ quiz.subject }}) - {{ quiz.examination }}
-                                    </h6>
-                                    <p class="card-text text-muted mb-2" style="font-size: 0.875rem;">
-                                        <span class="badge bg-info text-dark me-1">
-                                            Questions: {{ quiz.number_of_questions }}
-                                        </span>
-                                        <span class="badge bg-warning text-dark me-1">
-                                            Term: {{ quiz.term }}
-                                        </span>
-                                        <span class="badge bg-secondary text-white">
-                                            Class: {{ quiz.standard.name }}
-                                        </span>
-                                    </p>
-                                </div>
-                                <div class="mt-2 text-center d-grid gap-2">
-                                    <a href="{% url 'cbt:teacher-add-question-quiz' quiz.id %}" 
-                                       class="btn btn-success btn-sm w-100">
-                                        <i class="bi bi-plus-circle me-1"></i> Add Questions
-                                    </a>
-                                    <a href="{% url 'cbt:teacher-view-questions' quiz.id %}" 
-                                       class="btn btn-primary btn-sm w-100">
-                                        <i class="bi bi-eye me-1"></i> View Questions
-                                    </a>
+
+        <div class="card-body p-3">
+
+            <!-- FILTER SECTION -->
+            <form method="GET" class="row g-3 mb-4">
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Class</label>
+                    <select name="standard" class="form-select">
+                        <option value="">All Classes</option>
+                        {% for s in standards %}
+                        <option value="{{ s.id }}"
+                            {% if request.GET.standard == s.id|stringformat:"i" %}selected{% endif %}>
+                            {{ s.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Subject</label>
+                    <select name="subject" class="form-select">
+                        <option value="">All Subjects</option>
+                        {% for sub in subjects %}
+                        <option value="{{ sub.id }}"
+                            {% if request.GET.subject == sub.id|stringformat:"i" %}selected{% endif %}>
+                            {{ sub.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Term</label>
+                    <select name="term" class="form-select">
+                        <option value="">All Terms</option>
+                        {% for t in terms %}
+                        <option value="{{ t }}"
+                            {% if request.GET.term == t %}selected{% endif %}>
+                            {{ t }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-dark px-3">
+                    Filter
+                </button>
+
+                <a href="{% url 'cbt:teacher-add-question' %}" 
+                class="btn btn-outline-secondary px-3">
+                    Clear
+                </a>
+            </div>
+
+            </form>
+
+            <!-- QUIZ LIST -->
+            <div style="max-height: 65vh; overflow-y: auto;">
+                {% if quizzes %}
+                    <div class="row g-3">
+                        {% for quiz in quizzes %}
+                        <div class="col-sm-6 col-md-4 col-lg-3">
+                            <div class="card h-100 border-success shadow-sm quiz-card" style="transition: transform 0.2s;">
+                                <div class="card-body d-flex flex-column justify-content-between">
+                                    <div>
+                                        <h6 class="card-title quiz-subject mb-2">
+                                           ({{ quiz.subject }}) - {{ quiz.examination }}
+                                        </h6>
+                                        <p class="card-text text-muted mb-2" style="font-size: 0.875rem;">
+                                            <span class="badge bg-info text-dark me-1">
+                                                Questions: {{ quiz.number_of_questions }}
+                                            </span>
+                                            <span class="badge bg-warning text-dark me-1">
+                                                Term: {{ quiz.term }}
+                                            </span>
+                                            <span class="badge bg-secondary text-white">
+                                                Class: {{ quiz.standard.name }}
+                                            </span>
+                                        </p>
+                                    </div>
+                                    <div class="mt-2 text-center d-grid gap-2">
+                                        <a href="{% url 'cbt:teacher-add-question-quiz' quiz.id %}" 
+                                           class="btn btn-success btn-sm w-100">
+                                            <i class="bi bi-plus-circle me-1"></i> Add Questions
+                                        </a>
+                                        <a href="{% url 'cbt:teacher-view-questions' quiz.id %}" 
+                                           class="btn btn-primary btn-sm w-100">
+                                            <i class="bi bi-eye me-1"></i> View Questions
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="text-center text-muted mt-3">No quizzes available for you.</p>
-            {% endif %}
+                {% else %}
+                    <p class="text-center text-muted mt-3">
+                        No quizzes found for selected filters.
+                    </p>
+                {% endif %}
+            </div>
+
         </div>
     </div>
 </div>
 
 <style>
-/* Hover effect for cards */
 .quiz-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 16px rgba(0,0,0,0.2);
 }
 
-/* Scrollbar styling for the container */
 .card-body::-webkit-scrollbar {
     width: 6px;
 }
-
 .card-body::-webkit-scrollbar-track {
     background: #f1f1f1;
 }
-
 .card-body::-webkit-scrollbar-thumb {
     background: #28a745;
     border-radius: 10px;
 }
-
 .card-body::-webkit-scrollbar-thumb:hover {
     background: #218838;
 }
 
-/* Make subject standout */
 .quiz-subject {
-    font-size: 1rem;      /* slightly bigger */
-    font-weight: 700;     /* bold */
-    color: #198754;       /* bootstrap green */
+    font-size: 1rem;
+    font-weight: 700;
+    color: #198754;
     text-transform: uppercase;
     border-bottom: 2px solid #198754;
     padding-bottom: 2px;
 }
 </style>
+
 {% endblock %}

@@ -19,7 +19,7 @@ import csv
 from django.http import HttpResponse
 from django.utils import timezone
 from django.db.models import Q, F
-from curriculum.models import Standard
+from curriculum.models import Standard, Subject
 
 
 import csv
@@ -459,6 +459,76 @@ def admin_add_quiz(request):
 
 
 
+# @login_required
+# def teacher_add_question(request, quiz_id=None):
+#     """
+#     Teachers can see a list of quizzes and add questions to assigned quizzes.
+#     Staff and superuser can add to any quiz.
+#     """
+#     user = request.user
+
+#     # 1️⃣ No quiz_id → show quiz selection page
+#     if not quiz_id:
+#         teacher = None
+#         try:
+#             teacher = Teacher.objects.get(user=user)
+#         except Teacher.DoesNotExist:
+#             pass
+
+#         if user.is_staff or user.is_superuser:
+#             quizzes = Quiz.objects.all()
+#         elif teacher:
+#             quizzes = Quiz.objects.filter(
+#                 subject__in=teacher.subjects_taught.all(),
+#                 examination__standard__in=teacher.standards_assigned.all()
+#             )
+#         else:
+#             messages.error(request, "Access Denied.")
+#             return redirect('cbt:main-view')
+
+#         return render(request, "cbt/teacher_select_quiz.html", {"quizzes": quizzes})
+
+#     # 2️⃣ quiz_id provided → go to add question form
+#     quiz = get_object_or_404(Quiz, id=quiz_id)
+
+#     # Security check for teachers
+#     if not (user.is_staff or user.is_superuser):
+#         try:
+#             teacher = Teacher.objects.get(user=user)
+#         except Teacher.DoesNotExist:
+#             raise PermissionDenied("You must be a registered teacher.")
+
+#         is_authorized_standard = quiz.examination.standard in teacher.standards_assigned.all()
+#         is_authorized_subject = quiz.subject in teacher.subjects_taught.all()
+#         if not (is_authorized_standard and is_authorized_subject):
+#             messages.error(request, "Access Denied: You are not assigned to this Class or Subject.")
+#             return redirect('cbt:main-view')
+
+#     # 3️⃣ Handle form submission
+#     if request.method == 'POST':
+#         form = QuestionForm(request.POST)
+#         if form.is_valid():
+#             question = form.save(commit=False)
+#             question.quiz = quiz
+#             question.save()
+
+#             # Update quiz question count
+#             Quiz.objects.filter(id=quiz.id).update(number_of_questions=F('number_of_questions') + 1)
+
+#             messages.success(request, "Question added successfully!")
+
+#             if 'add_another' in request.POST:
+#                 return redirect('cbt:teacher-add-question-quiz', quiz_id=quiz.id)
+
+#             return redirect('cbt:main-view')
+#     else:
+#         form = QuestionForm()
+
+#     return render(request, 'cbt/teacher_add_question.html', {
+#         'form': form,
+#         'quiz': quiz
+#     })
+
 @login_required
 def teacher_add_question(request, quiz_id=None):
     """
@@ -474,11 +544,20 @@ def teacher_add_question(request, quiz_id=None):
             teacher = Teacher.objects.get(user=user)
         except Teacher.DoesNotExist:
             pass
-
+     
+        # ===== BASE QUERYSET (UNCHANGED LOGIC) =====
         if user.is_staff or user.is_superuser:
-            quizzes = Quiz.objects.all()
+            quizzes = Quiz.objects.select_related(
+                'subject',
+                'examination',
+                'standard'
+            ).all()
         elif teacher:
-            quizzes = Quiz.objects.filter(
+            quizzes = Quiz.objects.select_related(
+                'subject',
+                'examination',
+                'standard'
+            ).filter(
                 subject__in=teacher.subjects_taught.all(),
                 examination__standard__in=teacher.standards_assigned.all()
             )
@@ -486,12 +565,36 @@ def teacher_add_question(request, quiz_id=None):
             messages.error(request, "Access Denied.")
             return redirect('cbt:main-view')
 
-        return render(request, "cbt/teacher_select_quiz.html", {"quizzes": quizzes})
+        # ===== FILTER PARAMETERS (NEW – SAFE) =====
+        standard_id = request.GET.get('standard')
+        subject_id = request.GET.get('subject')
+        term = request.GET.get('term')
+
+        if standard_id:
+            quizzes = quizzes.filter(standard_id=standard_id)
+
+        if subject_id:
+            quizzes = quizzes.filter(subject_id=subject_id)
+
+        if term:
+            quizzes = quizzes.filter(term=term)
+
+        # ===== FILTER DROPDOWN DATA =====
+        standards = Standard.objects.all()
+        subjects = Subject.objects.all()
+        terms = Quiz.objects.values_list('term', flat=True).distinct()
+
+        return render(request, "cbt/teacher_select_quiz.html", {
+            "quizzes": quizzes,
+            "standards": standards,
+            "subjects": subjects,
+            "terms": terms,
+        })
 
     # 2️⃣ quiz_id provided → go to add question form
     quiz = get_object_or_404(Quiz, id=quiz_id)
 
-    # Security check for teachers
+    # Security check for teachers (UNCHANGED)
     if not (user.is_staff or user.is_superuser):
         try:
             teacher = Teacher.objects.get(user=user)
@@ -500,11 +603,12 @@ def teacher_add_question(request, quiz_id=None):
 
         is_authorized_standard = quiz.examination.standard in teacher.standards_assigned.all()
         is_authorized_subject = quiz.subject in teacher.subjects_taught.all()
+
         if not (is_authorized_standard and is_authorized_subject):
             messages.error(request, "Access Denied: You are not assigned to this Class or Subject.")
             return redirect('cbt:main-view')
 
-    # 3️⃣ Handle form submission
+    # 3️⃣ Handle form submission (UNCHANGED)
     if request.method == 'POST':
         form = QuestionForm(request.POST)
         if form.is_valid():
@@ -513,7 +617,9 @@ def teacher_add_question(request, quiz_id=None):
             question.save()
 
             # Update quiz question count
-            Quiz.objects.filter(id=quiz.id).update(number_of_questions=F('number_of_questions') + 1)
+            Quiz.objects.filter(id=quiz.id).update(
+                number_of_questions=F('number_of_questions') + 1
+            )
 
             messages.success(request, "Question added successfully!")
 
@@ -526,9 +632,9 @@ def teacher_add_question(request, quiz_id=None):
 
     return render(request, 'cbt/teacher_add_question.html', {
         'form': form,
-        'quiz': quiz
-    })
+        'quiz': quiz,
 
+    })
 
 
 # TEACHER VIEW QUESTIONS
