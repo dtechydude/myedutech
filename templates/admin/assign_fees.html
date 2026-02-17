@@ -1,13 +1,14 @@
 {% extends "admin/base_site.html" %}
 {% load i18n %}
+{% block title %}{% translate "Assign Fees to Students" %}{% endblock %}
+
 
 {% block content %}
 <div id="content-main">
-    <h1>{% translate "Assign Fees to Students" %}</h1>
     <p>{% translate "You are about to assign fees to the following students:" %}</p>
     <ul>
         {% for student in students %}
-            <li>{{ student.first_name }} {{ student.last_name }} ({{ student.USN }})</li>
+            <li>{{ student.first_name }} {{ student.last_name }} ({{ student.USN }}) {{ student.current_class }}</li>
         {% endfor %}
     </ul>
     

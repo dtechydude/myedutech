@@ -407,16 +407,16 @@
 						<ul aria-expanded="false">
 
 							<li><a href="{% url 'pages:portal-home' %}">Dashboard HOME</a></li>
-							<li><a href="{% url 'events:calendar' %}">School Events Calendar</a></li>
 							
 							{% if user.is_superuser or user.is_staff %}
-							<li><a href="/admin/" target="_blank">Main Settings</a></li>
+							<li><a href="/admin/" target="_blank">Main Settings (ADMIN PANEL)</a></li>
 							<li><a href="{% url 'events:event_new' %}">Add New Event</a></li>							
 							<li><a href="{% url 'all_users' %}">All Registered Users</a></li>
 							<li><a href="{% url 'students:student_search_list' %}">Search Students</a></li>
 							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>	
 
-							{% endif %}						
+							{% endif %}		
+	
 							{% if user.is_authenticated and user.student %}
 							<li><a href="{% url 'students:student-self-detail' %}">My Profile</a></li>							
 							{% endif %}
@@ -424,6 +424,8 @@
 							<li><a href="{% url 'staff:teacher_id_card' user.teacher.id %}"> My ID Card</a></li>			
 							<li><a href="{% url 'staff:teacher-self-detail' %}">My Profile</a></li>
 							{% endif %}
+
+							<li><a href="{% url 'events:calendar' %}">School Events Calendar</a></li>
 							
 						</ul>
 					</li>						

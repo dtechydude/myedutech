@@ -151,6 +151,8 @@ def birthday_list(request):
     }
     return render(request, 'pages/birthday_list.html', context)
 
+
+
 @login_required
 def payment_instruction(request):
     return render(request, 'pages/payment_instruction.html')

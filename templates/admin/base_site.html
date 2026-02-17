@@ -13,38 +13,39 @@
             KwikSchools EdTech |<small> -> <u>Go To Dashboard</u></small>
         </h2> -->
 
-        <h2 style="color:white; font-size: 1.2em; margin: 0; display: flex; align-items: center;">
-    >    <a href="{% url 'pages:portal-home' %}" class="btn btn-outline-light btn-sm ms-3" style="font-weight: 500; border-radius: 30px; padding: 5px 15px;">
-        <i class="fas fa-arrow-left me-2"></i> Go To System Dashboard
+        <h3 style="color:white; font-size: 1.1em; margin: 0; display: flex; align-items: center;">
+       <a href="{% url 'pages:portal-home' %}" class="btn btn-outline-light btn-sm ms-3" style="font-weight: 500; border-radius: 30px; padding: 5px 15px;">
+        <i class="fas fa-tachometer-alt me-2"></i> Go To System Dashboard
     </a>
   
 </div>
 {% endblock branding %}
 
+
 {% block extrahead %}
     {{ block.super }}
     <link rel="shortcut icon" href="{% static 'pages/images/favicon.png' %}" />
-{% endblock extrahead %}
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+{% endblock %}
+
+{% block footer %}
+<div style="
+    text-align:center;
+    padding:20px 10px;
+    margin-top:30px;
+    background:#03142e;
+    color:white;
+    font-size:13px;
+">
+    © {% now "Y" %} KwikSchools EdTech —
+    Smart School Management System
+</div>
+{% endblock %}
+
 
 {% block userlinks %}
 {{ block.super }}
 {% include "admin/color_theme_toggle.html" %}
 {% endblock %}
 
-
-{% comment %}
-<!-- {% extends 'admin/base.html'%}
-{% load static %}
-
-{% block branding %}
-<h1 id="head" style="color:white;"> KwikSchools</h1>
-{% endblock branding %}
-{% block extrahead %}
-    <link rel="shortcut icon" href="{% static 'pages/images/favicon.png' %}" />
-{% endblock extrahead %}
-
-{% block userlinks %}
-{{ block.super }}
-{% include "admin/color_theme_toggle.html" %}
-{% endblock %} -->
-{% endcomment %}
