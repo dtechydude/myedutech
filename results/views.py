@@ -1493,7 +1493,7 @@ class MidTermReportCardView(LoginRequiredMixin, View):
         overall_remark = get_overall_remark(overall_average) if overall_average else "No scores recorded."
 
         try:
-            school_identity = SchoolIdentity.objects.first()
+            school_identity = SchoolIdentity.objects.first()        
         except:
             school_identity = None
 

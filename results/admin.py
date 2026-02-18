@@ -198,4 +198,6 @@ class SessionResultStatusAdmin(admin.ModelAdmin):
         return obj.student.current_class
     get_class.short_description = 'Class'
 
+
+
 admin.site.register(Score, ScoreAdmin)

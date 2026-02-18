@@ -1,5 +1,5 @@
 # curriculum/admin.py
-from curriculum.models import SchoolIdentity, Lesson, Subject, ELearningSubject, Session, Standard, ClassGroup, Term
+from curriculum.models import SchoolIdentity, Lesson, Subject, ELearningSubject, Session, Standard, ClassGroup, Term, GradingComponent
 from embed_video.admin import AdminVideoMixin
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
@@ -139,6 +139,11 @@ class ClassFeeTemplateAdmin(ImportExportModelAdmin):
     actions = ['delete_selected']
 
 
+#GRADING ADMIN
+# @admin.register(GradingComponent)
+# class GradingComponentAdmin(admin.ModelAdmin):
+#     list_display = ('school', 'name', 'weight', 'is_active')
+#     list_filter = ('school', 'is_active')
 
 
 

@@ -11,6 +11,8 @@ from embed_video.fields import EmbedVideoField
 from django.core.exceptions import ValidationError
 from djrichtextfield.models import RichTextField
 # from portal.models import Dept
+from django.db.models import Sum
+
 
 from tinymce.models import HTMLField
 # from portal.models import Dept
@@ -292,47 +294,42 @@ class Reply(models.Model):
         return "reply to" + str(self.comment_name.comm_name)
     
 
-# # Online E-Learning Class
-# class SubjectOnlineMeeting(models.Model):
-#     PLATFORM_CHOICES = [
-#         ('ZOOM', 'Zoom'),
-#         ('MEET', 'Google Meet'),
-#         ('TEAMS', 'Microsoft Teams'),
-#     ]
-    
-#     # Link to the specific E-Learning Subject
-#     subject = models.ForeignKey(
-#         ELearningSubject, 
-#         on_delete=models.CASCADE, 
-#         related_name='online_meetings',
-#         verbose_name="E-Learning Subject"
-#     )
-    
-#     platform = models.CharField(
-#         max_length=5,
-#         choices=PLATFORM_CHOICES,
-#         default='ZOOM'
-#     )
-    
-#     # The URL for the recurring meeting
-#     meeting_link = models.URLField(
-#         help_text="The full join URL for this subject's online class (e.g., Zoom link)"
-#     )
-    
-#     is_active = models.BooleanField(
-#         default=True,
-#         help_text="Only active links will be visible to students."
-#     )
-    
-#     # Staff/Teacher field (optional, for tracking who set it)
-#     # staff_set_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
-#     def __str__(self):
-#         return f"{self.get_platform_display()} for {self.subject.name} ({self.subject.standard.name})"
+# GRADING SCALE
+class GradingComponent(models.Model):
+    """
+    Flexible grading structure per school.
+    Example:
+        CA1 - 10%
+        CA2 - 10%
+        Midterm - 30%
+        Exam - 50%
+    """
 
-#     class Meta:
-#         verbose_name = "Subject Online Meeting Link"
-#         verbose_name_plural = "Subject Online Meeting Links"
-#         # Only one link per platform per subject
-#         unique_together = ('subject', 'platform')
-#         ordering = ['subject__name', 'platform']
+    school = models.ForeignKey(
+        SchoolIdentity,
+        on_delete=models.CASCADE,
+        related_name="grading_components"
+    )
+
+    name = models.CharField(max_length=100)  # Midterm, Exam, CA1 etc
+    weight = models.DecimalField(max_digits=5, decimal_places=2)
+
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def clean(self):
+        total = GradingComponent.objects.filter(
+            school=self.school,
+            is_active=True
+        ).exclude(id=self.id).aggregate(
+            total=Sum('weight')
+        )['total'] or 0
+
+        if total + self.weight > 100:
+            raise ValidationError("Total grading weight cannot exceed 100%.")
+
+    def __str__(self):
+        return f"{self.name} ({self.weight}%)"
