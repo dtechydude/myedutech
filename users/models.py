@@ -121,6 +121,8 @@ class Profile(models.Model):
    
     class Meta:
         ordering = ['user']
+        verbose_name = 'User Profiles'
+        verbose_name_plural = 'User Profiles'
 
 #this function returns the profile name in the admin panel profile table
     def __str__ (self):
@@ -143,11 +145,7 @@ class Profile(models.Model):
             self.code = code
         super().save(*args, **kwargs)
 
-    class Meta:
-
-        verbose_name = 'User Profiles'
-        verbose_name_plural = 'User Profiles'
-
+   
     @property
     def image_url(self):
         if self.image:
