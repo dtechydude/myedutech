@@ -2,50 +2,67 @@
 {% load static %}
 
 {% block branding %}
-<div id="site-name">
-    <a href="{% url 'pages:portal-home' %}" target="_blank", style="text-decoration: none; display: flex; align-items: center;">
-<!--         
-        <img src="{% static 'pages/images/kwikschool_logo.png' %}" 
-             alt="Logo" 
-             style="height: 24px; margin-right: 8px; border-radius: 4px;">  -->
-<!--         
-        <h2 style="color:white; font-size: 1.2em; margin: 0;"> 
-            KwikSchools EdTech |<small> -> <u>Go To Dashboard</u></small>
-        </h2> -->
+<div id="site-name" style="display:flex; align-items:center;">
+    <a href="{% url 'pages:portal-home' %}" 
+       target="_blank"
+       style="text-decoration:none;">
 
-        <h3 style="color:white; font-size: 1.1em; margin: 0; display: flex; align-items: center;">
-       <a href="{% url 'pages:portal-home' %}" class="btn btn-outline-light btn-sm ms-3" style="font-weight: 500; border-radius: 30px; padding: 5px 15px;">
-        <i class="fas fa-tachometer-alt me-2"></i> Go To System Dashboard
+        <span style="
+            display:inline-block;
+            font-weight:500;
+            border-radius:30px;
+            padding:6px 18px;
+            background:white;
+            color:#03142e;
+            font-size:14px;
+        ">
+            <i class="fas fa-tachometer-alt" style="margin-right:6px;"></i>
+            Go To System Dashboard
+        </span>
+
     </a>
-  
 </div>
 {% endblock branding %}
 
 
 {% block extrahead %}
     {{ block.super }}
+
     <link rel="shortcut icon" href="{% static 'pages/images/favicon.png' %}" />
+
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-{% endblock %}
 
-{% block footer %}
-<div style="
-    text-align:center;
-    padding:20px 10px;
-    margin-top:30px;
-    background:#03142e;
-    color:white;
-    font-size:13px;
-">
-    © {% now "Y" %} KwikSchools EdTech —
-    Smart School Management System
-</div>
+    <style>
+        /* ===============================
+           FULL HEIGHT ADMIN LAYOUT
+        =============================== */
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Admin container expands */
+        #container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Main content should stretch */
+        #content {
+            flex: 1;
+        }
+    </style>
 {% endblock %}
 
 
 {% block userlinks %}
-{{ block.super }}
-{% include "admin/color_theme_toggle.html" %}
+    {{ block.super }}
+    {% include "admin/color_theme_toggle.html" %}
 {% endblock %}
-
