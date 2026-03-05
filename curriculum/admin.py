@@ -1,5 +1,5 @@
 # curriculum/admin.py
-from curriculum.models import SchoolIdentity, Lesson, Subject, ELearningSubject, Session, Standard, ClassGroup, Term, GradingComponent
+from curriculum.models import SchoolIdentity, Lesson, Subject, ELearningSubject, Session, Standard, ClassGroup, Term
 from embed_video.admin import AdminVideoMixin
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError

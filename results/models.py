@@ -208,8 +208,8 @@ class ResultPublication(models.Model):
     
     class Meta:
         unique_together = ('student', 'term')
-        verbose_name = "Result Publication Status"
-        verbose_name_plural = 'Result Publication Status'
+        verbose_name = "Result Publication (Termly)"
+        verbose_name_plural = 'Result Publication (Termly)'
         
     def __str__(self):
         status = 'ALLOWED' if self.is_published else 'BLOCKED'
@@ -218,25 +218,77 @@ class ResultPublication(models.Model):
 
 
 # MID TERM Results
+# class MidTermScore(models.Model):
+#     """
+#     Represents a student's score for a Mid-Term Exam (Total out of 100), 
+#     completely independent of Continuous Assessment (CA).
+#     """
+#     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='midterm_scores')
+#     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+#     term = models.ForeignKey(Term, on_delete=models.CASCADE)
+    
+#     # Single field for the Mid-Term Score, out of 100.
+#     exam_total_score = models.DecimalField(
+#         max_digits=5, 
+#         decimal_places=2, 
+#         null=True, 
+#         blank=True, 
+#         validators=[MinValueValidator(0), MaxValueValidator(100)],
+#         verbose_name="Mid-Term Score (out of 100)"
+#     )
+
+#     class Meta:
+#         # Each student can only have one mid-term score entry per subject per term
+#         unique_together = ('student', 'subject', 'term')
+#         ordering = ['student__last_name', 'subject__name']
+#         verbose_name = 'Mid-Term Score'
+#         verbose_name_plural = 'Mid-Term Scores'
+
+#     def __str__(self):
+#         return f"{self.student.first_name} - {self.subject.name} (Mid-Term {self.term.name})"
+    
+#     # Note: No custom save or clean logic needed as it's a single score with built-in validators.
+#     # The total score is the exam_total_score itself.
+
+
+# Exam Score Setting
+class ExamSetting(models.Model):
+    MIDTERM = "Midterm"
+    FINAL = "Final"
+
+    EXAM_TYPES = [
+        (MIDTERM, "Midterm"),
+        (FINAL, "Final"),
+    ]
+
+    term = models.ForeignKey(Term, on_delete=models.CASCADE)
+    exam_type = models.CharField(max_length=50, choices=EXAM_TYPES)
+    max_score = models.PositiveIntegerField()
+
+    class Meta:
+        unique_together = ('term', 'exam_type')
+
+    def __str__(self):
+        return f"{self.exam_type} - {self.term.name}"
+
+
+# New Mid Term Score
+
 class MidTermScore(models.Model):
-    """
-    Represents a student's score for a Mid-Term Exam (Total out of 100), 
-    completely independent of Continuous Assessment (CA).
-    """
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='midterm_scores')
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     term = models.ForeignKey(Term, on_delete=models.CASCADE)
-    
-    # Single field for the Mid-Term Score, out of 100.
-    exam_total_score = models.DecimalField(
-        max_digits=5, 
-        decimal_places=2, 
-        null=True, 
-        blank=True, 
-        validators=[MinValueValidator(0), MaxValueValidator(100)],
-        verbose_name="Mid-Term Score (out of 100)"
-    )
 
+    exam_total_score = models.FloatField(null=True, blank=True)
+
+    def percentage(self):
+        setting = ExamSetting.objects.get(
+            term=self.term,
+            exam_type="Midterm"
+        )
+        return (self.exam_total_score / setting.max_score) * 100
+
+    
     class Meta:
         # Each student can only have one mid-term score entry per subject per term
         unique_together = ('student', 'subject', 'term')
@@ -247,8 +299,6 @@ class MidTermScore(models.Model):
     def __str__(self):
         return f"{self.student.first_name} - {self.subject.name} (Mid-Term {self.term.name})"
     
-    # Note: No custom save or clean logic needed as it's a single score with built-in validators.
-    # The total score is the exam_total_score itself.
 
 
 class SessionResultStatus(models.Model):
@@ -259,7 +309,8 @@ class SessionResultStatus(models.Model):
 
     class Meta:
         unique_together = ('student', 'session')
-        verbose_name_plural = "Session Result Status"
+        verbose_name = "Result Publication (Session)"
+        verbose_name_plural = "Result Publication (Session)"
 
     def __str__(self):
         return f"{self.student.get_full_name()} - {self.session.name} - Published: {self.is_published}"

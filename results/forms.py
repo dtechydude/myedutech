@@ -183,42 +183,139 @@ class MotorAbilityScoreForm(forms.ModelForm):
 
 
 # MID TERM ENTRY FORM
-class MidTermScoreForm(forms.ModelForm):
-    """
-    Form for entering a single MidTermScore (out of 100).
-    """
+# class MidTermScoreForm(forms.ModelForm):
+#     """
+#     Form for entering a single MidTermScore (out of 100).
+#     """
     
-    # Ensure the field is not required at the form level to allow empty submission
-    exam_total_score = forms.DecimalField(
-        required=False,
-        max_digits=5, # Adjust based on your model, using DecimalField for 0.01 step
-        decimal_places=2,
-    )
+#     # Ensure the field is not required at the form level to allow empty submission
+#     exam_total_score = forms.DecimalField(
+#         required=False,
+#         max_digits=5, # Adjust based on your model, using DecimalField for 0.01 step
+#         decimal_places=2,
+#     )
+
+#     class Meta:
+#         model = MidTermScore
+#         fields = ['exam_total_score']
+#         widgets = {
+#             'exam_total_score': forms.NumberInput(attrs={
+#                 'class': 'form-control form-control-score mx-auto', 
+#                 'step': '0.01', 
+#                 'min': '0', 
+#                 'max': '100', 
+#                 'placeholder': 'Score (0-100)'
+#             }),
+#         }
+
+#     # --- CRITICAL FIX ---
+#     def clean_exam_total_score(self):
+#         """
+#         Ensures that an empty input is explicitly returned as None (NULL),
+#         preventing Django from setting it to 0.
+#         """
+#         score = self.cleaned_data.get('exam_total_score')
+        
+#         # If score is None (empty input), return None.
+#         if score is None:
+#             return None
+        
+#         # Otherwise, return the validated score.
+#         return score
+
+
+# New Mid Term Score Form
+# class MidTermScoreForm(forms.ModelForm):
+
+#     # class Meta:
+#     #     model = MidTermScore
+#     #     fields = ['exam_total_score', 'max_score']
+#     #     widgets = {
+#     #         'max_score': forms.HiddenInput()
+#     #     }
+#     class Meta:
+#         model = MidTermScore
+#         fields = ['exam_total_score', 'max_score']
+#         widgets = {
+#             'max_score': forms.HiddenInput(),
+#             'exam_total_score': forms.NumberInput(attrs={
+#                 'class': 'form-control form-control-score',
+#                 'style': 'max-width:120px; text-align:center;'
+#             })
+#         }
+
+#     def clean_exam_total_score(self):
+#         score = self.cleaned_data.get('exam_total_score')
+#         max_score = self.cleaned_data.get('max_score') or 100
+
+#         if score is None:
+#             return score
+
+#         if score > max_score:
+#             raise forms.ValidationError(
+#                 f"Score cannot exceed {max_score} marks."
+#             )
+
+#         return score
+
+# class MidTermScoreForm(forms.ModelForm):
+
+#     class Meta:
+#         model = MidTermScore
+#         fields = ['exam_total_score', 'max_score']
+#         widgets = {
+#             'max_score': forms.HiddenInput(),
+#             'exam_total_score': forms.NumberInput(attrs={
+#                 'class': 'form-control form-control-score',
+#                 'style': 'max-width:120px; text-align:center;'
+#             })
+#         }
+
+#     def clean(self):
+#         cleaned_data = super().clean()
+
+#         score = cleaned_data.get('exam_total_score')
+#         max_score = cleaned_data.get('max_score')
+
+#         if score is None:
+#             return cleaned_data
+
+#         if max_score is None:
+#             max_score = 100  # fallback safety
+
+#         if score > max_score:
+#             self.add_error(
+#                 'exam_total_score',
+#                 f"Score cannot be greater than {max_score}."
+#             )
+
+#         return cleaned_data
+
+class MidTermScoreForm(forms.ModelForm):
 
     class Meta:
         model = MidTermScore
         fields = ['exam_total_score']
         widgets = {
             'exam_total_score': forms.NumberInput(attrs={
-                'class': 'form-control form-control-score mx-auto', 
-                'step': '0.01', 
-                'min': '0', 
-                'max': '100', 
-                'placeholder': 'Score (0-100)'
-            }),
+                'class': 'form-control form-control-score',
+                'style': 'max-width:120px; text-align:center;'
+            })
         }
 
-    # --- CRITICAL FIX ---
+    def __init__(self, *args, **kwargs):
+        self.max_score = kwargs.pop('max_score', None)
+        super().__init__(*args, **kwargs)
+
     def clean_exam_total_score(self):
-        """
-        Ensures that an empty input is explicitly returned as None (NULL),
-        preventing Django from setting it to 0.
-        """
         score = self.cleaned_data.get('exam_total_score')
-        
-        # If score is None (empty input), return None.
+
         if score is None:
-            return None
-        
-        # Otherwise, return the validated score.
+            return score
+
+        if self.max_score and score > self.max_score:
+            raise forms.ValidationError(
+                f"Score cannot exceed {self.max_score}"
+            )
+
         return score

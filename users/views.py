@@ -13,6 +13,7 @@ from curriculum.models import SchoolIdentity
 from django.contrib.auth.views import LoginView
 from django.urls import reverse_lazy
 from students.models import Parent
+from django.core.exceptions import PermissionDenied
 
 from django.contrib.auth import views as auth_views
 from django.db.utils import OperationalError, ProgrammingError

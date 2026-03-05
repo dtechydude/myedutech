@@ -121,6 +121,13 @@ class StudentAdmin(ImportExportModelAdmin):
 
     actions = ['assign_fees_to_students', graduate_selected_students]
 
+    # making badge not required
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if 'badge' in form.base_fields:
+            form.base_fields['badge'].required = False
+            return form
+
     # ----------------- Existing Fee Assignment Action (Unchanged) ----------------- #
     @admin.action(description='Assign fees to selected students')
     def assign_fees_to_students(self, request, queryset):

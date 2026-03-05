@@ -15,16 +15,15 @@ from django.views import View
 from django.db import transaction
 from django.core.exceptions import ValidationError, ObjectDoesNotExist, PermissionDenied
 from django.forms import formset_factory, modelformset_factory
-from .models import Score, MotorAbilityScore, MidTermScore, ResultPublication, SessionResultStatus
+from .models import Score, MotorAbilityScore, MidTermScore, ResultPublication, SessionResultStatus, ExamSetting
 from .forms import ScoreEntryForm, ReportCardFilterForm, SessionReportCardFilterForm, MotorAbilityScoreForm, MidTermScoreForm # Import new form
-from .utils import get_grade, get_subject_remark, get_overall_remark # Import helper functions
+from .utils import get_grade, get_subject_remark, get_overall_remark, mdterm_get_subject_remark, mdterm_get_grade, mdterm_get_overall_remark # Import helper functions
 from django.template.loader import render_to_string # Import render_to_string
 from curriculum.models import SchoolIdentity
 from transport.context_processors import school_identity as school_identity_processor
 from django.core.paginator import Paginator
 import csv
 from django.core.exceptions import PermissionDenied
-
 
 
 # For PDF generation using django-wkhtmltopdf
@@ -85,27 +84,31 @@ def get_student_class_rank(student, standard, term):
 
 
 
-# working well 001
+# working well with new view to allow superuser and is_staff
 class TeacherRequiredMixin(UserPassesTestMixin):
-    """Mixin to ensure only users linked to a Teacher profile can access the view."""
+    """Mixin to allow only users linked to a Teacher profile, or staff/superuser."""
     def test_func(self):
-        return hasattr(self.request.user, 'teacher')
+        user = self.request.user
+        return hasattr(user, 'teacher') or user.is_staff or user.is_superuser
 
-
-# New adjustment 002
 class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
     template_name = 'results/score_entry.html'
 
     def get(self, request, *args, **kwargs):
-        teacher = request.user.teacher
+        # If superuser or staff, they are treated as having access to all classes and subjects
+        if request.user.is_superuser or request.user.is_staff:
+            teacher = None  # No need to filter by teacher
+            assigned_subjects = Subject.objects.all()
+            assigned_standards = Standard.objects.all()
+        else:
+            teacher = request.user.teacher
+            assigned_subjects = teacher.subjects_taught.all()
+            assigned_standards = teacher.standards_assigned.all()
 
         current_term = Term.objects.filter(is_current=True).first()
         if not current_term:
             messages.error(request, 'No current term set. Please contact administration.')
             return render(request, self.template_name, {})
-
-        assigned_subjects = teacher.subjects_taught.all()
-        assigned_standards = teacher.standards_assigned.all()
 
         selected_subject = None
         selected_standard = None
@@ -114,7 +117,6 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
         selected_standard_id = request.GET.get('standard', assigned_standards.first().id if assigned_standards.exists() else None)
 
         students_in_standard = []
-        # Keep default extra=0 here
         ScoreFormSet = formset_factory(ScoreEntryForm, extra=0)
         formset = ScoreFormSet()
 
@@ -130,14 +132,12 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
 
                 initial_data = []
                 for student in students_in_standard:
-                    # Retrieve existing score instance (or None if not scored yet)
                     score_instance = Score.objects.filter(
                         student=student,
                         subject=selected_subject,
                         term=current_term
                     ).first()
 
-                    # Populate initial data dictionary for this student
                     initial_data.append({
                         'student_id': student.id,
                         'student_name': student.get_full_name(),
@@ -148,11 +148,9 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
                         'exam_score': score_instance.exam_score if score_instance else None,
                     })
 
-                # --- CORRECTED LINE: Ensure extra=0 is used when initializing with initial data ---
                 ScoreFormSet = formset_factory(ScoreEntryForm, extra=0)
-                formset = ScoreFormSet(initial=initial_data) # Size is determined by len(initial_data)
+                formset = ScoreFormSet(initial=initial_data)
 
-        # ... (context population remains the same)
         try:
             school_identity = SchoolIdentity.objects.first()
         except SchoolIdentity.DoesNotExist:
@@ -173,7 +171,11 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
-        teacher = request.user.teacher
+        # Same as get: bypass teacher filtering for superuser/staff
+        if request.user.is_superuser or request.user.is_staff:
+            teacher = None
+        else:
+            teacher = request.user.teacher
 
         current_term = Term.objects.filter(is_current=True).first()
         if not current_term:
@@ -194,28 +196,22 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
             messages.error(request, 'Invalid subject or standard selected.')
             return redirect('score_entry')
 
-        if not teacher.subjects_taught.filter(id=selected_subject.id).exists() or \
-           not teacher.standards_assigned.filter(id=selected_standard.id).exists():
+        # Authorization check only for non-superuser/staff
+        if teacher and (not teacher.subjects_taught.filter(id=selected_subject.id).exists() or
+                        not teacher.standards_assigned.filter(id=selected_standard.id).exists()):
             messages.error(request, 'You are not authorized to enter scores for this subject or standard.')
             return redirect('score_entry')
 
         students_in_standard = Student.objects.filter(current_class=selected_standard).order_by('first_name', 'last_name')
-
-        # --- CORRECTED LINE: When handling POST data, Django expects the formset to match the number of forms submitted.
-        # Since we set extra=0 and submit one form per student, we use len(students_in_standard) for total forms.
-        # It's safest to define the formset size based on the submitted management data, but setting extra=0 here
-        # is necessary to avoid adding *more* rows if the validation fails and we re-render.
         ScoreFormSet = formset_factory(ScoreEntryForm, extra=0)
-
         formset = ScoreFormSet(request.POST)
 
         if formset.is_valid():
             try:
                 with transaction.atomic():
                     for form in formset:
-                        # Since you're not using modelformset_factory, you must ensure the form is not empty here
                         if form.cleaned_data.get('student_id') is None:
-                            continue # Skip empty/deleted forms, though this shouldn't happen with extra=0
+                            continue
 
                         student_id = form.cleaned_data['student_id']
                         score_id = form.cleaned_data['score_id']
@@ -246,7 +242,6 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
                                     exam_score=exam_score
                                 )
                         elif score_id:
-                            # Trigger the model's deletion logic by saving all None scores to the existing instance
                             score_instance = get_object_or_404(Score, id=score_id)
                             score_instance.ca1, score_instance.ca2, score_instance.ca3, score_instance.exam_score = None, None, None, None
                             score_instance.save()
@@ -257,12 +252,10 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
                 for field, error_list in e.message_dict.items():
                     for error_msg in error_list:
                         messages.error(request, f"Validation Error: {error_msg}")
-                pass # Fall through to rendering block
 
-        # This block now serves as the single point for re-rendering the page on any error
         messages.error(request, 'Please correct the errors below.')
-        assigned_subjects = teacher.subjects_taught.all()
-        assigned_standards = teacher.standards_assigned.all()
+        assigned_subjects = Subject.objects.all() if (request.user.is_superuser or request.user.is_staff) else teacher.subjects_taught.all()
+        assigned_standards = Standard.objects.all() if (request.user.is_superuser or request.user.is_staff) else teacher.standards_assigned.all()
 
         try:
             school_identity = SchoolIdentity.objects.first()
@@ -284,11 +277,12 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
         return render(request, self.template_name, context)
 
 
+
+
 # Simple success view
 class ScoreEntrySuccessView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         return render(request, 'results/score_entry_success.html')
-
 
 
 # For Report Card List
@@ -373,51 +367,51 @@ class ReportCardListView(LoginRequiredMixin, TeacherRequiredMixin, View):
         return render(request, self.template_name, context)
 
 
-#New Report Card View to capture the attendance
-# Placeholder functions from the original code
-def get_grade(score):
-    if score >= 80:
-        return "A"
-    elif score >= 71:
-        return "B+"
-    elif score >= 60:
-        return "B"
-    elif score >= 50:
-        return "C"
-    elif score >= 45:
-        return "D"
-    elif score >= 40:
-        return "E"
-    else:
-        return "F"
+# #New Report Card View to capture the attendance
+# # Placeholder functions from the original code
+# def get_grade(score):
+#     if score >= 80:
+#         return "A"
+#     elif score >= 71:
+#         return "B+"
+#     elif score >= 60:
+#         return "B"
+#     elif score >= 50:
+#         return "C"
+#     elif score >= 45:
+#         return "D"
+#     elif score >= 40:
+#         return "E"
+#     else:
+#         return "F"
 
-def get_subject_remark(score):
-    if score >= 80:
-        return "Excellent"
-    elif score >= 71:
-        return "Very Good"
-    elif score >= 60:
-        return "Good"
-    elif score >= 50:
-        return "Fair"
-    elif score >= 40:
-        return "Pass"
-    else:
-        return "Fail"
+# def get_subject_remark(score):
+#     if score >= 80:
+#         return "Excellent"
+#     elif score >= 71:
+#         return "Very Good"
+#     elif score >= 60:
+#         return "Good"
+#     elif score >= 50:
+#         return "Fair"
+#     elif score >= 40:
+#         return "Pass"
+#     else:
+#         return "Fail"
 
-def get_overall_remark(average):
-    if average >= 80:
-        return "Outstanding"
-    elif average >= 71:
-        return "Very Good"
-    elif average >= 60:
-        return "Good"
-    elif average >= 50:
-        return "Fair"
-    elif average >= 40:
-        return "Poor"
-    else:
-        return "Very Poor"
+# def get_overall_remark(average):
+#     if average >= 80:
+#         return "Outstanding"
+#     elif average >= 71:
+#         return "Very Good"
+#     elif average >= 60:
+#         return "Good"
+#     elif average >= 50:
+#         return "Fair"
+#     elif average >= 40:
+#         return "Poor"
+#     else:
+#         return "Very Poor"
 
 
 
@@ -489,8 +483,6 @@ class StudentReportCardView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
         # Authorization Check (Clean & Reusable)
         if not self.has_permission(request, student):
             return self.handle_no_permission(request)
-
-
 
 
         # --- ATTENDANCE and NEXT TERM ---
@@ -1171,21 +1163,190 @@ class ResultPermissionGatekeeperView(View):
         return redirect('pages:portal-home')
 
 
+
+# from django.shortcuts import render, get_object_or_404, redirect
+# from django.contrib import messages
+# from django.views import View
+# from django.forms import modelformset_factory
+# from django.contrib.auth.mixins import LoginRequiredMixin
+# from .models import MidTermScore, Student, Standard, Subject, Term, ExamSetting
+# from .forms import MidTermScoreForm
+
+# class MidTermScoreEntryView(LoginRequiredMixin, View):
+#     template_name = 'results/midterm_score_entry.html'
+
+#     def dispatch(self, request, *args, **kwargs):
+#         # Only teachers and staff can access
+#         if not (hasattr(request.user, 'teacher') or request.user.is_staff):
+#             messages.error(request, "You do not have permission to enter scores.")
+#             return redirect('pages:portal-home')
+#         return super().dispatch(request, *args, **kwargs)
+
+#     def get_formset(self, max_score, queryset, data=None):
+#         """
+#         Create a ModelFormSet passing max_score to each form for validation.
+#         """
+#         MidTermScoreFormSet = modelformset_factory(
+#             MidTermScore,
+#             form=MidTermScoreForm,
+#             extra=0,
+#             fields=('exam_total_score',)
+#         )
+
+#         return MidTermScoreFormSet(
+#             data=data,
+#             queryset=queryset,
+#             form_kwargs={'max_score': max_score}
+#         )
+
+#     def get(self, request, class_id, subject_id, term_id):
+#         assigned_class = get_object_or_404(Standard, id=class_id)
+#         subject = get_object_or_404(Subject, id=subject_id)
+#         term = get_object_or_404(Term, id=term_id)
+
+#         # --- Authorization for teachers ---
+#         if hasattr(request.user, 'teacher') and not request.user.is_staff:
+#             teacher = request.user.teacher
+#             is_assigned_to_class = assigned_class in teacher.standards_assigned.all()
+#             teaches_subject = subject in teacher.subjects_taught.all()
+#             if not (is_assigned_to_class and teaches_subject):
+#                 messages.error(
+#                     request,
+#                     f"You are not authorized to enter scores for {subject.name} in {assigned_class.name}."
+#                 )
+#                 return redirect('results:teacher_dashboard')
+
+#         # --- Get central max score from ExamSetting ---
+#         exam_setting = get_object_or_404(
+#             ExamSetting,
+#             term=term,
+#             exam_type="Midterm"
+#         )
+#         central_max = exam_setting.max_score
+
+#         # --- Ensure all students have a MidTermScore instance ---
+#         students = Student.objects.filter(current_class=assigned_class).order_by('last_name')
+#         existing_student_ids = MidTermScore.objects.filter(
+#             student__in=students, subject=subject, term=term
+#         ).values_list('student_id', flat=True)
+
+#         for student in students:
+#             if student.id not in existing_student_ids:
+#                 MidTermScore.objects.create(student=student, subject=subject, term=term)
+
+#         queryset = MidTermScore.objects.filter(
+#             student__in=students,
+#             subject=subject,
+#             term=term
+#         ).select_related('student').order_by('student__last_name')
+
+#         formset = self.get_formset(central_max, queryset)
+
+#         context = {
+#             'formset': formset,
+#             'assigned_class': assigned_class,
+#             'subject': subject,
+#             'term': term,
+#             'students': students,
+#             'central_max': central_max,
+#         }
+#         return render(request, self.template_name, context)
+
+#     def post(self, request, class_id, subject_id, term_id):
+#         assigned_class = get_object_or_404(Standard, id=class_id)
+#         subject = get_object_or_404(Subject, id=subject_id)
+#         term = get_object_or_404(Term, id=term_id)
+
+#         # --- Authorization check again ---
+#         if hasattr(request.user, 'teacher') and not request.user.is_staff:
+#             teacher = request.user.teacher
+#             if not (assigned_class in teacher.standards_assigned.all() and subject in teacher.subjects_taught.all()):
+#                 messages.error(request, "Unauthorized action.")
+#                 return redirect('results:teacher_dashboard')
+
+#         # --- Get central max score ---
+#         exam_setting = get_object_or_404(
+#             ExamSetting,
+#             term=term,
+#             exam_type="Midterm"
+#         )
+#         central_max = exam_setting.max_score
+
+#         students = Student.objects.filter(current_class=assigned_class)
+#         queryset = MidTermScore.objects.filter(
+#             student__in=students,
+#             subject=subject,
+#             term=term
+#         ).select_related('student').order_by('student__last_name')
+
+#         formset = self.get_formset(central_max, queryset, data=request.POST)
+
+#         if formset.is_valid():
+#             instances_to_save = []
+#             instances_to_delete = []
+
+#             for form in formset:
+#                 if form.has_changed():
+#                     instance = form.save(commit=False)
+#                     score_value = form.cleaned_data.get('exam_total_score')
+
+#                     if score_value is None:
+#                         if instance.pk:
+#                             instances_to_delete.append(instance)
+#                     else:
+#                         instances_to_save.append(instance)
+
+#             for instance in instances_to_save:
+#                 instance.save()
+
+#             for instance in instances_to_delete:
+#                 instance.delete()
+
+#             return redirect(
+#                 'results:midterm_score_success',
+#                 class_id=class_id,
+#                 subject_id=subject_id,
+#                 term_id=term_id
+#             )
+
+#         context = {
+#             'formset': formset,
+#             'assigned_class': assigned_class,
+#             'subject': subject,
+#             'term': term,
+#             'students': students.order_by('last_name'),
+#             'central_max': central_max,
+#         }
+#         messages.error(request, "There was an error in the score entry. Please check the scores entered.")
+#         return render(request, self.template_name, context)
+
+
+
 class MidTermScoreEntryView(LoginRequiredMixin, View):
     template_name = 'results/midterm_score_entry.html'
 
     def dispatch(self, request, *args, **kwargs):
+        # Only teachers and staff can access
         if not (hasattr(request.user, 'teacher') or request.user.is_staff):
             messages.error(request, "You do not have permission to enter scores.")
             return redirect('pages:portal-home')
         return super().dispatch(request, *args, **kwargs)
 
-    def get_formset_class(self, **kwargs):
-        return modelformset_factory(
+    def get_formset(self, max_score, queryset, data=None):
+        """
+        Create a ModelFormSet passing max_score to each form for validation.
+        """
+        MidTermScoreFormSet = modelformset_factory(
             MidTermScore,
             form=MidTermScoreForm,
             extra=0,
             fields=('exam_total_score',)
+        )
+
+        return MidTermScoreFormSet(
+            data=data,
+            queryset=queryset,
+            form_kwargs={'max_score': max_score}
         )
 
     def get(self, request, class_id, subject_id, term_id):
@@ -1193,30 +1354,36 @@ class MidTermScoreEntryView(LoginRequiredMixin, View):
         subject = get_object_or_404(Subject, id=subject_id)
         term = get_object_or_404(Term, id=term_id)
 
-        # --- UPDATED AUTHORIZATION LOGIC ---
+        # --- Authorization for teachers ---
         if hasattr(request.user, 'teacher') and not request.user.is_staff:
             teacher = request.user.teacher
-
-            # Check if the teacher is assigned to this specific Class
             is_assigned_to_class = assigned_class in teacher.standards_assigned.all()
-            # Check if the teacher is assigned to this specific Subject
             teaches_subject = subject in teacher.subjects_taught.all()
-
-            # Logic: Teacher must be assigned to BOTH the class and the subject
             if not (is_assigned_to_class and teaches_subject):
-                messages.error(request, f"You are not authorized to enter scores for {subject.name} in {assigned_class.name}.")
+                messages.error(
+                    request,
+                    f"You are not authorized to enter scores for {subject.name} in {assigned_class.name}."
+                )
                 return redirect('results:teacher_dashboard')
-        # ------------------------------------
 
+        
+        exam_setting = get_object_or_404(
+            ExamSetting,
+            term=term,
+            exam_type="Midterm"
+        )
+
+        central_max = exam_setting.max_score  # used for form validation
+
+        # --- Ensure all students have a MidTermScore instance ---
         students = Student.objects.filter(current_class=assigned_class).order_by('last_name')
-
         existing_student_ids = MidTermScore.objects.filter(
             student__in=students, subject=subject, term=term
         ).values_list('student_id', flat=True)
 
         for student in students:
             if student.id not in existing_student_ids:
-                MidTermScore.objects.create(student=student, subject=subject, term=term, exam_total_score=None)
+                MidTermScore.objects.create(student=student, subject=subject, term=term)
 
         queryset = MidTermScore.objects.filter(
             student__in=students,
@@ -1224,8 +1391,7 @@ class MidTermScoreEntryView(LoginRequiredMixin, View):
             term=term
         ).select_related('student').order_by('student__last_name')
 
-        MidTermScoreFormSet = self.get_formset_class()
-        formset = MidTermScoreFormSet(queryset=queryset)
+        formset = self.get_formset(central_max, queryset)
 
         context = {
             'formset': formset,
@@ -1233,6 +1399,9 @@ class MidTermScoreEntryView(LoginRequiredMixin, View):
             'subject': subject,
             'term': term,
             'students': students,
+            'central_max': central_max,
+            'exam_setting': exam_setting,  # <-- pass the object
+
         }
         return render(request, self.template_name, context)
 
@@ -1241,14 +1410,22 @@ class MidTermScoreEntryView(LoginRequiredMixin, View):
         subject = get_object_or_404(Subject, id=subject_id)
         term = get_object_or_404(Term, id=term_id)
 
-        # --- RE-RUN UPDATED AUTHORIZATION LOGIC IN POST ---
+        # --- Authorization check ---
         if hasattr(request.user, 'teacher') and not request.user.is_staff:
             teacher = request.user.teacher
             if not (assigned_class in teacher.standards_assigned.all() and subject in teacher.subjects_taught.all()):
                 messages.error(request, "Unauthorized action.")
                 return redirect('results:teacher_dashboard')
-        # --------------------------------------------------
 
+        # --- Get central max score ---
+        exam_setting = get_object_or_404(
+            ExamSetting,
+            term=term,
+            exam_type="Midterm"
+        )
+        central_max = exam_setting.max_score
+
+        # --- Prepare queryset ---
         students = Student.objects.filter(current_class=assigned_class)
         queryset = MidTermScore.objects.filter(
             student__in=students,
@@ -1256,8 +1433,7 @@ class MidTermScoreEntryView(LoginRequiredMixin, View):
             term=term
         ).select_related('student').order_by('student__last_name')
 
-        MidTermScoreFormSet = self.get_formset_class()
-        formset = MidTermScoreFormSet(request.POST, queryset=queryset)
+        formset = self.get_formset(central_max, queryset, data=request.POST)
 
         if formset.is_valid():
             instances_to_save = []
@@ -1268,22 +1444,38 @@ class MidTermScoreEntryView(LoginRequiredMixin, View):
                     instance = form.save(commit=False)
                     score_value = form.cleaned_data.get('exam_total_score')
 
-                    if score_value is None:
+                    # Skip saving empty or blank inputs
+                    if score_value in (None, ''):
                         if instance.pk:
                             instances_to_delete.append(instance)
-                    else:
-                        instances_to_save.append(instance)
+                        continue
 
+                    # Enforce central max score
+                    if score_value > central_max:
+                        form.add_error(
+                            'exam_total_score',
+                            f"Score cannot exceed {central_max}."
+                        )
+                        continue
+
+                    # Assign max_score before saving
+                    instance.max_score = central_max
+                    instances_to_save.append(instance)
+
+            # Save valid scores
             for instance in instances_to_save:
                 instance.save()
 
+            # Delete empty/removed scores
             for instance in instances_to_delete:
                 instance.delete()
 
-            return redirect('results:midterm_score_success',
-                            class_id=class_id,
-                            subject_id=subject_id,
-                            term_id=term_id)
+            return redirect(
+                'results:midterm_score_success',
+                class_id=class_id,
+                subject_id=subject_id,
+                term_id=term_id
+            )
 
         context = {
             'formset': formset,
@@ -1291,10 +1483,12 @@ class MidTermScoreEntryView(LoginRequiredMixin, View):
             'subject': subject,
             'term': term,
             'students': students.order_by('last_name'),
+            'central_max': central_max,
+            'exam_setting': exam_setting,  # <-- pass the object
+
         }
         messages.error(request, "There was an error in the score entry. Please check the scores entered.")
         return render(request, self.template_name, context)
-
 
 
 class MidTermReportCardView(LoginRequiredMixin, View):
@@ -1306,28 +1500,31 @@ class MidTermReportCardView(LoginRequiredMixin, View):
         term = get_object_or_404(Term, id=term_id)
 
         # -----------------------------------------------------------
-        # REFACTORED AUTHORIZATION LOGIC
+        # AUTHORIZATION LOGIC
         # -----------------------------------------------------------
-        # 1. Superuser/Staff check
         is_admin = request.user.is_superuser or request.user.is_staff
-
-        # 2. Student ownership check
         is_current_student = hasattr(request.user, 'student') and request.user.student.id == student_id
-
-        # 3. Strict Form Teacher check
-        # Only the teacher assigned to this specific student can view the report
         is_assigned_form_teacher = False
-        if hasattr(request.user, 'teacher'):
-            # This checks if the teacher logged in is the one referenced in the student's form_teacher column
-            if student.form_teacher == request.user.teacher:
-                is_assigned_form_teacher = True
 
-        # Combine checks: If none are met, deny access
+        if hasattr(request.user, 'teacher') and student.form_teacher == request.user.teacher:
+            is_assigned_form_teacher = True
+
         if not (is_admin or is_current_student or is_assigned_form_teacher):
             return redirect('results:student_midterm_list')
         # -----------------------------------------------------------
 
-        # Get student's scores (Existing logic below remains unchanged)
+        # -----------------------------------------------------------
+        # Get central max score for Midterm from ExamSetting
+        # -----------------------------------------------------------
+        exam_setting = get_object_or_404(
+            ExamSetting,
+            term=term,
+            exam_type="Midterm"
+        )
+        central_max = exam_setting.max_score
+        # -----------------------------------------------------------
+
+        # Fetch student's midterm scores
         midterm_scores = MidTermScore.objects.filter(
             student=student,
             term=term,
@@ -1338,6 +1535,7 @@ class MidTermReportCardView(LoginRequiredMixin, View):
         total_scores_sum = 0
 
         for score in midterm_scores:
+            # Class statistics for the subject
             stats = MidTermScore.objects.filter(
                 term=term,
                 subject=score.subject,
@@ -1352,8 +1550,8 @@ class MidTermReportCardView(LoginRequiredMixin, View):
             report_data.append({
                 'subject': score.subject.name,
                 'total_score': score.exam_total_score,
-                'grade': get_grade(score.exam_total_score),
-                'remark': get_subject_remark(score.exam_total_score),
+                'grade': mdterm_get_grade(score.exam_total_score, max_score=central_max),
+                'remark': mdterm_get_subject_remark(score.exam_total_score, max_score=central_max),
                 'class_high': stats['class_max'],
                 'class_low': stats['class_min'],
                 'class_avg': stats['class_avg'],
@@ -1363,10 +1561,10 @@ class MidTermReportCardView(LoginRequiredMixin, View):
 
         subjects_with_scores_count = len(report_data)
         overall_average = total_scores_sum / subjects_with_scores_count if subjects_with_scores_count > 0 else None
-        overall_remark = get_overall_remark(overall_average) if overall_average else "No scores recorded."
+        overall_remark = mdterm_get_overall_remark(overall_average, max_score=central_max) if overall_average else "No scores recorded."
 
         try:
-            school_identity = SchoolIdentity.objects.first()        
+            school_identity = SchoolIdentity.objects.first()
         except:
             school_identity = None
 
@@ -1378,8 +1576,10 @@ class MidTermReportCardView(LoginRequiredMixin, View):
             'overall_remark': overall_remark,
             'school_identity': school_identity,
             'total_subjects_scored': subjects_with_scores_count,
+            'exam_setting': exam_setting,  # Pass exam_setting for template display
         }
 
+        # PDF download option
         if 'download' in request.GET and request.GET['download'] == 'pdf':
             filename = f"{student.first_name}_{term.name}_MidTerm.pdf"
             pdf_response = render_to_pdf_xhtml2pdf(self.pdf_template_name, context)
@@ -1388,6 +1588,7 @@ class MidTermReportCardView(LoginRequiredMixin, View):
                 return pdf_response
 
         return render(request, self.template_name, context)
+
 
 
 # Mid Term List with filtering

@@ -100,7 +100,7 @@ class Teacher(models.Model):
         ('head_teacher', head_teacher),
               
     ]
-    staff_role= models.CharField(max_length=20, choices=staff_role, default=select)
+    staff_role= models.CharField(max_length=20, choices=staff_role, default=select, blank=True, null=True)
     updated = models.DateTimeField(auto_now=True)
     created = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=False, blank=True)  

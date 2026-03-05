@@ -1,11 +1,12 @@
 from doctest import Example
 from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
-from results.models import Examination, Score, MotorAbilityScore, MidTermScore, ResultPublication, SessionResultStatus
+from results.models import Examination, Score, MotorAbilityScore, MidTermScore, ResultPublication, SessionResultStatus, ExamSetting
 from curriculum.models import Term
 # add this because of the cbt
 from django.utils.html import format_html
 from django.urls import reverse
+
 
 
 
@@ -197,6 +198,31 @@ class SessionResultStatusAdmin(admin.ModelAdmin):
     def get_class(self, obj):
         return obj.student.current_class
     get_class.short_description = 'Class'
+
+
+
+# ----------------------------- Exam Setting Admin ----------------------------- #
+@admin.register(ExamSetting)
+class ExamSettingAdmin(ImportExportModelAdmin):
+    list_display = ('term', 'exam_type', 'max_score')
+    list_filter = ('term', 'exam_type')
+    search_fields = ('term__name', 'exam_type')
+    
+    fieldsets = (
+        ('Exam Configuration', {
+            'fields': ('term', 'exam_type', 'max_score'),
+            'description': 'Set the maximum score for a given exam type and term. This is used centrally for all score entries.',
+        }),
+    )
+
+    def save_model(self, request, obj, form, change):
+        # Prevent duplicate settings for the same term + exam_type
+        if not change:
+            exists = ExamSetting.objects.filter(term=obj.term, exam_type=obj.exam_type).exists()
+            if exists:
+                from django.core.exceptions import ValidationError
+                raise ValidationError(f"An ExamSetting already exists for term '{obj.term}' and exam type '{obj.exam_type}'.")
+        super().save_model(request, obj, form, change)
 
 
 

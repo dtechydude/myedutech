@@ -1,3 +1,4 @@
+{% comment %}
 {% load static %}
 {% load crispy_forms_filters %}
 
@@ -144,5 +145,124 @@
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
+
+{% endcomment %}
+
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Score Entry: {{ subject.name }}</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <style>
+        body { background-color: #f4f6f9; font-family: Arial, sans-serif; }
+        .score-entry-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 25px;
+        }
+        .form-header { border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 25px; }
+        .table thead th { background-color: #007bff; color: white; font-weight: 600; }
+        .form-control-score { max-width: 120px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="score-entry-container">
+
+    <!-- Back Button & User Info -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="{% url 'results:midterm_score_selection' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Selection
+        </a>
+        <p class="text-muted mb-0 small">Logged in as: {{ request.user.get_full_name }}</p>
+    </div>
+
+    <!-- Header -->
+    <div class="form-header text-center">
+        <h1 class="h4 text-primary font-weight-bold">{{ school_info.name|default:"Score Entry Portal" }}</h1>
+        <h2 class="h5 mt-2">
+            Mid-Term Score Entry: {{ subject.name }} - {{ assigned_class.name }} ({{ term.name }})
+        </h2>
+        <p class="small text-muted">
+            Maximum Score for this Exam: <strong>{{ exam_setting.max_score }}</strong>
+        </p>
+    </div>
+
+    <!-- Score Entry Form -->
+    <form method="post">
+        {% csrf_token %}
+        {{ formset.management_form }}
+
+        {% if formset.non_form_errors %}
+            <div class="alert alert-danger">{{ formset.non_form_errors }}</div>
+        {% endif %}
+
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered table-sm">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Admission No.</th>
+                        <th class="text-center">Mid-Term Score (0-{{ exam_setting.max_score }})</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for form in formset %}
+                        {% with student=form.instance.student %}
+                        <tr class="{% if form.errors %}table-danger{% endif %}">
+                            <td>{{ student.get_full_name }}</td>
+                            <td>{{ student.USN }}</td>
+                            <td class="text-center">
+
+                                <!-- Hidden fields -->
+                                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+                                <!-- Set max_score hidden -->
+                                <input type="hidden" name="{{ form.prefix }}-max_score" value="{{ exam_setting.max_score }}">
+
+                                <!-- Exam Score Input -->
+                                <input 
+                                    type="number" 
+                                    name="{{ form.prefix }}-exam_total_score" 
+                                    class="form-control form-control-score"
+                                    value="{{ form.instance.exam_total_score }}"
+                                    min="0"
+                                    max="{{ exam_setting.max_score }}"
+                                >
+                                {% if form.exam_total_score.errors %}
+                                    <div class="text-danger small mt-1">{{ form.exam_total_score.errors }}</div>
+                                {% endif %}
+
+                            </td>
+                        </tr>
+                        {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save"></i> Save All Scores
+            </button>
+        </div>
+    </form>
+</div>
+
+<footer class="text-center mt-5 mb-3 text-muted">
+    &copy; {% now "Y" %} KwikSchools EdTech | All Rights Reserved.
+</footer>
+
 </body>
 </html>
