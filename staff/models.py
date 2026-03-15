@@ -85,22 +85,23 @@ class Teacher(models.Model):
     next_of_kin_address = models.CharField(max_length=150, blank=True)  
     next_of_kin_phone = models.CharField(max_length=15, blank=True) 
 
-    select = 'select'
-    form_teacher = 'form_teacher'
-    subject_teacher = 'subject_teacher'
-    principal = 'principal'
-    head_teacher = 'head_teacher'
+    # select = 'select'
+    # form_teacher = 'form_teacher'
+    # subject_teacher = 'subject_teacher'
+    # principal = 'principal'
+    # head_teacher = 'head_teacher'
   
     
-    staff_role = [
-        ('select', select),
-        ('form_teacher', form_teacher),
-        ('subject_teacher', subject_teacher),
-        ('principal', principal),
-        ('head_teacher', head_teacher),
+    # staff_role = [
+    #     ('select', select),
+    #     ('form_teacher', form_teacher),
+    #     ('subject_teacher', subject_teacher),
+    #     ('principal', principal),
+    #     ('head_teacher', head_teacher),
               
-    ]
-    staff_role= models.CharField(max_length=20, choices=staff_role, default=select, blank=True, null=True)
+    # ]
+    # staff_role= models.CharField(max_length=20, choices=staff_role, default=select, blank=True, null=True)
+    staff_role = models.ForeignKey(StaffPosition, on_delete=models.CASCADE, default='select', related_name='staff_role', blank=True, null=True)
     updated = models.DateTimeField(auto_now=True)
     created = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=False, blank=True)  
