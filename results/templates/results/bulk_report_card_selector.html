@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Print | {{ school_identity.name|default:"School Management System" }}</title>
+    
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #f4f7f6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        /* Header Styling - Using your Blue brand color */
+        .school-header {
+            background-color: #006699;
+            color: white;
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .btn-orange {
+            background-color: #ff6600;
+            color: white;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-orange:hover {
+            background-color: #e65c00;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+        }
+        .card-header {
+            border-top-left-radius: 10px !important;
+            border-top-right-radius: 10px !important;
+            background-color: #004d73;
+        }
+        /* Footer Styling */
+        footer {
+            margin-top: auto;
+            background: #333;
+            color: #ccc;
+            padding: 20px 0;
+            font-size: 14px;
+        }
+        /* Loading Overlay */
+        #loadingOverlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9);
+            z-index: 9999;
+            text-align: center;
+            padding-top: 20%;
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            color: #ff6600;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="school-header">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                {% if school_identity.logo %}
+                    <img src="{{ school_identity.logo.url }}" alt="Logo" style="height: 40px; margin-right: 15px;">
+                {% endif %}
+                <h5 class="mb-0">{{ school_identity.name|default:"School Portal" }}</h5>
+            </div>
+            <a href="/dashboard" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </header>
+
+    <div class="container my-5">
+        <div id="loadingOverlay">
+            <div class="spinner-border" role="status"></div>
+            <h4 class="mt-3" style="color: #006699;">Generating Report Cards...</h4>
+            <p>Please wait, this may take a moment for large classes.</p>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header text-white">
+                        <h4 class="mb-0"><i class="fas fa-print mr-2"></i> Bulk Print Results</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted small">Select a class and term to generate a consolidated print view for all students.</p>
+                        
+                        <form id="bulkPrintForm">
+                            <div class="form-group">
+                                <label for="standardSelect"><strong>Select Class:</strong></label>
+                                <select class="form-control form-control-lg" id="standardSelect" required>
+                                    <option value="">-- Choose Class --</option>
+                                    {% for s in standards %}
+                                    <option value="{{ s.id }}">{{ s.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group mt-3">
+                                <label for="termSelect"><strong>Select Term:</strong></label>
+                                <select class="form-control form-control-lg" id="termSelect" required>
+                                    <option value="">-- Choose Term --</option>
+                                    {% for t in terms %}
+                                    <option value="{{ t.id }}">{{ t.name }} ({{ t.session.name }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-orange btn-block btn-lg mt-4">
+                                <i class="fas fa-magic mr-2"></i> Generate All Report Cards
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="/dashboard" class="text-muted"><i class="fas fa-times"></i> Cancel and Return</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center">
+        <div class="container">
+            <p class="mb-0">&copy; {{ school_identity.name }} | Powered by KwikSchools</p>
+            <small>Nigeria Education Portal Environment</small>
+        </div>
+    </footer>
+
+    <script>
+    document.getElementById('bulkPrintForm').onsubmit = function(e) {
+        e.preventDefault();
+        const standardId = document.getElementById('standardSelect').value;
+        const termId = document.getElementById('termSelect').value;
+        
+        if(standardId && termId) {
+            // Show loading overlay
+            document.getElementById('loadingOverlay').style.display = 'block';
+            document.querySelector('.card').style.opacity = '0.3';
+            
+            // Redirect to the Bulk Print View
+            window.location.href = `/results/bulk-print/${standardId}/${termId}/`;
+        }
+    };
+    </script>
+
+</body>
+</html>

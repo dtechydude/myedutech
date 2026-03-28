@@ -32,50 +32,151 @@ class Examination(models.Model):
         ordering = ['term__start_date', 'date', 'name']
     
 
-    
 
-# Work on 002
+ # School Year Setting for setting the exam scores for CA and Exam
+ 
+class SchoolYearSettings(models.Model):
+    """Stores global settings for the school's grading system."""
+    max_ca_total = models.DecimalField(
+        max_digits=5, decimal_places=2, default=40, 
+        help_text="Total maximum allowed for all CA components combined."
+    )
+    max_exam_score = models.DecimalField(
+        max_digits=5, decimal_places=2, default=60,
+        help_text="Maximum allowed score for the examination."
+    )
+    is_active = models.BooleanField(default=True, help_text="Only one setting should be active.")
+
+    class Meta:
+        verbose_name = "Grading Configuration"
+        verbose_name_plural = "Grading Configurations"
+
+    def __str__(self):
+        return f"Grading: CA({self.max_ca_total}) + Exam({self.max_exam_score})"
+
+    def clean(self):
+        if (self.max_ca_total + self.max_exam_score) != 100:
+            raise ValidationError("The sum of Max CA and Max Exam must equal 100.")
+           
+
+# Existing working model before changing to dynamic score entry
+
+# class Score(models.Model):
+#     """Represents a student's score in a specific subject for a given term."""
+#     # ... (Fields remain the same)
+#     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='scores')
+#     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+#     term = models.ForeignKey(Term, on_delete=models.CASCADE)
+#     ca1 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(40)])
+#     ca2 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(40)])
+#     ca3 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(40)])
+#     exam_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(60)])
+#     total_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
+
+#     class Meta:
+#         unique_together = ('student', 'subject', 'term')
+#         ordering = ['student__last_name', 'student__first_name']
+#         verbose_name = 'Exams & CA Scores'
+#         verbose_name_plural = 'Exams & CA Scores'
+
+#     def __str__(self):
+#         return f"{self.student.first_name} - {self.subject.name} ({self.term.name})"
+
+#     def clean(self):
+#         super().clean()
+#         total_ca = (self.ca1 or 0) + (self.ca2 or 0) + (self.ca3 or 0)
+#         if total_ca > 40:
+#             raise ValidationError('The total sum of CA scores (CA1, CA2, CA3) cannot exceed 40.')
+
+#     def save(self, *args, **kwargs):
+#         self.full_clean()
+
+#         # --- CORRECTION: Check if ALL score fields are empty/None ---
+#         # If all fields are None/empty, delete the instance if it exists, and skip creation.
+#         has_ca_score = any(s is not None for s in [self.ca1, self.ca2, self.ca3])
+#         has_exam_score = self.exam_score is not None
+
+#         if not has_ca_score and not has_exam_score:
+#             if self.pk:  # Check if the object already exists
+#                 self.delete() # Delete the object instead of saving empty data
+#             return # Stop the save process
+
+#         # Auto-calculate total_score ONLY if some scores are present
+#         total_ca = (self.ca1 or 0) + (self.ca2 or 0) + (self.ca3 or 0)
+        
+#         if self.exam_score is not None:
+#             self.total_score = total_ca + self.exam_score
+#         else:
+#             self.total_score = total_ca 
+
+#         super().save(*args, **kwargs)
+
+# New logic to ensure dynamic input into the score
 class Score(models.Model):
     """Represents a student's score in a specific subject for a given term."""
-    # ... (Fields remain the same)
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='scores')
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     term = models.ForeignKey(Term, on_delete=models.CASCADE)
-    ca1 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(40)])
-    ca2 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(40)])
-    ca3 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(40)])
-    exam_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(60)])
+    
+    # We use MinValueValidator(0) but remove hardcoded MaxValueValidators 
+    # to allow the dynamic SchoolYearSettings to control the limits via clean()
+    ca1 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
+    ca2 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
+    ca3 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
+    exam_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
     total_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
 
     class Meta:
         unique_together = ('student', 'subject', 'term')
-        ordering = ['student__first_name', 'student__last_name']
+        ordering = ['student__last_name', 'student__first_name']
         verbose_name = 'Exams & CA Scores'
         verbose_name_plural = 'Exams & CA Scores'
 
     def __str__(self):
         return f"{self.student.first_name} - {self.subject.name} ({self.term.name})"
 
+    def get_grading_configs(self):
+        """Fetches dynamic totals from settings or falls back to defaults."""
+        try:
+            # Assumes SchoolYearSettings model exists as created in previous step
+            from .models import SchoolYearSettings 
+            config = SchoolYearSettings.objects.filter(is_active=True).first()
+            if config:
+                return config.max_ca_total, config.max_exam_score
+        except Exception:
+            pass
+        return 40, 60  # Default fallback if no config is found
+
     def clean(self):
         super().clean()
+        max_ca, max_exam = self.get_grading_configs()
+        
+        # Calculate totals for validation
         total_ca = (self.ca1 or 0) + (self.ca2 or 0) + (self.ca3 or 0)
-        if total_ca > 40:
-            raise ValidationError('The total sum of CA scores (CA1, CA2, CA3) cannot exceed 40.')
+        
+        # 1. Check total CA against dynamic limit
+        if total_ca > max_ca:
+            raise ValidationError(f'The total sum of CA scores (CA1, CA2, CA3) cannot exceed {max_ca}.')
+        
+        # 2. Check Exam Score against dynamic limit
+        if self.exam_score is not None and self.exam_score > max_exam:
+            raise ValidationError(f'The exam score cannot exceed {max_exam}.')
 
     def save(self, *args, **kwargs):
+        # This triggers the clean() method above
         self.full_clean()
 
-        # --- CORRECTION: Check if ALL score fields are empty/None ---
-        # If all fields are None/empty, delete the instance if it exists, and skip creation.
+        # Check if ALL score fields are empty/None
         has_ca_score = any(s is not None for s in [self.ca1, self.ca2, self.ca3])
         has_exam_score = self.exam_score is not None
 
+        # If all fields are None/empty, delete the instance if it exists, and skip creation.
         if not has_ca_score and not has_exam_score:
-            if self.pk:  # Check if the object already exists
-                self.delete() # Delete the object instead of saving empty data
-            return # Stop the save process
+            if self.pk:  
+                self.delete() 
+            return 
 
-        # Auto-calculate total_score ONLY if some scores are present
+        # Auto-calculate total_score
         total_ca = (self.ca1 or 0) + (self.ca2 or 0) + (self.ca3 or 0)
         
         if self.exam_score is not None:
@@ -84,8 +185,6 @@ class Score(models.Model):
             self.total_score = total_ca 
 
         super().save(*args, **kwargs)
-
-
 
 
 class MotorAbilityScore(models.Model):
@@ -217,40 +316,6 @@ class ResultPublication(models.Model):
 
 
 
-# MID TERM Results
-# class MidTermScore(models.Model):
-#     """
-#     Represents a student's score for a Mid-Term Exam (Total out of 100), 
-#     completely independent of Continuous Assessment (CA).
-#     """
-#     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='midterm_scores')
-#     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-#     term = models.ForeignKey(Term, on_delete=models.CASCADE)
-    
-#     # Single field for the Mid-Term Score, out of 100.
-#     exam_total_score = models.DecimalField(
-#         max_digits=5, 
-#         decimal_places=2, 
-#         null=True, 
-#         blank=True, 
-#         validators=[MinValueValidator(0), MaxValueValidator(100)],
-#         verbose_name="Mid-Term Score (out of 100)"
-#     )
-
-#     class Meta:
-#         # Each student can only have one mid-term score entry per subject per term
-#         unique_together = ('student', 'subject', 'term')
-#         ordering = ['student__last_name', 'subject__name']
-#         verbose_name = 'Mid-Term Score'
-#         verbose_name_plural = 'Mid-Term Scores'
-
-#     def __str__(self):
-#         return f"{self.student.first_name} - {self.subject.name} (Mid-Term {self.term.name})"
-    
-#     # Note: No custom save or clean logic needed as it's a single score with built-in validators.
-#     # The total score is the exam_total_score itself.
-
-
 # Exam Score Setting
 class ExamSetting(models.Model):
     MIDTERM = "Midterm"
@@ -270,6 +335,10 @@ class ExamSetting(models.Model):
 
     def __str__(self):
         return f"{self.exam_type} - {self.term.name}"
+    
+    class Meta:
+        verbose_name = "Mid-Term Score Setting"
+        verbose_name_plural = 'Mid-Term Score Settings'
 
 
 # New Mid Term Score
@@ -314,3 +383,85 @@ class SessionResultStatus(models.Model):
 
     def __str__(self):
         return f"{self.student.get_full_name()} - {self.session.name} - Published: {self.is_published}"
+    
+
+
+# MODELS FOR TOGGLING CLASS POSITION AND AUTO/MANUAL COMMENT
+
+class ClassPositionSetting(models.Model):
+    """
+    Settings to toggle whether class position is shown for a given standard/term/session.
+    """
+    standard = models.ForeignKey(
+        Standard,
+        on_delete=models.CASCADE,
+        related_name='position_settings'
+    )
+    term = models.ForeignKey(
+        Term,
+        on_delete=models.CASCADE,
+        related_name='position_settings'
+    )
+    session = models.ForeignKey(
+        Session,
+        on_delete=models.CASCADE,
+        related_name='position_settings'
+    )
+    show_class_position = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('standard', 'term', 'session')
+        verbose_name = "Class Position Setting"
+        verbose_name_plural = "Class Position Settings"
+
+    def __str__(self):
+        status = "Visible" if self.show_class_position else "Hidden"
+        return f"{self.standard.name} - {self.term.name} - {self.session.name} ({status})"
+
+
+class ReportComments(models.Model):
+    """
+    Stores teacher and principal comments for a specific student's report card.
+    Manual entry per student per term and session.
+    """
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        related_name='report_comments'
+    )
+    standard = models.ForeignKey(
+        Standard,
+        on_delete=models.CASCADE,
+        related_name='report_comments'
+    )
+    term = models.ForeignKey(
+        Term,
+        on_delete=models.CASCADE,
+        related_name='report_comments'
+    )
+    session = models.ForeignKey(
+        Session,
+        on_delete=models.CASCADE,
+        related_name='report_comments'
+    )
+    teacher_comment = models.TextField(blank=True, null=True)
+    principal_comment = models.TextField(blank=True, null=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_report_comments'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('student', 'standard', 'term', 'session')
+        verbose_name = "Custom Report Comment"
+        verbose_name_plural = "Custom Report Comments"
+
+    def __str__(self):
+        return f"Comments for {self.student.get_full_name()} - {self.term.name} - {self.session.name}"

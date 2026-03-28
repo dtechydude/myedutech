@@ -1,7 +1,7 @@
 from doctest import Example
 from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
-from results.models import Examination, Score, MotorAbilityScore, MidTermScore, ResultPublication, SessionResultStatus, ExamSetting
+from results.models import Examination, Score, MotorAbilityScore, MidTermScore, ResultPublication, SessionResultStatus, ExamSetting, ClassPositionSetting,  ReportComments
 from curriculum.models import Term
 # add this because of the cbt
 from django.utils.html import format_html
@@ -224,6 +224,130 @@ class ExamSettingAdmin(ImportExportModelAdmin):
                 raise ValidationError(f"An ExamSetting already exists for term '{obj.term}' and exam type '{obj.exam_type}'.")
         super().save_model(request, obj, form, change)
 
+
+
+
+# Class Position And Comments
+@admin.register(ClassPositionSetting)
+class ClassPositionSettingAdmin(admin.ModelAdmin):
+    list_display = (
+        'standard',
+        'term',
+        'session',
+        'show_class_position',
+        'updated_at'
+    )
+
+    list_filter = (
+        'standard',
+        'term',
+        'session',
+        'show_class_position'
+    )
+
+    search_fields = (
+        'standard__name',
+        'term__name',
+        'session__name'
+    )
+    
+    list_editable = ('show_class_position',)
+
+    ordering = ('-session', 'standard', 'term')
+
+    # Prevent duplicate entries manually
+    def save_model(self, request, obj, form, change):
+        obj.save()
+
+## Principal and Teachers comment
+@admin.register(ReportComments)
+class ReportCommentsAdmin(admin.ModelAdmin):
+    list_display = (
+        'student',
+        'standard',
+        'term',
+        'session',
+        'short_teacher_comment',
+        'short_principal_comment',
+        'created_by',
+        'updated_at'
+    )
+
+    list_filter = (
+        'standard',
+        'term',
+        'session',
+    )
+
+    search_fields = (
+        'student__first_name',
+        'student__last_name',
+        'teacher_comment',
+        'principal_comment'
+    )
+
+    readonly_fields = ('created_by', 'created_at', 'updated_at')
+    
+    raw_id_fields = ('student', 'standard')
+
+    ordering = ('-session', 'standard', 'student')
+
+    # Auto-assign creator
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:  # Only on create
+            obj.created_by = request.user
+        obj.save()
+
+    # Short previews for admin list
+    def short_teacher_comment(self, obj):
+        return (obj.teacher_comment[:50] + '...') if obj.teacher_comment else '---'
+    short_teacher_comment.short_description = "Teacher Comment"
+
+    def short_principal_comment(self, obj):
+        return (obj.principal_comment[:50] + '...') if obj.principal_comment else '---'
+    short_principal_comment.short_description = "Principal Comment"
+
+
+
+# Setting Exams Scores
+from django.contrib import admin
+from django.core.exceptions import ValidationError
+from .models import SchoolYearSettings
+
+@admin.register(SchoolYearSettings)
+class SchoolYearSettingsAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'max_ca_total', 'max_exam_score', 'is_active')
+    list_editable = ('is_active',)
+    
+    fieldsets = (
+        ('Grading Weights', {
+            'fields': ('max_ca_total', 'max_exam_score'),
+            'description': "Set the maximum points for Continuous Assessment and Examinations. Their sum must equal 100."
+        }),
+        ('Status', {
+            'fields': ('is_active',),
+        }),
+    )
+
+    def save_model(self, request, obj, form, change):
+        """
+        Ensures that if this configuration is set to active, 
+        all other configurations are deactivated.
+        """
+        if obj.is_active:
+            # Deactivate all other settings
+            SchoolYearSettings.objects.exclude(pk=obj.pk).update(is_active=False)
+        super().save_model(request, obj, form, change)
+
+    def has_add_permission(self, request):
+        """
+        Optional: Limit to only one configuration record total to keep it simple.
+        If you want to keep a history of past years, remove this method.
+        """
+        if SchoolYearSettings.objects.count() >= 1:
+            return False
+        return super().has_add_permission(request)
+    
 
 
 admin.site.register(Score, ScoreAdmin)

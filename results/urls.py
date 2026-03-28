@@ -120,6 +120,10 @@ urlpatterns = [
     path('broadsheet/select/', views.BroadsheetSelectionView.as_view(), name='broadsheet_select'),
     path('class-broadsheet/<int:class_id>/<int:term_id>/', views.ClassBroadsheetView.as_view(), name='class_broadsheet'),
 
+    # Bulk Report Card Print
+    path('bulk-print-selector/', views.BulkReportCardSelectorView.as_view(), name='bulk_report_card_selector'),
+    path('bulk-print/<int:standard_id>/<int:term_id>/', views.BulkReportCardPrintView.as_view(), name='bulk_report_card_print'),
+
 ]
 
 

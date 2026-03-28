@@ -13,3 +13,19 @@ def get_item(dictionary, key):
     if isinstance(dictionary, dict):
         return dictionary.get(key)
     return None
+
+
+
+@register.filter
+def ordinal(value):
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        return value
+
+    if 10 <= value % 100 <= 20:
+        suffix = 'th'
+    else:
+        suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(value % 10, 'th')
+
+    return f"{value}{suffix}"

@@ -36,7 +36,7 @@ class Teacher(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
     first_name = models.CharField(max_length=20, blank=True, null=True)
     middle_name = models.CharField(max_length=20, blank=True, null=True)
-    last_name = models.CharField(max_length=20, blank=True, null=True)   
+    last_name = models.CharField(max_length=20, blank=True, null=True)
     dept = models.ForeignKey(Dept, on_delete=models.CASCADE, default=1, related_name='my_dept', blank=True, null=True)
     # class_in_charge = models.ForeignKey(Standard, on_delete=models.CASCADE, blank=True, null=True, related_name='myclasses')
     subjects_taught = models.ManyToManyField(Subject, related_name='teachers')
@@ -44,14 +44,14 @@ class Teacher(models.Model):
     female = 'female'
     male = 'male'
     select_gender = 'select_gender'
-    
+
     gender_type = [
         ('female', female),
         ('male', male),
         ('select_gender', select_gender),
     ]
 
-    gender= models.CharField(max_length=20, choices=gender_type, default= select_gender) 
+    gender= models.CharField(max_length=20, choices=gender_type, default= select_gender)
     DOB = models.DateField(default='1998-01-01')
     date_employed = models.DateField(default='1998-01-01')
 
@@ -69,47 +69,31 @@ class Teacher(models.Model):
     phone_home = models.CharField(max_length=11, null=True, blank=True)
 
     # Academic information
-    qualification = models.CharField(max_length=150, default='OND')  
-    year = models.DateField(default='1998-01-01')   
+    qualification = models.CharField(max_length=150, default='OND')
+    year = models.DateField(default='1998-01-01')
     institution = models.CharField(max_length=150, blank=True)
-    professional_body = models.CharField(max_length=150, blank=True)  
-   
-    # Guarantor's information
-    guarantor_name = models.CharField(max_length=150, blank=True) 
-    guarantor_phone = models.CharField(max_length=15, blank=True) 
-    guarantor_address = models.CharField(max_length=150, blank=True) 
-    guarantor_email = models.CharField(max_length=60, blank=True)
-    
-    # next of kin info
-    next_of_kin_name = models.CharField(max_length=60, blank=True)  
-    next_of_kin_address = models.CharField(max_length=150, blank=True)  
-    next_of_kin_phone = models.CharField(max_length=15, blank=True) 
+    professional_body = models.CharField(max_length=150, blank=True)
 
-    # select = 'select'
-    # form_teacher = 'form_teacher'
-    # subject_teacher = 'subject_teacher'
-    # principal = 'principal'
-    # head_teacher = 'head_teacher'
-  
-    
-    # staff_role = [
-    #     ('select', select),
-    #     ('form_teacher', form_teacher),
-    #     ('subject_teacher', subject_teacher),
-    #     ('principal', principal),
-    #     ('head_teacher', head_teacher),
-              
-    # ]
-    # staff_role= models.CharField(max_length=20, choices=staff_role, default=select, blank=True, null=True)
+    # Guarantor's information
+    guarantor_name = models.CharField(max_length=150, blank=True)
+    guarantor_phone = models.CharField(max_length=15, blank=True)
+    guarantor_address = models.CharField(max_length=150, blank=True)
+    guarantor_email = models.CharField(max_length=60, blank=True)
+
+    # next of kin info
+    next_of_kin_name = models.CharField(max_length=60, blank=True)
+    next_of_kin_address = models.CharField(max_length=150, blank=True)
+    next_of_kin_phone = models.CharField(max_length=15, blank=True)
+
     staff_role = models.ForeignKey(StaffPosition, on_delete=models.CASCADE, default='select', related_name='staff_role', blank=True, null=True)
     updated = models.DateTimeField(auto_now=True)
     created = models.DateTimeField(auto_now_add=True)
-    active = models.BooleanField(default=False, blank=True)  
+    active = models.BooleanField(default=False, blank=True)
 
- 
+
     def __str__(self):
         return f'{self.first_name} - {self.last_name}'
-    
+
     # def get_full_name(self):
     #     """
     #     Returns the teachers's full name.
@@ -117,14 +101,14 @@ class Teacher(models.Model):
     #     return f"{self.user.first_name} - {self.middle_name} - {self.user.last_name}"
 
     def get_full_name(self):
-   
+
         names = [self.user.last_name, self.user.first_name, self.middle_name]
         full_name = " ".join(filter(None, names))
         return full_name.strip()
- 
-        
+
+
     class Meta:
         ordering = ['last_name']
-        
+
         verbose_name = 'Teachers & Staff Details'
         verbose_name_plural = 'Teachers & Staff Details'

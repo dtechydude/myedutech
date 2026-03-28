@@ -741,6 +741,7 @@ def teacher_results_view(request):
 def export_results_csv(request):
     examination = request.GET.get('examination')
     standard = request.GET.get('standard')
+   
 
     results = QuizResult.objects.select_related(
         'user', 'quiz', 'quiz__standard'

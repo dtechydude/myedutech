@@ -388,7 +388,7 @@ class QuizResultAdmin(ImportExportModelAdmin):
 class QuizAttemptAdmin(admin.ModelAdmin):
 
     list_display = (
-        'user',
+        'user', 'get_first_name', 'get_last_name',
         'quiz',
         'start_time',
         'completed',
@@ -410,6 +410,8 @@ class QuizAttemptAdmin(admin.ModelAdmin):
     )
 
     actions = ['cancel_attempts']
+    
+    raw_id_fields = ['user', 'quiz',]
 
     readonly_fields = (
         'start_time',
@@ -451,3 +453,13 @@ class QuizAttemptAdmin(admin.ModelAdmin):
     cancel_attempts.short_description = (
         "Cancel selected attempts (Allow Retake)"
     )
+
+    # Define the method to get first name
+    @admin.display(description='First Name', ordering='user__first_name')
+    def get_first_name(self, obj):
+        return obj.user.first_name
+
+    # Define the method to get last name
+    @admin.display(description='Last Name', ordering='user__last_name')
+    def get_last_name(self, obj):
+        return obj.user.last_name

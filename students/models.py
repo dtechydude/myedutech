@@ -110,7 +110,7 @@ class Student(models.Model):
     current_class = models.ForeignKey(Standard, on_delete=models.SET_NULL, null=True, blank=True, related_name='students')
     class_group = models.ForeignKey(ClassGroup, on_delete=models.SET_NULL, null=True, blank=True, related_name='classes')
     form_teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, blank=True, null=True, related_name='teacher', help_text='This field will be automatically updated when form teacher is set in the standard')
-    badge =  models.ForeignKey(Badge, on_delete=models.SET_NULL, blank=True, null=True, default='select', related_name='prefect', verbose_name='Prefect')
+    badge =  models.ForeignKey(Badge, on_delete=models.SET_NULL, blank=True, null=True, related_name='prefect', verbose_name='Prefect')
     
     female = 'female'
     male = 'male'

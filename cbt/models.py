@@ -97,7 +97,7 @@ class QuizAttempt(models.Model):
         return max(0, int(remaining.total_seconds()))
 
     def __str__(self):
-        return f"{self.user.username} - {self.quiz}"
+        return f"{self.user.username} {self.user.last_name} - {self.quiz}"
 
 
 class Question(models.Model):
