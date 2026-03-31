@@ -25,7 +25,6 @@ from django.core.paginator import Paginator
 import csv
 from django.core.exceptions import PermissionDenied
 
-
 # For PDF generation using django-wkhtmltopdf
 # from wkhtmltopdf.views import PDFTemplateResponse # Import this
 from django.conf import settings # To access MEDIA_ROOT/STATIC_ROOT if needed for CSS/images
@@ -278,14 +277,6 @@ class TeacherRequiredMixin(UserPassesTestMixin):
 #         return render(request, self.template_name, context)
 
 # New logic for twiking the CA total and Exam Total
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views import View
-from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.forms import formset_factory
-from django.db import transaction
-from django.core.exceptions import ValidationError
-
 # Ensure these models and forms are imported correctly based on your app structure
 # from .models import Score, Student, Subject, Standard, Term, SchoolIdentity, SchoolYearSettings
 # from .forms import ScoreEntryForm
@@ -502,13 +493,6 @@ from django.core.exceptions import ValidationError
 #         }
 #         return render(request, self.template_name, context)
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views import View
-from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.forms import formset_factory
-from django.db import transaction
-from django.core.exceptions import ValidationError
 
 class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
     template_name = 'results/score_entry.html'
@@ -1005,6 +989,8 @@ from results.models import ClassPositionSetting, ReportComments
 class StudentReportCardView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
 
     template_name = 'results/test_student_report_card_detail_extended.html'
+    # template_name = 'results/test_student_report_card_detail.html'
+
     pdf_template_name = 'results/test_student_report_card_pdf.html'
 
     def get(self, request, student_id, term_id, *args, **kwargs):

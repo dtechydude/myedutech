@@ -133,26 +133,80 @@
                 </tbody>
             </table>
 
-            <div class="summary-section my-2">
-                <table class="w-100 text-center" style="border: 1px solid grey;">
-                    <tr>
-                        <td style="padding: 5px; background: #f8f9fa;">Valid Subj: <strong>{{ report.subjects_with_scores_count }}</strong></td>
-                        <td style="padding: 5px; background: #f8f9fa;">Total Marks: <strong>{{ report.total_marks_obtained|floatformat:0 }}</strong></td>
-                        <td style="padding: 5px; background: #f0f8ff;">Avg: <strong style="font-size: 16px; color: #006699;">{{ report.overall_average|floatformat:2 }}%</strong></td>
-                        {% if show_class_position %}
-                        <td style="padding: 5px; background: #fff4e6;">Position: <strong style="color: #d9480f;">{{ report.student_position_display }}</strong></td>
-                        {% endif %}
-                    </tr>
-                </table>
+            <div class="summary-section">
+      <table class="w-100" style="border: 1px solid #dee2e6; border-collapse: collapse; margin-top: 5px;">
+            <tr style="font-size: 11px;">
+                <td style="padding: 6px; text-align: center; background: #f8f9fa; border-right: 1px solid #dee2e6;">
+                    <div style="text-transform: uppercase; color: #666; font-size: 9px;">Valid Subjects</div>
+                    <div style="font-weight: bold; font-size: 13px;">{{ subjects_with_scores_count }}</div>
+                </td>
+
+                <td style="padding: 6px; text-align: center; background: #f8f9fa; border-right: 1px solid #dee2e6;">
+                    <div style="text-transform: uppercase; color: #666; font-size: 9px;">Term's Total</div>
+                    <div style="font-weight: bold; font-size: 13px;">{{ total_marks_obtained|floatformat:0 }}</div>
+                </td>
+
+                <td style="padding: 6px; text-align: center; background: #f0f8ff; border-right: 1px solid #dee2e6; min-width: 120px;">
+                    <div style="text-transform: uppercase; color: #006699; font-size: 10px; font-weight: bold;">Overall Average</div>
+                    <div style="font-weight: 800; font-size: 18px; color: #006699;">
+                        {% if overall_average is not None %}{{ overall_average|floatformat:2 }}%{% else %}N/A{% endif %}
+                    </div>
+                </td>
+
+                {% if show_class_position %}
+                <td style="padding: 6px; text-align: center; background: #fff4e6;">
+                    <div style="text-transform: uppercase; color: #d9480f; font-size: 10px; font-weight: bold;">Position</div>
+                    <div style="font-weight: 800; font-size: 18px; color: #d9480f;">
+                        {{ student_position_display|default:"N/A" }}
+                    </div>
+                </td>
+                {% endif %}
+            </tr>
+        </table>
+
+            <table class="w-100" style="border: 1px solid grey; border-collapse: collapse; table-layout: fixed; margin-top: -1px;">
+    <tr style="font-size: 11px;">
+        <td style="padding: 5px 10px; text-align: center; background: #f8f9fa; border: 1px solid grey; white-space: nowrap;">
+            <strong>MAX. AVG:</strong>
+            {% if class_max_avg is not None %}{{ class_max_avg|floatformat:2 }}{% else %}N/A{% endif %}
+        </td>
+
+        <td style="padding: 5px 10px; text-align: center; background: #f8f9fa; border: 1px solid grey; white-space: nowrap;">
+            <strong>MIN. AVG:</strong>
+            {% if class_min_avg is not None %}{{ class_min_avg|floatformat:2 }}{% else %}N/A{% endif %}
+        </td>
+
+        <td style="padding: 5px 10px; text-align: center; background: #f8f9fa; border: 1px solid grey; white-space: nowrap;">
+            <strong>CLASS MEAN:</strong>
+            {% if class_avg is not None %}{{ class_avg|floatformat:2 }}{% else %}N/A{% endif %}
+        </td>
+    </tr>
+</table>
             </div>
+             <div class="text-center psychomotor-heading">
+          <strong>PSYCHOMOTOR ASSESSMENT</strong> <span class="scale">(5-Point Scale)</span>
+        </div>
 
             <div class="behavioral-grid mb-3">
-                <div class="trait"><span class="label">Honesty</span><span class="score">{{ report.motor_ability_score.honesty|default:"-" }}</span></div>
-                <div class="trait"><span class="label">Politeness</span><span class="score">{{ report.motor_ability_score.politeness|default:"-" }}</span></div>
-                <div class="trait"><span class="label">Neatness</span><span class="score">{{ report.motor_ability_score.neatness|default:"-" }}</span></div>
-                <div class="trait"><span class="label">Cooperation</span><span class="score">{{ report.motor_ability_score.cooperation|default:"-" }}</span></div>
-                <div class="trait"><span class="label">Obedience</span><span class="score">{{ report.motor_ability_score.obedience|default:"-" }}</span></div>
-                <div class="trait"><span class="label">Punctuality</span><span class="score">{{ report.motor_ability_score.punctuality|default:"-" }}</span></div>
+             <div class="trait"><span class="label">Honesty</span><span class="score">{{ motor_ability_score.honesty|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Politeness</span><span class="score">{{ motor_ability_score.politeness|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Neatness</span><span class="score">{{ motor_ability_score.neatness|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Cooperation</span><span class="score">{{ motor_ability_score.cooperation|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Obedience</span><span class="score">{{ motor_ability_score.obedience|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Punctuality</span><span class="score">{{ motor_ability_score.punctuality|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Physical Ed.</span><span class="score">{{ motor_ability_score.physical_education|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Games</span><span class="score">{{ motor_ability_score.games|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Attentiveness</span><span class="score">{{ motor_ability_score.attentiveness|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Leadership</span><span class="score">{{ motor_ability_score.leadership|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Attitude</span><span class="score">{{ motor_ability_score.attitude|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Emotional Stability</span><span class="score">{{ motor_ability_score.emotional_stability|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Musical</span><span class="score">{{ motor_ability_score.musical|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Handwriting</span><span class="score">{{ motor_ability_score.handwriting|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Reading</span><span class="score">{{ motor_ability_score.reading|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Verbal Fluency</span><span class="score">{{ motor_ability_score.verbal_fluency|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Handling Tools</span><span class="score">{{ motor_ability_score.handling_tools|default:"-" }}</span></div>
+              <div class="trait"><span class="label">Perseverance</span><span class="score">{{ motor_ability_score.perseverance|default:"-" }}</span></div>
+          
             </div>
 
             <div class="comment-section">

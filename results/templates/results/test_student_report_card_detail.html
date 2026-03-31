@@ -179,7 +179,7 @@
     .report-card-wrapper > * { position: relative; z-index: 1; }
     .qr-code-small { width: 80px; height: 80px; margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto; }
     
-    @media print {
+    {% comment %} @media print {
       body { background-color: #fff !important; -webkit-print-color-adjust: exact; margin: 0; padding: 0; }
       .report-card-wrapper { box-shadow: none; margin: 0 auto; }
       .no-print, .btn, .back-link { display: none !important; }
@@ -188,7 +188,26 @@
       .qr-code-small { width: 50px !important; height: 50px !important; }
       .behavioral-grid { min-width: 100% !important; }
       .info-table { min-width: 100% !important; }
+    } {% endcomment %}
+
+
+      /* PRINT SPECIFIC OVERRIDES */
+    @media print {
+      @page { size: A4; margin: 10mm; }
+      body { background-color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .report-card-wrapper {
+          max-width: 100% !important;
+          width: 100% !important;
+          margin: 0 !important;
+          border: none !important;
+          box-shadow: none !important;
+      }
+      .no-print, .btn, .d-flex.justify-content-center.mt-5 { display: none !important; }
+      table { width: 100% !important; }
+      .behavioral-grid { grid-template-columns: repeat(6, 1fr) !important; }
     }
+
+
     </style>
   </head>
   <body>
