@@ -246,7 +246,7 @@
                 <h1>{% if school_identity.name %}{{ school_identity.name }}{% else %}KwikSchools Institute{% endif %}</h1>
                 <p>
                     {% if school_identity.address_line_1 %}{{ school_identity.address_line_1 }}{% endif %}<br>
-                    {% if school_identity.address_line_2 %}, {{ school_identity.address_line_2 }}{% endif %}<br>
+                    {% if school_identity.address_line_2 %} {{ school_identity.address_line_2 }}{% endif %}<br>
                     {% if school_identity.phone1 %}<strong>PHONE: </strong>{{ school_identity.phone1 }}{% endif %}
                 </p>
               </div>
@@ -323,9 +323,9 @@
                 {% comment %} <td>{{ data.remark }}</td> {% endcomment %}
                  <td style="font-style: italic;
                     color:
-                    {% if data.remark == 'Poor.' %}red
-                    {% elif data.remark == 'Excellent.' %}green
-                    {% elif data.remark == 'Very Good.' %}blue
+                    {% if data.remark == 'Poor' %}red
+                    {% elif data.remark == 'Excellent' %}green
+                    {% elif data.remark == 'Very Good' %}blue
                     {% else %}inherit
                     {% endif %};">
                     {{ data.remark }}

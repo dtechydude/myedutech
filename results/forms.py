@@ -89,7 +89,7 @@ class ScoreEntryForm(forms.Form):
         # Update CA fields with dynamic placeholders and max attributes
         for field_name in ['ca1', 'ca2', 'ca3']:
             self.fields[field_name].widget = forms.NumberInput(attrs={
-                'placeholder': f'Max total: {self.max_ca}',
+                'placeholder': f'Max Total: {self.max_ca}',
                 'min': 0,
                 'max': self.max_ca,
                 'class': 'form-control ca-field'

@@ -1,0 +1,324 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Score Entry | KwikSchools</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --brand-blue: #003366;
+            --brand-orange: #ff6600;
+            --brand-red: #cc0000;
+            --brand-accent: linear-gradient(90deg, var(--brand-orange), var(--brand-red));
+            --brand-gray: #f8f9fa;
+        }
+
+        body {
+            background-color: var(--brand-gray);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-family: "Inter", "Segoe UI", sans-serif;
+            color: #212529;
+        }
+
+        /* HEADER - First Template Style */
+        .header {
+            background-color: #fff;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1100;
+        }
+
+        .header .logo img {
+            height: 50px;
+            object-fit: contain;
+        }
+
+        /* MAIN CONTAINER - First Template Style */
+        .container-main {
+            max-width: 1100px; /* Slightly wider to accommodate the table */
+            margin: 2rem auto;
+            background-color: #fff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 2rem;
+        }
+
+        h5, h3 { color: var(--brand-blue); font-weight: 600; }
+
+        /* TABLE LOGIC - Upgraded Template Core */
+        .table-responsive {
+            overflow-x: auto; 
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background: white;
+            margin-top: 1rem;
+        }
+
+        .table { 
+            min-width: 900px; 
+            margin-bottom: 0; 
+            border-collapse: separate; 
+            border-spacing: 0; 
+        }
+
+        .table thead th {
+            background: var(--brand-accent) !important; /* Preference from Template 1 */
+            color: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            padding: 12px 10px;
+            font-size: 0.85rem;
+            border: none;
+        }
+
+        /* Sticky Columns */
+        .sticky-sn {
+            position: sticky;
+            left: 0;
+            background-color: #fff !important;
+            z-index: 10;
+            width: 50px;
+            text-align: center;
+            border-right: 1px solid #eee !important;
+        }
+
+        .sticky-name {
+            position: sticky;
+            left: 50px; 
+            background-color: #fff !important;
+            z-index: 10;
+            min-width: 200px;
+            border-right: 3px solid rgba(0, 51, 102, 0.1) !important;
+        }
+
+        thead th.sticky-sn { z-index: 30; left: 0; }
+        thead th.sticky-name { z-index: 30; left: 50px; }
+
+        /* Scoring Inputs */
+        .score-cell { width: 100px; padding: 8px !important; }
+        .score-cell input {
+            width: 100%;
+            text-align: center;
+            font-weight: 700;
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            padding: 0.4rem;
+        }
+
+        .score-cell input:focus {
+            border-color: var(--brand-orange);
+            box-shadow: 0 0 0 0.2rem rgba(255,102,0,0.15);
+            outline: none;
+        }
+
+        .student-name-input {
+            border: none !important;
+            background-color: transparent !important;
+            font-weight: 600 !important;
+            color: var(--brand-blue) !important;
+            pointer-events: none;
+            width: 100%;
+        }
+
+        /* BUTTONS - First Template Style */
+        .btn-primary {
+            background: var(--brand-accent);
+            border: none;
+            font-weight: 600;
+            padding: 0.8rem 2rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn-primary:hover { opacity: 0.9; color: #fff; }
+
+        .btn-outline-primary {
+            border-color: var(--brand-orange);
+            color: var(--brand-orange);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--brand-orange);
+            color: #fff;
+        }
+
+        .error-text { font-size: 11px; color: var(--brand-red); display: block; font-weight: 600; }
+
+        /* FOOTER */
+        .simple-footer {
+            background-color: #fff;
+            border-top: 1px solid #e9ecef;
+            text-align: center;
+            padding: 1.5rem 0;
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <a href="/" class="logo">
+            <img src="{% if school_identity.logo %}{{ school_identity.logo.url }}{% else %}{% static 'pages/images/logo.png' %}{% endif %}" alt="Logo">
+        </a>
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-muted small d-none d-md-block">User: <strong>{{ user.username }}</strong></span>
+            <a href="/dashboard/" class="btn btn-outline-primary btn-sm px-3">Dashboard</a>
+        </div>
+    </header>
+
+    <main class="container-main">
+        <div class="mb-4">
+            <h5 class="mb-1">SCORE ENTRY TABLE </h5>
+                <P> Welcome, {{ user.get_full_name|default:user.username }}
+            {% if current_term %}
+                <p class="text-muted small mb-0">CURRENT TERM :  <span class="fw-bold text-dark">{{ current_term.name }} - {{ current_term.session }}</span></p>
+            {% endif %}
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="get" id="filter-form" class="row g-3 mb-4">
+            <div class="col-md-6">
+                <label class="form-label fw-bold small">Select Subject</label>
+                <select name="subject" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- Select Subject --</option>
+                    {% for subject in assigned_subjects %}
+                        <option value="{{ subject.id }}" {% if selected_subject_id == subject.id %}selected{% endif %}>{{ subject.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold small">Class/Standard</label>
+                <select name="standard" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- Select Class --</option>
+                    {% for std in assigned_standards %}
+                        <option value="{{ std.id }}" {% if selected_standard_id == std.id %}selected{% endif %}>{{ std.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+
+        {% if selected_subject and selected_standard %}
+            <div class="alert alert-light border d-flex justify-content-between align-items-center flex-wrap mb-4">
+                <div>
+                    <strong>ENTERING SCORE FOR : {{ selected_subject.name }}</strong> | <strong>{{ selected_standard.name }}</strong>
+                </div>
+                <div class="badge bg-primary px-3 py-2">
+                    GRADING POLICY: CA {{ max_ca|default:"-" }} / Exam {{ max_exam|default:"-" }}
+                </div>
+            </div>
+
+            <form method="post" action="{{ request.get_full_path }}">
+                {% csrf_token %}
+                <input type="hidden" name="selected_subject_id" value="{{ selected_subject_id }}">
+                <input type="hidden" name="selected_standard_id" value="{{ selected_standard_id }}">
+                {{ formset.management_form }}
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th class="sticky-sn">S/N</th>
+                                <th class="sticky-name">Student Name</th>
+                                <th>CA 1</th>
+                                <th>CA 2</th>
+                                <th>CA 3</th>
+                                <th class="bg-dark">Exam ({{ max_exam|default:"-" }})</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% if formset.forms %}
+                            {% for form in formset %}
+                            <tr>
+                                <td class="sticky-sn text-muted small">{{ forloop.counter }}</td>
+                                <td class="sticky-name">
+                                    {{ form.student_id }}
+                                    {{ form.score_id }}
+                                    {{ form.student_name }}
+                                    {% if form.non_field_errors %}
+                                        {% for error in form.non_field_errors %}
+                                            <span class="error-text">{{ error }}</span>
+                                        {% endfor %}
+                                    {% endif %}
+                                </td>
+                                <td class="score-cell">
+                                    {{ form.ca1 }}
+                                    {% if form.ca1.errors %}<span class="error-text">{{ form.ca1.errors.0 }}</span>{% endif %}
+                                </td>
+                                <td class="score-cell">
+                                    {{ form.ca2 }}
+                                    {% if form.ca2.errors %}<span class="error-text">{{ form.ca2.errors.0 }}</span>{% endif %}
+                                </td>
+                                <td class="score-cell">
+                                    {{ form.ca3 }}
+                                    {% if form.ca3.errors %}<span class="error-text">{{ form.ca3.errors.0 }}</span>{% endif %}
+                                </td>
+                                <td class="score-cell">
+                                    {{ form.exam_score }}
+                                    {% if form.exam_score.errors %}<span class="error-text">{{ form.exam_score.errors.0 }}</span>{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    No student records found for this selection.
+                                </td>
+                            </tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg px-5 shadow">Save All Records</button>
+                </div>
+            </form>
+        {% else %}
+            <div class="alert alert-warning">
+                Please select both a subject and a class to load the score sheet.
+            </div>
+        {% endif %}
+    </main>
+
+    <footer class="simple-footer">
+        <p class="mb-0">&copy; {% now "Y" %} KwikSchools EdTech</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Apply form-control class to all score inputs and handle selection
+        document.querySelectorAll('.score-cell input').forEach(el => {
+            el.classList.add('form-control');
+            el.addEventListener('focus', function() { this.select(); });
+        });
+
+        // Style the read-only student name fields
+        document.querySelectorAll('input[name$="-student_name"]').forEach(el => {
+            el.classList.add('student-name-input');
+            el.setAttribute('tabindex', '-1');
+        });
+    </script>
+</body>
+</html>

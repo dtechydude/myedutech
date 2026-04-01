@@ -41,17 +41,17 @@ def get_subject_remark(score):
         return "Score out of typical range."
         
     if 80 <= score <= 100:
-        return "Excellent."
+        return "Excellent"
     elif 71 <= score < 80:
-        return "Very Good."
+        return "Very Good"
     elif 60 <= score < 71:
-        return "Good."
+        return "Good"
     elif 50 <= score < 60:
-        return "Average."
+        return "Average"
     elif 40 <= score < 50:
-        return "Needs more effort." # Combines D and E ranges for a single remark
+        return "Fair" # Combines D and E ranges for a single remark
     elif 0 <= score < 40:
-        return "Poor."
+        return "Poor"
     else:
         return "Score out of typical range."
 # get_overall_remark remains largely acceptable but is slightly adjusted 

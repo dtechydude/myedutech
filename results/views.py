@@ -495,7 +495,7 @@ class TeacherRequiredMixin(UserPassesTestMixin):
 
 
 class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
-    template_name = 'results/score_entry.html'
+    template_name = 'results/score_entry2.html'
 
     def get_grading_config(self):
         """Helper to fetch dynamic totals from settings or use 40/60 defaults."""
