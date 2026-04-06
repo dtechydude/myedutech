@@ -1021,6 +1021,7 @@ class StudentReportCardView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
         next_term_start_date = next_term.start_date if next_term else None
         total_students_in_class = Student.objects.filter(current_class=standard).count()
 
+       
         # ---------------- SCORES ----------------
         scores = Score.objects.filter(
             student=student,

@@ -230,7 +230,7 @@ class Lesson(models.Model):
     lesson_id = models.CharField(max_length=100, unique=True)
     standard = models.ForeignKey(Standard, on_delete=models.CASCADE)
     subject = models.ForeignKey(ELearningSubject, on_delete=models.CASCADE, related_name='lessons')
-    name = models.CharField(max_length=250)
+    name = models.CharField(max_length=250, verbose_name="Topic", help_text="Enter the lesson topic (e.g. Heat Energy, Algebraic Expressions)")
     position = models.PositiveSmallIntegerField(verbose_name="Chapter no.")
     video = EmbedVideoField(blank=True, null=True)
     notes = models.FileField(upload_to='save_lesson_files', verbose_name="Notes", blank=True)
