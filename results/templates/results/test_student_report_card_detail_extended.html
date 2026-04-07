@@ -332,8 +332,8 @@
                     {% endif %};">
                     {{ data.remark }}
                 </td>
-                <td>{{ data.subject_min }}</td>
-                <td>{{ data.subject_max }}</td>
+                <td>{{ data.subject_min|floatformat:0 }}</td>
+                <td>{{ data.subject_max|floatformat:0 }}</td>
                 <td>{{ data.subject_avg|floatformat:1 }}</td>
               </tr>
               {% endfor %}
@@ -357,7 +357,7 @@
                 <td style="padding: 6px; text-align: center; background: #f0f8ff; border-right: 1px solid #dee2e6; min-width: 120px;">
                     <div style="text-transform: uppercase; color: #006699; font-size: 10px; font-weight: bold;">Overall Average</div>
                     <div style="font-weight: 800; font-size: 18px; color: #006699;">
-                        {% if overall_average is not None %}{{ overall_average|floatformat:2 }}%{% else %}N/A{% endif %}
+                        {% if overall_average is not None %}{{ overall_average|floatformat:1 }}%{% else %}N/A{% endif %}
                     </div>
                 </td>
 
@@ -376,17 +376,17 @@
     <tr style="font-size: 11px;">
         <td style="padding: 5px 10px; text-align: center; background: #f8f9fa; border: 1px solid grey; white-space: nowrap;">
             <strong>MAX. AVG:</strong>
-            {% if class_max_avg is not None %}{{ class_max_avg|floatformat:2 }}{% else %}N/A{% endif %}
+            {% if class_max_avg is not None %}{{ class_max_avg|floatformat:1 }}{% else %}N/A{% endif %}
         </td>
 
         <td style="padding: 5px 10px; text-align: center; background: #f8f9fa; border: 1px solid grey; white-space: nowrap;">
             <strong>MIN. AVG:</strong>
-            {% if class_min_avg is not None %}{{ class_min_avg|floatformat:2 }}{% else %}N/A{% endif %}
+            {% if class_min_avg is not None %}{{ class_min_avg|floatformat:1 }}{% else %}N/A{% endif %}
         </td>
 
         <td style="padding: 5px 10px; text-align: center; background: #f8f9fa; border: 1px solid grey; white-space: nowrap;">
             <strong>CLASS MEAN:</strong>
-            {% if class_avg is not None %}{{ class_avg|floatformat:2 }}{% else %}N/A{% endif %}
+            {% if class_avg is not None %}{{ class_avg|floatformat:1 }}{% else %}N/A{% endif %}
         </td>
     </tr>
 </table>
