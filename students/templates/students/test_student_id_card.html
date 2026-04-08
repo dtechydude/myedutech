@@ -192,16 +192,16 @@
 <div class="id-card-container">
 
     <div class="header">
-        {% if school_identity.logo %}
-            <img src="{{ school_identity.logo.url }}" class="school-logo" alt="School Logo">
+        {% if school_info.logo %}
+            <img src="{{ school_info.logo.url }}" class="school-logo" alt="School Logo">
         {% else %}
             <img src="{% static 'images/default_school_logo.png' %}" class="school-logo" alt="School Logo">
         {% endif %}
 
-        <h5 class="text-uppercase">{{ school_identity.name|default:"KwikSchools" }}</h5>
+        <h5 class="text-uppercase">{{ school_info.name|default:"KwikSchools" }}</h5>
         <p>
-            {{ school_identity.address_line_1|default:"123 School Lane" }}
-            {% if school_identity.phone1 %} | Tel: {{ school_identity.phone1 }}{% endif %}
+            {{ school_info.address_line_1|default:"123 School Lane" }}
+            {% if school_info.phone1 %} | Tel: {{ school_info.phone1 }}{% endif %}
         </p>
     </div>
 

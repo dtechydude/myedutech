@@ -10,35 +10,75 @@ from import_export.admin import ImportExportModelAdmin
 from payments.models import StudentFeeAssignment, ClassFeeTemplate, PaymentCategory 
 from results.models import SessionResultStatus
 
+# New Admin For Standard or School Identity
+from django.contrib import admin, messages
+from django.core.exceptions import ValidationError
+from .models import SchoolIdentity, StandardIdentity
+
+
 class ClassFeeTemplateForm(forms.Form):
     fee_template = forms.ModelChoiceField(
         queryset=ClassFeeTemplate.objects.all(),
         label="Select Fee Template to Apply"
     )
 
+# class SchoolIdentityAdmin(admin.ModelAdmin):
+#     def has_add_permission(self, request):
+#         if self.model.objects.exists():
+#             return False
+#         return super().has_add_permission(request)
+
+#     def save_model(self, request, obj, form, change):
+#         if not change and self.model.objects.exists():
+#             messages.error(request, "There can be only one school identity instance. Please edit the existing one.")
+#         else:
+#             try:
+#                 obj.save()
+#             except ValidationError as e:
+#                 for error_msg in e.messages:
+#                     messages.error(request, error_msg)
+    
+#     list_display = ('name', 'phone1', 'email')
+#     exclude = ['slug',]
+
+
+
+class StandardIdentityInline(admin.TabularInline):
+    model = StandardIdentity
+    extra = 1  # Number of empty rows to show for mapping classes
+    autocomplete_fields = ['standard'] # Optional: if your Standard model has search_fields
+
+@admin.register(SchoolIdentity)
 class SchoolIdentityAdmin(admin.ModelAdmin):
+    # Updated: Allow adding up to 3 identities
     def has_add_permission(self, request):
-        if self.model.objects.exists():
+        if self.model.objects.count() >= 3:
             return False
         return super().has_add_permission(request)
 
     def save_model(self, request, obj, form, change):
-        if not change and self.model.objects.exists():
-            messages.error(request, "There can be only one school identity instance. Please edit the existing one.")
-        else:
-            try:
-                obj.save()
-            except ValidationError as e:
-                for error_msg in e.messages:
-                    messages.error(request, error_msg)
+        # The 3-entry limit is already handled in the model's save() method,
+        # but we can provide immediate feedback here as well.
+        try:
+            obj.save()
+        except ValidationError as e:
+            for error_msg in e.messages:
+                messages.error(request, error_msg)
+
+    list_display = ('identity_label', 'name', 'is_default', 'phone1', 'email')
+    list_editable = ('is_default',) # Quickly toggle the main identity from the list view
+    exclude = ['slug']
     
-    list_display = ('name', 'phone1', 'email')
-    exclude = ['slug',]
+    # Allows you to map classes to this identity on the same page
+    inlines = [StandardIdentityInline]
+
+@admin.register(StandardIdentity)
+class StandardIdentityAdmin(admin.ModelAdmin):
+    list_display = ('standard', 'school_identity')
+    list_filter = ('school_identity',)
 
 
 # Session Report Card Admin
-
-
 @admin.register(Session)
 class SessionAdmin(admin.ModelAdmin):
     list_display = ('name', 'start_date', 'end_date', 'is_current')
@@ -153,7 +193,7 @@ admin.site.register(ClassGroup, ClassGroupAdmin)
 admin.site.register(Subject, SubjectAdmin)
 admin.site.register(ELearningSubject, ELearningSubjectAdmin)
 admin.site.register(Lesson, LessonAdmin)
-admin.site.register(SchoolIdentity, SchoolIdentityAdmin)
+# admin.site.register(SchoolIdentity, SchoolIdentityAdmin)
 # The decorator @admin.register(ClassFeeTemplate) already handles this registration
 # admin.site.register(ClassFeeTemplate, ClassFeeTemplateAdmin)
 

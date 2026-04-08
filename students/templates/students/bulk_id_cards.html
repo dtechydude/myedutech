@@ -236,7 +236,7 @@
 <body>
 
 <div class="page-header">
-    <h4 class="mb-0">{{ school_identity.name|default:"SCHOOL NAME" }}</h4>
+    <h4 class="mb-0">{{ school_info.name|default:"SCHOOL NAME" }}</h4>
     <a href="/dashboard" class="btn btn-sm btn-outline-secondary">← Back to Dashboard</a>
 </div>
 
@@ -270,26 +270,26 @@
         </form>
     </div>
 </div>
-
+{% comment %} 
 <div class="cards-grid">
 {% for student in students %}
 <div class="id-card">
 
     <div class="watermark-container">
-        {% if school_identity.logo %}
-            <img src="{{ school_identity.logo.url }}" class="watermark-logo">
+        {% if school_info.logo %}
+            <img src="{{ school_info.logo.url }}" class="watermark-logo">
         {% else %}
-            <div class="watermark-text">{{ school_identity.name }}</div>
+            <div class="watermark-text">{{ school_info.name }}</div>
         {% endif %}
     </div>
 
     <div class="card-header">
-        {% if school_identity.logo %}
-            <img src="{{ school_identity.logo.url }}" class="card-logo">
+        {% if school_info.logo %}
+            <img src="{{ school_info.logo.url }}" class="card-logo">
         {% endif %}
         <div>
-            <div class="s-name">{{ school_identity.name }}</div>
-            <div class="s-addr">{{ school_identity.address_line_1 }}</div>
+            <div class="s-name">{{ school_info.name }}</div>
+            <div class="s-addr">{{ school_info.address_line_1 }}</div>
         </div>
     </div>
 
@@ -313,10 +313,69 @@
     </div>
 
     <div class="card-footer">
-        PROPERTY OF {{ school_identity.name }}
+        PROPERTY OF {{ school_info.name }}
     </div>
 
 </div>
+{% endfor %}
+</div> {% endcomment %}
+<div class="cards-grid">
+{% for student in students %}
+    {# 1. Try to get the section-specific logo, then the default school logo #}
+    {% with section_logo=student.current_class.identity_mapping.school_identity.logo %}
+    {% with section_name=student.current_class.identity_mapping.school_identity.name %}
+    
+    <div class="id-card">
+        <div class="watermark-container">
+            {% if section_logo %}
+                <img src="{{ section_logo.url }}" class="watermark-logo">
+            {% elif school_info.logo %}
+                <img src="{{ school_info.logo.url }}" class="watermark-logo">
+            {% else %}
+                <div class="watermark-text">{{ section_name|default:school_info.name }}</div>
+            {% endif %}
+        </div>
+
+        <div class="card-header">
+            {% if section_logo %}
+                <img src="{{ section_logo.url }}" class="card-logo">
+            {% elif school_info.logo %}
+                <img src="{{ school_info.logo.url }}" class="card-logo">
+            {% endif %}
+            <div>
+                <div class="s-name">{{ section_name|default:school_info.name }}</div>
+                <div class="s-addr">
+                    {{ student.current_class.identity_mapping.school_identity.address_line_1|default:school_info.address_line_1 }}
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="photo-side">
+                {% if student.user.profile.image %}
+                    <img src="{{ student.user.profile.image.url }}" class="student-photo">
+                {% endif %}
+            </div>
+
+            <div class="content-main">
+                <div class="student-name">{{ student.get_full_name }}</div>
+                <div class="info-row"><span class="info-label">USN:</span>{{ student.USN }}</div>
+                <div class="info-row"><span class="info-label">CLASS:</span>{{ student.current_class.name }}</div>
+                <div class="info-row"><span class="info-label">SEX:</span>{{ student.gender }}</div>
+            </div>
+
+            <div class="qr-side">
+                <div class="qr-target" data-qr="{{ student.USN }}"></div>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            PROPERTY OF {{ section_name|default:school_info.name }}
+        </div>
+    </div>
+    
+    {% endwith %}
+    {% endwith %}
 {% endfor %}
 </div>
 
