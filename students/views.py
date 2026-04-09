@@ -562,7 +562,12 @@ class StudentIDCardView(LoginRequiredMixin, View):
 class BulkStudentIDCardView(LoginRequiredMixin, View):
     def get(self, request):
         class_id = request.GET.get('class')
-        students = Student.objects.select_related('current_class')
+        # students = Student.objects.select_related('current_class')
+        # In BulkStudentIDCardView
+        students = Student.objects.select_related(
+            'current_class__identity_mapping__school_identity', 
+            'user__profile'
+        ).all()
 
         if class_id:
             students = students.filter(current_class_id=class_id)
