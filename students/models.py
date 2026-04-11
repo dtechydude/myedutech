@@ -115,6 +115,24 @@ class Hostel(models.Model):
         # Dynamically count students assigned to this hostel
         return self.hostel_name.count() # matches related_name in Student model
     
+    @property
+    def male_occupants(self):
+        # Filter related students where gender is 'male'
+        return self.hostel_name.filter(gender='male').count()
+
+    @property
+    def female_occupants(self):
+        # Filter related students where gender is 'female'
+        return self.hostel_name.filter(gender='female').count()
+
+    @property
+    def total_occupants(self):
+        return self.hostel_name.count()
+
+    @property
+    def available_spaces(self):
+        return self.capacity - self.total_occupants
+    
     class Meta:
         verbose_name = 'Hostel Reg'
         verbose_name_plural = 'Hostel Reg'

@@ -12,7 +12,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.template.loader import get_template
 # from xhtml2pdf import pisa
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from students.models import Student, Hostel, Parent, GraduationRecord
+from students.models import Student, Hostel, Parent, GraduationRecord, Room
 from staff.models import Teacher
 from students.forms import StudentUpdateForm, SuperUserStudentUpdateForm
 from payments.models import Payment, CategoryFee # Import Payment and CategoryFee models
@@ -319,14 +319,26 @@ def readmit_student(request, student_id):
 
 
  # Hostel List
+# @login_required
+# def hostel_list(request):
+#     hostel_list = Hostel.objects.all()
+#     room_list = Room.objects.all()
+#     # boarder_student = Student.objects.all().order_by('-date_admitted')
+
+#     context ={
+#         'hostel_list': hostel_list,
+#     }         
+    
+#     return render(request, 'students/hostel_list.html', context)
+
 @login_required
 def hostel_list(request):
-    hostel_list = Hostel.objects.all()
-    # boarder_student = Student.objects.all().order_by('-date_admitted')
-
-    context ={
+    # Prefetch the students to make the property counts faster
+    hostel_list = Hostel.objects.all().prefetch_related('hostel_name')
+    
+    context = {
         'hostel_list': hostel_list,
-    }         
+    }
     
     return render(request, 'students/hostel_list.html', context)
     
