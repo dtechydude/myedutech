@@ -194,7 +194,9 @@ def all_users(request):
         return response
 
     # Normal template rendering
-    context = {'all_users': all_users_list}
+    context = {'all_users': all_users_list,
+             'total_count': all_users_list.count()
+            }
     return render(request, 'users/all_registered_users.html', context)
 
 

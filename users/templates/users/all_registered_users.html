@@ -88,8 +88,9 @@
                 
 					<div class="col-12">
                         <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title" style="color:green;">All Registered Users </h4>
+                          <div class="card-header">
+                                <h4 class="card-title" style="color:orange;">System Users Directory <br>
+                                <span style="font-size:14px; color:#001111"><small>Total registered accounts : {{ total_count }}</small> </span></h4>
                                 <a href="{% url 'all_users' %}?export=csv" class="btn btn-success float-end">
                                         <i class="fas fa-file-download me-2"></i> Export to CSV
                                     </a>
@@ -102,27 +103,62 @@
                                                 <th>S/N</th>
                                                 <th>Username</th>
                                                 <th>Name</th>                                                
+                                                <th>Role</th>
                                                 <th>Status</th>
-                                                <th>State Of Origin</th>
-                                                <th>Created Date</th>
-                                                <th>Last Updated</th>
+                                                <th>Created</th>
+                                                <th>Updated</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {% for u in all_users %}
+                                                 {% for u in all_users %}
                                             <tr>
                                                 <td>{{ forloop.counter }}</td>
-                                                <td><a href="">{{ u.username }}</a></td>
-                                                <td><a href=""><strong>{{ u.last_name }} </strong> {{ u.first_name }}</a></td>
-                                                <td>{{ u.profile.user_type }}</td>
-                                                <td>{{ u.profile.state_of_origin}}</td>                                               
-                                                <td><strong>{{ u.profile.created }}</strong></a></td>
-                                                <td>{{ u.profile.updated }}</td>
-                                                
+                                                <td class="align-middle">
+                                                    <a href="" class="btn btn-sm btn-light border-0 fw-bold text-start px-2 py-1 w-100">
+                                                        <i class="fas fa-link me-2 text-primary small"></i>{{ u.username }}
+                                                    </a>
+                                                </td>                                                <td><a href=""><strong><img class="rounded-circle" width="40" height="40" src="{{u.profile.image_url}}" alt=""> {{ u.last_name }} </strong> {{ u.first_name }}</a></td>
+                                                <td class="align-middle">
+                                                    {% if u.is_staff or u.is_superuser %}
+                                                        <span class="badge bg-danger">
+                                                            <i class="fas fa-user-shield me-1"></i> Admin User
+                                                        </span>
+                                                    {% elif u.student %}
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-user-graduate me-1"></i> Student
+                                                        </span>
+                                                    {% elif u.teacher %}
+                                                        <span class="badge bg-primary">
+                                                            <i class="fas fa-chalkboard-teacher me-1"></i> Teacher
+                                                        </span>
+                                                    {% elif u.parent %}
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="fas fa-users me-1"></i> Parent
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">
+                                                            <i class="fas fa-user-slash me-1"></i> Not Profiled
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="align-middle">
+                                                    {% if u.is_active %}
+                                                        <div class="d-flex align-items-center text-success fw-bold">
+                                                            <span class="bg-success rounded-circle me-2" style="width: 8px; height: 8px;"></span>
+                                                            Active
+                                                        </div>
+                                                    {% else %}
+                                                        <div class="d-flex align-items-center text-muted fw-bold">
+                                                            <span class="bg-secondary rounded-circle me-2" style="width: 8px; height: 8px;"></span>
+                                                            Inactive
+                                                        </div>
+                                                    {% endif %}
+                                                </td>
+                                                <td><strong>{{ u.profile.created|date:"M d, Y" }}</strong></a></td>
+                                                <td>{{ u.profile.updated|date:"M d, Y" }}</td>
+
                                                 {% endfor %}
-                                            </tr>
-                                           
-                                           
+                                            </tr>                                          
                                          
                                         </tbody>
                                     </table>

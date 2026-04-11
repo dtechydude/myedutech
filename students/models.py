@@ -72,18 +72,71 @@ class Badge(models.Model):
 
 
 
-class Hostel(models.Model):
-    name = models.CharField(max_length=50, blank=True, null=True)
-    hostel_master = models.ForeignKey(Teacher, on_delete=models.CASCADE, blank=True, null=True, help_text='select hostel master')    
-    desc = models.CharField(max_length=50, blank=True)
-    slug = models.SlugField(null=True, blank=True)
+# class Hostel(models.Model):
+#     name = models.CharField(max_length=50, blank=True, null=True)
+#     hostel_master = models.ForeignKey(Teacher, on_delete=models.CASCADE, blank=True, null=True, help_text='select hostel master')    
+#     desc = models.CharField(max_length=50, blank=True)
+#     slug = models.SlugField(null=True, blank=True)
     
-    def __str__ (self):
-        return f'{self.name}'
+#     def __str__ (self):
+#         return f'{self.name}'
+
+#     def save(self, *args, **kwargs):
+#         self.slug = slugify(self.name)
+#         super().save(*args, **kwargs)
+
+
+class Hostel(models.Model):
+    GENDER_CHOICES = [('male', 'Male'), ('female', 'Female'), ('mixed', 'Mixed')]
+
+    name = models.CharField(max_length=100, unique=True, default="TEMPORARY_NAME")
+    hostel_master = models.ForeignKey(
+        'staff.Teacher', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='managed_hostels'
+    )
+    gender_type = models.CharField(max_length=10, choices=GENDER_CHOICES, default='mixed')
+    capacity = models.PositiveIntegerField(default=1, help_text="Total bed spaces in this hostel")
+    description = models.TextField(blank=True, help_text="Location details or rules")
+    slug = models.SlugField(unique=True, null=True, blank=True)
+
+    def __str__(self):
+        return self.name
 
     def save(self, *args, **kwargs):
-        self.slug = slugify(self.name)
+        if not self.slug:
+            self.slug = slugify(self.name)
         super().save(*args, **kwargs)
+
+    @property
+    def occupied_spaces(self):
+        # Dynamically count students assigned to this hostel
+        return self.hostel_name.count() # matches related_name in Student model
+    
+    class Meta:
+        verbose_name = 'Hostel Reg'
+        verbose_name_plural = 'Hostel Reg'
+        # ordering = ['last_name']
+    
+    
+
+class Room(models.Model):
+    hostel = models.ForeignKey(Hostel, on_delete=models.CASCADE, related_name='rooms')
+    room_number = models.CharField(max_length=10)
+    max_occupancy = models.PositiveIntegerField(default=4)
+    is_available = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.hostel.name} - Room {self.room_number}"
+    
+    class Meta:
+        verbose_name = 'Hostel Rooms'
+        verbose_name_plural = 'Hostel Rooms'
+        # ordering = ['last_name']
+    
+
 
 #parent Model
 class Parent(models.Model):
@@ -139,7 +192,8 @@ class Student(models.Model):
     ]
 
     student_type = models.CharField(max_length=15, choices=student_types, default=day_student)
-    hostel_name = models.ForeignKey(Hostel, on_delete=models.SET_NULL, blank=True, null=True, related_name='hostel_name', verbose_name='hostel')
+    hostel_name = models.ForeignKey(Hostel, on_delete=models.SET_NULL, blank=True, null=True, related_name='hostel_name', verbose_name='Hostel')
+    assigned_room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, blank=True, related_name='occupants', verbose_name='Assigned Rooom(Hostel)')
     date_admitted = models.DateField(default='2020-01-01')
     class_on_admission = models.ForeignKey(Standard, on_delete=models.SET_NULL, blank=True, null=True, related_name='class_on_admission', verbose_name='class_on_admission')
      # Guardian details here..
