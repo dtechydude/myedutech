@@ -1,195 +1,194 @@
 {% extends 'pages/portal_home.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    
-	<!-- PAGE TITLE HERE -->
-    {% block title %}
-	<title>Student Boarder List</title>
-	{% endblock title %}
-	
-	<!-- FAVICONS ICON -->
-    {% block favicon %}
-    <!-- Datatable -->
-    <link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
-    <!-- Custom Stylesheet -->
-	<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
-    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
-    {% endblock favicon %}
+{% block title %}
+<title>Student Boarder List | Schoolly</title>
+{% endblock title %}
 
-</head>
+{% block favicon %}
+<link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
+<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+<link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<body>
+<style>
+    /* Fix for muddled columns */
+    #boarderTable thead th {
+        text-transform: uppercase;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #f0f0f0 !important;
+        padding: 15px 10px !important;
+    }
 
-    <!--*******************
-        Preloader start
-    ********************-->
-   <div id="preloader">
-		<div class="lds-ripple">
-			<div></div>
-			<div></div>
-		</div>
+    #boarderTable tbody td {
+        padding: 18px 10px !important;
+        font-size: 14px;
+        vertical-align: middle !important;
+    }
+
+    .nowrap {
+        white-space: nowrap;
+    }
+
+    /* Modernizing the DataTable Search & Length areas */
+    .dataTables_wrapper .dataTables_filter, 
+    .dataTables_wrapper .dataTables_length {
+        margin-bottom: 20px;
+        padding: 0 5px;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 6px 12px;
+        margin-left: 10px;
+    }
+
+    .avatar-wrapper {
+        width: 45px;
+        height: 45px;
+        overflow: hidden;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock favicon %}
+
+{% block content_body %}
+<div class="content-body">
+    <div id="preloader" style="display: none;">
+        <div class="lds-ripple"><div></div><div></div></div>
     </div>
-    <!--*******************
-        Preloader end
-    ********************-->
 
-
-    <!--**********************************
-        Main wrapper start
-    ***********************************-->
-    <div id="main-wrapper">
-
-        <!--**********************************
-            Nav header start
-        ***********************************-->
-		
-        <!--**********************************
-            Nav header end
-        ***********************************-->
-		
-		<!--**********************************
-            Chat box start
-        ***********************************-->
-		
-		<!--**********************************
-            Chat box End
-        ***********************************-->
-
-		
-        <!--**********************************
-            Header start
-        ***********************************-->
-       
-        <!--**********************************
-            Header end ti-comment-alt
-        ***********************************-->
-
-        <!--**********************************
-            Sidebar start
-        ***********************************-->
-      
-        <!--**********************************
-            Sidebar end
-        ***********************************-->
-
-        <!--**********************************
-            Content body start
-        ***********************************-->
-        {% block content_body %}
-        <div class="content-body">
-            <div class="container-fluid">
-				                
-                <!-- row -->
-
-                <div class="row">
-                
-					<div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title" style="color:green;"><i class="fas fa-users"></i> All Boarders (Students) Profile Datatable </h4>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table id="example3" class="display" style="min-width: 845px">
-                                        <thead>
-                                            <tr>
-                                                <th>S/N</th>
-                                                <th>Img</th>
-                                                <th>USN</th>
-                                                <th>Name</th>
-                                                <th>Class</th>                                             
-                                                <th>Mobile</th>
-                                                <th style="color: red;">Hostel</th>
-                                                <th style="color: red;">Hostel Master</th>
-                                                <th>Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for s in boarder_student %}
-                                            <tr>
-                                                <td>{{ forloop.counter }}</td>
-												<td><a href="{% url 'students:student-detail' s.USN %}"><img class="rounded-circle" width="40" height="40" src="{{s.user.profile.image_url}}" alt=""></a></td>
-                                                <td><a href="{% url 'students:student-detail' s.USN %}">{{ s.USN }}</a></td>
-                                                <td><a href="{% url 'students:student-detail' s.USN %}"><strong>{{ s.last_name }} </strong> {{ s.first_name }} {% if s.middle_name %} {{ s.middle_name }} {% endif%}</a></td>
-                                                <td>{{ s.current_class }}</td>
-                                                <td>{{ s.guardian_phone }}</td>
-                                                <!-- <td>M.COM., P.H.D.</td> -->
-                                                <td><strong>{{ s.hostel_name }}</strong></a></td>
-                                                <td>{{ s.hostel_master }}</td>
-                                                <td>
-													<div class="d-flex">
-														<a href="{% url 'students:student-detail' s.USN %}" class="btn btn-success me-1">View</a>
-														<a href="{% url 'students:student-update' s.USN %}" class="btn btn-warning">Edit</a>
-													</div>
-												</td>
-                                                {% endfor %}
-                                            </tr>
-                                           
-                                           
-                                         
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="card-title" style="color: orange;">
+                            <i class="fas fa-bed me-2"></i> Boarding Students Directory<br>
+                            <span style = "font-size:12px; color:black;">Total Boading Student: {{ total_count }}</span>
+                        </h4>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-primary btn-sm me-2"><i class="fas fa-filter"></i> Filter</button>
+                            <a href="/admin" class="btn btn-primary btn-sm shadow-sm">
+                                <i class="fas fa-plus me-1"></i> Add Boarder
+                            </a>
                         </div>
                     </div>
-
-
-
-				</div>
+                    
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="boarderTable" class="display table-hover" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 30px;">#</th>
+                                        <th style="width: 60px;">Profile</th>
+                                        <th style="width: 100px;">USN</th>
+                                        <th>Full Name</th>
+                                        <th style="width: 100px;">Class</th>
+                                        <th>Hostel / Room</th>
+                                        <th>Guardian</th>
+                                        <th style="width: 90px;">Status</th>
+                                        <th style="width: 80px;" class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for s in boarder_student %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>
+                                            <div class="avatar-wrapper">
+                                                <img width="45" height="45" src="{% if s.user.profile.image %}{{ s.user.profile.image.url }}{% else %}{% static 'pages/images/default-user.png' %}{% endif %}" alt="">
+                                            </div>
+                                        </td>
+                                        <td class="nowrap">
+                                            <a href="{% url 'students:student-detail' s.USN %}" class="fw-bold text-primary">
+                                                {{ s.USN }}
+                                            </a>
+                                        </td>
+                                        <td class="nowrap">
+                                            <div class="fw-bold text-dark">{{ s.last_name }} {{ s.first_name }}</div>
+                                            {% if s.middle_name %}<small class="text-muted">{{ s.middle_name }}</small>{% endif %}
+                                        </td>
+                                        <td><span class="badge bg-light text-dark border-0">{{ s.current_class }}</span></td>
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <span class="text-danger fw-bold"><i class="fas fa-door-open me-1 small"></i>{{ s.hostel_name|default:"No Hostel" }}</span>
+                                                <small class="text-muted">Room: {{ s.assigned_room.room_number|default:"-" }}</small>
+                                            </div>
+                                        </td>
+                                        <td class="nowrap">
+                                            <div class="small"><i class="fas fa-phone-alt me-1 text-success small"></i> {{ s.guardian_phone }}</div>
+                                            <div class="small text-muted text-truncate" style="max-width: 150px;">{{ s.guardian_name }}</div>
+                                        </td>
+                                        <td>
+                                            {% if s.student_status == 'active' %}
+                                                <span class="badge light badge-success">Active</span>
+                                            {% elif s.student_status == 'suspended' %}
+                                                <span class="badge light badge-warning">Suspended</span>
+                                            {% else %}
+                                                <span class="badge light badge-danger">{{ s.student_status|title }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="dropdown">
+                                                <button type="button" class="btn btn-light btn-xs sharp" data-bs-toggle="dropdown">
+                                                    <i class="fa fa-ellipsis-v"></i>
+                                                </button>
+                                                <div class="dropdown-menu dropdown-menu-end">
+                                                    <a class="dropdown-item" href="{% url 'students:student-detail' s.USN %}">View Profile</a>
+                                                    <a class="dropdown-item" href="{% url 'students:student-update' s.USN %}">Edit Info</a>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        {% endblock content_body %}
-        <!--**********************************
-            Content body end
-        ***********************************-->
-
-
-        <!--**********************************
-            Footer start
-        ***********************************-->
-       
-        <!--**********************************
-            Footer end
-        ***********************************-->
-
-        <!--**********************************
-           Support ticket button start
-        ***********************************-->
-
-        <!--**********************************
-           Support ticket button end
-        ***********************************-->
-
-        
     </div>
-    <!--**********************************
-        Main wrapper end
-    ***********************************-->
+</div>
+{% endblock content_body %}
 
-    <!--**********************************
-        Scripts
-    ***********************************-->
-    <!-- Required vendors -->
-    {% block scripts %}
-    <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
-    <script src="{% static 'pages/vendor/chart.js/Chart.bundle.min.js' %}"></script>
-	<!-- Apex Chart -->
-	<script src="{% static 'pages/vendor/apexchart/apexchart.js' %}"></script>
-	
-    <!-- Datatable -->
-    <script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
-    <script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
+{% block scripts %}
+<script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+<script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
+<script src="{% static 'pages/js/custom.min.js' %}"></script>
+<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
 
-	<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
+<script>
+    $(document).ready(function() {
+        // Use a unique ID to avoid conflicts with theme's default datatables.init.js
+        if ($.fn.DataTable.isDataTable('#boarderTable')) {
+            $('#boarderTable').DataTable().destroy();
+        }
 
-    <script src="{% static 'pages/js/custom.min.js' %}"></script>
-	<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
-	<script src="{% static 'pages/js/demo.js' %}"></script>
-    <script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
-    {% endblock scripts %}
-</body>
-</html>
+        $('#boarderTable').DataTable({
+            "paging": true,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "lengthChange": true,
+            "pageLength": 10,
+            "language": {
+                "search": "Quick Search:",
+                "searchPlaceholder": "Enter name, USN, or hostel...",
+                "paginate": {
+                    "next": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>'
+                }
+            },
+            "dom": '<"d-flex justify-content-between align-items-center mb-3"lf>rt<"d-flex justify-content-between align-items-center mt-3"ip>'
+        });
+    });
+</script>
+{% endblock scripts %}

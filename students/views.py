@@ -119,7 +119,9 @@ def student_boarder_list(request):
     ).order_by('-date_admitted')
 
     context = {
-        'boarder_student': boarder_student
+        'boarder_student': boarder_student,
+        'total_count': boarder_student.count()
+
     }
 
     if request.user.is_superuser or request.user.is_staff:
