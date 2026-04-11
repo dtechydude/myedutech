@@ -1,13 +1,85 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>No Student Profile</title>
+    <title>Profile Required • {{ school_identity.name|default:"Tertiary Portal" }}</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .error-card {
+            max-width: 500px;
+            text-align: center;
+            background: #fff;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+        .icon-box {
+            width: 80px;
+            height: 80px;
+            background: #fff8e1;
+            color: #ffa000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 24px;
+        }
+        .btn-home {
+            background-color: #1a237e;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .btn-home:hover {
+            background-color: #0d1440;
+            color: #fff;
+            transform: translateY(-2px);
+        }
+    </style>
 </head>
 <body>
-    <h1>No Student Profile Found</h1>
-    <p>It seems your user account does not have a student profile associated with it. Please contact the administrator or create one.</p>
-    <p><a href="{% url 'pages:portal-home' %}">Go to Home</a></p>
-    </body>
+
+    <div class="error-card">
+        <div class="icon-box">
+            <i class="fas fa-user-shield"></i>
+        </div>
+        
+        <h3 class="fw-bold text-dark">Access Restricted</h3>
+        <p class="text-muted mb-4">
+            We couldn't find a <strong>Student Profile</strong> associated with your account ({{ request.user.username }}). This feature is reserved for enrolled students.
+        </p>
+
+        <div class="alert alert-info py-2 small mb-4">
+            <i class="fas fa-info-circle me-2"></i> 
+            If you are a staff member, please use the <strong>Administrative Tools</strong>.
+        </div>
+
+        <div class="d-grid gap-2">
+            <a href="{% url 'pages:portal-home' %}" class="btn-home">
+                <i class="fas fa-home me-2"></i> Return to Dashboard
+            </a>
+            <a href="mailto:admin@schoolly.edu" class="btn btn-link btn-sm text-muted text-decoration-none mt-2">
+                Contact System Administrator
+            </a>
+        </div>
+    </div>
+
+</body>
 </html>

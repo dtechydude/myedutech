@@ -401,19 +401,6 @@ class StudentSelfDetailView(LoginRequiredMixin, DetailView):
             return redirect('pages:portal-home') # Adjust this URL as needed
 
 
-# class StudentUpdateView(LoginRequiredMixin, UpdateView):
-#     form_class = StudentUpdateForm
-#     template_name = 'students/student_update_form.html'
-#     # queryset = StudentDetail.objects.all()
-
-
-#     def get_object(self):
-#         id_ = self.kwargs.get("id")
-#         return get_object_or_404(Student, USN=id_)
-
-#     def form_valid(self, form):
-#         print(form.cleaned_data)
-        return super().form_valid(form)
     
 # new student update form
 class StudentUpdateView(LoginRequiredMixin, UpdateView):
@@ -507,42 +494,6 @@ def my_classmates_view(request):
         return render(request, 'students/error.html', {'error_message': str(e)})
     
 
-# # Student ID Card
-# class StudentIDCardView(LoginRequiredMixin, View):
-#     """
-#     Displays a printable ID card for a specific student.
-#     """
-#     def get(self, request, student_id):
-#         student = get_object_or_404(Student, id=student_id)
-        
-#         # Get the SchoolIdentity. Assuming there is only one instance.
-#         # If there can be multiple, you may need a different retrieval method.
-#         try:
-#             school_info = SchoolIdentity.objects.first()
-#         except SchoolIdentity.DoesNotExist:
-#             school_info = None
-
-#         context = {
-#             'student': student,
-#             'school_info': school_info,
-#         }
-#         return render(request, 'students/test_student_id_card.html', context)
-
-# # Bulk Print ID CArd
-# class BulkStudentIDCardView(LoginRequiredMixin, View):
-#     def get(self, request):
-#         class_id = request.GET.get('class')
-#         students = Student.objects.select_related('current_class')
-
-#         if class_id:
-#             students = students.filter(current_class_id=class_id)
-
-#         return render(request, 'students/bulk_id_cards.html', {
-#             'students': students,
-#             'classes': Standard.objects.all(),
-#             'selected_class': class_id,
-#             'school_info': SchoolIdentity.objects.first(),
-#         })
 
 # Student ID Card
 class StudentIDCardView(LoginRequiredMixin, View):

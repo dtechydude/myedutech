@@ -279,7 +279,7 @@
               </tr>
                   <tr>
                   <td><strong>GENDER:</strong> {{ student.get_gender_display|default:student.gender|upper }}</td>
-                  <td><strong>Days Sch. Opened:</strong> {{ total_school_days }}</td>
+                  <td><strong>Days Sch. Opened:</strong> {{ total_school_days|default:"N/A" }}</td>
                   <td colspan="2">
                       <span style="color: green;"><strong>Days Present:</strong> {{ days_present|default:"N/A"}}</span>
                       <span class="mx-2">|</span>
