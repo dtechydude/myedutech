@@ -1,190 +1,146 @@
 {% extends 'pages/portal_home.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    
-	<!-- PAGE TITLE HERE -->
-    {% block title %}
-	<title>Teachers Email List</title>
-	{% endblock title %}
-	
-	<!-- FAVICONS ICON -->
-    {% block favicon %}
-    <!-- Datatable -->
-    <link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
-    <!-- Custom Stylesheet -->
-	<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
-    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
-    {% endblock favicon %}
+{% block title %}
+<title>Staff Email Directory | KwikSchools</title>
+{% endblock title %}
 
-</head>
+{% block favicon %}
+{{ block.super }}
+<link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
+<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+<style>
+    /* Staff Directory UI Enhancements */
+    .staff-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: #fdf2f2; /* Professional tint for staff */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #ff5e5e;
+        margin-right: 12px;
+        border: 1px solid #fee2e2;
+    }
+    .email-link {
+        color: #2e66ff;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    .email-link:hover {
+        text-decoration: underline;
+        color: #0036cc;
+    }
+    .guarantor-box {
+        background-color: #f8f9fa;
+        padding: 5px 10px;
+        border-radius: 6px;
+        display: inline-block;
+    }
+    .table thead th {
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.5px;
+        color: #7e7e7e;
+    }
+</style>
+{% endblock favicon %}
 
-<body>
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">Directory</a></li>
+                <li class="breadcrumb-item"><a href="javascript:void(0)">Staff Emails</a></li>
+            </ol>
+        </div>
 
-    <!--*******************
-        Preloader start
-    ********************-->
-   <div id="preloader">
-		<div class="lds-ripple">
-			<div></div>
-			<div></div>
-		</div>
-    </div>
-    <!--*******************
-        Preloader end
-    ********************-->
-
-
-    <!--**********************************
-        Main wrapper start
-    ***********************************-->
-    <div id="main-wrapper">
-
-        <!--**********************************
-            Nav header start
-        ***********************************-->
-		
-        <!--**********************************
-            Nav header end
-        ***********************************-->
-		
-		<!--**********************************
-            Chat box start
-        ***********************************-->
-		
-		<!--**********************************
-            Chat box End
-        ***********************************-->
-
-		
-        <!--**********************************
-            Header start
-        ***********************************-->
-       
-        <!--**********************************
-            Header end ti-comment-alt
-        ***********************************-->
-
-        <!--**********************************
-            Sidebar start
-        ***********************************-->
-      
-        <!--**********************************
-            Sidebar end
-        ***********************************-->
-
-        <!--**********************************
-            Content body start
-        ***********************************-->
-        {% block content_body %}
-        <div class="content-body">
-            <div class="container-fluid">
-				                
-                <!-- row -->
-
-                <div class="row">
-                
-					<div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title" style="color:green;">Teachers Email List </h4>
-                                 <a href="{% url 'pages:teachers_email_list' %}?export=csv" class="btn btn-success">
-                                <i class="fas fa-file-download me-2"></i>Export CSV
-                                </a>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table id="example3" class="display" style="min-width: 845px">
-                                        <thead>
-                                            <tr>
-                                                <th>S/N</th>
-                                               <th>Teacher Name</th>
-                                               <th>Email</th>
-                                                <th>Guarantor Name</th>
-                                                <th>Guarantor Email</th>
-                                                
-                                                                                            
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                           {% for teacher in teachers %}
-                                            <tr>  
-                                            <td>{{ forloop.counter }}  </td>                                      
-                                            <td>{{ teacher.get_full_name }}</td>
-                                            <td>{{ teacher.user.email }}</td>
-                                            <td>{{ teacher.guarantor_name }}</td>
-                                            <td>
-                                                <a href="mailto:{{ teacher.guarantor_email }}" class="text-decoration-none">
-                                                    {{ teacher.guarantor_email }}
-                                                </a>
-                                            </td>
-                                        </tr>
-                                        {% empty %}
-                                        <tr>
-                                            <td colspan="3" class="text-center text-muted">No guarantor information found.</td>
-                                        </tr>
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="card-title text-primary">Staff & Faculty Directory</h4>
+                            <p class="m-0 subtitle">Official email registry and emergency contact links</p>
+                        </div>
+                        <a href="{% url 'pages:teachers_email_list' %}?export=csv" class="btn btn-success btn-sm shadow-sm">
+                            <i class="fas fa-file-download me-2"></i>Export Staff CSV
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="example3" class="display table-hover" style="min-width: 845px">
+                                <thead>
+                                    <tr>
+                                        <th>S/N</th>
+                                        <th>Staff Identity</th>
+                                        <th>Official Email</th>
+                                        <th>Guarantor Name</th>
+                                        <th>Guarantor Contact</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for teacher in teachers %}
+                                    <tr>
+                                        <td><strong>{{ forloop.counter }}</strong></td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="staff-avatar">
+                                                    {{ teacher.user.first_name|first }}{{ teacher.user.last_name|first }}
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0 fs-14 text-black">{{ teacher.get_full_name }}</h6>
+                                                    <small class="text-muted">{{ teacher.user}}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="mailto:{{ teacher.user.email }}" class="email-link">
+                                                <i class="far fa-envelope-open me-2 text-muted"></i>{{ teacher.user.email }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <div class="guarantor-box">
+                                                <span class="text-black font-w500 fs-13">
+                                                    <i class="fas fa-user-check me-1 text-success fs-11"></i> 
+                                                    {{ teacher.guarantor_name|default:"Not Provided" }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if teacher.guarantor_email %}
+                                            <a href="mailto:{{ teacher.guarantor_email }}" class="email-link">
+                                                <i class="fas fa-at me-1 fs-11"></i> {{ teacher.guarantor_email }}
+                                            </a>
+                                            {% else %}
+                                            <span class="text-muted small">No Email Linked</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">No staff records found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-
-
-				</div>
+                </div>
             </div>
         </div>
-        {% endblock content_body %}
-        <!--**********************************
-            Content body end
-        ***********************************-->
-
-
-        <!--**********************************
-            Footer start
-        ***********************************-->
-       
-        <!--**********************************
-            Footer end
-        ***********************************-->
-
-        <!--**********************************
-           Support ticket button start
-        ***********************************-->
-
-        <!--**********************************
-           Support ticket button end
-        ***********************************-->
-
-        
     </div>
-    <!--**********************************
-        Main wrapper end
-    ***********************************-->
+</div>
+{% endblock content_body %}
 
-    <!--**********************************
-        Scripts
-    ***********************************-->
-    <!-- Required vendors -->
-    {% block scripts %}
-    <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
-    <script src="{% static 'pages/vendor/chart.js/Chart.bundle.min.js' %}"></script>
-	<!-- Apex Chart -->
-	<script src="{% static 'pages/vendor/apexchart/apexchart.js' %}"></script>
-	
-    <!-- Datatable -->
-    <script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
-    <script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
-
-	<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
-
-    <script src="{% static 'pages/js/custom.min.js' %}"></script>
-	<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
-	<script src="{% static 'pages/js/demo.js' %}"></script>
-    <script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
-    {% endblock scripts %}
-</body>
-</html>
+{% block scripts %}
+<script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+<script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
+<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
+<script src="{% static 'pages/js/custom.min.js' %}"></script>
+<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+{% endblock scripts %}

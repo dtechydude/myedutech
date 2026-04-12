@@ -1,196 +1,166 @@
 {% extends 'pages/portal_home.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    
-	<!-- PAGE TITLE HERE -->
-    {% block title %}
-	<title>Phone List</title>
-	{% endblock title %}
-	
-	<!-- FAVICONS ICON -->
-    {% block favicon %}
-	<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
-    <!-- Datatable -->
-    <link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
-    <!-- Custom Stylesheet -->
-	<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
-    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
-    {% endblock favicon %}
+{% block title %}
+<title>Phone Directory | KwikSchools</title>
+{% endblock title %}
 
-</head>
+{% block favicon %}
+{{ block.super }}
+<link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
+<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+<style>
+    /* UI Enhancements for Phone Directory */
+    .student-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #333;
+        margin-right: 12px;
+        border: 1px solid #e9ecef;
+    }
+    .phone-link {
+        color: #1a1a1a;
+        font-weight: 600;
+        font-family: 'Segoe UI', Roboto, sans-serif;
+        display: flex;
+        align-items: center;
+    }
+    .phone-link:hover {
+        color: #2e66ff;
+    }
+    .call-btn {
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        background: #f1f4fb;
+        color: #2e66ff;
+        border: none;
+        transition: 0.3s;
+    }
+    .call-btn:hover {
+        background: #2e66ff;
+        color: #fff;
+    }
+    .badge-class {
+        background-color: rgba(46, 102, 255, 0.1);
+        color: #2e66ff;
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+</style>
+{% endblock favicon %}
 
-<body>
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active"><a href="/dashboard">Directory</a></li>
+                <li class="breadcrumb-item"><a href="javascript:void(0)">Phone List</a></li>
+            </ol>
+        </div>
 
-    <!--*******************
-        Preloader start
-    ********************-->
-   <div id="preloader">
-		<div class="lds-ripple">
-			<div></div>
-			<div></div>
-		</div>
-    </div>
-    <!--*******************
-        Preloader end
-    ********************-->
-
-
-    <!--**********************************
-        Main wrapper start
-    ***********************************-->
-    <div id="main-wrapper">
-
-        <!--**********************************
-            Nav header start
-        ***********************************-->
-		
-        <!--**********************************
-            Nav header end
-        ***********************************-->
-		
-		<!--**********************************
-            Chat box start
-        ***********************************-->
-		
-		<!--**********************************
-            Chat box End
-        ***********************************-->
-
-		
-        <!--**********************************
-            Header start
-        ***********************************-->
-       
-        <!--**********************************
-            Header end ti-comment-alt
-        ***********************************-->
-
-        <!--**********************************
-            Sidebar start
-        ***********************************-->
-      
-        <!--**********************************
-            Sidebar end
-        ***********************************-->
-
-        <!--**********************************
-            Content body start
-        ***********************************-->
-        {% block content_body %}
-        <div class="content-body">
-            <div class="container-fluid">
-				                
-                <!-- row -->
-
-                <div class="row">
-                
-					<div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title" style="color:green;">Students Phone List </h4>
-                                <a href="{% url 'pages:students_phone_list' %}?export=csv" class="btn btn-success">
-                                 <i class="fas fa-file-download me-2"></i>Export CSV
-                                    </a>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table id="example3" class="display" style="min-width: 845px">
-                                        <thead>
-                                            <tr>
-                                                <th>S/N</th>
-                                                <th>Student Name</th>
-                                                <th>Student Phone</th>
-                                                <th>Guardian Name</th>
-                                                <th>Guardian Phone</th>
-                                                
-                                                                                            
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                           {% for student in students %}
-                                            <tr>
-                                                <td>{{ forloop.counter }}</td>
-                                                <td>{{ student.get_full_name }} - {{ student.current_class }} <strong></td>
-                                                <td> <a href="tel:{{ student.user.profile.phone }}" class="text-decoration-none">
-                                                    {{ student.user.profile.phone }}
-                                                    </a></td>
-                                                <td>{% if student.guardian_name %} {{ student.guardian_name }} {% else %} Not Updated Yet {% endif %}</td>
-                                                <td> {{ student.guardian_phone }}</td>
-                                                
-                                                                                          
-												</td>
-                                               
-                                            </tr>
-                                            {% empty %}
-                                            <tr>
-                                                <td colspan="4" class="text-center text-muted">No students found.</td>
-                                            </tr>
-                                            {% endfor %}                                                           
-                                           
-                                         
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="card-title text-primary">Student Phone Directory</h4>
+                            <p class="m-0 subtitle">Quick access to student and guardian contact numbers</p>
+                        </div>
+                        <a href="{% url 'pages:students_phone_list' %}?export=csv" class="btn btn-success btn-sm shadow-sm">
+                            <i class="fas fa-file-download me-2"></i>Export CSV
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="example3" class="display table-hover" style="min-width: 845px">
+                                <thead>
+                                    <tr>
+                                        <th>S/N</th>
+                                        <th>Student Name</th>
+                                        <th>Student Phone</th>
+                                        <th>Guardian Info</th>
+                                        <th>Guardian Phone</th>
+                                        <th>Class</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in students %}
+                                    <tr>
+                                        <td><strong>{{ forloop.counter }}</strong></td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="student-avatar">
+                                                    {{ student.user.first_name|first }}{{ student.user.last_name|first }}
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0 fs-14 text-black">{{ student.get_full_name }}</h6>
+                                                    <small class="text-muted">ID: {{ student.USN|default:"---" }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if student.user.profile.phone %}
+                                            <a href="tel:{{ student.user.profile.phone }}" class="phone-link">
+                                                <i class="fas fa-phone-alt me-2 text-muted fs-12"></i>{{ student.user.profile.phone }}
+                                            </a>
+                                            {% else %}
+                                            <span class="text-muted small">No Phone</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="text-black font-w500">
+                                                {% if student.guardian_name %}{{ student.guardian_name }}{% else %}<span class="text-warning">Not Set</span>{% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if student.guardian_phone %}
+                                            <div class="d-flex align-items-center">
+                                                <a href="tel:{{ student.guardian_phone }}" class="phone-link me-3">
+                                                    {{ student.guardian_phone }}
+                                                </a>
+                                                <a href="tel:{{ student.guardian_phone }}" class="call-btn">
+                                                    <i class="fas fa-phone"></i>
+                                                </a>
+                                            </div>
+                                            {% else %}
+                                            <span class="text-muted small">Not Provided</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge-class">{{ student.current_class }}</span>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">No phone records available.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-
-
-
-				</div>
+                </div>
             </div>
         </div>
-        {% endblock content_body %}
-        <!--**********************************
-            Content body end
-        ***********************************-->
-
-
-        <!--**********************************
-            Footer start
-        ***********************************-->
-       
-        <!--**********************************
-            Footer end
-        ***********************************-->
-
-        <!--**********************************
-           Support ticket button start
-        ***********************************-->
-
-        <!--**********************************
-           Support ticket button end
-        ***********************************-->
-
-        
     </div>
-    <!--**********************************
-        Main wrapper end
-    ***********************************-->
+</div>
+{% endblock content_body %}
 
-    <!--**********************************
-        Scripts
-    ***********************************-->
-    <!-- Required vendors -->
-    {% block scripts %}
-    <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
-    <script src="{% static 'pages/vendor/chart.js/Chart.bundle.min.js' %}"></script>
-	<!-- Apex Chart -->
-	<script src="{% static 'pages/vendor/apexchart/apexchart.js' %}"></script>
-	
-    <!-- Datatable -->
-    <script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
-    <script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
-
-	<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
-
-    <script src="{% static 'pages/js/custom.min.js' %}"></script>
-	<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
-	<script src="{% static 'pages/js/demo.js' %}"></script>
-    <script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
-    {% endblock scripts %}
-</body>
-</html>
+{% block scripts %}
+<script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+<script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
+<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
+<script src="{% static 'pages/js/custom.min.js' %}"></script>
+<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+{% endblock scripts %}

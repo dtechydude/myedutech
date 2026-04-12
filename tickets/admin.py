@@ -15,4 +15,6 @@ class TicketAdmin(ImportExportModelAdmin):
 class CommentAdmin(ImportExportModelAdmin):
     list_display = ['id', 'ticket', 'author', 'created_at']
     search_fields = ['text']
+    raw_id_fields = ['ticket',]
+
     autocomplete_fields = ['author']

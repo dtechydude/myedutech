@@ -1,188 +1,153 @@
 {% extends 'pages/portal_home.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
+{% block title %}
+<title>Transport & Bus Routes | KwikSchools</title>
+{% endblock title %}
+
+{% block favicon %}
+{{ block.super }}
+<link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
+<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+<style>
+    /* Transport UI Enhancements */
+    .route-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: #fff3e0; 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ff6d00;
+        margin-right: 12px;
+        border: 1px solid #ffe0b2;
+    }
+    .fee-badge {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+    }
+    .direction-badge {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+    .dir-inbound { background: #e3f2fd; color: #1565c0; }
+    .dir-outbound { background: #f3e5f5; color: #7b1fa2; }
     
-	<!-- PAGE TITLE HERE -->
-    {% block title %}
-	<title>Bus Route List</title>
-	{% endblock title %}
-	
-	<!-- FAVICONS ICON -->
-    {% block favicon %}
-	<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
-    <!-- Datatable -->
-    <link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
-    <!-- Custom Stylesheet -->
-	<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
-    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
-    {% endblock favicon %}
+    /* Ensure DataTable Search/Filter area has enough space */
+    .dataTables_wrapper .dataTables_filter, 
+    .dataTables_wrapper .dataTables_length {
+        margin-bottom: 20px;
+    }
+    .table thead th {
+        text-transform: uppercase;
+        font-size: 11px;
+        color: #717171;
+        background: #fafafa;
+    }
+</style>
+{% endblock favicon %}
 
-</head>
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">Logistics</a></li>
+                <li class="breadcrumb-item"><a href="javascript:void(0)">Bus Routes</a></li>
+            </ol>
+        </div>
 
-<body>
-
-    <!--*******************
-        Preloader start
-    ********************-->
-   <div id="preloader">
-		<div class="lds-ripple">
-			<div></div>
-			<div></div>
-		</div>
-    </div>
-    <!--*******************
-        Preloader end
-    ********************-->
-
-
-    <!--**********************************
-        Main wrapper start
-    ***********************************-->
-    <div id="main-wrapper">
-
-        <!--**********************************
-            Nav header start
-        ***********************************-->
-		
-        <!--**********************************
-            Nav header end
-        ***********************************-->
-		
-		<!--**********************************
-            Chat box start
-        ***********************************-->
-		
-		<!--**********************************
-            Chat box End
-        ***********************************-->
-
-		
-        <!--**********************************
-            Header start
-        ***********************************-->
-       
-        <!--**********************************
-            Header end ti-comment-alt
-        ***********************************-->
-
-        <!--**********************************
-            Sidebar start
-        ***********************************-->
-      
-        <!--**********************************
-            Sidebar end
-        ***********************************-->
-
-        <!--**********************************
-            Content body start
-        ***********************************-->
-        {% block content_body %}
-        <div class="content-body">
-            <div class="container-fluid">				
-                
-                <!-- row -->
-                <div class="row">                
-					<div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title" style="color:orangered;"><i class="fa fa-bus" aria-hidden="true"></i> - Bus Route List </h4>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table id="example3" class="display" style="min-width: 845px">
-                                        <thead>
-                                            <tr>
-                                                <th>S/N</th>
-                                                <th>Route Name</th>
-                                                <th>Route ID</th>
-                                                <th>Bus Fare</th>
-                                                <th>Direction</th>
-                                                <th>Staff In Charge</th>                                                
-                                                <th>Driver</th>                                                
-                                                <th>Phone</th>
-                                                
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for rt in routelist %}
-                                            <tr>
-                                                <td>{{ forloop.counter }}</td>
-												<td>{{rt.name}}</td>
-                                                <td>{{rt.route_id}}</td>
-                                                <td>{{rt.bus_fee}}</td>
-                                                <td>{{ rt.direction }}</td>
-                                                <td>{{ rt.staff_in_charge }}</td>
-                                                <td>{{ rt.driver }}</td>
-                                                <td>{{ rt.driver_phone }}</td>
-                                                
-                                                {% endfor %}
-                                            </tr>
-                                           
-                                           
-                                         
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="card-title" style="color: #ff4500;">
+                                <i class="fa fa-bus-alt me-2"></i>School Transport Service
+                            </h4>
+                        </div>
+                        <a href="{% url 'pages:teachers_phone_list' %}?export=csv" class="btn btn-success btn-sm shadow-sm">
+                            <i class="fas fa-file-download me-2"></i>Export CSV
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="example3" class="display table-hover" style="min-width: 845px">
+                                <thead>
+                                    <tr>
+                                        <th>S/N</th>
+                                        <th>Route & ID</th>
+                                        <th>Bus Fare</th>
+                                        <th>Direction</th>
+                                        <th>Administrative Staff</th>
+                                        <th>Driver & Contact</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for rt in routelist %}
+                                    <tr>
+                                        <td><strong>{{ forloop.counter }}</strong></td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="route-icon">
+                                                    <i class="fas fa-map-marked-alt"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0 fs-14 text-black">{{ rt.name }}</h6>
+                                                    <small class="text-muted">ID: {{ rt.route_id }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="fee-badge">₦{{ rt.bus_fee }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="direction-badge {% if 'In' in rt.direction %}dir-inbound{% else %}dir-outbound{% endif %}">
+                                                <i class="fas fa-exchange-alt me-1"></i> {{ rt.direction }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="text-dark font-w500">
+                                                <i class="fas fa-user-tie me-2 text-muted"></i>{{ rt.staff_in_charge }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="driver-contact">
+                                                <div class="mb-1 text-black">{{ rt.driver }}</div>
+                                                {% if rt.driver_phone %}
+                                                <a href="tel:{{ rt.driver_phone }}" class="text-primary small font-w600">
+                                                    <i class="fas fa-phone-alt me-1"></i> {{ rt.driver_phone }}
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-
-
-
-				</div>
+                </div>
             </div>
         </div>
-        {% endblock content_body %}
-        <!--**********************************
-            Content body end
-        ***********************************-->
-
-
-        <!--**********************************
-            Footer start
-        ***********************************-->
-       
-        <!--**********************************
-            Footer end
-        ***********************************-->
-
-        <!--**********************************
-           Support ticket button start
-        ***********************************-->
-
-        <!--**********************************
-           Support ticket button end
-        ***********************************-->
-
-        
     </div>
-    <!--**********************************
-        Main wrapper end
-    ***********************************-->
+</div>
+{% endblock content_body %}
 
-    <!--**********************************
-        Scripts
-    ***********************************-->
-    <!-- Required vendors -->
-    {% block scripts %}
-    <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
-    <script src="{% static 'pages/vendor/chart.js/Chart.bundle.min.js' %}"></script>
-	<!-- Apex Chart -->
-	<script src="{% static 'pages/vendor/apexchart/apexchart.js' %}"></script>
-	
-    <!-- Datatable -->
-    <script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
-    <script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
-
-	<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
-
-    <script src="{% static 'pages/js/custom.min.js' %}"></script>
-	<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
-	<script src="{% static 'pages/js/demo.js' %}"></script>
-    <script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
-    {% endblock scripts %}
-</body>
-</html>
+{% block scripts %}
+<script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+<script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
+<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
+<script src="{% static 'pages/js/custom.min.js' %}"></script>
+<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+{% endblock scripts %}

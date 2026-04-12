@@ -15,18 +15,18 @@
 	<meta property="og:description" content="KwikSchools : School Management System" />
 	<meta property="og:image" content="https://travl.dexignlab.com/xhtml/social-image.png" />
 	<meta name="format-detection" content="telephone=no">
-	
+
 	<!-- PAGE TITLE HERE -->
     {% block title %}
 	<title>Contact Support</title>
     {% endblock title %}
-	
+
 	{% block favicon %}
 	<!-- FAVICONS ICON -->
 	<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
     <!-- Chartist -->
     <link rel="stylesheet" href="{% static 'pages/vendor/chartist/css/chartist.min.css' %}">
-	
+
     	<link href="{% static 'pages/vendor/bootstrap-select/dist/css/bootstrap-select.min.css' %}" rel="stylesheet">
 		<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
     <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
@@ -56,23 +56,23 @@
         <!--**********************************
             Nav header start
         ***********************************-->
-        
+
         <!--**********************************
             Nav header end
         ***********************************-->
-		
+
 		<!--**********************************
             Chat box start
         ***********************************-->
-		
+
 		<!--**********************************
             Chat box End
         ***********************************-->
-			
+
         <!--**********************************
             Header start
         ***********************************-->
-                         
+
         <!--**********************************
             Header end ti-comment-alt
         ***********************************-->
@@ -80,7 +80,7 @@
         <!--**********************************
             Sidebar start
         ***********************************-->
-       
+
         <!--**********************************
             Sidebar end
         ***********************************-->
@@ -108,7 +108,7 @@
                                 <div id="DZ_W_TimeLine" class="widget-timeline dlab-scroll height570">
                                     {% for s in school_contact %}
                                     <ul class="timeline">
-                                        
+
                                         <li>
                                            <div class="timeline-badge primary"></div>
                                             <a class="timeline-panel text-muted" href="#">
@@ -124,7 +124,7 @@
                                             <a class="timeline-panel text-muted" href="#">
                                                 <span>School's Phones</span>
                                                 <h6 class="mb-0">Phone 1: (+234) {{ s.phone1 }} <strong class="text-info"><br> Phone 2: (+234) {{s.phone2}}</strong></h6>
-											
+
                                             </a>
                                         </li>
                                         <li>
@@ -140,20 +140,14 @@
                                             </div>
                                             <a class="timeline-panel text-muted" href="#">
                                                 <span>School's Physical Address</span>
-                                                <h6 class="mb-0">{{ s.address_line_1 }} </h6>
+                                                <h6 class="mb-0">{{ s.address_line_1 }}
+                                                <br> {{ s.address_line_2 }}</h6>
                                             </a>
                                         </li>
-                                        <li>
-                                            <div class="timeline-badge warning">
-                                            </div>
-                                            <a class="timeline-panel text-muted" href="#">
-                                                <span>School's Address 2</span>
-                                                <h6 class="mb-0">{{ s.address_line_2 }}</h6>
-                                            </a>
-                                        </li>
-                                                                                                                 
+
+
                                     </ul>
-                                    {% endfor %}   
+                                    {% endfor %}
                                 </div>
                             </div>
                         </div>
@@ -187,7 +181,8 @@
                                             </div>
                                             <a class="timeline-panel text-muted" href="#">
                                                 <span>Social Media Connect</span>
-                                                <h6 class="mb-0">FACEBOOK, INSTAGRAM, X, YOUTUBE, TIKTOK <strong class="text-warning">@kwikschools, or @kwikschools</strong></h6>
+                                                <h6 class="mb-0">FACEBOOK, INSTAGRAM, X, YOUTUBE, TIKTOK <br>
+                                                <strong class="text-warning">@kwikschools</strong></h6>
                                             </a>
                                         </li>
                                         <li>
@@ -198,13 +193,13 @@
                                                 <h6 class="mb-0">https://kwikschools.com </h6>
                                             </a>
                                         </li>
-                                       
+
                                     </ul>
                                 </div>
                             </div>
                         </div>
-					</div>					
-						
+					</div>
+
                 </div>
             </div>
         </div>
@@ -216,7 +211,7 @@
         <!--**********************************
             Footer start
         ***********************************-->
-       
+
         <!--**********************************
             Footer end
         ***********************************-->
@@ -229,7 +224,7 @@
            Support ticket button end
         ***********************************-->
 
-        
+
     </div>
     <!--**********************************
         Main wrapper end
@@ -244,35 +239,35 @@
     <script src="{% static 'pages/vendor/chart.js/Chart.bundle.min.js' %}"></script>
 	<!-- Apex Chart -->
 	<script src="{% static 'pages/vendor/apexchart/apexchart.js' %}"></script>
-	
+
 	<!-- Chartist -->
     <script src="{% static 'pages/vendor/chartist/js/chartist.min.js' %}"></script>
     <script src="{% static 'pages/vendor/chartist-plugin-tooltips/js/chartist-plugin-tooltip.min.js' %}"></script>
-    
+
 	<!-- Flot -->
     <script src="{% static 'pages/vendor/flot/jquery.flot.js' %}"></script>
     <script src="{% static 'pages/vendor/flot/jquery.flot.pie.js' %}"></script>
     <script src="{% static 'pages/vendor/flot/jquery.flot.resize.js' %}"></script>
     <script src="{% static 'pages/vendor/flot-spline/jquery.flot.spline.min.js' %}"></script>
-	
+
 	<!-- Chart sparkline plugin files -->
     <script src="{% static 'pages/vendor/jquery-sparkline/jquery.sparkline.min.js' %}"></script>
 	<script src="{% static 'pages/js/plugins-init/sparkline-init.js' %}"></script>
-	
+
 	<!-- Chart piety plugin files -->
     <script src="{% static 'pages/vendor/peity/jquery.peity.min.js' %}"></script>
 	<script src="{% static 'pages/js/plugins-init/piety-init.js' %}"></script>
-	
+
     <!-- Init file -->
     <script src="{% static 'pages/js/plugins-init/widgets-script-init.js' %}"></script>
 
 	<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
-	
+
     <script src="{% static 'pages/js/custom.min.js' %}"></script>
 	<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
 	<script src="{% static 'pages/js/demo.js' %}"></script>
     <script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
-    
+
     {% endblock script %}
 </body>
 </html>
