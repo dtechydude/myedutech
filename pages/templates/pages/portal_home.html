@@ -413,7 +413,6 @@
 							<li><a href="{% url 'events:event_new' %}">Add New Event</a></li>							
 							<li><a href="{% url 'all_users' %}">All Registered Users</a></li>
 							<li><a href="{% url 'students:student_search_list' %}">Search Students</a></li>
-							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>	
 
 							{% endif %}		
 	
@@ -438,10 +437,11 @@
 							{% if user.is_superuser or user.is_staff %}
 							<li><a href="{% url 'enroll_student' %}">Enroll Student</a></li>
 							<li><a href="{% url 'students:student-list' %}">All CURRENT Students</a></li>
-							<li><a href="{% url 'students:bulk_student_id_cards' %}">Print Bulk Students ID</a></li>
 							<li><a href="{% url 'students:boarder-list' %}">All Boarders</a></li>
-							<li><a href="{% url 'students:student-in-class' %}">No. In Class</a></li>
-							<li><a href="{% url 'students:assign_classgroup_to_students' %}">Assign Students To ClassGroup</a></li>
+							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>	
+							<li><a href="{% url 'students:student-in-class' %}">Class Distribution</a></li>
+							<li><a href="{% url 'students:bulk_student_id_cards' %}">Print Bulk Students ID</a></li>
+							{% comment %} <li><a href="{% url 'students:assign_classgroup_to_students' %}">Assign Students To ClassGroup</a></li> {% endcomment %}
 							<li><a href="{% url 'students:parent_list' %}">PARENTS LIST</a></li>	
 							<li><a href="{% url 'students:parent-dashboard' %}">PARENTS DASHBOARD</a></li>
 							<li><a href="{% url 'students:graduate_students' %}">Move Students To Alumni</a></li>
@@ -538,10 +538,10 @@
 						<ul aria-expanded="false">
 							<li><a href="{% url 'staff:teacher_user_signup'%}">Signup Teacher</a></li>
 							<li><a href="{% url 'staff:teacher-list' %}">All Teachers</a></li>
-							<li><a href="{% url 'staff:assign_form_teacher' %}">Assign FormTeacher-HEAD</a></li> 
-							<li><a href="{% url 'staff:assign_form_teacher_to_classgroup' %}">Assign FormTeacher To CLASSGROUP</a></li>
+							<li><a href="{% url 'staff:assign_form_teacher' %}">Assign FormTeacher To Class</a></li> 
+							{% comment %} <li><a href="{% url 'staff:assign_form_teacher_to_classgroup' %}">Assign FormTeacher To CLASSGROUP</a></li> {% endcomment %}
 							<li><a href="{% url 'staff:teacher_assignments' %}">Teacher's Subj./Classes</a></li>
-							<li><a href="{% url 'staff:cbv_all_teachers_student_counts' %}">Teacher's Students Count</a></li>
+							<li><a href="{% url 'staff:cbv_all_teachers_student_counts' %}">Staff Allocation</a></li>
 							<li><a href="{% url 'curriculum:form_teachers_head' %}">FormTeachers List</a></li>
 							<li><a href="{% url 'curriculum:classgroup_form_teachers' %}">ClassGroup FormTeachers</a></li>
 

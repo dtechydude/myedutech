@@ -153,15 +153,14 @@ def classroom_students(request, class_id):
     return render(request, 'staff/classroom_students.html', context)
 
 
-# Count Teachers Class Students
-
+# Teachers Student Count In Class
 class TeacherStudentCountListView(ListView):
     model = Teacher
     template_name = 'staff/all_teachers_student_counts.html'
     context_object_name = 'teachers'
 
     def get_queryset(self):
-        # Prefetch the related students and their class to minimize database queries
+        # Prefetch the related students and their classes to minimize database queries
         return super().get_queryset().prefetch_related(
             'teacher__current_class'
         ).order_by('user__last_name', 'user__first_name')
@@ -170,26 +169,22 @@ class TeacherStudentCountListView(ListView):
         context = super().get_context_data(**kwargs)
         
         for teacher in context['teachers']:
-            # Get all students related to this teacher (via the related_name 'teacher')
-            students = teacher.teacher.all()
+            # 1. Filter students: Exclude those whose current_class name is "Alumni"
+            active_students = [
+                s for s in teacher.teacher.all() 
+                if s.current_class and s.current_class.name != "Alumni"
+            ]
             
-            # 1. Calculate the Total Count (Used in the 'Total Students' column)
-            teacher.total_student_count = students.count() 
+            # 2. Calculate the Total Count (Excluding Alumni)
+            teacher.total_student_count = len(active_students)
             
-            # 2. Determine the Class Name(s) for the single 'Class' column
+            # 3. Determine the Unique Class Objects excluding "Alumni"
+            unique_classes = {s.current_class for s in active_students}
             
-            # Use a set to get unique Standard objects the students belong to
-            unique_classes = {s.current_class for s in students if s.current_class}
-            
-            # Get the name from each unique class, sort them, and join into a string
-            # This populates the 'Class' column with a comma-separated list
-            class_names = [c.name for c in sorted(list(unique_classes), key=lambda x: x.name)]
-            
-            # Store the joined string as 'assigned_classes'
-            teacher.assigned_classes = ", ".join(class_names)
+            # 4. Create a sorted list of class names for the template badges
+            teacher.class_list = [c.name for c in sorted(list(unique_classes), key=lambda x: x.name)]
             
         return context
-
     
 
 # Teachers Subjects & Classes Assigned

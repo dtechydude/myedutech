@@ -1,108 +1,144 @@
 {% extends 'pages/portal_home.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
+{% block title %}
+<title>Staff Allocation | KwikSchools</title>
+{% endblock title %}
+
+{% block favicon %}
+<link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
+<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+<link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+
+<style>
+    /* Table Styling */
+    .teacher-name { color: #333; font-weight: 600; }
+    .count-badge { font-size: 1.1rem; padding: 0.5em 0.8em; min-width: 45px; display: inline-block; }
+    .table thead th { background-color: #f8f9fa; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 2px solid #eee; }
+    .card-title i { color: #FF6600; margin-right: 10px; } 
+
+    /* FIXED READABILITY BADGE */
+    .assigned-class-badge { 
+        background-color: #ebf2ff !important; /* Soft light blue background */
+        color: #2c5cc5 !important;           /* High-contrast deep blue text */
+        border: 1px solid #c8daff; 
+        padding: 5px 12px; 
+        border-radius: 6px; 
+        font-weight: 600;
+        font-size: 11px;
+        display: inline-block;
+        text-transform: uppercase;
+    }
     
-    {% block title %}
-    <title>Teachers Student Count</title>
-    {% endblock title %}
-    
-    {% block favicon %}
-    <link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
-    <link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
-    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
-    {% endblock favicon %}
+    .staff-id-tag {
+        background: #f4f4f4;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        color: #666;
+    }
+</style>
+{% endblock favicon %}
 
-</head>
-
-<body>
-
-    <div id="preloader">
-        <div class="lds-ripple">
-            <div></div>
-            <div></div>
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="javascript:void(0)">Management</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">Staff Allocation</a></li>
+            </ol>
         </div>
-    </div>
-    <div id="main-wrapper">
 
-        {% block content_body %}
-        <div class="content-body">
-            <div class="container-fluid">              
-                
-                <div class="row">
-                
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title" style="color:orangered;"><i class="fa fa-users" aria-hidden="true"></i><span style="color: blueviolet;"> Form Teacher's Students Count</span> </h4>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table id="example3" class="display" style="min-width: 845px">
-                                        <thead>
-                                            <tr>
-                                                <th>S/N</th>
-                                                <th>Teacher's Name</th>
-                                                <th>Teacher's Phone</th>
-                                                <th>Class</th> <th>Total Students</th>                                 
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {# RENDERED TABLE CONTENT WITH REFACTORED VARIABLES #}
-                                            {% for teacher in teachers %}
-                                                <tr>
-                                                    
-                                                    <td>{{ forloop.counter}} </td>
-                                                    <td><strong>{{ teacher.user.last_name }} </strong>{{ teacher.user.first_name }}</td>
-                                                    <td>{{ teacher.phone_home|default:"N/A" }}</td>
-                                                    
-                                                    <td>
-                                                        {% if teacher.assigned_classes %}
-                                                            <span class="badge badge-secondary">{{ teacher.assigned_classes }}</span>
-                                                        {% else %}
-                                                            -
-                                                        {% endif %}
-                                                    </td>
-                                                    
-                                                    <td><strong>{{ teacher.total_student_count }}</strong></td>
-                                                    
-                                                </tr>
-                                            {% empty %}
-                                                <tr>
-                                                    <td colspan="5" class="text-center text-muted">No teachers found.</td>
-                                                </tr>
-                                            {% endfor %}
-                                            
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header border-0 pb-0 d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">
+                                <i class="fa fa-chalkboard-teacher"></i> 
+                                <span style="color: #002244;">Classroom Assignments</span>
+                            </h4>
+                            <p class="text-muted small mt-1">Live overview of teacher-student distribution (Excluding Alumni).</p>
                         </div>
                     </div>
-
-
-
+                    
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="example3" class="display table table-hover" style="min-width: 845px">
+                                <thead>
+                                    <tr>
+                                        <th>S/N</th>
+                                        <th>Teacher's Name</th>
+                                        <th>Contact Info</th>
+                                        <th>Assigned Classes</th> 
+                                        <th class="text-center">Active Students</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for teacher in teachers %}
+                                    <tr>
+                                        <td class="align-middle"><strong>{{ forloop.counter }}</strong></td>
+                                        <td class="align-middle">
+                                            <div class="d-flex align-items-center">
+                                                <div>
+                                                    <p class="mb-0 teacher-name text-dark">
+                                                        {{ teacher.user.last_name|upper }} {{ teacher.user.first_name }}
+                                                    </p>
+                                                    <span class="staff-id-tag">STAFF ID: {{ teacher.user.username }}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="align-middle">
+                                            <span class="text-primary small">
+                                                <i class="fa fa-phone me-1"></i> {{ teacher.phone_home|default:"N/A" }}
+                                            </span>
+                                        </td>
+                                        <td class="align-middle">
+                                            {% if teacher.class_list %}
+                                                <div class="d-flex flex-wrap gap-1">
+                                                {% for class_name in teacher.class_list %}
+                                                    <span class="badge assigned-class-badge">{{ class_name }}</span>
+                                                {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted small italic">Not Assigned</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <span class="badge badge-lg {% if teacher.total_student_count > 0 %}badge-primary{% else %}badge-light text-muted{% endif %} count-badge">
+                                                {{ teacher.total_student_count }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5">
+                                            <div class="text-muted">
+                                                <i class="fa fa-users-slash mb-3" style="font-size: 3rem; opacity: 0.2;"></i>
+                                                <p>No teacher assignments found.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        {% endblock content_body %}
-        </div>
-    {% block scripts %}
+    </div>
+</div>
+{% endblock content_body %}
+
+{% block scripts %}
     <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
-    <script src="{% static 'pages/vendor/chart.js/Chart.bundle.min.js' %}"></script>
-    <script src="{% static 'pages/vendor/apexchart/apexchart.js' %}"></script>
+    <script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
     
     <script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
     <script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
-
-    <script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
-
+    
     <script src="{% static 'pages/js/custom.min.js' %}"></script>
     <script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
-    <script src="{% static 'pages/js/demo.js' %}"></script>
-    <script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
-    {% endblock scripts %}
-</body>
-</html>
+{% endblock scripts %}

@@ -1,204 +1,134 @@
 {% extends 'pages/portal_home.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    
-	<!-- PAGE TITLE HERE -->
-    {% block title %}
-	<title>Teachers List</title>
-	{% endblock title %}
-	
-	<!-- FAVICONS ICON -->
-    {% block favicon %}
-    <!-- Datatable -->
-    <link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
-    <!-- Custom Stylesheet -->
-	<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
-    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
-    {% endblock favicon %}
+{% block title %}
+<title>Staff Assignments | KwikSchools</title>
+{% endblock title %}
 
-</head>
+{% block favicon %}
+<link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
+<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+<link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+<style>
+    /* Custom styles to enhance readability */
+    .subject-badge {
+        background-color: #ebf2ff !important;
+        color: #2c5cc5 !important;
+        border: 1px solid #c8daff;
+        font-weight: 500;
+        margin: 2px;
+    }
+    .class-badge {
+        background-color: #fff4eb !important;
+        color: #ff6600 !important;
+        border: 1px solid #ffd8bc;
+        font-weight: 500;
+        margin: 2px;
+    }
+    .teacher-name-link {
+        font-weight: 600;
+        color: #002244;
+        transition: 0.3s;
+    }
+    .teacher-name-link:hover {
+        color: #ff6600;
+    }
+    .table thead th {
+        background-color: #f8f9fa;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.5px;
+    }
+</style>
+{% endblock favicon %}
 
-<body>
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="javascript:void(0)">Staff</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">Assignments</a></li>
+            </ol>
+        </div>
 
-    <!--*******************
-        Preloader start
-    ********************-->
-   <div id="preloader">
-		<div class="lds-ripple">
-			<div></div>
-			<div></div>
-		</div>
-    </div>
-    <!--*******************
-        Preloader end
-    ********************-->
-
-
-    <!--**********************************
-        Main wrapper start
-    ***********************************-->
-    <div id="main-wrapper">
-
-        <!--**********************************
-            Nav header start
-        ***********************************-->
-		
-        <!--**********************************
-            Nav header end
-        ***********************************-->
-		
-		<!--**********************************
-            Chat box start
-        ***********************************-->
-		
-		<!--**********************************
-            Chat box End
-        ***********************************-->
-
-		
-        <!--**********************************
-            Header start
-        ***********************************-->
-       
-        <!--**********************************
-            Header end ti-comment-alt
-        ***********************************-->
-
-        <!--**********************************
-            Sidebar start
-        ***********************************-->
-      
-        <!--**********************************
-            Sidebar end
-        ***********************************-->
-
-        <!--**********************************
-            Content body start
-        ***********************************-->
-        {% block content_body %}
-        <div class="content-body">
-            <div class="container-fluid">		
-			                
-                <!-- row -->
-
-                <div class="row">
-                
-					<div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title" style="color:orangered;">Teachers Subjects & Class Assigned </h4>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table id="example3" class="display" style="min-width: 845px">
-                                        <thead>
-                                            <tr>
-                                                <th>S/N</th>
-                                                 <th>Teacher Name</th>
-                                                <th>Subjects Taught</th>
-                                                <th>Standards Assigned</th> 
-                                                <th>Action</th>                                            
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for teacher in teachers %}
-                                            <tr>
-                                                <td>{{ forloop.counter }}</td>
-												<td><a href="{% url 'staff:teacher_profile' teacher.id %}"> {{ teacher.get_full_name }}
-                                                    </a>
-                                                </td>
-                                                <td>
-                                                     {% if teacher.subjects_taught.all %}
-                                                <ul>
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header border-0 pb-0">
+                        <h4 class="card-title">
+                            <i class="fa fa-book-reader me-2" style="color: #ff6600;"></i>
+                            <span style="color: #002244;">Staff Subjects & Class Assignments</span>
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="example3" class="display table table-hover" style="min-width: 845px">
+                                <thead>
+                                    <tr>
+                                        <th>S/N</th>
+                                        <th>Teacher Name</th>
+                                        <th>Subjects Taught</th>
+                                        <th>Standards Assigned</th>
+                                        <th class="text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for teacher in teachers %}
+                                    <tr>
+                                        <td class="align-middle"><strong>{{ forloop.counter }}</strong></td>
+                                        <td class="align-middle">
+                                            <a href="{% url 'staff:teacher_profile' teacher.id %}" class="teacher-name-link">
+                                                {{ teacher.get_full_name|upper }}
+                                            </a>
+                                        </td>
+                                        <td class="align-middle">
+                                            {% if teacher.subjects_taught.all %}
+                                                <div class="d-flex flex-wrap">
                                                     {% for subject in teacher.subjects_taught.all %}
-                                                        <li>{{ subject.name }}</li>
+                                                        <span class="badge subject-badge">{{ subject.name }}</span>
                                                     {% endfor %}
-                                                </ul>
-                                                {% else %}
-                                                <p>No subjects have been assigned to this teacher.</p>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted small italic">No subjects assigned</span>
                                             {% endif %}
-                                                </td>
-
-                                                <td>
-                                                     {% if teacher.standards_assigned.all %}
-                                                    <ul>
-                                                        {% for standard in teacher.standards_assigned.all %}
-                                                            <li>{{ standard.name }}</li>
-                                                        {% endfor %}
-                                                    </ul>
-                                                {% else %}
-                                                    <p>No classes have been assigned to this teacher.</p>
-                                                {% endif %}
-                                                </td> 
-                                                <td> <a href="{% url 'staff:teacher_profile' teacher.id %}"><strong> View Details</strong></a>
-                                                </td>                                          
-                                                                                
-                                                {% endfor %}
-                                            </tr>                                                                                    
-                                         
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                                        </td>
+                                        <td class="align-middle">
+                                            {% if teacher.standards_assigned.all %}
+                                                <div class="d-flex flex-wrap">
+                                                    {% for standard in teacher.standards_assigned.all %}
+                                                        <span class="badge class-badge">{{ standard.name }}</span>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted small italic">No classes assigned</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="align-middle text-end">
+                                            <a href="{% url 'staff:teacher_profile' teacher.id %}" class="btn btn-outline-primary btn-xs shadow-sm">
+                                                <i class="fa fa-eye me-1"></i> Details
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-
-
-
-				</div>
+                </div>
             </div>
         </div>
-        {% endblock content_body %}
-        <!--**********************************
-            Content body end
-        ***********************************-->
-
-
-        <!--**********************************
-            Footer start
-        ***********************************-->
-       
-        <!--**********************************
-            Footer end
-        ***********************************-->
-
-        <!--**********************************
-           Support ticket button start
-        ***********************************-->
-
-        <!--**********************************
-           Support ticket button end
-        ***********************************-->
-
-        
     </div>
-    <!--**********************************
-        Main wrapper end
-    ***********************************-->
+</div>
+{% endblock content_body %}
 
-    <!--**********************************
-        Scripts
-    ***********************************-->
-    <!-- Required vendors -->
-    {% block scripts %}
+{% block scripts %}
     <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
-    <script src="{% static 'pages/vendor/chart.js/Chart.bundle.min.js' %}"></script>
-	<!-- Apex Chart -->
-	<script src="{% static 'pages/vendor/apexchart/apexchart.js' %}"></script>
-	
-    <!-- Datatable -->
+    <script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
+
     <script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
     <script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
 
-	<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
-
     <script src="{% static 'pages/js/custom.min.js' %}"></script>
-	<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
-	<script src="{% static 'pages/js/demo.js' %}"></script>
-    <script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
-    {% endblock scripts %}
-</body>
-</html>
+    <script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+{% endblock scripts %}

@@ -343,37 +343,43 @@ def hostel_list(request):
     return render(request, 'students/hostel_list.html', context)
     
 
-
-# Student Search Query App
+# SEARCH STUDENT RECORD
 def student_search_list(request):
-    student = Student.objects.all()
-    
-     # PAGINATOR METHOD
+    # Base queryset - using select_related for performance (database optimization)
+    query = request.GET.get('search', '').strip()
+    student_list = Student.objects.select_related('current_class', 'user').all()
+
+    # Apply search filters if a query exists
+    if query:
+        student_list = student_list.filter(
+            Q(first_name__icontains=query) | 
+            Q(last_name__icontains=query) | 
+            Q(current_class__name__icontains=query) | 
+            Q(guardian_name__icontains=query) | 
+            Q(user__username__icontains=query) | 
+            Q(USN__icontains=query)
+        ).distinct()
+
+    # Pagination logic
     page = request.GET.get('page', 1)
-    paginator = Paginator(student, 30)
+    paginator = Paginator(student_list, 20) # 20 is usually better for mobile/web balance
+    
     try:
-        student = paginator.page(page)
+        students = paginator.page(page)
     except PageNotAnInteger:
-        student = paginator.page(1)
+        students = paginator.page(1)
     except EmptyPage:
-        student = paginator.page(paginator.num_pages)
+        students = paginator.page(paginator.num_pages)
 
-    return render(request, 'students/search_student_list.html', {'student': student })
+    context = {
+        'students': students,
+        'query': query,
+        'is_search': bool(query)
+    }
+    
+    return render(request, 'students/search_student_list.html', context)
 
-# Define function to search student
-def search(request):
-    results = []
 
-    if request.method == "GET":
-        query = request.GET.get('search')
-
-        if query == '':
-            query = 'None'
-
-        results = Student.objects.filter(Q(first_name__icontains=query) | Q(last_name__icontains=query) | Q(current_class__name__icontains=query) | Q(guardian_name__icontains=query) | Q(user__username__icontains=query) | Q(USN__icontains=query))
-        # results = Student.objects.filter(Q(full_name__icontains=query))
-        
-    return render(request, 'students/search.html', {'query': query, 'results': results})
 
 #count students in each class
 @login_required

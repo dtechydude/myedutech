@@ -39,7 +39,7 @@ urlpatterns = [
 
     # path('create-student-profile/', views.create_student_profile, name='create_student_profile'), # Example
     # Search student detail app
-    path('search/', students_views.search, name='search'),
+    # path('search/', students_views.search, name='search'),
     path('student_search_list/', students_views.student_search_list, name='student_search_list'),
     
     path('my-detail/', StudentSelfDetailView.as_view(), name="student-self-detail"),

@@ -1,121 +1,165 @@
 {% extends 'pages/portal_home.html' %}
 {% load static %}
 
-{% block title %}
-<title>Student Search</title>
-{% endblock title %}
-
-{% block head %}
-<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
-<link href="{% static 'pages/vendor/lightgallery/css/lightgallery.min.css' %}" rel="stylesheet">
-<link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
-{% endblock %}
+{% block title %}<title>Student Search | KwikSchools</title>{% endblock %}
 
 {% block content_body %}
 <div class="content-body">
     <div class="container-fluid">
-        <div class="row page-titles">
+        <div class="row page-titles mb-3">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item active"><a href="javascript:void(0)">Students Search</a></li>
+                <li class="breadcrumb-item"><a href="javascript:void(0)">Students</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">Search Portal</a></li>
             </ol>
         </div>
-        
-        <div class="row">
-            <div class="col-lg-12">
+
+        <div class="row justify-content-center">
+            <div class="col-xl-11">
                 {% if user.is_authenticated and user.is_superuser or user.is_staff or user.teacher %}
-                <div class="card">
-                    <div class="card-header">
-                        <h4 class="card-title">Search Students</h4>
-                        <p class="text-muted mb-0">Use the search form to filter for students by: <em>first name, last name, teacher's name or current class.</em></p>
-                    </div>
-                    <div class="card-body">
-                        <form action="{% url 'students:search' %}" class="form-inline d-flex align-items-center mb-4" method="get">
-                            <div class="form-group flex-grow-1 me-3">
-                                <label for="search-input" class="sr-only">Search</label>
-                                <input name="search" type="text" class="form-control" id="search-input" placeholder="Keyword" value="{{ request.GET.search }}">
-                            </div>
-                            <div class="form-group">
-                                <button type="submit" class="btn btn-primary btn-md">
-                                    <i class="fas fa-search me-2"></i>Search
-                                </button>
-                            </div>
-                        </form>
+                
+                <div class="text-center {% if is_search %}mb-3{% else %}mt-5 mb-4{% endif %}">
+                    <h3 class="font-w600 mb-2">Student Directory Search</h3>
+                    {% if not is_search %}
+                        <p class="text-muted">Enter a student's name, USN, or class to retrieve their records.</p>
+                    {% endif %}
+                    
+                    <div class="row justify-content-center">
+                        <div class="col-md-8 col-lg-7">
+                            <form method="get" action="{% url 'students:student_search_list' %}">
+                                <div class="input-group shadow-sm custom-search-group">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i class="fa fa-search text-primary"></i>
+                                    </span>
+                                    <input name="search" type="text" 
+                                           class="form-control border-start-0 ps-0 form-control-lg" 
+                                           placeholder="e.g. 'John Doe' or 'JS1 Gold'" 
+                                           value="{{ query }}" 
+                                           autocomplete="off" required>
+                                    <button type="submit" class="btn btn-primary btn-lg px-4">Search</button>
+                                </div>
+                                {% if is_search %}
+                                    <div class="mt-2">
+                                        <a href="{% url 'students:student_search_list' %}" class="text-danger small font-w500">
+                                            <i class="fas fa-times-circle me-1"></i>Reset and Show All
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </form>
+                        </div>
                     </div>
                 </div>
 
-                <!-- <div class="card">
-                    <div class="card-header">
-                        <h4 class="card-title">Search Results</h4>
-                    </div> -->
-                    <div class="card-body">
+                {% if is_search %}
+                <div class="card shadow-sm">
+                    <div class="card-header border-0 pb-0 d-flex justify-content-between align-items-center">
+                        <h4 class="card-title text-black">Matches for "{{ query }}"</h4>
+                        <span class="badge light badge-primary">{{ students.paginator.count }} Found</span>
+                    </div>
+                    <div class="card-body pt-2">
                         {% if students %}
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>USN</th>
-                                        <th>Student Name</th>
-                                        <th>Class</th>
-                                        <th>Current Teacher</th>
-                                        <th>Actions</th>
+                            <table class="table table-hover mb-0">
+                                <thead class="bg-light">
+                                    <tr style="font-size: 11px; letter-spacing: 0.5px;" class="text-uppercase">
+                                        <th class="py-2">USN</th>
+                                        <th class="py-2">Student</th>
+                                        <th class="py-2 text-center">Class</th>
+                                        <th class="py-2">Guardian</th>
+                                        <th class="py-2 text-end">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for student in students %}
                                     <tr>
-                                        <td>{{ student.USN }}</td>
-                                        <td>{{ student.first_name }} {{ student.last_name }}</td>
-                                        <td>{{ student.current_class|default:"N/A" }}</td>
-                                        <td>{{ student.teacher|default:"N/A" }}</td>
-                                        <td>
-                                            <a href="{% url 'students:student_detail' student.id %}" class="btn btn-sm btn-info">View</a>
+                                        <td class="align-middle"><strong>{{ student.USN }}</strong></td>
+                                        <td class="align-middle">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-container me-2">
+                                                    <img src="{{ student.user.profile.image_url }}" 
+                                                         class="rounded-circle" width="30" height="30" style="object-fit: cover;">
+                                                </div>
+                                                <span class="text-black font-w500">{{ student.first_name }} {{ student.last_name }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <span class="badge light badge-info">{{ student.current_class|default:"N/A" }}</span>
+                                        </td>
+                                        <td class="align-middle text-muted small">{{ student.guardian_name|default:"---" }}</td>
+                                        <td class="text-end align-middle">
+                                            <a href="{% url 'students:student-detail' student.USN %}" class="btn btn-primary btn-xs px-2">
+                                                <i class="fas fa-eye me-1"></i> Profile
+                                            </a>
                                         </td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
+
+                        {% if students.has_other_pages %}
+                        <div class="d-flex justify-content-center mt-3">
+                            <nav>
+                                <ul class="pagination pagination-xs pagination-gutter pagination-primary mb-0">
+                                    {% if students.has_previous %}
+                                        <li class="page-item"><a class="page-link" href="?page={{ students.previous_page_number }}&search={{ query }}"><i class="la la-angle-left"></i></a></li>
+                                    {% endif %}
+                                    <li class="page-item active"><a class="page-link" href="#">{{ students.number }}</a></li>
+                                    {% if students.has_next %}
+                                        <li class="page-item"><a class="page-link" href="?page={{ students.next_page_number }}&search={{ query }}"><i class="la la-angle-right"></i></a></li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                        {% endif %}
+
                         {% else %}
-                        <p class="text-center text-muted">No students found matching your search criteria.</p>
+                        <div class="text-center py-5">
+                            <i class="fa fa-user-slash text-light mb-3" style="font-size: 50px;"></i>
+                            <h5 class="text-muted">No students found matching your search.</h5>
+                        </div>
                         {% endif %}
                     </div>
                 </div>
-
-                {% if students.has_other_pages %}
-                <div class="d-flex justify-content-center mt-4">
-                    <nav>
-                        <ul class="pagination">
-                            {% if students.has_previous %}
-                                <li class="page-item"><a class="page-link" href="?page={{ students.previous_page_number }}&search={{ request.GET.search }}">&laquo; Previous</a></li>
-                            {% else %}
-                                <li class="page-item disabled"><span class="page-link">&laquo; Previous</span></li>
-                            {% endif %}
-                            
-                            {% for i in students.paginator.page_range %}
-                                {% if students.number == i %}
-                                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
-                                {% else %}
-                                    <li class="page-item"><a class="page-link" href="?page={{ i }}&search={{ request.GET.search }}">{{ i }}</a></li>
-                                {% endif %}
-                            {% endfor %}
-                            
-                            {% if students.has_next %}
-                                <li class="page-item"><a class="page-link" href="?page={{ students.next_page_number }}&search={{ request.GET.search }}">Next &raquo;</a></li>
-                            {% else %}
-                                <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
-                            {% endif %}
-                        </ul>
-                    </nav>
+                {% else %}
+                <div class="text-center mt-4 opacity-50">
+                    <i class="fas fa-search mb-3" style="font-size: 60px; color: #dee2e6;"></i>
+                    <p class="text-muted">Enter search criteria above to display results.</p>
                 </div>
                 {% endif %}
-                
+
                 {% else %}
-                <div class="alert alert-warning">
-                    You do not have permission to view this page.
+                <div class="alert alert-danger light">
+                    <strong>Access Denied!</strong> Insufficient permissions.
                 </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
-{% endblock content_body %}
+
+<style>
+    .custom-search-group {
+        border-radius: 50px;
+        overflow: hidden;
+        border: 1px solid #e2e2e2;
+        background: #fff;
+    }
+    .custom-search-group input {
+        border: none !important;
+    }
+    .custom-search-group .input-group-text {
+        border: none !important;
+        padding-left: 20px;
+    }
+    .avatar-container {
+        width: 30px;
+        height: 30px;
+        background: #f8f9fa;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #eee;
+    }
+</style>
+{% endblock %}
