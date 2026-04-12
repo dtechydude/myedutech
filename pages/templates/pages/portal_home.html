@@ -410,9 +410,10 @@
 							
 							{% if user.is_superuser or user.is_staff %}
 							<li><a href="/admin/" target="_blank">Main Settings (ADMIN PANEL)</a></li>
-							<li><a href="{% url 'events:event_new' %}">Add New Event</a></li>							
 							<li><a href="{% url 'all_users' %}">All Registered Users</a></li>
 							<li><a href="{% url 'students:student_search_list' %}">Search Students</a></li>
+							<li><a href="{% url 'events:event_new' %}">Add New Event</a></li>							
+
 
 							{% endif %}		
 	
@@ -540,10 +541,10 @@
 							<li><a href="{% url 'staff:teacher-list' %}">All Teachers</a></li>
 							<li><a href="{% url 'staff:assign_form_teacher' %}">Assign FormTeacher To Class</a></li> 
 							{% comment %} <li><a href="{% url 'staff:assign_form_teacher_to_classgroup' %}">Assign FormTeacher To CLASSGROUP</a></li> {% endcomment %}
-							<li><a href="{% url 'staff:teacher_assignments' %}">Teachers Allocation</a></li>
+							<li><a href="{% url 'staff:teacher_assignments' %}">Subj/Classes Allocation List</a></li>
 							<li><a href="{% url 'staff:cbv_all_teachers_student_counts' %}">Form Teachers</a></li>
-							<li><a href="{% url 'curriculum:form_teachers_head' %}">FormTeachers List</a></li>
-							<li><a href="{% url 'curriculum:classgroup_form_teachers' %}">ClassGroup FormTeachers</a></li>
+							{% comment %} <li><a href="{% url 'curriculum:form_teachers_head' %}">FormTeachers List</a></li> {% endcomment %}
+							{% comment %} <li><a href="{% url 'curriculum:classgroup_form_teachers' %}">ClassGroup FormTeachers</a></li> {% endcomment %}
 
 						</ul>
 					</li>
