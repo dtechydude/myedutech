@@ -120,7 +120,7 @@
                                                 <td><a href="{% url 'students:student-detail' s.USN %}">{{ s.USN }}</a></td>
                                                 <td><a href="{% url 'students:student-detail' s.USN %}"><strong>{{ s.last_name }} </strong> {{ s.first_name }} {% if s.middle_name %} {{ s.middle_name }} {% endif%}</a></td>
                                                 <td>{{ s.current_class }}</td>
-                                                <td>{{ s.gender }}</td>
+                                                <td>{{ s.gender|upper }}</td>
                                                 <!-- <td>M.COM., P.H.D.</td> -->
                                                 <td><strong>{{ s.guardian_phone }}</strong></a></td>
                                                 <td>{{ s.date_admitted }}</td>
