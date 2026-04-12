@@ -73,21 +73,24 @@
                 {% endfor %}
             </select>
         </div>
-
-        <div class="col-md-2 col-sm-6">
-            <label class="form-label">Graduation Year</label>
-            <select name="year" class="form-select">
-                <option value="">All Years</option>
-                {% for y in years %}
-                    <option value="{{ y|stringformat:'s' }}"
-                        {% if request.GET.year == y|stringformat:"s" %}
-                            selected
-                        {% endif %}>
-                        {{ y }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
+        
+                <div class="col-md-2 col-sm-6">
+                <label class="form-label">Graduation Year</label>
+                <select name="year" class="form-select">
+                    <option value="">All Years</option>
+                    {% load l10n %}  {# Load the l10n library if it's not already loaded #}
+                    {% for y in years %}
+                        {% with year_str=y|unlocalize %}
+                            <option value="{{ year_str }}"
+                                {% if request.GET.year == year_str %}
+                                    selected
+                                {% endif %}>
+                                {{ year_str }}
+                            </option>
+                        {% endwith %}
+                    {% endfor %}
+                </select>
+            </div>
 
         <div class="col-md-4 col-sm-12">
             <label class="form-label">Search</label>

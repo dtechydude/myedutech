@@ -379,7 +379,7 @@ def search(request):
 @login_required
 def student_in_class(request):
     students = Student.objects.all()
-    student_no = Student.objects.filter().order_by('current_class').values('current_class__name').annotate(count=Count('current_class__name'))
+    student_no = Student.objects.exclude(current_class__name="Alumni").order_by('current_class').values('current_class__name').annotate(count=Count('current_class__name'))
 
     try:
         num_inclass = Student.objects.filter(standard__name = request.user.student.standard).count()

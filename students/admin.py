@@ -245,3 +245,4 @@ class GraduationRecordAdmin(ImportExportModelAdmin):
     list_display = ('student', 'session', 'graduated_class', 'date_graduated')
     list_filter = ('session', 'graduated_class', 'date_graduated')
     search_fields = ('student__first_name', 'student__last_name', 'student__USN')
+    raw_id_fields = ['student',]
