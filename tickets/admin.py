@@ -8,8 +8,11 @@ class TicketAdmin(ImportExportModelAdmin):
     list_display = ['id', 'title', 'author', 'status', 'priority', 'created_at']
     list_filter = ['status', 'priority', 'category', 'created_at']
     search_fields = ['title', 'description', 'author__username']
+    autocomplete_fields = ['assigned_to', 'author']
+
 
 @admin.register(Comment)
 class CommentAdmin(ImportExportModelAdmin):
     list_display = ['id', 'ticket', 'author', 'created_at']
     search_fields = ['text']
+    autocomplete_fields = ['author']

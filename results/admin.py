@@ -193,6 +193,8 @@ class SessionResultStatusAdmin(admin.ModelAdmin):
     list_filter = ['session', 'student__current_class', 'is_published']
     search_fields = ['student__first_name', 'student__last_name', 'student__admission_number']
     list_editable = ['is_published'] # Edit checkboxes directly from the list!
+    raw_id_fields = ('student',)
+
     
     # Helper to show the class in the list
     def get_class(self, obj):
