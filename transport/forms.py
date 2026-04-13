@@ -2,6 +2,8 @@
 from django import forms
 from .models import StudentOnRoute , BusPayment
 from students.models import Student
+from curriculum.models import Session, Term
+
 
 class StudentOnRouteForm(forms.ModelForm):
     class Meta:
@@ -18,64 +20,98 @@ class StudentBusCreateForm(forms.ModelForm):
 
 
 
+#===========================================================================
+
 class BusEnrollmentForm(forms.ModelForm):
-    """
-    Form to handle a student's one-time enrollment on a bus route.
-    """
+    # Searchable field for Admin
+    student_search = forms.CharField(
+        label="Search Student",
+        required=False,
+        widget=forms.TextInput(attrs={
+            'list': 'student-list', 
+            'placeholder': 'Type Name or ID...',
+            'class': 'form-control'
+        })
+    )
+
     class Meta:
         model = StudentOnRoute
         fields = ['student', 'route', 'term', 'session']
-        
+
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
         
-        # If the user is a regular student, lock the student field to their own account.
-        if self.request and not self.request.user.is_staff:
-            try:
-                # Retrieve the student object related to the logged-in user
-                current_student = Student.objects.get(user=self.request.user)
+        # 1. Fetch Current Academic Data
+        current_session = Session.objects.filter(is_current=True).first()
+        current_term = Term.objects.filter(is_current=True).first()
+
+        # 2. Styling and Pre-fills
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control'})
+            if field_name == 'session' and current_session:
+                self.initial['session'] = current_session
+            if field_name == 'term' and current_term:
+                self.initial['term'] = current_term
+
+        # 3. User-Specific Logic
+        if self.request:
+            user = self.request.user
+            is_admin = user.is_staff or user.is_superuser
+
+            if not is_admin:
+                # Student View: Hide search, lock ID, lock Term/Session
+                self.fields['student_search'].widget = forms.HiddenInput()
+                current_student = Student.objects.filter(user=user).first()
+                if current_student:
+                    self.fields['student'].queryset = Student.objects.filter(pk=current_student.pk)
+                    self.initial['student'] = current_student
+                    self.fields['student'].widget = forms.HiddenInput()
                 
-                # Set the queryset for the 'student' field to only include the current student.
-                # This ensures the form can only be submitted with this student.
-                self.fields['student'].queryset = Student.objects.filter(pk=current_student.pk)
-                
-                # Pre-select the student and make the field read-only or hidden.
-                self.initial['student'] = current_student
-                self.fields['student'].disabled = True
-            except Student.DoesNotExist:
-                # Handle the case where the user is not a student
-                pass
+                if current_session:
+                    self.fields['session'].queryset = Session.objects.filter(pk=current_session.pk)
+                    self.fields['session'].disabled = True
+                if current_term:
+                    self.fields['term'].queryset = Term.objects.filter(pk=current_term.pk)
+                    self.fields['term'].disabled = True
+            else:
+                # Admin View: Hide the actual student ID field (handled by search)
+                self.fields['student'].widget = forms.HiddenInput()
+                self.all_students = Student.objects.all().order_by('last_name')
 
     def clean(self):
         cleaned_data = super().clean()
         
-        # If the student field was disabled, retrieve its value from the initial data
-        if self.request and not self.request.user.is_staff and 'student' not in cleaned_data:
-            try:
-                cleaned_data['student'] = Student.objects.get(user=self.request.user)
-            except Student.DoesNotExist:
-                raise forms.ValidationError("Student record not found.")
+        # Recovery for disabled fields for students
+        if self.request and not (self.request.user.is_staff or self.request.user.is_superuser):
+            for field in ['student', 'term', 'session']:
+                if field not in cleaned_data:
+                    cleaned_data[field] = self.initial.get(field)
 
         student = cleaned_data.get('student')
         route = cleaned_data.get('route')
         term = cleaned_data.get('term')
         session = cleaned_data.get('session')
-        
-        # Validate that all required fields are present
-        if not all([student, route, term, session]):
-            raise forms.ValidationError("All fields are required for enrollment.")
-        
-        # Check for existing enrollment to prevent duplicates
-        if StudentOnRoute.objects.filter(student=student, route=route, term=term, session=session).exists():
-            raise forms.ValidationError("This student is already signed up for this bus route for the selected term and session.")
+
+        # Duplicate Check
+        if all([student, route, term, session]):
+            exists = StudentOnRoute.objects.filter(
+                student=student, route=route, term=term, session=session
+            ).exclude(pk=self.instance.pk if self.instance else None).exists()
+
+            if exists:
+                raise forms.ValidationError(f"{student.get_full_name()} is already enrolled for this route/term.")
         
         return cleaned_data
+
+#==================================================================================
+
 
 class BusPaymentForm(forms.ModelForm):
     class Meta:
         model = BusPayment
-        fields = ('enrollment', 'amount_paid', 'payment_date', 'payment_method', 'short_note') 
+        # Remove 'enrollment' from the fields list so it doesn't show up in the box
+        fields = ('amount_paid', 'payment_date', 'payment_method', 'short_note') 
         labels = {
             'short_note': 'Payment Notes',
         }

@@ -1,218 +1,93 @@
 {% extends 'pages/portal_home.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    
-	<!-- PAGE TITLE HERE -->
-    {% block title %}
-	<title>Students On Bus</title>
-	{% endblock title %}
-	
-	<!-- FAVICONS ICON -->
-    {% block favicon %}
-	<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
-    <!-- Datatable -->
-    <link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
-    <!-- Custom Stylesheet -->
-	<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
-    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
-    {% endblock favicon %}
+{% block title %}<title>Bus Registry | KwikSchools</title>{% endblock %}
 
-</head>
+{% block favicon %}
+<link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
+<link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+<style>
+    .fin-text { font-size: 0.8rem; font-weight: 600; }
+    .text-paid { color: #2ecc71; }
+    .text-debt { color: #e74c3c; }
+</style>
+{% endblock %}
 
-<body>
-
-    <!--*******************
-        Preloader start
-    ********************-->
-   <div id="preloader">
-		<div class="lds-ripple">
-			<div></div>
-			<div></div>
-		</div>
-    </div>
-    <!--*******************
-        Preloader end
-    ********************-->
-
-
-    <!--**********************************
-        Main wrapper start
-    ***********************************-->
-    <div id="main-wrapper">
-
-        <!--**********************************
-            Nav header start
-        ***********************************-->
-		
-        <!--**********************************
-            Nav header end
-        ***********************************-->
-		
-		<!--**********************************
-            Chat box start
-        ***********************************-->
-		
-		<!--**********************************
-            Chat box End
-        ***********************************-->
-
-		
-        <!--**********************************
-            Header start
-        ***********************************-->
-       
-        <!--**********************************
-            Header end ti-comment-alt
-        ***********************************-->
-
-        <!--**********************************
-            Sidebar start
-        ***********************************-->
-      
-        <!--**********************************
-            Sidebar end
-        ***********************************-->
-
-        <!--**********************************
-            Content body start
-        ***********************************-->
-        {% block content_body %}
-        <div class="content-body">
-            <div class="container-fluid">				
-                
-                <!-- row -->
-                <div class="row">                
-					<div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title" style="color:orangered;"><i class="fa fa-bus" aria-hidden="true"></i> - Students On Bus </h4>
-                            </div>
-                            <div class="card-body">
-                                 {% if student_signups %}
-                                <div class="table-responsive">
-                                    <table id="example3" class="display" style="min-width: 845px">
-                                        <thead>
-                                            <tr>
-                                                <th>#</th>
-                                                <th>Student Name</th>
-                                                <th>Grade/Class</th>
-                                                <th>Bus Route</th>
-                                                <th>Sign-up Date</th> 
-                                                <th>Amount Paid</th> 
-                                                <th>Balance Due</th> 
-                                                <th>Status</th>                                              
-                                                
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for signup in student_signups %}
-                                                {% if signup.is_active_on_bus == True %}
-                                        
-                                            <tr>
-                                               <td>{{ forloop.counter }}</td>
-                                                <td>{% if signup.student %}
-                                                    {{ signup.student.first_name }} {{ signup.student.last_name }}                                                    {% else %}
-                                                    N/A (Student Deleted)
-                                                    {% endif %}
-                                                    </td>
-                                                     <td>{% if signup.student %}
-                                                    {{ signup.student.student.current_class }} 
-                                                    {% else %}
-                                                    N/A (Student Deleted)
-                                                    {% endif %}
-                                                    </td>
-                                                    <td>
-                                                    {% if signup.route %}
-                                                    {{ signup.route.name }}
-                                                    {% else %}
-                                                    N/A (Route Deleted)
-                                                    {% endif %}
-                                                    </td>                                                                                                 
-                                            
-                                                    <td>{{ signup.signup_date| date:"d/m/Y" }}</td>                                                    
-                                                    <td>                                                   
-                                                    <strong>{{ signup.amount_paid }} </strong>                                                   
-                                                    </td> 
-                                                      <td>                                                  
-                                                    {{ signup.balance_payment }}
-                                                    </td> 
-                                                    <td>
-                                                    {% if signup.is_approved %}
-                                                    <span style="color: green;">Approved</span>
-                                                    {% else %}
-                                                   <span style="color: red;">Pending</span>
-                                                    {% endif %}
-                                                    </td>
-                                                {% endif %}    
-                                                {% endfor %}
-                                            </tr>   
-                                                                              
-                                                                                   
-                                        </tbody>
-                                    </table>
-                                </div>
-                                {% else %}
-                                <div class="alert alert-info" role="alert">
-                                    No students currently signed up for bus routes.
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header border-0 pb-0 d-flex justify-content-between">
+                        <h4 class="card-title" style="color: #ff4500;">
+                            <i class="fa fa-bus-alt me-2"></i> Students Transport Registry
+                        </h4>
+                        <a href="{% url 'transport:signup' %}" class="btn btn-primary btn-sm rounded shadow-sm">
+                            + New Enrollment
+                        </a>
                     </div>
-				</div>
+                    <div class="card-body">
+                        {% if student_signups %}
+                        <div class="table-responsive">
+                            <table id="example3" class="display table-hover" style="min-width: 845px">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Student</th>
+                                        <th>Route</th>
+                                        <th>Term/Session</th>
+                                        <th>Financials</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for signup in student_signups %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>
+                                            <span class="font-w600 text-dark">{{ signup.student.get_full_name|upper }}</span><br>
+                                            <small class="text-muted">{{ signup.student.student_id }}</small>
+                                        </td>
+                                        <td><span class="badge light badge-primary">{{ signup.route.name }}</span></td>
+                                        <td>{{ signup.term.name }} <br> <small>{{ signup.session.name }}</small></td>
+                                        <td>
+                                            <div class="fin-text text-paid">Paid: ₦{{ signup.amount_paid|default:"0" }}</div>
+                                            <div class="fin-text text-debt">Bal: ₦{{ signup.balance_payment|default:"0" }}</div>
+                                        </td>
+                                        <td>
+                                            {% if signup.is_active %}
+                                                <span class="badge badge-success badge-xs">Active</span>
+                                            {% else %}
+                                                <span class="badge badge-danger badge-xs">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="#" class="btn btn-info btn-xs sharp me-1"><i class="fa fa-eye"></i></a>
+                                            <a href="#" class="btn btn-danger btn-xs sharp"><i class="fa fa-trash"></i></a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <h5 class="text-muted">No transport enrollments found.</h5>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
-        {% endblock content_body %}
-        <!--**********************************
-            Content body end
-        ***********************************-->
-
-
-        <!--**********************************
-            Footer start
-        ***********************************-->
-       
-        <!--**********************************
-            Footer end
-        ***********************************-->
-
-        <!--**********************************
-           Support ticket button start
-        ***********************************-->
-
-        <!--**********************************
-           Support ticket button end
-        ***********************************-->
-
-        
     </div>
-    <!--**********************************
-        Main wrapper end
-    ***********************************-->
+</div>
+{% endblock %}
 
-    <!--**********************************
-        Scripts
-    ***********************************-->
-    <!-- Required vendors -->
-    {% block scripts %}
-    <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
-    <script src="{% static 'pages/vendor/chart.js/Chart.bundle.min.js' %}"></script>
-	<!-- Apex Chart -->
-	<script src="{% static 'pages/vendor/apexchart/apexchart.js' %}"></script>
-	
-    <!-- Datatable -->
-    <script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
-    <script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
-
-	<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
-
-    <script src="{% static 'pages/js/custom.min.js' %}"></script>
-	<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
-	<script src="{% static 'pages/js/demo.js' %}"></script>
-    <script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
-    {% endblock scripts %}
-</body>
-</html>
+{% block scripts %}
+<script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+<script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
+<script src="{% static 'pages/js/custom.min.js' %}"></script>
+{% endblock %}

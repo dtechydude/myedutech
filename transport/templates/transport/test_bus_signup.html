@@ -1,80 +1,109 @@
 {% extends 'pages/portal_home.html' %}
 {% load static %}
-{% load crispy_forms_tags %}
 
-{% block title %}
-<title>Bus Route Enrollment</title>
-{% endblock title %}
-
-{% block head %}
-<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-    .form-icon {
-        font-size: 2rem;
-        color: #007bff;
-    }
-    .card-footer-text {
-        color: #6c757d;
-        font-style: italic;
-    }
-</style>
-{% endblock head %}
+{% block title %}<title> {{ school_info.name }} |Bus Enrollment</title>{% endblock %}
 
 {% block content_body %}
 <div class="content-body">
     <div class="container-fluid">
         <div class="row page-titles">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="#">Bus Enrollment</a></li>
+                <li class="breadcrumb-item"><a href="#">Home</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">Bus Enrollment</a></li>
             </ol>
         </div>
 
         <div class="row justify-content-center">
-            <div class="col-lg-8 col-md-10 mb-4">
+            <div class="col-xl-8 col-lg-10">
                 <div class="card shadow-sm border-0">
-                    <div class="card-header bg-primary text-white text-center">
-                        <h4 class="card-title text-white mb-0">🚌 Bus Route Enrollment</h4>
+                    <div class="card-header bg-primary">
+                        <h4 class="card-title text-white mb-0">🚌 New Bus Subscription</h4>
                     </div>
                     <div class="card-body">
-                        {% if messages %}
-                        <div class="mb-4">
-                            {% for message in messages %}
-                            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
-                                {{ message }}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger alert-dismissible fade show">
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                {% for error in form.non_field_errors %}
+                                    <strong>Error:</strong> {{ error }}
+                                {% endfor %}
                             </div>
-                            {% endfor %}
-                        </div>
                         {% endif %}
 
-                        <div class="text-center mb-4">
-                            <i class="fas fa-bus form-icon mb-3"></i>
-                            {% if request.user.is_staff %}
-                                <p class="text-muted">As a staff member, you can enroll a student in a bus route.</p>
-                            {% else %}
-                                <p class="text-muted">Hello **{{ student.get_full_name|default:"Student" }}**, please select a bus route and academic period to enroll.</p>
-                            {% endif %}
-                        </div>
-                        
-                        <form method="post">
+                        <form method="POST" id="enrollmentForm">
                             {% csrf_token %}
-                            {{ form|crispy }}
-                            <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary btn-lg mt-3">
-                                    <i class="fas fa-paper-plane me-2"></i>Enroll
-                                </button>
+                            
+                            <div class="form-group mb-4">
+                                <label class="form-label font-w600 text-dark">Student Name</label>
+                                {% if is_admin %}
+                                    {{ form.student_search }}
+                                    {{ form.student }}
+                                    <datalist id="student-list">
+                                        {% for s in form.all_students %}
+                                            <option data-id="{{ s.id }}" value="{{ s.get_full_name }} ({{ s.student_id }})"></option>
+                                        {% endfor %}
+                                    </datalist>
+                                    <small class="text-muted">Type student name or ID to search.</small>
+                                {% else %}
+                                    {{ form.student }}
+                                    <input type="text" class="form-control bg-light" value="{{ request.user.get_full_name }}" readonly>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group mb-4">
+                                <label class="form-label font-w600 text-dark">Transport Route</label>
+                                {{ form.route }}
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 form-group mb-4">
+                                    <label class="form-label font-w600 text-dark">Academic Session</label>
+                                    {{ form.session }}
+                                </div>
+                                <div class="col-md-6 form-group mb-4">
+                                    <label class="form-label font-w600 text-dark">Term</label>
+                                    {{ form.term }}
+                                </div>
+                            </div>
+
+                            <hr>
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">Confirm Enrollment</button>
+                                <a href="{% url 'transport:signup' %}" class="btn btn-light">Back to Registry</a>
                             </div>
                         </form>
-                    </div>       
-                    <div class="card-footer bg-light text-center">
-                        <p class="text-secondary fw-bold mb-0">
-                            You will be redirected to the payment pass after enrollment.
-                        </p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock content_body %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+<script src="{% static 'pages/js/custom.min.js' %}"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.querySelector('input[list="student-list"]');
+        const hiddenInput = document.querySelector('input[name="student"]');
+        const dataList = document.getElementById('student-list');
+
+        if (searchInput && dataList) {
+            searchInput.addEventListener('input', function() {
+                const val = this.value;
+                const options = dataList.options;
+                hiddenInput.value = ""; 
+
+                for (let i = 0; i < options.length; i++) {
+                    if (options[i].value === val) {
+                        hiddenInput.value = options[i].getAttribute('data-id');
+                        break;
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

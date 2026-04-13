@@ -29,17 +29,6 @@ def bus_route_list(request):
     return render (request, 'transport/bus_route_list.html', context )
 
 
-# Students Approved On Bus
-@login_required
-def student_on_bus(request): 
-    student_on_bus = StudentOnRoute.objects.all()   
-
-    context = {
-        'student_on_bus' : student_on_bus,              
-
-    }
-    
-    return render (request, 'transport/student_onbus.html', context )
 
 @login_required
 def sign_up_bus(request):
@@ -65,19 +54,41 @@ def submission_success(request):
     return render(request, 'transport/bus_signup_success.html')
 
 
-@login_required
-def bus_signup_list(request):
-    """
-    Displays a list of all bus signups.
-    """
-    # 🆕 Corrected field name from 'signup_date' to 'created_at'
-    student_signups = StudentOnRoute.objects.all().select_related('student', 'route').order_by('created_at')
+#==========================================================
 
-    context = {
-        'student_signups': student_signups,
-        'page_title': "Bus Signups"
-    }
-    return render(request, 'transport/bus_signup_list.html', context)
+def is_staff_or_superuser(user):
+    return user.is_staff or user.is_superuser
+
+
+@login_required
+def student_bus_signup_view(request, student_id=None):  # <--- Ensure student_id=None is here
+    is_admin = request.user.is_staff or request.user.is_superuser
+    
+    # Identify the student based on the URL or the logged-in user
+    if student_id:
+        target_student = get_object_or_404(Student, pk=student_id)
+
+    else:
+        # Fallback for students accessing from their own dashboard
+        target_student = Student.objects.filter(user=request.user).first()
+
+    if request.method == 'POST':
+        form = BusEnrollmentForm(request.POST, request=request, target_student=target_student)
+        if form.is_valid():
+            enrollment = form.save(commit=False)
+            enrollment.is_active = True
+            enrollment.save()
+            messages.success(request, "Enrollment successful!")
+            return redirect('transport:bus_signup_list')
+    else:
+        form = BusEnrollmentForm(request=request, target_student=target_student)
+
+    return render(request, 'transport/test_bus_signup.html', {
+        'form': form,
+        'target_student': target_student,
+        'is_admin': is_admin
+    })
+# ============================================================================
 
 
 # students see their route details
@@ -92,7 +103,19 @@ def student_own_route_detail(request):
         current_student = Student.objects.get(user=request.user)
 
         # Step 2: Use the Student object to filter the StudentOnRoute model
-        student_signup = StudentOnRoute.objects.select_related('route').get(student=current_student)
+        # student_signup = StudentOnRoute.objects.select_related('route').get(student=current_student)
+        # Change this:
+        # student_signup = StudentOnRoute.objects.select_related('route').get(student=current_student)
+
+        # To this:
+        student_signup = StudentOnRoute.objects.select_related('route').filter(
+            student=current_student
+        ).order_by('-id').first()  # Gets the most recently created enrollment
+
+        if not student_signup:
+            # Handle the case where the student isn't enrolled in any route
+            messages.warning(request, "You are not currently enrolled in any bus route.")
+            return redirect('pages:portal-home')
         
     except Student.DoesNotExist:
         # Handle the case where the logged-in user is not a Student
@@ -161,20 +184,16 @@ def staff_bus_signup_view(request):
     return render(request, 'transport/test_bus_signup.html', context)
 
 
-# Common view for payment pass, accessible by both student and staff
+
+# # Common view for payment pass, accessible by both student and staff
+@login_required
 def student_payment_pass_view(request, enrollment_id):
-    """
-    Displays a student's bus payment pass, with an option for a printable version.
-    """
     enrollment = get_object_or_404(StudentOnRoute, id=enrollment_id)
     payments = BusPayment.objects.filter(enrollment=enrollment, is_approved=True)
     
     total_paid_float = payments.aggregate(Sum('amount_paid'))['amount_paid__sum'] or 0.0
-    
-    # 🆕 Convert the total_paid float to a Decimal object
     total_paid = Decimal(str(total_paid_float))
     
-    # 🆕 Now perform the subtraction with both values as Decimals
     balance = enrollment.route.bus_fee - total_paid
     is_fully_paid = balance <= 0
     
@@ -199,7 +218,8 @@ def student_payment_pass_view(request, enrollment_id):
             payment_form = BusPaymentForm(request.POST)
             if payment_form.is_valid():
                 payment = payment_form.save(commit=False)
-                payment.enrollment = enrollment
+                # This ensures the payment is linked to the correct student record
+                payment.enrollment = enrollment 
                 payment.save()
                 messages.success(request, "Payment has been recorded successfully.")
                 return redirect('transport:payment_pass', enrollment_id=enrollment.id)
@@ -259,6 +279,7 @@ def bus_enrollment_list_view(request):
         'page_title': "Bus Enrollments"
     }
     return render(request, 'transport/test_bus_enrollment_list.html', context)
+
 
 
 @login_required
@@ -408,8 +429,17 @@ def enroll_or_pay_redirect(request, student_id):
     
     try:
         # Check if a StudentOnRoute record exists for this student
-        student_on_route = StudentOnRoute.objects.get(student=student)
-        
+        # student_on_route = StudentOnRoute.objects.get(student=student)
+        # Change this:
+        # student_on_route = StudentOnRoute.objects.get(student=student)
+
+        # To this:
+        student_on_route = StudentOnRoute.objects.filter(student=student).order_by('-id').first()
+
+        if not student_on_route:
+            # If no enrollment exists, redirect to the enrollment page
+            return redirect('transport:bus_enrollment_form', student_id=student_id)
+                
         # If enrolled, redirect to the bus payment form
         messages.info(request, f'{student.first_name} {student.last_name} is not yet enrolled for bus services. Please complete the enrollment form.')
         return redirect('transport:bus_payment_form', student_id=student.USN)
@@ -421,6 +451,7 @@ def enroll_or_pay_redirect(request, student_id):
     
 
 
+
 def is_staff_or_superuser(user):
     return user.is_staff or user.is_superuser
 
@@ -429,29 +460,36 @@ def bus_payment_form_view(request, student_id=None):
     """
     Renders the bus payment form, pre-filling the student and enrollment details.
     """
-    initial_data = {}
     student = None
+    student_on_route = None
     
     if student_id:
         student = get_object_or_404(Student, USN=student_id)
-        try:
-            # Get the related StudentOnRoute instance to link the payment
-            student_on_route = StudentOnRoute.objects.get(student=student)
-            initial_data['enrollment'] = student_on_route
-        except StudentOnRoute.DoesNotExist:
-            messages.error(request, 'This student is not enrolled for bus services. Please enroll them first.')
+        
+        # Grab the most recent enrollment to avoid MultipleObjectsReturned crash
+        student_on_route = StudentOnRoute.objects.filter(student=student).order_by('-id').first()
+
+        if not student_on_route:
+            messages.error(request, "This student is not enrolled on any route.")
+            # Redirecting to enrollment form as per your original logic
             return redirect('transport:bus_enrollment_form', student_id=student.USN)
-    
+
     if request.method == 'POST':
-        form = BusPaymentForm(request.POST, initial=initial_data)
+        form = BusPaymentForm(request.POST)
         if form.is_valid():
             payment = form.save(commit=False)
-            payment.is_approved = True  # Admins can approve payments directly
+            
+            # CRITICAL FIX: Explicitly attach the enrollment object
+            # This solves the NOT NULL constraint failed error
+            payment.enrollment = student_on_route
+            payment.is_approved = True  
+            
             payment.save()
             messages.success(request, f'Bus payment for {student.get_full_name()} was successfully recorded.')
             return redirect('transport:payment_report')
     else:
-        form = BusPaymentForm(initial=initial_data)
+        # Pre-fill the form with the enrollment object for the GET request
+        form = BusPaymentForm(initial={'enrollment': student_on_route})
 
     context = {
         'form': form,
@@ -462,4 +500,5 @@ def bus_payment_form_view(request, student_id=None):
 
 
 def bus_signup_success(request):
-    return render(request, 'transport/test_bus_signup_success.html')
+    return render(request, 'transport/test_signup_success.html')
+
