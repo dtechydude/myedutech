@@ -6,21 +6,23 @@
 {% endblock title %}
 
 {% block head %}
-<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
 <link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 <style>
-    /* Styling to match the original template's search bar feel */
+    /* Fix for the "Loading Forever" / Preloader Issue */
+    #main-wrapper { opacity: 1 !important; visibility: visible !important; }
+    
     .dataTables_wrapper .dataTables_filter input {
         border: 1px solid #eee;
-        padding: 5px 10px;
-        border-radius: 5px;
+        padding: 5px 12px;
+        border-radius: 8px;
         margin-left: 10px;
     }
-    .dataTables_wrapper .dataTables_length select {
-        border: 1px solid #eee;
-        border-radius: 5px;
-        padding: 5px;
+    
+    /* Mobile Sidebar Overlap Fix */
+    @media (max-width: 768px) {
+        .content-body { padding-top: 20px !important; }
     }
 </style>
 {% endblock head %}
@@ -30,34 +32,34 @@
     <div class="container-fluid">
         <div class="row page-titles">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="#">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'pages:portal-home' %}">Home</a></li>
                 <li class="breadcrumb-item active"><a href="javascript:void(0)">Bus Enrollments</a></li>
             </ol>
         </div>
         
-        <div class="row justify-content-center">
-            <div class="col-lg-12">
+        <div class="row">
+            <div class="col-12">
                 <div class="card shadow-sm border-0">
-                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <div class="card-header bg-primary py-3 d-flex justify-content-between align-items-center">
                         <h4 class="card-title text-white mb-0">🚌 All Bus Enrollments</h4>
-                        <a href="{% url 'transport:signup' %}" class="btn btn-light btn-sm text-primary">
-                            <i class="fa fa-plus me-1"></i> Add Enrollment
+                        <a href="{% url 'transport:signup' %}" class="btn btn-light btn-sm fw-bold text-primary">
+                            <i class="fa fa-plus me-1"></i> New Enrollment
                         </a>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table id="example3" class="display table table-hover table-striped" style="min-width: 845px">
-                                <thead class="table-dark">
+                            <table id="example3" class="display table table-hover" style="min-width: 845px">
+                                <thead>
                                     <tr>
                                         <th>#</th>
                                         <th>Student</th>
                                         <th>Route</th>
                                         <th>Session/Term</th>
-                                        <th>Bus Fee</th>
-                                        <th>Paid</th>
-                                        <th>Balance</th>
+                                        <th>Fee (₦)</th>
+                                        <th>Paid (₦)</th>
+                                        <th>Balance (₦)</th>
                                         <th>Status</th>
-                                        <th>Actions</th>
+                                        <th class="text-end">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -65,21 +67,18 @@
                                     <tr>
                                         <td>{{ forloop.counter }}</td>
                                         <td>
-                                            <strong>{{ enrollment.student.get_full_name|upper }}</strong><br>
-                                            <small class="text-muted">{{ enrollment.student.student_id }}</small>
+                                            <span class="text-dark fw-bold">{{ enrollment.student.get_full_name|upper }}</span><br>
+                                            <small class="text-muted">{{ enrollment.student.USN }}</small>
                                         </td>
-                                        <td><span class="badge light badge-primary">{{ enrollment.route.name }}</span></td>
-                                        <td>
-                                            {{ enrollment.session.name }}<br>
-                                            <small class="text-info">{{ enrollment.term.name }}</small>
-                                        </td>
-                                        <td>₦{{ enrollment.route.bus_fee|floatformat:2 }}</td>
-                                        <td><span class="text-success font-w600">₦{{ enrollment.total_paid|floatformat:2 }}</span></td>
+                                        <td><span class="badge light badge-primary">{{ enrollment.route.route_name }}</span></td>
+                                        <td>{{ enrollment.session.name }}<br><small class="text-info">{{ enrollment.term.name }}</small></td>
+                                        <td class="fw-bold">{{ enrollment.route.bus_fee|floatformat:2 }}</td>
+                                        <td class="text-success fw-bold">{{ enrollment.total_paid|floatformat:2 }}</td>
                                         <td>
                                             {% if enrollment.balance > 0 %}
-                                                <span class="text-danger font-w600">₦{{ enrollment.balance|floatformat:2 }}</span>
+                                                <span class="text-danger fw-bold">{{ enrollment.balance|floatformat:2 }}</span>
                                             {% else %}
-                                                <span class="text-success font-w600">₦0.00</span>
+                                                <span class="text-success fw-bold">0.00</span>
                                             {% endif %}
                                         </td>
                                         <td>
@@ -89,14 +88,12 @@
                                                 <span class="badge badge-xs light badge-danger">Inactive</span>
                                             {% endif %}
                                         </td>
-                                        <td>
-                                            <div class="d-flex">
+                                        <td class="text-end">
+                                            <div class="d-flex justify-content-end">
                                                 <a href="{% url 'transport:payment_pass' enrollment.id %}" class="btn btn-info shadow btn-xs sharp me-1">
                                                     <i class="fa fa-id-card"></i>
                                                 </a>
-                                                <a href="#" class="btn btn-danger shadow btn-xs sharp">
-                                                    <i class="fa fa-trash"></i>
-                                                </a>
+                                                <a href="#" class="btn btn-danger shadow btn-xs sharp"><i class="fa fa-trash"></i></a>
                                             </div>
                                         </td>
                                     </tr>
@@ -114,7 +111,30 @@
 
 {% block scripts %}
 <script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+
 <script src="{% static 'pages/vendor/datatables/js/jquery.dataTables.min.js' %}"></script>
-<script src="{% static 'pages/js/plugins-init/datatables.init.js' %}"></script>
+
 <script src="{% static 'pages/js/custom.min.js' %}"></script>
+<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+
+<script>
+    (function($) {
+        "use strict";
+        if ($('#example3').length > 0) {
+            $('#example3').DataTable({
+                searching: true,
+                paging: true,
+                select: false,
+                lengthChange: true,
+                autoWidth: false,
+                language: {
+                    paginate: {
+                        next: '<i class="fa fa-angle-double-right"></i>',
+                        previous: '<i class="fa fa-angle-double-left"></i>'
+                    }
+                }
+            });
+        }
+    })(jQuery);
+</script>
 {% endblock scripts %}
