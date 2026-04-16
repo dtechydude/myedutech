@@ -328,6 +328,7 @@
                     {% if data.remark == 'Poor' %}red
                     {% elif data.remark == 'Excellent' %}green
                     {% elif data.remark == 'Very Good' %}blue
+                     {% elif data.remark == 'Fail' %}red
                     {% else %}inherit
                     {% endif %};">
                     {{ data.remark }}

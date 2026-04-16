@@ -57,59 +57,7 @@ class SchoolYearSettings(models.Model):
     def clean(self):
         if (self.max_ca_total + self.max_exam_score) != 100:
             raise ValidationError("The sum of Max CA and Max Exam must equal 100.")
-           
-
-# Existing working model before changing to dynamic score entry
-
-# class Score(models.Model):
-#     """Represents a student's score in a specific subject for a given term."""
-#     # ... (Fields remain the same)
-#     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='scores')
-#     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-#     term = models.ForeignKey(Term, on_delete=models.CASCADE)
-#     ca1 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(40)])
-#     ca2 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(40)])
-#     ca3 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(40)])
-#     exam_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(60)])
-#     total_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
-
-#     class Meta:
-#         unique_together = ('student', 'subject', 'term')
-#         ordering = ['student__last_name', 'student__first_name']
-#         verbose_name = 'Exams & CA Scores'
-#         verbose_name_plural = 'Exams & CA Scores'
-
-#     def __str__(self):
-#         return f"{self.student.first_name} - {self.subject.name} ({self.term.name})"
-
-#     def clean(self):
-#         super().clean()
-#         total_ca = (self.ca1 or 0) + (self.ca2 or 0) + (self.ca3 or 0)
-#         if total_ca > 40:
-#             raise ValidationError('The total sum of CA scores (CA1, CA2, CA3) cannot exceed 40.')
-
-#     def save(self, *args, **kwargs):
-#         self.full_clean()
-
-#         # --- CORRECTION: Check if ALL score fields are empty/None ---
-#         # If all fields are None/empty, delete the instance if it exists, and skip creation.
-#         has_ca_score = any(s is not None for s in [self.ca1, self.ca2, self.ca3])
-#         has_exam_score = self.exam_score is not None
-
-#         if not has_ca_score and not has_exam_score:
-#             if self.pk:  # Check if the object already exists
-#                 self.delete() # Delete the object instead of saving empty data
-#             return # Stop the save process
-
-#         # Auto-calculate total_score ONLY if some scores are present
-#         total_ca = (self.ca1 or 0) + (self.ca2 or 0) + (self.ca3 or 0)
-        
-#         if self.exam_score is not None:
-#             self.total_score = total_ca + self.exam_score
-#         else:
-#             self.total_score = total_ca 
-
-#         super().save(*args, **kwargs)
+     
 
 # New logic to ensure dynamic input into the score
 class Score(models.Model):
