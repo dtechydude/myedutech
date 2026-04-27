@@ -72,25 +72,6 @@ class StandardIdentity(models.Model):
         return f"{self.standard.name} -> {self.school_identity.identity_label}"
 
 
-# # session registration
-# class Session(models.Model):
-#     name = models.CharField(max_length=50, unique=True)
-#     start_date = models.DateField(blank=True, null=True, verbose_name='Start Date')
-#     end_date = models.DateField(blank=True, null=True, verbose_name='End Date')
-#     desc = models.TextField(max_length=100, blank=True)
-#     is_current = models.BooleanField(default=False, help_text='check the box if the session is current') # To easily identify the current session
-#     slug = models.SlugField(null=True, blank=True)
-
-#     class Meta:
-#         verbose_name_plural = "Sessions"
-#         ordering = ['-start_date'] # Order by newest session first
-
-#     def __str__(self):
-#         return f"{self.name}"
-
-#     def save(self, *args, **kwargs):
-#         self.slug = slugify(self.name)
-#         super().save(*args, **kwargs)
 class Session(models.Model):
     name = models.CharField(max_length=50, unique=True)
     start_date = models.DateField(blank=True, null=True, verbose_name='Start Date')
