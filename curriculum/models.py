@@ -2,9 +2,11 @@ from django.db import models
 from django.db.models.signals import post_save, post_delete
 from datetime import timedelta
 from django.template.defaultfilters import slugify
+from django.utils.text import slugify
 from django.contrib.auth.models import User
 from django.urls import reverse
 import os
+from django.db.models import Q
 from django.utils.html import strip_tags
 from django_ckeditor_5.fields import CKEditor5Field
 from embed_video.fields import EmbedVideoField
@@ -70,26 +72,61 @@ class StandardIdentity(models.Model):
         return f"{self.standard.name} -> {self.school_identity.identity_label}"
 
 
-# session registration
+# # session registration
+# class Session(models.Model):
+#     name = models.CharField(max_length=50, unique=True)
+#     start_date = models.DateField(blank=True, null=True, verbose_name='Start Date')
+#     end_date = models.DateField(blank=True, null=True, verbose_name='End Date')
+#     desc = models.TextField(max_length=100, blank=True)
+#     is_current = models.BooleanField(default=False, help_text='check the box if the session is current') # To easily identify the current session
+#     slug = models.SlugField(null=True, blank=True)
+
+#     class Meta:
+#         verbose_name_plural = "Sessions"
+#         ordering = ['-start_date'] # Order by newest session first
+
+#     def __str__(self):
+#         return f"{self.name}"
+
+#     def save(self, *args, **kwargs):
+#         self.slug = slugify(self.name)
+#         super().save(*args, **kwargs)
 class Session(models.Model):
     name = models.CharField(max_length=50, unique=True)
     start_date = models.DateField(blank=True, null=True, verbose_name='Start Date')
     end_date = models.DateField(blank=True, null=True, verbose_name='End Date')
     desc = models.TextField(max_length=100, blank=True)
-    is_current = models.BooleanField(default=False, help_text='check the box if the session is current') # To easily identify the current session
+
+    is_current = models.BooleanField(
+        default=False,
+        help_text='Check this box if this is the current session'
+    )
+
     slug = models.SlugField(null=True, blank=True)
 
     class Meta:
         verbose_name_plural = "Sessions"
-        ordering = ['-start_date'] # Order by newest session first
+        ordering = ['-start_date']
+
+        # 🔒 Enforce ONLY ONE current session
+        constraints = [
+            models.UniqueConstraint(
+                fields=['is_current'],
+                condition=Q(is_current=True),
+                name='only_one_current_session'
+            )
+        ]
 
     def __str__(self):
-        return f"{self.name}"
+        return self.name
 
     def save(self, *args, **kwargs):
+        # 🔥 Auto-unset other current sessions
+        if self.is_current:
+            Session.objects.filter(is_current=True).exclude(pk=self.pk).update(is_current=False)
+
         self.slug = slugify(self.name)
         super().save(*args, **kwargs)
-
 
 
 class Term(models.Model):
@@ -106,6 +143,15 @@ class Term(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.session.name})"    
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['is_current'],
+                condition=Q(is_current=True),
+                name='only_one_current_term_can_be_active'
+            )
+        ]
 
 
 
