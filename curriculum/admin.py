@@ -22,25 +22,6 @@ class ClassFeeTemplateForm(forms.Form):
         label="Select Fee Template to Apply"
     )
 
-# class SchoolIdentityAdmin(admin.ModelAdmin):
-#     def has_add_permission(self, request):
-#         if self.model.objects.exists():
-#             return False
-#         return super().has_add_permission(request)
-
-#     def save_model(self, request, obj, form, change):
-#         if not change and self.model.objects.exists():
-#             messages.error(request, "There can be only one school identity instance. Please edit the existing one.")
-#         else:
-#             try:
-#                 obj.save()
-#             except ValidationError as e:
-#                 for error_msg in e.messages:
-#                     messages.error(request, error_msg)
-    
-#     list_display = ('name', 'phone1', 'email')
-#     exclude = ['slug',]
-
 
 
 class StandardIdentityInline(admin.TabularInline):
