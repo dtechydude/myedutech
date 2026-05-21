@@ -134,7 +134,7 @@
 <header class="header">
     <div class="d-flex align-items-center">
         <div class="logo-container">
-            <img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="KwikSchools">
+		<img src="{{ school_info.logo.url }}" alt="kwikschools" width="80px" height="auto">
         </div>
     </div>
     <a href="/dashboard" class="text-decoration-none">
