@@ -247,31 +247,70 @@ class MotorAbilityScoreForm(forms.ModelForm):
             })
 
 
+# class MidTermScoreForm(forms.ModelForm):
+
+#     class Meta:
+#         model = MidTermScore
+#         fields = ['exam_total_score']
+#         widgets = {
+#             'exam_total_score': forms.NumberInput(attrs={
+#                 'class': 'form-control form-control-score',
+#                 'style': 'max-width:120px; text-align:center;'
+#             })
+#         }
+
+#     def __init__(self, *args, **kwargs):
+#         self.max_score = kwargs.pop('max_score', None)
+#         super().__init__(*args, **kwargs)
+
+#     def clean_exam_total_score(self):
+#         score = self.cleaned_data.get('exam_total_score')
+
+#         if score is None:
+#             return score
+
+#         if self.max_score and score > self.max_score:
+#             raise forms.ValidationError(
+#                 f"Score cannot exceed {self.max_score}"
+#             )
+
+#         return score
+#New mid term scoreform
+from django import forms
+from .models import MidTermComponentScore
+
+
 class MidTermScoreForm(forms.ModelForm):
 
-    class Meta:
-        model = MidTermScore
-        fields = ['exam_total_score']
-        widgets = {
-            'exam_total_score': forms.NumberInput(attrs={
-                'class': 'form-control form-control-score',
-                'style': 'max-width:120px; text-align:center;'
-            })
-        }
-
+    # dynamic fields (Test1, Test2, Test3 etc.)
     def __init__(self, *args, **kwargs):
         self.max_score = kwargs.pop('max_score', None)
+        self.components = kwargs.pop('components', [])
+
         super().__init__(*args, **kwargs)
 
-    def clean_exam_total_score(self):
-        score = self.cleaned_data.get('exam_total_score')
+        # Build dynamic inputs based on components
+        for component in self.components:
+            field_name = f"component_{component.id}"
 
-        if score is None:
-            return score
-
-        if self.max_score and score > self.max_score:
-            raise forms.ValidationError(
-                f"Score cannot exceed {self.max_score}"
+            self.fields[field_name] = forms.FloatField(
+                required=False,
+                label=component.title,
+                widget=forms.NumberInput(attrs={
+                    'class': 'form-control form-control-score',
+                    'style': 'max-width:120px; text-align:center;'
+                })
             )
 
-        return score
+            # preload existing value
+            existing = MidTermComponentScore.objects.filter(
+                midterm_score=self.instance,
+                component=component
+            ).first()
+
+            if existing:
+                self.initial[field_name] = existing.score
+
+    class Meta:
+        model = MidTermComponentScore
+        fields = []

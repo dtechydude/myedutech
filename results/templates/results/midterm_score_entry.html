@@ -1,268 +1,231 @@
-{% comment %}
+{% comment %} 
 {% load static %}
-{% load crispy_forms_filters %}
+{% load get_item %}
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Score Entry: {{ subject.name }}</title>
-    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    
+    <title>Score Entry | {{ school_info.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            background-color: #f4f6f9;
-            font-family: Arial, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .content-wrap {
-            padding: 30px 15px;
-            flex-grow: 1;
-        }
-        .score-entry-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            padding: 25px;
-        }
-        .form-header {
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 10px;
-            margin-bottom: 25px;
-        }
-        .table thead th {
-            background-color: #007bff;
-            color: white;
-            font-weight: 600;
-            vertical-align: middle;
-        }
-        .table tbody tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-        .form-control-score {
-            max-width: 120px;
-            text-align: center; /* Center the input text */
-        }
-        footer {
-            background-color: #343a44;
-            color: #ccc;
-            padding: 15px 0;
-            margin-top: 30px;
-        }
+        .comp-input { transition: all 0.2s; }
+        .comp-input:focus { outline: 2px solid #3b82f6; }
     </style>
 </head>
-<body>
 
-<div class="content-wrap">
-    <div class="score-entry-container">
-        
-        {# --- Top Action Bar: Back Button --- #}
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <a href="{% url 'results:midterm_score_selection' %}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left"></i> Back to Selection
-            </a>
-            <p class="text-muted mb-0 small">Logged in as: {{ request.user.get_full_name }}</p>
+<body class="bg-gray-50 min-h-screen flex flex-col font-sans text-gray-900">
+
+    <nav class="bg-white border-b border-gray-200 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <a href="/dashboard" class="text-blue-600 hover:text-blue-800 font-semibold">← Dashboard</a>
+                <a href="javascript:history.back()" class="text-gray-600 hover:text-gray-900">Back</a>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800">{{ school_info.name }}</h1>
         </div>
+    </nav>
 
-        {# --- Form Header --- #}
-        <div class="form-header text-center">
-            {% if school_info %}
-                <h1 class="h4 text-primary font-weight-bold">{{ school_info.name|default:"School Management System" }}</h1>
-            {% else %}
-                <h1 class="h4 text-primary font-weight-bold">Score Entry Portal</h1>
-            {% endif %}
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <div class="max-w-6xl mx-auto bg-white shadow-sm border border-gray-200 rounded-xl p-6">
             
-            <h2 class="h5 mt-2">Mid-Term Score Entry: **{{ subject.name }}** - **{{ assigned_class.name }}** (**{{ term.name }}**)</h2>
-        </div>
+            <div class="mb-6 text-center">
+                <p> Entering Scores For: </p>
+                <h2 class="text-2xl font-bold text-gray-800">{{ subject.name }} - {{ assigned_class.name }} </h2>
+                <p class="text-gray-500 font-medium">{{ term.name }}/{{ term.session.name }}</p>
+            </div>
 
-        {# --- Score Entry Form --- #}
-        <form method="post">
-            {% csrf_token %}
-            
-            {{ formset.management_form }}
-            
-            {% if formset.non_form_errors %}
-                <div class="alert alert-danger mt-3" role="alert">
-                    <h5>Form Errors:</h5>
-                    {{ formset.non_form_errors }}
-                </div>
-            {% endif %}
+            <form method="post" id="scoreForm">
+                {% csrf_token %}
+                {{ formset.management_form }}
 
-            <div class="table-responsive">
-                <table class="table table-hover table-bordered table-sm">
-                    <thead>
-                        <tr>
-                            <th class="w-25">Student Name</th>
-                            <th class="w-20">Admission No.</th>
-                            <th class="w-35 text-center">Mid-Term Score (0-100)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for form in formset %}
-                            {# Attach the student object to the form instance for easy access #}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 border-b border-gray-200">
+                                <th class="p-3 font-semibold text-gray-700">Student</th>
+                                {% for component in components %}
+                                    <th class="p-3 text-center font-semibold text-gray-700">{{ component.title }}</th>
+                                {% endfor %}
+                                <th class="p-3 text-center font-semibold text-green-700">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            {% for form in formset %}
                             {% with student=form.instance.student %}
-                                <tr class="{% if form.errors %}table-danger{% endif %}">
-                                    <td>{{ student.get_full_name }}</td>
-                                    <td>{{ student.USN }}</td>
-                                    <td class="text-center">
-                                        {# Hidden fields (IDs) #}
-                                        {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-                                        
-                                        {# Apply Bootstrap classes using the loaded filter #}
-                                        {{ form.exam_total_score }}                                        
-                                        {% if form.exam_total_score.errors %}
-                                            <div class="text-danger small mt-1">{{ form.exam_total_score.errors }}</div>
-                                        {% endif %}
-                                    </td>
-                                </tr>
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="p-3 font-medium text-gray-700 whitespace-nowrap">
+                                    {{ student.get_full_name }} <span class="text-xs text-gray-400">({{ student.USN }})</span>
+                                    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                                </td>
+                                {% for component in components %}
+                                {% with value=component_score_map|get_item:form.instance.id|get_item:component.id %}
+                                <td class="p-2 text-center">
+                                    <input type="number"
+                                        class="comp-input w-16 p-1 border border-gray-300 rounded text-center focus:ring-2 focus:ring-blue-500"
+                                        name="component_{{ form.instance.id }}_{{ component.id }}"
+                                        value="{{ value|default:'' }}"
+                                        data-row="{{ form.instance.id }}"
+                                        min="0" max="{{ component.max_score }}">
+                                </td>
+                                {% endwith %}
+                                {% endfor %}
+                                <td class="p-2 text-center">
+                                    <input type="text"
+                                           class="w-16 p-1 bg-green-50 text-green-700 font-bold border border-green-200 rounded text-center"
+                                           id="total_{{ form.instance.id }}"
+                                           readonly>
+                                </td>
+                            </tr>
                             {% endwith %}
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
 
-            <div class="d-flex justify-content-center mt-4">
-                <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="fas fa-save"></i> Save All Scores
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
+                <div class="mt-8 flex justify-end">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-8 rounded-lg shadow-md transition-all">
+                        Save Results
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
 
-{# --- Footer Section (Optional, adjust as per your base template or project structure) --- #}
-<footer class="text-center">
-    &copy; {% now "Y" %} <a href="https://kwikschools.com">KwikSchools EdTech</a> | All Rights Reserved.
-</footer>
+    <footer class="bg-white border-t border-gray-200 py-6 text-center text-gray-500 text-sm">
+        &copy; 2026 {{ school_info.name }}. All rights reserved.
+    </footer>
 
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener("input", function(e){
+            if(!e.target.classList.contains("comp-input")) return;
+            let row = e.target.dataset.row;
+            let inputs = document.querySelectorAll(`[data-row="${row}"]`);
+            let total = 0;
+            inputs.forEach(i => {
+                let v = parseFloat(i.value);
+                if(!isNaN(v)) total += v;
+            });
+            document.getElementById("total_" + row).value = total;
+        });
+    </script>
 </body>
-</html>
-
-{% endcomment %}
+</html> {% endcomment %}
 
 
 {% load static %}
+{% load get_item %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Score Entry: {{ subject.name }}</title>
-    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Score Entry | {{ school_info.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #f4f6f9; font-family: Arial, sans-serif; }
-        .score-entry-container {
-            max-width: 1000px;
-            margin: 40px auto;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            padding: 25px;
-        }
-        .form-header { border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 25px; }
-        .table thead th { background-color: #007bff; color: white; font-weight: 600; }
-        .form-control-score { max-width: 120px; text-align: center; }
+        .comp-input { transition: all 0.2s; }
+        .comp-input:focus { outline: 2px solid #3b82f6; }
     </style>
 </head>
-<body>
 
-<div class="score-entry-container">
+<body class="bg-gray-50 min-h-screen flex flex-col font-sans text-gray-900">
 
-    <!-- Back Button & User Info -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <a href="{% url 'results:midterm_score_selection' %}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Selection
-        </a>
-        <p class="text-muted mb-0 small">Logged in as: {{ request.user.get_full_name }}</p>
-    </div>
-
-    <!-- Header -->
-    <div class="form-header text-center">
-        <h1 class="h4 text-primary font-weight-bold">{{ school_info.name|default:"Score Entry Portal" }}</h1>
-        <h2 class="h5 mt-2">
-            Mid-Term Score Entry: {{ subject.name }} - {{ assigned_class.name }} ({{ term.name }})
-        </h2>
-        <p class="small text-muted">
-            Maximum Score for this Exam: <strong>{{ exam_setting.max_score }}</strong>
-        </p>
-    </div>
-
-    <!-- Score Entry Form -->
-    <form method="post">
-        {% csrf_token %}
-        {{ formset.management_form }}
-
-        {% if formset.non_form_errors %}
-            <div class="alert alert-danger">{{ formset.non_form_errors }}</div>
-        {% endif %}
-
-        <div class="table-responsive">
-            <table class="table table-hover table-bordered table-sm">
-                <thead>
-                    <tr>
-                        <th>Student Name</th>
-                        <th>Admission No.</th>
-                        <th class="text-center">Mid-Term Score (0-{{ exam_setting.max_score }})</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for form in formset %}
-                        {% with student=form.instance.student %}
-                        <tr class="{% if form.errors %}table-danger{% endif %}">
-                            <td>{{ student.get_full_name }}</td>
-                            <td>{{ student.USN }}</td>
-                            <td class="text-center">
-
-                                <!-- Hidden fields -->
-                                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-
-                                <!-- Set max_score hidden -->
-                                <input type="hidden" name="{{ form.prefix }}-max_score" value="{{ exam_setting.max_score }}">
-
-                                <!-- Exam Score Input -->
-                                <input 
-                                    type="number" 
-                                    name="{{ form.prefix }}-exam_total_score" 
-                                    class="form-control form-control-score"
-                                    value="{{ form.instance.exam_total_score }}"
-                                    min="0"
-                                    max="{{ exam_setting.max_score }}"
-                                >
-                                {% if form.exam_total_score.errors %}
-                                    <div class="text-danger small mt-1">{{ form.exam_total_score.errors }}</div>
-                                {% endif %}
-
-                            </td>
-                        </tr>
-                        {% endwith %}
-                    {% endfor %}
-                </tbody>
-            </table>
+    <nav class="bg-white border-b border-gray-200 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <a href="/dashboard" class="text-blue-600 hover:text-blue-800 font-semibold">← Dashboard</a>
+                <a href="javascript:history.back()" class="text-gray-600 hover:text-gray-900">Back</a>
+            </div>
+            <h1 class="text-xl font-bold text-gray-800">{{ school_info.name }}</h1>
         </div>
+    </nav>
 
-        <div class="text-center mt-4">
-            <button type="submit" class="btn btn-primary btn-lg">
-                <i class="fas fa-save"></i> Save All Scores
-            </button>
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <div class="max-w-6xl mx-auto bg-white shadow-sm border border-gray-200 rounded-xl p-6">
+            
+            <div class="mb-6 text-center">
+                <p> Entering Scores For: </p>
+                <h2 class="text-2xl font-bold text-gray-800">{{ subject.name }} - {{ assigned_class.name }} </h2>
+                <p class="text-gray-500 font-medium">{{ term.name }}/{{ term.session.name }}</p>
+            </div>
+
+            <form method="post" id="scoreForm">
+                {% csrf_token %}
+                {{ formset.management_form }}
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 border-b border-gray-200">
+                                <th class="p-3 font-semibold text-gray-700">Student</th>
+                                {% for component in components %}
+                                    <th class="p-3 text-center font-semibold text-gray-700">
+                                        {{ component.title }} <span class="text-xs font-normal text-gray-500">({{ component.max_score }})</span>
+                                    </th>
+                                {% endfor %}
+                                <th class="p-3 text-center font-semibold text-green-700">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            {% for form in formset %}
+                            {% with student=form.instance.student %}
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="p-3 font-medium text-gray-700 whitespace-nowrap">
+                                    {{ student.get_full_name }} <span class="text-xs text-gray-400">({{ student.USN }})</span>
+                                    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                                </td>
+                                {% for component in components %}
+                                {% with value=component_score_map|get_item:form.instance.id|get_item:component.id %}
+                                <td class="p-2 text-center">
+                                    <input type="number"
+                                        class="comp-input w-16 p-1 border border-gray-300 rounded text-center focus:ring-2 focus:ring-blue-500"
+                                        name="component_{{ form.instance.id }}_{{ component.id }}"
+                                        value="{{ value|default:'' }}"
+                                        data-row="{{ form.instance.id }}"
+                                        min="0" max="{{ component.max_score }}">
+                                </td>
+                                {% endwith %}
+                                {% endfor %}
+                                <td class="p-2 text-center">
+                                    <input type="text"
+                                           class="w-16 p-1 bg-green-50 text-green-700 font-bold border border-green-200 rounded text-center"
+                                           id="total_{{ form.instance.id }}"
+                                           readonly>
+                                </td>
+                            </tr>
+                            {% endwith %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-8 flex justify-end">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-8 rounded-lg shadow-md transition-all">
+                        Save Results
+                    </button>
+                </div>
+            </form>
         </div>
-    </form>
-</div>
+    </main>
 
-<footer class="text-center mt-5 mb-3 text-muted">
-    &copy; {% now "Y" %} KwikSchools EdTech | All Rights Reserved.
-</footer>
+    <footer class="bg-white border-t border-gray-200 py-6 text-center text-gray-500 text-sm">
+        &copy; 2026 {{ school_info.name }}. All rights reserved.
+    </footer>
 
+    <script>
+        document.addEventListener("input", function(e){
+            if(!e.target.classList.contains("comp-input")) return;
+            let row = e.target.dataset.row;
+            let inputs = document.querySelectorAll(`[data-row="${row}"]`);
+            let total = 0;
+            inputs.forEach(i => {
+                let v = parseFloat(i.value);
+                if(!isNaN(v)) total += v;
+            });
+            document.getElementById("total_" + row).value = total;
+        });
+    </script>
 </body>
 </html>

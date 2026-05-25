@@ -6,6 +6,8 @@ from curriculum.models import Term
 # add this because of the cbt
 from django.utils.html import format_html
 from django.urls import reverse
+from .utils import mdterm_get_overall_remark
+from django.db.models import Avg
 
 
 
@@ -125,66 +127,66 @@ class ResultPublicationAdmin(admin.ModelAdmin):
     
 
 
-# Mid Term Admin Logic
-@admin.register(MidTermScore)
-class MidTermScoreAdmin(ImportExportModelAdmin):
-    list_display = ('student', 'subject', 'term', 'exam_total_score', 'student_class')
-    search_fields = ('student__USN', 'student__user__first_name', 'subject__name')
-    # Allows filtering by term, subject, and the student's current class
-    list_filter = ('term', 'subject', 'student__current_class') 
-    raw_id_fields = ('student', 'subject', 'term')
+# # Mid Term Admin Logic
+# @admin.register(MidTermScore)
+# class MidTermScoreAdmin(ImportExportModelAdmin):
+#     list_display = ('student', 'subject', 'term', 'exam_total_score', 'student_class')
+#     search_fields = ('student__USN', 'student__user__first_name', 'subject__name')
+#     # Allows filtering by term, subject, and the student's current class
+#     list_filter = ('term', 'subject', 'student__current_class') 
+#     raw_id_fields = ('student', 'subject', 'term')
     
-    # Custom method to display student's current class in the admin list
-    def student_class(self, obj):
-        # Assumes obj.student.current_class exists and has a 'name' attribute
-        return obj.student.current_class.name
-    student_class.short_description = 'Class'
+#     # Custom method to display student's current class in the admin list
+#     def student_class(self, obj):
+#         # Assumes obj.student.current_class exists and has a 'name' attribute
+#         return obj.student.current_class.name
+#     student_class.short_description = 'Class'
 
-    # --- 1. Limit QuerySet (What records a user sees in the list) ---
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
+#     # --- 1. Limit QuerySet (What records a user sees in the list) ---
+#     def get_queryset(self, request):
+#         qs = super().get_queryset(request)
         
-        # Superuser and Staff see everything
-        if request.user.is_superuser or request.user.is_staff:
-            return qs
+#         # Superuser and Staff see everything
+#         if request.user.is_superuser or request.user.is_staff:
+#             return qs
         
-        # Filter for teachers: only allow editing scores for their classes/subjects
-        if hasattr(request.user, 'teacher'):
-            teacher = request.user.teacher
-            # Returns scores where the student is in the teacher's assigned class 
-            # AND the score's subject is one the teacher teaches
-            return qs.filter(
-                student__current_class=teacher.class_assigned,
-                subject__in=teacher.subjects_taught.all()
-            )
-        # Hide scores if not staff/teacher
-        return qs.none() 
+#         # Filter for teachers: only allow editing scores for their classes/subjects
+#         if hasattr(request.user, 'teacher'):
+#             teacher = request.user.teacher
+#             # Returns scores where the student is in the teacher's assigned class 
+#             # AND the score's subject is one the teacher teaches
+#             return qs.filter(
+#                 student__current_class=teacher.class_assigned,
+#                 subject__in=teacher.subjects_taught.all()
+#             )
+#         # Hide scores if not staff/teacher
+#         return qs.none() 
     
-    # --- 2. Limit Change Permission (What records a user can modify) ---
-    def has_change_permission(self, request, obj=None):
-        # Superuser and Staff can change anything
-        if request.user.is_superuser or request.user.is_staff:
-            return True
+#     # --- 2. Limit Change Permission (What records a user can modify) ---
+#     def has_change_permission(self, request, obj=None):
+#         # Superuser and Staff can change anything
+#         if request.user.is_superuser or request.user.is_staff:
+#             return True
         
-        # For teachers, check if they are authorized to modify this specific score object (obj)
-        if obj is not None and hasattr(request.user, 'teacher'):
-            teacher = request.user.teacher
-            # Allow change if the teacher teaches this subject AND the student belongs to their class
-            return (obj.subject in teacher.subjects_taught.all() and 
-                    obj.student.current_class == teacher.class_assigned)
+#         # For teachers, check if they are authorized to modify this specific score object (obj)
+#         if obj is not None and hasattr(request.user, 'teacher'):
+#             teacher = request.user.teacher
+#             # Allow change if the teacher teaches this subject AND the student belongs to their class
+#             return (obj.subject in teacher.subjects_taught.all() and 
+#                     obj.student.current_class == teacher.class_assigned)
         
-        # Block change permission if not an admin/staff or an authorized teacher
-        return False
+#         # Block change permission if not an admin/staff or an authorized teacher
+#         return False
         
-    # --- 3. Optional: Block Add/Delete for Teachers ---
-    # Teachers should generally use the dedicated front-end entry view (MidTermScoreEntryView).
-    def has_add_permission(self, request):
-        # Only allow staff/superusers to add new records manually via admin
-        return request.user.is_staff or request.user.is_superuser
+#     # --- 3. Optional: Block Add/Delete for Teachers ---
+#     # Teachers should generally use the dedicated front-end entry view (MidTermScoreEntryView).
+#     def has_add_permission(self, request):
+#         # Only allow staff/superusers to add new records manually via admin
+#         return request.user.is_staff or request.user.is_superuser
 
-    def has_delete_permission(self, request, obj=None):
-        # Only allow staff/superusers to delete records
-        return request.user.is_staff or request.user.is_superuser
+#     def has_delete_permission(self, request, obj=None):
+#         # Only allow staff/superusers to delete records
+#         return request.user.is_staff or request.user.is_superuser
 
 @admin.register(SessionResultStatus)
 class SessionResultStatusAdmin(admin.ModelAdmin):
@@ -350,6 +352,943 @@ class SchoolYearSettingsAdmin(admin.ModelAdmin):
             return False
         return super().has_add_permission(request)
     
+
+
+
+
+# Midterm setting 
+# ============================================
+# ADMIN.PY
+# ============================================
+
+from django.contrib import admin
+from django.db.models import Sum
+
+from .models import (
+    ExamSetting,
+    MidTermScore,
+    MidTermComponent,
+    MidTermComponentScore,
+    MidTermReportRemark,
+)
+
+
+# ============================================
+# INLINE: COMPONENT SCORES
+# ============================================
+
+class MidTermComponentScoreInline(admin.TabularInline):
+    model = MidTermComponentScore
+    extra = 0
+
+    fields = (
+        'component',
+        'score',
+    )
+
+    autocomplete_fields = (
+        'component',
+    )
+
+
+# ============================================
+# MIDTERM COMPONENT ADMIN
+# ============================================
+
+@admin.register(MidTermComponent)
+class MidTermComponentAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'title',
+        'term',
+        'max_score',
+        'order',
+        'is_active',
+        'total_term_score',
+    )
+
+    list_filter = (
+        'term',
+        'is_active',
+    )
+
+    search_fields = (
+        'title',
+        'term__name',
+    )
+
+    ordering = (
+        'term',
+        'order',
+    )
+
+    list_editable = (
+        'order',
+        'is_active',
+    )
+
+    def total_term_score(self, obj):
+        """
+        Shows cumulative configured component score
+        for the term.
+        """
+
+        total = MidTermComponent.objects.filter(
+            term=obj.term,
+            is_active=True
+        ).aggregate(
+            total=Sum('max_score')
+        )['total'] or 0
+
+        return total
+
+    total_term_score.short_description = (
+        'Configured Total'
+    )
+
+
+# ============================================
+# MIDTERM SCORE ADMIN
+# ============================================
+
+@admin.register(MidTermScore)
+class MidTermScoreAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'student',
+        'subject',
+        'term',
+        'exam_total_score',
+        'percentage_display',
+    )
+
+    list_filter = (
+        'term',
+        'subject',
+        'student__current_class',
+    )
+
+    search_fields = (
+        'student__first_name',
+        'student__last_name',
+        'subject__name',
+    )
+
+    ordering = (
+        'student__last_name',
+        'subject__name',
+    )
+
+    inlines = [
+        MidTermComponentScoreInline
+    ]
+
+    readonly_fields = (
+        'exam_total_score',
+    )
+
+    def percentage_display(self, obj):
+
+        try:
+            return f"{obj.percentage():.2f}%"
+
+        except Exception:
+            return "-"
+
+    percentage_display.short_description = (
+        'Percentage'
+    )
+
+
+# ============================================
+# COMPONENT SCORE ADMIN
+# ============================================
+
+@admin.register(MidTermComponentScore)
+class MidTermComponentScoreAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'midterm_score',
+        'component',
+        'score',
+        'component_max_score',
+    )
+
+    list_filter = (
+        'component__term',
+        'component',
+    )
+
+    search_fields = (
+        'midterm_score__student__first_name',
+        'midterm_score__student__last_name',
+        'component__title',
+    )
+
+    ordering = (
+        'component__term',
+        'component__order',
+    )
+
+    def component_max_score(self, obj):
+        return obj.component.max_score
+
+    component_max_score.short_description = (
+        'Component Max'
+    )
+
+
+# ============================================
+# REPORT REMARK ADMIN
+# ============================================
+
+# @admin.register(MidTermReportRemark)
+# class MidTermReportRemarkAdmin(admin.ModelAdmin):
+
+#     list_display = (
+#         'student',
+#         'term',
+#         'short_teacher_remark',
+#         'short_head_teacher_remark',
+#         'updated_at',
+#     )
+
+#     list_filter = (
+#         'term',
+#     )
+
+#     search_fields = (
+#         'student__first_name',
+#         'student__last_name',
+#         'teacher_remark',
+#         'head_teacher_remark',
+#     )
+
+#     readonly_fields = (
+#         'created_at',
+#         'updated_at',
+#     )
+
+#     fieldsets = (
+
+#         ('Student Information', {
+#             'fields': (
+#                 'student',
+#                 'term',
+#             )
+#         }),
+
+#         ('Teacher Remark', {
+#             'fields': (
+#                 'teacher_remark',
+#             )
+#         }),
+
+#         ('Head Teacher Remark', {
+#             'fields': (
+#                 'head_teacher_remark',
+#             )
+#         }),
+
+#         ('Timestamps', {
+#             'fields': (
+#                 'created_at',
+#                 'updated_at',
+#             )
+#         }),
+#     )
+
+#     def short_teacher_remark(self, obj):
+
+#         if obj.teacher_remark:
+#             return obj.teacher_remark[:50]
+
+#         return "Auto Generated"
+
+#     short_teacher_remark.short_description = (
+#         'Teacher Remark'
+#     )
+
+#     def short_head_teacher_remark(self, obj):
+
+#         if obj.head_teacher_remark:
+#             return obj.head_teacher_remark[:50]
+
+#         return "Auto Generated"
+
+#     short_head_teacher_remark.short_description = (
+#         'Head Teacher Remark'
+#     )
+
+
+# ============================================
+# ADMIN.PY
+# UPDATED REPORT REMARK ADMIN
+# ============================================
+
+from django.contrib import admin
+from django.db.models import Avg, Sum
+
+from .models import (
+    MidTermReportRemark,
+    MidTermScore,
+)
+
+
+# @admin.register(MidTermReportRemark)
+# class MidTermReportRemarkAdmin(admin.ModelAdmin):
+
+#     list_display = (
+#         'student',
+#         'term',
+#         'overall_average_display',
+#         'auto_teacher_remark_preview',
+#         'auto_head_teacher_remark_preview',
+#         'updated_at',
+#     )
+
+#     list_filter = (
+#         'term',
+#     )
+
+#     search_fields = (
+#         'student__first_name',
+#         'student__last_name',
+#         'teacher_remark',
+#         'head_teacher_remark',
+#     )
+
+#     readonly_fields = (
+#         'overall_average_display',
+#         'auto_teacher_remark_preview',
+#         'auto_head_teacher_remark_preview',
+#         'created_at',
+#         'updated_at',
+#     )
+
+#     fieldsets = (
+
+#         ('Student Information', {
+#             'fields': (
+#                 'student',
+#                 'term',
+#                 'overall_average_display',
+#             )
+#         }),
+
+#         ('System Generated Remarks Preview', {
+#             'description': (
+#                 'These are the automatic remarks '
+#                 'generated from the student overall '
+#                 'average score.'
+#             ),
+#             'fields': (
+#                 'auto_teacher_remark_preview',
+#                 'auto_head_teacher_remark_preview',
+#             )
+#         }),
+
+#         ('Teacher Remark Override', {
+#             'description': (
+#                 'Leave blank to use the system '
+#                 'generated teacher remark.'
+#             ),
+#             'fields': (
+#                 'teacher_remark',
+#             )
+#         }),
+
+#         ('Head Teacher Remark Override', {
+#             'description': (
+#                 'Leave blank to use the system '
+#                 'generated head teacher remark.'
+#             ),
+#             'fields': (
+#                 'head_teacher_remark',
+#             )
+#         }),
+
+#         ('Timestamps', {
+#             'fields': (
+#                 'created_at',
+#                 'updated_at',
+#             )
+#         }),
+#     )
+
+#     # ============================================
+#     # OVERALL AVERAGE
+#     # ============================================
+
+#     def get_overall_average(self, obj):
+#         """
+#         Computes student overall average.
+#         """
+
+#         scores = MidTermScore.objects.filter(
+#             student=obj.student,
+#             term=obj.term,
+#             exam_total_score__isnull=False
+#         )
+
+#         aggregate = scores.aggregate(
+#             avg_score=Avg('exam_total_score')
+#         )
+
+#         return aggregate['avg_score']
+
+#     # ============================================
+#     # DISPLAY OVERALL AVERAGE
+#     # ============================================
+
+#     def overall_average_display(self, obj):
+
+#         average = self.get_overall_average(obj)
+
+#         if average is not None:
+#             return round(average, 2)
+
+#         return "No Scores Available"
+
+#     overall_average_display.short_description = (
+#         'Overall Average'
+#     )
+
+#     # ============================================
+#     # AUTO TEACHER REMARK PREVIEW
+#     # ============================================
+
+#     def auto_teacher_remark_preview(self, obj):
+
+#         average = self.get_overall_average(obj)
+
+#         # exam_setting = getattr(
+#         #     obj.term.examsetting_set.filter(
+#         #         exam_type="Midterm"
+#         #     ).first(),
+#         #     'max_score',
+#         #     100
+#         # )
+#         exam_setting = ExamSetting.objects.filter(
+#                 term=obj.term,
+#                     exam_type="Midterm"
+#                 ).first()
+
+#         max_score = exam_setting.max_score if exam_setting else 100
+
+#         return mdterm_get_overall_remark(
+#             average_score=average,
+#             # max_score=exam_setting,
+#             max_score=max_score,
+#             remark_type='teacher'
+#         )
+
+#     auto_teacher_remark_preview.short_description = (
+#         'Auto Teacher Remark'
+#     )
+
+#     # ============================================
+#     # AUTO HEAD TEACHER REMARK PREVIEW
+#     # ============================================
+
+#     def auto_head_teacher_remark_preview(self, obj):
+
+#         average = self.get_overall_average(obj)
+
+#         exam_setting = getattr(
+#             obj.term.examsetting_set.filter(
+#                 exam_type="Midterm"
+#             ).first(),
+#             'max_score',
+#             100
+#         )
+
+#         return mdterm_get_overall_remark(
+#             average_score=average,
+#             max_score=exam_setting,
+#             remark_type='head_teacher'
+#         )
+
+#     auto_head_teacher_remark_preview.short_description = (
+#         'Auto Head Teacher Remark'
+#     )
+
+#     # ============================================
+#     # LIST PREVIEWS
+#     # ============================================
+
+#     def short_teacher_remark(self, obj):
+
+#         if obj.teacher_remark:
+#             return obj.teacher_remark[:50]
+
+#         return "Auto Generated"
+
+#     short_teacher_remark.short_description = (
+#         'Teacher Remark'
+#     )
+
+#     def short_head_teacher_remark(self, obj):
+
+#         if obj.head_teacher_remark:
+#             return obj.head_teacher_remark[:50]
+
+#         return "Auto Generated"
+
+#     short_head_teacher_remark.short_description = (
+#         'Head Teacher Remark'
+#     )
+
+from django.contrib import admin
+from django.db.models import Avg
+
+from .models import (
+    MidTermReportRemark,
+    MidTermScore,
+    ExamSetting,
+)
+
+from .utils import mdterm_get_overall_remark
+
+
+# @admin.register(MidTermReportRemark)
+# class MidTermReportRemarkAdmin(admin.ModelAdmin):
+
+#     list_display = (
+#         'student',
+#         'term',
+#         'overall_average_display',
+#         'auto_teacher_remark_preview',
+#         'auto_head_teacher_remark_preview',
+#         'updated_at',
+#     )
+
+#     list_filter = (
+#         'term',
+#     )
+
+#     search_fields = (
+#         'student__first_name',
+#         'student__last_name',
+#         'teacher_remark',
+#         'head_teacher_remark',
+#     )
+
+#     readonly_fields = (
+#         'overall_average_display',
+#         'auto_teacher_remark_preview',
+#         'auto_head_teacher_remark_preview',
+#         'created_at',
+#         'updated_at',
+#     )
+
+#     fieldsets = (
+#         ('Student Information', {
+#             'fields': (
+#                 'student',
+#                 'term',
+#                 'overall_average_display',
+#             )
+#         }),
+
+#         ('System Generated Remarks Preview', {
+#             'fields': (
+#                 'auto_teacher_remark_preview',
+#                 'auto_head_teacher_remark_preview',
+#             )
+#         }),
+
+#         ('Teacher Remark Override', {
+#             'fields': (
+#                 'teacher_remark',
+#             )
+#         }),
+
+#         ('Head Teacher Remark Override', {
+#             'fields': (
+#                 'head_teacher_remark',
+#             )
+#         }),
+
+#         ('Timestamps', {
+#             'fields': (
+#                 'created_at',
+#                 'updated_at',
+#             )
+#         }),
+#     )
+
+#     # ============================================
+#     # OVERALL AVERAGE
+#     # ============================================
+
+#     def get_overall_average(self, obj):
+#         return MidTermScore.objects.filter(
+#             student=obj.student,
+#             term=obj.term,
+#             exam_total_score__isnull=False
+#         ).aggregate(
+#             avg=Avg('exam_total_score')
+#         )['avg']
+
+#     def overall_average_display(self, obj):
+#         avg = self.get_overall_average(obj)
+#         return round(avg, 2) if avg else "No Scores Available"
+
+#     overall_average_display.short_description = "Overall Average"
+
+#     # ============================================
+#     # GET MAX SCORE (SINGLE SOURCE OF TRUTH)
+#     # ============================================
+
+#     def get_max_score(self, obj):
+#         setting = ExamSetting.objects.filter(
+#             term=obj.term,
+#             exam_type="Midterm"
+#         ).first()
+
+#         return setting.max_score if setting else 100
+
+#     # ============================================
+#     # AUTO TEACHER REMARK
+#     # ============================================
+
+#     def auto_teacher_remark_preview(self, obj):
+#         return mdterm_get_overall_remark(
+#             average_score=self.get_overall_average(obj),
+#             max_score=self.get_max_score(obj),
+#             remark_type='teacher'
+#         )
+
+#     auto_teacher_remark_preview.short_description = "Auto Teacher Remark"
+
+#     # ============================================
+#     # AUTO HEAD TEACHER REMARK
+#     # ============================================
+
+#     def auto_head_teacher_remark_preview(self, obj):
+#         return mdterm_get_overall_remark(
+#             average_score=self.get_overall_average(obj),
+#             max_score=self.get_max_score(obj),
+#             remark_type='head_teacher'
+#         )
+
+#     auto_head_teacher_remark_preview.short_description = "Auto Head Teacher Remark"
+    
+
+# from django.contrib import admin
+# from django.db.models import Avg
+
+# from .models import MidTermReportRemark, MidTermScore, ExamSetting
+# from .utils import mdterm_get_overall_remark
+
+
+# @admin.register(MidTermReportRemark)
+# class MidTermReportRemarkAdmin(admin.ModelAdmin):
+
+#     list_display = (
+#         'student',
+#         'term',
+#         'overall_average_display',
+#         'auto_teacher_remark_preview',
+#         'auto_head_teacher_remark_preview',
+#         'updated_at',
+#     )
+
+#     list_filter = (
+#         'term',
+#     )
+
+#     search_fields = (
+#         'student__first_name',
+#         'student__last_name',
+#         'teacher_remark',
+#         'head_teacher_remark',
+#     )
+
+#     readonly_fields = (
+#         'overall_average_display',
+#         'auto_teacher_remark_preview',
+#         'auto_head_teacher_remark_preview',
+#         'created_at',
+#         'updated_at',
+#     )
+
+#     fieldsets = (
+#         ('Student Information', {
+#             'fields': (
+#                 'student',
+#                 'term',
+#                 'overall_average_display',
+#             )
+#         }),
+
+#         ('System Generated Remarks Preview', {
+#             'fields': (
+#                 'auto_teacher_remark_preview',
+#                 'auto_head_teacher_remark_preview',
+#             )
+#         }),
+
+#         ('Teacher Remark Override', {
+#             'fields': (
+#                 'teacher_remark',
+#             )
+#         }),
+
+#         ('Head Teacher Remark Override', {
+#             'fields': (
+#                 'head_teacher_remark',
+#             )
+#         }),
+
+#         ('Timestamps', {
+#             'fields': (
+#                 'created_at',
+#                 'updated_at',
+#             )
+#         }),
+#     )
+
+#     # ============================================
+#     # OVERALL AVERAGE
+#     # ============================================
+
+#     def get_overall_average(self, obj):
+#         return MidTermScore.objects.filter(
+#             student=obj.student,
+#             term=obj.term,
+#             exam_total_score__isnull=False
+#         ).aggregate(
+#             avg=Avg('exam_total_score')
+#         )['avg']
+
+#     def overall_average_display(self, obj):
+#         avg = self.get_overall_average(obj)
+#         return round(avg, 2) if avg else "No Scores Available"
+
+#     overall_average_display.short_description = "Overall Average"
+
+#     # ============================================
+#     # GET MAX SCORE
+#     # ============================================
+
+#     def get_max_score(self, obj):
+#         setting = ExamSetting.objects.filter(
+#             term=obj.term,
+#             exam_type="Midterm"
+#         ).first()
+
+#         return setting.max_score if setting else 100
+
+#     # ============================================
+#     # AUTO TEACHER REMARK
+#     # ============================================
+
+#     def auto_teacher_remark_preview(self, obj):
+#         return mdterm_get_overall_remark(
+#             average_score=self.get_overall_average(obj),
+#             max_score=self.get_max_score(obj),
+#             remark_type='teacher'
+#         )
+
+#     auto_teacher_remark_preview.short_description = "Auto Teacher Remark"
+
+#     # ============================================
+#     # AUTO HEAD TEACHER REMARK
+#     # ============================================
+
+#     def auto_head_teacher_remark_preview(self, obj):
+#         return mdterm_get_overall_remark(
+#             average_score=self.get_overall_average(obj),
+#             max_score=self.get_max_score(obj),
+#             remark_type='head_teacher'
+#         )
+
+#     auto_head_teacher_remark_preview.short_description = "Auto Head Teacher Remark"
+
+#     # ============================================
+#     # 🔥 CRITICAL FIX: AUTO-SAVE OVERRIDE LOGIC
+#     # ============================================
+
+#     def save_model(self, request, obj, form, change):
+#         """
+#         Auto-generate remarks ONLY when empty.
+#         Manual input ALWAYS takes priority.
+#         """
+
+#         average = self.get_overall_average(obj)
+#         max_score = self.get_max_score(obj)
+
+#         # Prevent crash if no scores exist
+#         if average is None:
+#             super().save_model(request, obj, form, change)
+#             return
+
+#         # AUTO TEACHER REMARK (ONLY IF EMPTY)
+#         if not obj.teacher_remark:
+#             obj.teacher_remark = mdterm_get_overall_remark(
+#                 average_score=average,
+#                 max_score=max_score,
+#                 remark_type='teacher'
+#             )
+
+#         # AUTO HEAD TEACHER REMARK (ONLY IF EMPTY)
+#         if not obj.head_teacher_remark:
+#             obj.head_teacher_remark = mdterm_get_overall_remark(
+#                 average_score=average,
+#                 max_score=max_score,
+#                 remark_type='head_teacher'
+#             )
+
+#         super().save_model(request, obj, form, change)
+
+
+from django.contrib import admin
+from django.db.models import Avg
+
+from .models import MidTermReportRemark, MidTermScore, ExamSetting
+from .utils import mdterm_get_overall_remark
+
+
+@admin.register(MidTermReportRemark)
+class MidTermReportRemarkAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'student',
+        'term',
+        'overall_average_display',
+        'display_teacher_remark',
+        'display_head_teacher_remark',
+        'updated_at',
+    )
+
+    list_filter = (
+        'term',
+    )
+
+    search_fields = (
+        'student__first_name',
+        'student__last_name',
+        'teacher_remark',
+        'head_teacher_remark',
+    )
+
+    readonly_fields = (
+        'overall_average_display',
+        'auto_teacher_remark_preview',
+        'auto_head_teacher_remark_preview',
+        'created_at',
+        'updated_at',
+    )
+
+    fieldsets = (
+        ('Student Information', {
+            'fields': (
+                'student',
+                'term',
+                'overall_average_display',
+            )
+        }),
+
+        ('System Generated Remarks Preview', {
+            'fields': (
+                'auto_teacher_remark_preview',
+                'auto_head_teacher_remark_preview',
+            )
+        }),
+
+        ('Teacher Remark Override', {
+            'fields': (
+                'teacher_remark',
+            )
+        }),
+
+        ('Head Teacher Remark Override', {
+            'fields': (
+                'head_teacher_remark',
+            )
+        }),
+
+        ('Timestamps', {
+            'fields': (
+                'created_at',
+                'updated_at',
+            )
+        }),
+    )
+
+    # ============================================
+    # AVERAGE CALCULATION
+    # ============================================
+
+    def get_overall_average(self, obj):
+        return MidTermScore.objects.filter(
+            student=obj.student,
+            term=obj.term,
+            exam_total_score__isnull=False
+        ).aggregate(
+            avg=Avg('exam_total_score')
+        )['avg']
+
+    def overall_average_display(self, obj):
+        avg = self.get_overall_average(obj)
+        return round(avg, 2) if avg else "No Scores Available"
+
+    overall_average_display.short_description = "Overall Average"
+
+    # ============================================
+    # MAX SCORE
+    # ============================================
+
+    def get_max_score(self, obj):
+        setting = ExamSetting.objects.filter(
+            term=obj.term,
+            exam_type="Midterm"
+        ).first()
+
+        return setting.max_score if setting else 100
+
+    # ============================================
+    # AUTO REMARKS
+    # ============================================
+
+    def auto_teacher_remark_preview(self, obj):
+        return mdterm_get_overall_remark(
+            average_score=self.get_overall_average(obj),
+            max_score=self.get_max_score(obj),
+            remark_type='teacher'
+        )
+
+    auto_teacher_remark_preview.short_description = "Auto Teacher Remark"
+
+    def auto_head_teacher_remark_preview(self, obj):
+        return mdterm_get_overall_remark(
+            average_score=self.get_overall_average(obj),
+            max_score=self.get_max_score(obj),
+            remark_type='head_teacher'
+        )
+
+    auto_head_teacher_remark_preview.short_description = "Auto Head Teacher Remark"
+
+    # ============================================
+    # DISPLAY (DB VALUE FIRST, AUTO FALLBACK)
+    # ============================================
+
+    def display_teacher_remark(self, obj):
+        if obj.teacher_remark:
+            return obj.teacher_remark
+        return self.auto_teacher_remark_preview(obj)
+
+    display_teacher_remark.short_description = "Teacher Remark"
+
+    def display_head_teacher_remark(self, obj):
+        if obj.head_teacher_remark:
+            return obj.head_teacher_remark
+        return self.auto_head_teacher_remark_preview(obj)
+
+    display_head_teacher_remark.short_description = "Head Teacher Remark"
+
 
 
 admin.site.register(Score, ScoreAdmin)

@@ -185,34 +185,166 @@ def mdterm_get_subject_remark(score, max_score=100):
         return "Score out of typical range."
 
 
-def mdterm_get_overall_remark(average_score, max_score=100):
+# # Mid Term
+# def mdterm_get_overall_remark(average_score, max_score=100):
+#     """
+#     Provides an overall remark for a term based on the average score,
+#     normalized to the exam's max score.
+
+#     Args:
+#         average_score (float | int | None): Average score across subjects.
+#         max_score (float | int): Maximum possible score for the exam.
+
+#     Returns:
+#         str: Overall remark for the student.
+#     """
+#     if average_score is None:
+#         return "No overall average available."
+
+#     percentage = normalize_score(average_score, max_score)
+#     if percentage is None:
+#         return "Average score out of typical range."
+
+#     if 75 <= percentage <= 100:
+#         return "Outstanding academic achievement this term. Keep up the excellent work!"
+#     elif 65 <= percentage < 75:
+#         return "Very good overall performance. Continue to strive for excellence."
+#     elif 55 <= percentage < 65:
+#         return "Good academic progress. Focus on improving weaker areas."
+#     elif 45 <= percentage < 55:
+#         return "Fair overall performance. Requires more dedication and effort across subjects."
+#     elif 0 <= percentage < 45:
+#         return "Below average performance. Urgent need for improvement and support."
+#     else:
+#         return "Average score out of typical range."
+
+
+
+# ============================================
+# OVERALL REMARK UTILITY
+# ============================================
+
+def mdterm_get_overall_remark(
+    average_score,
+    max_score=100,
+    remark_type='teacher'
+):
     """
-    Provides an overall remark for a term based on the average score,
-    normalized to the exam's max score.
+    Generates overall report remark.
 
     Args:
-        average_score (float | int | None): Average score across subjects.
-        max_score (float | int): Maximum possible score for the exam.
+        average_score:
+            Student overall average.
+
+        max_score:
+            Exam setting maximum score.
+
+        remark_type:
+            teacher | head_teacher
 
     Returns:
-        str: Overall remark for the student.
+        str
     """
+
     if average_score is None:
         return "No overall average available."
 
-    percentage = normalize_score(average_score, max_score)
+    percentage = normalize_score(
+        average_score,
+        max_score
+    )
+
     if percentage is None:
         return "Average score out of typical range."
 
+    # ============================================
+    # TEACHER REMARKS
+    # ============================================
+
+    teacher_remarks = {
+
+        'excellent': (
+            "Outstanding academic achievement "
+            "this term. Keep up the excellent work!"
+        ),
+
+        'very_good': (
+            "Very good overall performance. "
+            "Continue to strive for excellence."
+        ),
+
+        'good': (
+            "Good academic progress. "
+            "Focus on improving weaker areas."
+        ),
+
+        'fair': (
+            "Fair overall performance. "
+            "Requires more dedication and effort "
+            "across subjects."
+        ),
+
+        'poor': (
+            "Below average performance. "
+            "Urgent need for improvement and support."
+        )
+    }
+
+    # ============================================
+    # HEAD TEACHER REMARKS
+    # ============================================
+
+    head_teacher_remarks = {
+
+        'excellent': (
+            "Excellent result. "
+            "A highly commendable academic outing."
+        ),
+
+        'very_good': (
+            "Very impressive performance. "
+            "Keep maintaining high standards."
+        ),
+
+        'good': (
+            "Good performance overall. "
+            "More consistency will produce better results."
+        ),
+
+        'fair': (
+            "Average performance observed. "
+            "Greater academic commitment is encouraged."
+        ),
+
+        'poor': (
+            "Performance is below expectation. "
+            "Immediate academic improvement is necessary."
+        )
+    }
+
+    remarks = (
+        teacher_remarks
+        if remark_type == 'teacher'
+        else head_teacher_remarks
+    )
+
+    # ============================================
+    # SCORE MAPPING
+    # ============================================
+
     if 75 <= percentage <= 100:
-        return "Outstanding academic achievement this term. Keep up the excellent work!"
+        return remarks['excellent']
+
     elif 65 <= percentage < 75:
-        return "Very good overall performance. Continue to strive for excellence."
+        return remarks['very_good']
+
     elif 55 <= percentage < 65:
-        return "Good academic progress. Focus on improving weaker areas."
+        return remarks['good']
+
     elif 45 <= percentage < 55:
-        return "Fair overall performance. Requires more dedication and effort across subjects."
+        return remarks['fair']
+
     elif 0 <= percentage < 45:
-        return "Below average performance. Urgent need for improvement and support."
-    else:
-        return "Average score out of typical range."
+        return remarks['poor']
+
+    return "Average score out of typical range."

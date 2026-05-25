@@ -15,7 +15,7 @@ from django.views import View
 from django.db import transaction
 from django.core.exceptions import ValidationError, ObjectDoesNotExist, PermissionDenied
 from django.forms import formset_factory, modelformset_factory
-from .models import Score, MotorAbilityScore, MidTermScore, ResultPublication, SessionResultStatus, ExamSetting, SchoolYearSettings
+from .models import Score, MotorAbilityScore, MidTermScore, ResultPublication, SessionResultStatus, ExamSetting, SchoolYearSettings, MidTermComponent, MidTermComponentScore, MidTermReportRemark
 from .forms import ScoreEntryForm, ReportCardFilterForm, SessionReportCardFilterForm, MotorAbilityScoreForm, MidTermScoreForm # Import new form
 from .utils import get_grade, get_subject_remark, get_overall_remark, mdterm_get_subject_remark, mdterm_get_grade, mdterm_get_overall_remark # Import helper functions
 from django.template.loader import render_to_string # Import render_to_string
@@ -1753,77 +1753,141 @@ class ResultPermissionGatekeeperView(View):
 
 
 
-# Mid term score entry for new logic
-class MidTermScoreEntryView(LoginRequiredMixin, View):
+# # Mid term score entry for new logic
+class TeacherRequiredMixin(UserPassesTestMixin):
+    """
+    Allows only:
+    - teachers linked to Teacher model
+    - staff
+    - superusers
+    """
+
+    def test_func(self):
+        user = self.request.user
+        return (
+            hasattr(user, 'teacher')
+            or user.is_staff
+            or user.is_superuser
+        )
+
+
+class MidTermScoreEntryView(TeacherRequiredMixin, LoginRequiredMixin, View):
     template_name = 'results/midterm_score_entry.html'
 
     def dispatch(self, request, *args, **kwargs):
-        # Only teachers and staff can access
-        if not (hasattr(request.user, 'teacher') or request.user.is_staff):
-            messages.error(request, "You do not have permission to enter scores.")
+        if not self.test_func():
+            messages.error(request, "Access denied.")
             return redirect('pages:portal-home')
+
         return super().dispatch(request, *args, **kwargs)
 
-    def get_formset(self, max_score, queryset, data=None):
-        """
-        Create a ModelFormSet passing max_score to each form for validation.
-        """
+    # ============================================
+    # GET FORMSET
+    # ============================================
+    def get_formset(self, queryset, data=None):
         MidTermScoreFormSet = modelformset_factory(
             MidTermScore,
             form=MidTermScoreForm,
-            extra=0,
-            fields=('exam_total_score',)
+            extra=0
         )
 
         return MidTermScoreFormSet(
-            data=data,
             queryset=queryset,
-            form_kwargs={'max_score': max_score}
+            data=data
         )
 
+    # ============================================
+    # GET
+    # ============================================
     def get(self, request, class_id, subject_id, term_id):
+
         assigned_class = get_object_or_404(Standard, id=class_id)
         subject = get_object_or_404(Subject, id=subject_id)
         term = get_object_or_404(Term, id=term_id)
 
-        # --- Authorization for teachers ---
-        if hasattr(request.user, 'teacher') and not request.user.is_staff:
+        # ============================================
+        # STAFF / SUPERUSER GET FULL ACCESS
+        # ============================================
+        if request.user.is_superuser or request.user.is_staff:
+            teacher = None
+            assigned_subjects = Subject.objects.all()
+            assigned_classes = Standard.objects.all()
+        else:
             teacher = request.user.teacher
-            is_assigned_to_class = assigned_class in teacher.standards_assigned.all()
-            teaches_subject = subject in teacher.subjects_taught.all()
-            if not (is_assigned_to_class and teaches_subject):
-                messages.error(
-                    request,
-                    f"You are not authorized to enter scores for {subject.name} in {assigned_class.name}."
-                )
-                return redirect('results:teacher_dashboard')
+            assigned_subjects = teacher.subjects_taught.all()
+            assigned_classes = teacher.standards_assigned.all()
 
-        
+        # ============================================
+        # STRICT ACCESS CONTROL
+        # ============================================
+        if (
+            assigned_class not in assigned_classes
+            or subject not in assigned_subjects
+        ):
+            messages.error(request, "You are not assigned to this class or subject.")
+            return redirect('results:teacher_dashboard')
+
+        # ============================================
+        # EXAM SETTING
+        # ============================================
         exam_setting = get_object_or_404(
             ExamSetting,
             term=term,
             exam_type="Midterm"
         )
 
-        central_max = exam_setting.max_score  # used for form validation
+        central_max = exam_setting.max_score
 
-        # --- Ensure all students have a MidTermScore instance ---
-        students = Student.objects.filter(current_class=assigned_class).order_by('last_name')
-        existing_student_ids = MidTermScore.objects.filter(
-            student__in=students, subject=subject, term=term
+        # ============================================
+        # COMPONENTS
+        # ============================================
+        components = MidTermComponent.objects.filter(
+            term=term,
+            is_active=True
+        ).order_by('order')
+
+        # ============================================
+        # STUDENTS (ONLY ASSIGNED CLASS)
+        # ============================================
+        students = Student.objects.filter(
+            current_class=assigned_class
+        ).order_by('last_name')
+
+        # ============================================
+        # ENSURE SCORE OBJECTS
+        # ============================================
+        existing = MidTermScore.objects.filter(
+            student__in=students,
+            subject=subject,
+            term=term
         ).values_list('student_id', flat=True)
 
         for student in students:
-            if student.id not in existing_student_ids:
-                MidTermScore.objects.create(student=student, subject=subject, term=term)
+            if student.id not in existing:
+                MidTermScore.objects.create(
+                    student=student,
+                    subject=subject,
+                    term=term
+                )
 
         queryset = MidTermScore.objects.filter(
             student__in=students,
             subject=subject,
             term=term
-        ).select_related('student').order_by('student__last_name')
+        ).select_related('student').prefetch_related('component_scores__component')
 
-        formset = self.get_formset(central_max, queryset)
+        # ============================================
+        # SCORE MAP (PERSISTENCE FIX)
+        # ============================================
+        component_score_map = {}
+
+        for score in queryset:
+            component_score_map[score.id] = {
+                cs.component_id: cs.score
+                for cs in score.component_scores.all()
+            }
+
+        formset = self.get_formset(queryset)
 
         context = {
             'formset': formset,
@@ -1831,196 +1895,415 @@ class MidTermScoreEntryView(LoginRequiredMixin, View):
             'subject': subject,
             'term': term,
             'students': students,
+            'components': components,
+            'exam_setting': exam_setting,
             'central_max': central_max,
-            'exam_setting': exam_setting,  # <-- pass the object
-
+            'component_score_map': component_score_map,
+            'assigned_subjects': assigned_subjects,
+            'assigned_classes': assigned_classes,
         }
+
         return render(request, self.template_name, context)
 
+    # ============================================
+    # POST (SAME ACCESS CONTROL)
+    # ============================================
     def post(self, request, class_id, subject_id, term_id):
+
         assigned_class = get_object_or_404(Standard, id=class_id)
         subject = get_object_or_404(Subject, id=subject_id)
         term = get_object_or_404(Term, id=term_id)
 
-        # --- Authorization check ---
-        if hasattr(request.user, 'teacher') and not request.user.is_staff:
+        if request.user.is_superuser or request.user.is_staff:
+            teacher = None
+            assigned_subjects = Subject.objects.all()
+            assigned_classes = Standard.objects.all()
+        else:
             teacher = request.user.teacher
-            if not (assigned_class in teacher.standards_assigned.all() and subject in teacher.subjects_taught.all()):
-                messages.error(request, "Unauthorized action.")
-                return redirect('results:teacher_dashboard')
+            assigned_subjects = teacher.subjects_taught.all()
+            assigned_classes = teacher.standards_assigned.all()
 
-        # --- Get central max score ---
+        if (
+            assigned_class not in assigned_classes
+            or subject not in assigned_subjects
+        ):
+            messages.error(request, "Unauthorized access.")
+            return redirect('results:teacher_dashboard')
+
         exam_setting = get_object_or_404(
             ExamSetting,
             term=term,
             exam_type="Midterm"
         )
+
         central_max = exam_setting.max_score
 
-        # --- Prepare queryset ---
-        students = Student.objects.filter(current_class=assigned_class)
+        components = MidTermComponent.objects.filter(
+            term=term,
+            is_active=True
+        ).order_by('order')
+
+        students = Student.objects.filter(
+            current_class=assigned_class
+        )
+
         queryset = MidTermScore.objects.filter(
             student__in=students,
             subject=subject,
             term=term
-        ).select_related('student').order_by('student__last_name')
+        ).select_related('student').prefetch_related('component_scores__component')
 
-        formset = self.get_formset(central_max, queryset, data=request.POST)
+        formset = self.get_formset(queryset, data=request.POST)
+
+        errors = False
+
+        for score in queryset:
+
+            total = 0
+
+            for component in components:
+
+                key = f'component_{score.id}_{component.id}'
+                raw = request.POST.get(key)
+
+                try:
+                    value = float(raw) if raw not in ['', None] else 0
+                except ValueError:
+                    errors = True
+                    continue
+
+                if value > component.max_score:
+                    messages.error(
+                        request,
+                        f"{score.student} - {component.title} exceeds limit"
+                    )
+                    errors = True
+
+                total += value
+
+            if total > central_max:
+                messages.error(
+                    request,
+                    f"{score.student} exceeds total max score"
+                )
+                errors = True
+
+        if errors:
+            return render(request, self.template_name, {
+                'formset': formset,
+                'assigned_class': assigned_class,
+                'subject': subject,
+                'term': term,
+                'students': students,
+                'components': components,
+                'exam_setting': exam_setting,
+                'central_max': central_max,
+                'component_score_map': {},
+            })
 
         if formset.is_valid():
-            instances_to_save = []
-            instances_to_delete = []
+            formset.save()
 
-            for form in formset:
-                if form.has_changed():
-                    instance = form.save(commit=False)
-                    score_value = form.cleaned_data.get('exam_total_score')
+            for score in queryset:
 
-                    # Skip saving empty or blank inputs
-                    if score_value in (None, ''):
-                        if instance.pk:
-                            instances_to_delete.append(instance)
-                        continue
+                total = 0
 
-                    # Enforce central max score
-                    if score_value > central_max:
-                        form.add_error(
-                            'exam_total_score',
-                            f"Score cannot exceed {central_max}."
-                        )
-                        continue
+                for component in components:
 
-                    # Assign max_score before saving
-                    instance.max_score = central_max
-                    instances_to_save.append(instance)
+                    key = f'component_{score.id}_{component.id}'
+                    raw = request.POST.get(key)
+                    value = float(raw) if raw not in ['', None] else 0
 
-            # Save valid scores
-            for instance in instances_to_save:
-                instance.save()
+                    obj, _ = MidTermComponentScore.objects.get_or_create(
+                        midterm_score=score,
+                        component=component
+                    )
 
-            # Delete empty/removed scores
-            for instance in instances_to_delete:
-                instance.delete()
+                    obj.score = value
+                    obj.save()
 
-            return redirect(
-                'results:midterm_score_success',
+                    total += value
+
+                score.exam_total_score = total
+                score.save()
+
+            messages.success(request, "Scores saved successfully.")
+
+            return redirect('results:midterm_score_success',
                 class_id=class_id,
                 subject_id=subject_id,
                 term_id=term_id
             )
 
-        context = {
+        return render(request, self.template_name, {
             'formset': formset,
             'assigned_class': assigned_class,
             'subject': subject,
             'term': term,
-            'students': students.order_by('last_name'),
+            'students': students,
+            'components': components,
+            'exam_setting': exam_setting,
             'central_max': central_max,
-            'exam_setting': exam_setting,  # <-- pass the object
+            'component_score_map': {},
+        })
 
-        }
-        messages.error(request, "There was an error in the score entry. Please check the scores entered.")
-        return render(request, self.template_name, context)
-
+# MID TERM REPORT CARD VIEW
 
 class MidTermReportCardView(LoginRequiredMixin, View):
-    template_name = 'results/mid_term_report_card_detail.html'
+
+    template_name     = 'results/mid_term_report_card_detail.html'
     pdf_template_name = 'results/mid_term_report_card_detail.html'
 
     def get(self, request, student_id, term_id, *args, **kwargs):
+
         student = get_object_or_404(Student, id=student_id)
-        term = get_object_or_404(Term, id=term_id)
+        term    = get_object_or_404(Term, id=term_id)
 
-        # -----------------------------------------------------------
-        # AUTHORIZATION LOGIC
-        # -----------------------------------------------------------
-        is_admin = request.user.is_superuser or request.user.is_staff
-        is_current_student = hasattr(request.user, 'student') and request.user.student.id == student_id
-        is_assigned_form_teacher = False
+        # ============================================
+        # AUTHORIZATION
+        # ============================================
 
-        if hasattr(request.user, 'teacher') and student.form_teacher == request.user.teacher:
-            is_assigned_form_teacher = True
+        is_admin = (
+            request.user.is_superuser
+            or request.user.is_staff
+        )
+
+        is_current_student = (
+            hasattr(request.user, 'student')
+            and request.user.student.id == student_id
+        )
+
+        is_assigned_form_teacher = (
+            hasattr(request.user, 'teacher')
+            and student.form_teacher == request.user.teacher
+        )
 
         if not (is_admin or is_current_student or is_assigned_form_teacher):
             return redirect('results:student_midterm_list')
-        # -----------------------------------------------------------
 
-        # -----------------------------------------------------------
-        # Get central max score for Midterm from ExamSetting
-        # -----------------------------------------------------------
+        # ============================================
+        # EXAM SETTING
+        # ============================================
+
         exam_setting = get_object_or_404(
             ExamSetting,
             term=term,
             exam_type="Midterm"
         )
+
         central_max = exam_setting.max_score
-        # -----------------------------------------------------------
 
-        # Fetch student's midterm scores
-        midterm_scores = MidTermScore.objects.filter(
-            student=student,
-            term=term,
-            exam_total_score__isnull=False
-        ).select_related('subject').order_by('subject__name')
+        # ============================================
+        # MIDTERM SCORES
+        # ============================================
 
-        report_data = []
-        total_scores_sum = 0
+        midterm_scores = (
+            MidTermScore.objects
+            .filter(
+                student=student,
+                term=term,
+                exam_total_score__isnull=False,
+            )
+            .select_related('subject')
+            .prefetch_related('component_scores__component')
+            .order_by('subject__name')
+        )
+
+        # ============================================
+        # BUILD COMPONENT HEADERS
+        # Collect all distinct components for this
+        # student + term, ordered consistently.
+        # This defines the fixed column structure.
+        # ============================================
+
+        seen_component_ids = []
+        component_headers  = []
 
         for score in midterm_scores:
-            # Class statistics for the subject
-            stats = MidTermScore.objects.filter(
+            for cs in score.component_scores.all():
+                if cs.component.id not in seen_component_ids:
+                    seen_component_ids.append(cs.component.id)
+                    component_headers.append({
+                        'id':        cs.component.id,
+                        'title':     cs.component.title,
+                        'max_score': cs.component.max_score,
+                    })
+
+        # Sort headers by their natural order if needed
+        # (remove this sort if your component model has no 'order' field)
+        # component_headers.sort(key=lambda x: x.get('order', 0))
+
+        # ============================================
+        # BUILD REPORT DATA
+        # Each row has a fixed-length component_breakdown
+        # list that is always aligned to component_headers.
+        # Missing scores appear as None → shown as N/A.
+        # ============================================
+
+        report_data          = []
+        normalized_total_sum = 0
+
+        for score in midterm_scores:
+
+            # -- percentage conversion --
+            percentage_score = (
+                (score.exam_total_score / central_max) * 100
+                if central_max > 0 else 0
+            )
+
+            # -- classmates scores for statistics --
+            classmates_scores = MidTermScore.objects.filter(
                 term=term,
                 subject=score.subject,
                 student__current_class=student.current_class,
-                exam_total_score__isnull=False
-            ).aggregate(
-                class_max=Max('exam_total_score'),
-                class_min=Min('exam_total_score'),
-                class_avg=Avg('exam_total_score')
+                exam_total_score__isnull=False,
             )
 
+            normalized_scores = [
+                (cs.exam_total_score / central_max) * 100
+                if central_max > 0 else 0
+                for cs in classmates_scores
+            ]
+
+            class_high = max(normalized_scores) if normalized_scores else None
+            class_low  = min(normalized_scores) if normalized_scores else None
+            class_avg  = (
+                sum(normalized_scores) / len(normalized_scores)
+                if normalized_scores else None
+            )
+
+            # -- build lookup: component_id -> score value --
+            comp_score_lookup = {
+                cs.component.id: cs.score
+                for cs in score.component_scores.all()
+            }
+
+            # -- build fixed-length breakdown aligned to headers --
+            # Every row will have exactly len(component_headers) cells.
+            # If a component score was not recorded, score = None → N/A.
+            component_breakdown = [
+                {
+                    'title':     header['title'],
+                    'max_score': header['max_score'],
+                    'score':     comp_score_lookup.get(header['id'], None),
+                }
+                for header in component_headers
+            ]
+
             report_data.append({
-                'subject': score.subject.name,
-                'total_score': score.exam_total_score,
-                'grade': mdterm_get_grade(score.exam_total_score, max_score=central_max),
-                'remark': mdterm_get_subject_remark(score.exam_total_score, max_score=central_max),
-                'class_high': stats['class_max'],
-                'class_low': stats['class_min'],
-                'class_avg': stats['class_avg'],
+                'subject':              score.subject.name,
+                'raw_score':            score.exam_total_score,
+                'percentage_score':     percentage_score,
+                'grade':                mdterm_get_grade(
+                                            percentage_score, max_score=100
+                                        ),
+                'remark':               mdterm_get_subject_remark(
+                                            percentage_score, max_score=100
+                                        ),
+                'class_high':           class_high,
+                'class_low':            class_low,
+                'class_avg':            class_avg,
+                'component_breakdown':  component_breakdown,
             })
 
-            total_scores_sum += score.exam_total_score
+            normalized_total_sum += percentage_score
 
-        subjects_with_scores_count = len(report_data)
-        overall_average = total_scores_sum / subjects_with_scores_count if subjects_with_scores_count > 0 else None
-        overall_remark = mdterm_get_overall_remark(overall_average, max_score=central_max) if overall_average else "No scores recorded."
+        # ============================================
+        # OVERALL COMPUTATION
+        # ============================================
+
+        subjects_count  = len(report_data)
+        overall_average = (
+            normalized_total_sum / subjects_count
+            if subjects_count > 0 else 0
+        )
+        total_raw_score  = sum(
+            row['raw_score'] for row in report_data
+        )
+        total_obtainable = subjects_count * central_max
+
+        # ============================================
+        # REMARKS
+        # ============================================
+
+        report_remark_obj, _ = MidTermReportRemark.objects.get_or_create(
+            student=student,
+            term=term,
+        )
+
+        teacher_auto_remark = (
+            mdterm_get_overall_remark(
+                overall_average, max_score=100, remark_type='teacher'
+            )
+            if overall_average is not None
+            else "No scores recorded."
+        )
+
+        head_teacher_auto_remark = (
+            mdterm_get_overall_remark(
+                overall_average, max_score=100, remark_type='head_teacher'
+            )
+            if overall_average is not None
+            else "No scores recorded."
+        )
+
+        teacher_remark = (
+            report_remark_obj.teacher_remark
+            or teacher_auto_remark
+        )
+
+        head_teacher_remark = (
+            report_remark_obj.head_teacher_remark
+            or head_teacher_auto_remark
+        )
+
+        # ============================================
+        # SCHOOL IDENTITY
+        # ============================================
 
         try:
             school_identity = SchoolIdentity.objects.first()
-        except:
+        except Exception:
             school_identity = None
 
+        # ============================================
+        # CONTEXT
+        # ============================================
+
         context = {
-            'student': student,
-            'term': term,
-            'report_data': report_data,
-            'overall_average': overall_average,
-            'overall_remark': overall_remark,
-            'school_identity': school_identity,
-            'total_subjects_scored': subjects_with_scores_count,
-            'exam_setting': exam_setting,  # Pass exam_setting for template display
+            'student':              student,
+            'term':                 term,
+            'exam_setting':         exam_setting,
+            'central_max':          central_max,
+            'component_headers':    component_headers,
+            'report_data':          report_data,
+            'overall_average':      overall_average,
+            'total_raw_score':      total_raw_score,
+            'total_obtainable':     total_obtainable,
+            'total_subjects_scored': subjects_count,
+            'teacher_remark':       teacher_remark,
+            'head_teacher_remark':  head_teacher_remark,
+            'school_identity':      school_identity,
         }
 
-        # PDF download option
-        if 'download' in request.GET and request.GET['download'] == 'pdf':
-            filename = f"{student.first_name}_{term.name}_MidTerm.pdf"
-            pdf_response = render_to_pdf_xhtml2pdf(self.pdf_template_name, context)
+        # ============================================
+        # PDF DOWNLOAD
+        # ============================================
+
+        if request.GET.get('download') == 'pdf':
+            filename = (
+                f"{student.first_name}_{term.name}_MidTerm.pdf"
+            )
+            pdf_response = render_to_pdf_xhtml2pdf(
+                self.pdf_template_name, context
+            )
             if pdf_response:
-                pdf_response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                pdf_response['Content-Disposition'] = (
+                    f'attachment; filename="{filename}"'
+                )
                 return pdf_response
 
         return render(request, self.template_name, context)
-
 
 
 # Mid Term List with filtering

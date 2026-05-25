@@ -289,32 +289,231 @@ class ExamSetting(models.Model):
         verbose_name_plural = 'Mid-Term Score Settings'
 
 
-# New Mid Term Score
+
+# # New Mid Term Score
+
+# class MidTermScore(models.Model):
+#     student = models.ForeignKey(Student, on_delete=models.CASCADE)
+#     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+#     term = models.ForeignKey(Term, on_delete=models.CASCADE)
+
+#     exam_total_score = models.FloatField(null=True, blank=True)
+
+#     def percentage(self):
+#         setting = ExamSetting.objects.get(
+#             term=self.term,
+#             exam_type="Midterm"
+#         )
+#         return (self.exam_total_score / setting.max_score) * 100
+
+    
+#     class Meta:
+#         # Each student can only have one mid-term score entry per subject per term
+#         unique_together = ('student', 'subject', 'term')
+#         ordering = ['student__last_name', 'subject__name']
+#         verbose_name = 'Mid-Term Score'
+#         verbose_name_plural = 'Mid-Term Scores'
+
+#     def __str__(self):
+#         return f"{self.student.first_name} - {self.subject.name} (Mid-Term {self.term.name})"
+ 
+
+# New addition for midterm scores
 
 class MidTermScore(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     term = models.ForeignKey(Term, on_delete=models.CASCADE)
 
-    exam_total_score = models.FloatField(null=True, blank=True)
+    exam_total_score = models.FloatField(null=True, blank=True, default=0)
+
+    def calculate_total_score(self):
+        return self.component_scores.aggregate(
+            total=models.Sum('score')
+        )['total'] or 0
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        total = self.calculate_total_score()
+
+        if self.exam_total_score != total:
+            self.exam_total_score = total
+
+            super().save(update_fields=['exam_total_score'])
 
     def percentage(self):
         setting = ExamSetting.objects.get(
             term=self.term,
             exam_type="Midterm"
         )
-        return (self.exam_total_score / setting.max_score) * 100
 
-    
+        if setting.max_score > 0:
+            return (
+                self.exam_total_score / setting.max_score
+            ) * 100
+
+        return 0
+
     class Meta:
-        # Each student can only have one mid-term score entry per subject per term
         unique_together = ('student', 'subject', 'term')
         ordering = ['student__last_name', 'subject__name']
         verbose_name = 'Mid-Term Score'
         verbose_name_plural = 'Mid-Term Scores'
 
     def __str__(self):
-        return f"{self.student.first_name} - {self.subject.name} (Mid-Term {self.term.name})"
+        return (
+            f"{self.student.first_name} - "
+            f"{self.subject.name} "
+            f"(Mid-Term {self.term.name})"
+        )
+
+#New Logic For midterm score setting
+from django.db import models
+from django.core.exceptions import ValidationError
+
+
+class MidTermComponent(models.Model):
+    term = models.ForeignKey(Term, on_delete=models.CASCADE)
+
+    title = models.CharField(max_length=100)
+
+    max_score = models.PositiveIntegerField()
+
+    order = models.PositiveIntegerField(default=1)
+
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['order']
+        unique_together = ('term', 'title')
+
+    def __str__(self):
+        return f"{self.title} ({self.max_score})"
+
+    def clean(self):
+        """
+        Ensure total component scores do not exceed
+        ExamSetting maximum score.
+        """
+
+        setting = ExamSetting.objects.filter(
+            term=self.term,
+            exam_type="Midterm"
+        ).first()
+
+        if not setting:
+            return
+
+        existing_total = MidTermComponent.objects.filter(
+            term=self.term
+        ).exclude(pk=self.pk).aggregate(
+            total=models.Sum('max_score')
+        )['total'] or 0
+
+        final_total = existing_total + self.max_score
+
+        if final_total > setting.max_score:
+            raise ValidationError(
+                f"Total component scores ({final_total}) "
+                f"cannot exceed Midterm setting score "
+                f"({setting.max_score})."
+            )
+        
+class MidTermComponentScore(models.Model):
+    midterm_score = models.ForeignKey(
+        MidTermScore,
+        on_delete=models.CASCADE,
+        related_name='component_scores'
+    )
+
+    component = models.ForeignKey(
+        MidTermComponent,
+        on_delete=models.CASCADE
+    )
+
+    score = models.FloatField(default=0)
+
+    class Meta:
+        unique_together = ('midterm_score', 'component')
+
+    def __str__(self):
+        return (
+            f"{self.midterm_score.student} - "
+            f"{self.component.title}: {self.score}"
+        )
+
+    def clean(self):
+        """
+        Prevent score from exceeding component maximum.
+        """
+
+        if self.score > self.component.max_score:
+            raise ValidationError({
+                'score': (
+                    f"Score cannot exceed "
+                    f"{self.component.max_score}"
+                )
+            })
+        
+# ============================================
+# MIDTERM REPORT REMARK MODEL
+# ============================================
+
+class MidTermReportRemark(models.Model):
+
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE
+    )
+
+    term = models.ForeignKey(
+        Term,
+        on_delete=models.CASCADE
+    )
+
+    teacher_remark = models.TextField(
+        blank=True,
+        null=True
+    )
+
+    head_teacher_remark = models.TextField(
+        blank=True,
+        null=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+        unique_together = (
+            'student',
+            'term',
+        )
+
+        ordering = [
+            'student__last_name'
+        ]
+
+        verbose_name = (
+            'Midterm Report Remark'
+        )
+
+        verbose_name_plural = (
+            'Midterm Report Remarks'
+        )
+
+    def __str__(self):
+
+        return (
+            f"{self.student} - "
+            f"{self.term}"
+        )
     
 
 

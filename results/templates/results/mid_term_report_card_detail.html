@@ -1,288 +1,1094 @@
 {% load static %}
+{% load results_extras %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mid-Term Report: {{ student.get_full_name }}</title>
-    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Midterm Report Card — {{ student.get_full_name }}</title>
+
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --brand-main: #002b5c;
-            --brand-accent: #c0392b;
-            --text-dark: #2c3e50;
-            --bg-light: #f4f7f6;
-        }
 
-        /* Print Settings */
-        * {
+        /* =========================================
+           RESET & VARIABLES
+        ========================================= */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
-            color-adjust: exact !important;
         }
 
-        @page { size: A4; margin: 5mm; }
+        :root {
+            --primary:       #0B3D6E;
+            --primary-mid:   #1A5998;
+            --primary-light: #E8F0FA;
+            --accent:        #C8972A;
+            --accent-light:  #FDF6E7;
+            --danger:        #B91C1C;
+            --success:       #166534;
+            --neutral-100:   #F7F8FC;
+            --neutral-200:   #EDF0F7;
+            --neutral-300:   #CBD4E1;
+            --neutral-500:   #64748B;
+            --neutral-700:   #334155;
+            --neutral-900:   #0F172A;
+            --border:        1px solid var(--neutral-300);
+            --radius-sm:     4px;
+            --radius-md:     8px;
+            --font-head:     'Merriweather', Georgia, serif;
+            --font-body:     'Source Sans 3', Arial, sans-serif;
+        }
 
+        /* =========================================
+           SCREEN LAYOUT
+        ========================================= */
         body {
-            background-color: #d1d8e0;
-            font-family: 'Times New Roman', Times, serif;
-            padding-bottom: 120px;
-            margin: 0;
+            background: #D9E4F0;
+            font-family: var(--font-body);
+            font-size: 12px;
+            color: var(--neutral-900);
+            padding: 16px 10px 32px;
         }
 
-        /* --- Horizontal Scroll Wrapper --- */
-        .report-viewport {
-            width: 100%;
-            overflow-x: auto;
-            padding: 15px 10px;
-            display: block;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .scroll-hint {
-            display: none;
-            text-align: center;
-            color: var(--brand-main);
-            font-size: 0.8rem;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        .report-card-container {
-            background: white;
-            width: 850px;
+        .page-wrapper {
+            max-width: 960px;
             margin: 0 auto;
-            padding: 30px 40px;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            border-top: 6px solid var(--brand-main);
         }
 
-        @media (max-width: 870px) {
-            .scroll-hint { display: block; }
-            body { background-color: #f0f2f5; }
-        }
-
-        /* --- Watermarks --- */
-        .watermark-text {
-            position: absolute;
-            top: 55%; left: 50%;
-            transform: translate(-50%, -50%) rotate(-45deg);
-            font-size: 70pt;
-            color: rgba(0, 0, 0, 0.02);
-            pointer-events: none;
-            z-index: 0;
-            text-transform: uppercase;
-            font-weight: bold;
-        }
-
-        .watermark-logo {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 350px;
-            opacity: 0.04;
-            pointer-events: none;
-        }
-
-        /* --- Header & Content --- */
-        .school-header { display: flex; align-items: center; margin-bottom: 15px; position: relative; z-index: 1; }
-        .logo-box img { width: 80px; height: 80px; object-fit: contain; }
-        .school-details { flex-grow: 1; padding-left: 20px; }
-        .school-details h1 { color: var(--brand-main); font-size: 22pt; font-weight: 800; margin: 0; }
-        .school-details p { margin: 0; font-size: 9pt; color: #7f8c8d; }
-
-        .report-meta-title {
-            display: flex; justify-content: space-between;
-            background: var(--bg-light) !important;
-            padding: 8px 15px;
-            border-left: 5px solid var(--brand-main);
-            margin: 15px 0;
-            font-weight: bold; font-size: 10pt;
-        }
-
-        .student-info-panel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .info-pill { background: #fff; border: 1px solid #e1e8ed; padding: 8px 12px; border-radius: 4px; }
-        .info-pill span { display: block; font-size: 7pt; color: #95a5a6; text-transform: uppercase; }
-        .info-pill strong { font-size: 10pt; }
-
-        /* --- Table Styling --- */
-        .scores-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; z-index: 1; position: relative; }
-        .scores-table th { background-color: var(--brand-main) !important; color: white !important; padding: 10px 5px; font-size: 8pt; text-transform: uppercase; text-align: center; }
-        .scores-table td { padding: 8px 6px; border: 1px solid #dee2e6; text-align: center; font-size: 9.5pt; }
-        .subject-name { text-align: left !important; font-weight: bold; color: var(--brand-main); }
-        .stat-cell { background-color: #f8f9fa !important; color: #666; font-size: 9pt; }
-
-        .bottom-grid { display: flex; gap: 20px; margin-top: 15px; }
-        .comment-area { flex: 2; border: 1px solid #eee; padding: 12px; border-radius: 5px; }
-        .score-summary-circle {
-            flex: 1; background: var(--brand-main) !important; color: white !important;
-            border-radius: 8px; padding: 15px; text-align: center;
-        }
-
-        /* --- Centralized Signature Section --- */
-        .signature-section {
-            margin-top: 30px;
-            text-align: center;
+        /* =========================================
+           ACTION BAR
+        ========================================= */
+        .action-bar {
             display: flex;
-            flex-direction: column;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 7px 16px;
+            border-radius: var(--radius-md);
+            font-family: var(--font-body);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            transition: opacity .15s;
+            white-space: nowrap;
+        }
+
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-outline  { background: #fff; color: var(--primary); border: 1.5px solid var(--primary); }
+
+        /* =========================================
+           REPORT CARD SHELL
+        ========================================= */
+        .report-card {
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 28px rgba(11,61,110,.13);
+            position: relative;
+        }
+
+        /* =========================================
+           WATERMARK
+           Separate element so it spans the full
+           card height and prints reliably.
+        ========================================= */
+        .watermark {
+            position: absolute;
+            inset: 0;
+            display: flex;
             align-items: center;
             justify-content: center;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
         }
-        .signature-image {
-            max-height: 70px;
-            margin-bottom: 5px;
+
+        .watermark img {
+            width: 320px;
+            height: 320px;
+            object-fit: contain;
+            opacity: 0.045;
+            display: block;
         }
-        .qr-code {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 8px;
+
+        /* All direct children sit above watermark */
+        .report-card > *:not(.watermark) {
+            position: relative;
+            z-index: 1;
         }
-        .sig-line {
-            width: 250px;
-            border-top: 1.5px solid var(--text-dark);
+
+        /* =========================================
+           STRIPES
+        ========================================= */
+        .top-stripe {
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+        }
+
+        .bottom-stripe {
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--primary) 100%);
+        }
+
+        /* =========================================
+           HEADER — compact 3-col grid
+           Never collapses on mobile — stays inline.
+        ========================================= */
+        .report-header {
+            display: grid;
+            grid-template-columns: 68px 1fr 68px;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px 8px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .school-logo img,
+        .school-logo-placeholder {
+            width: 64px;
+            height: 64px;
+            display: block;
+        }
+
+        .school-logo img { object-fit: contain; }
+
+        .school-logo-placeholder {
+            border-radius: 50%;
+            background: var(--primary-light);
+            border: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            font-family: var(--font-head);
+        }
+
+        .school-info { text-align: center; padding: 0 4px; }
+
+        .school-info h1 {
+            font-family: var(--font-head);
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            line-height: 1.25;
+        }
+
+        .school-info .school-sub {
+            font-size: 10.5px;
+            color: var(--neutral-500);
+            margin-top: 3px;
+            line-height: 1.45;
+        }
+
+        .student-passport { display: flex; justify-content: flex-end; }
+
+        .student-passport img,
+        .passport-placeholder {
+            width: 56px;
+            height: 68px;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+            border: 2px solid var(--primary);
+            display: block;
+        }
+
+        .passport-placeholder {
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-mid);
+        }
+
+        /* =========================================
+           TITLE BAND
+        ========================================= */
+        .title-band {
+            background: var(--primary);
+            color: #fff;
+            text-align: center;
+            padding: 6px 16px;
+        }
+
+        .title-band h2 {
+            font-family: var(--font-head);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .title-band p {
+            font-size: 10.5px;
+            margin-top: 1px;
+            opacity: .85;
+            letter-spacing: .4px;
+        }
+
+        /* =========================================
+           STUDENT INFO GRID — 2-row x 3-col
+        ========================================= */
+        .info-section { padding: 8px 16px 6px; }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            border: var(--border);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+
+        .info-cell {
+            padding: 5px 10px;
+            border-right: var(--border);
+            border-bottom: var(--border);
+            font-size: 11px;
+        }
+
+        .info-cell:nth-child(3n)        { border-right: none; }
+        .info-cell:nth-last-child(-n+3) { border-bottom: none; }
+
+        .info-cell .lbl {
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--primary-mid);
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            margin-bottom: 1px;
+        }
+
+        .info-cell .val {
+            font-weight: 600;
+            color: var(--neutral-900);
+            font-size: 11.5px;
+        }
+
+        /* =========================================
+           SUMMARY STRIP — 4 cards in one row
+        ========================================= */
+        .summary-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--neutral-100);
+            border-top: var(--border);
+            border-bottom: var(--border);
+        }
+
+        .summary-card {
+            background: #fff;
+            border: var(--border);
+            border-radius: var(--radius-md);
+            padding: 7px 10px;
+            text-align: center;
+        }
+
+        .summary-card .s-lbl {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            color: var(--neutral-500);
+            margin-bottom: 3px;
+        }
+
+        .summary-card .s-val {
+            font-family: var(--font-head);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .summary-card.highlight { background: var(--primary); border-color: var(--primary); }
+        .summary-card.highlight .s-lbl { color: rgba(255,255,255,.75); }
+        .summary-card.highlight .s-val { color: #fff; }
+
+        /* =========================================
+           SECTION HEADING
+        ========================================= */
+        .section-heading {
+            font-family: var(--font-head);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: .7px;
+            border-left: 3px solid var(--accent);
+            padding-left: 8px;
+            margin-bottom: 6px;
+        }
+
+        /* =========================================
+           RESULTS TABLE — ultra-compact
+        ========================================= */
+        .table-section {
+            padding: 10px 16px 6px;
+            overflow-x: auto;
+        }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10.5px;
+        }
+
+        .result-table thead tr {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .result-table th {
+            padding: 6px 5px;
+            text-align: center;
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: .3px;
+            text-transform: uppercase;
+            border: 1px solid rgba(255,255,255,.15);
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+
+        .result-table th.col-subject {
+            text-align: left;
+            min-width: 130px;
+            padding-left: 8px;
+        }
+
+        .result-table tbody tr:nth-child(even) { background: var(--neutral-100); }
+        .result-table tbody tr:hover           { background: var(--primary-light); }
+
+        .result-table td {
+            padding: 5px;
+            border: 1px solid var(--neutral-200);
+            text-align: center;
+            vertical-align: middle;
+            line-height: 1.2;
+        }
+
+        .result-table td.col-subject {
+            text-align: left;
+            font-weight: 700;
+            color: var(--primary);
+            padding-left: 8px;
+            font-size: 10.5px;
+        }
+
+        .result-table td.col-remark {
+            text-align: left;
+            font-style: italic;
+            color: var(--neutral-700);
+            min-width: 100px;
+            font-size: 10px;
+        }
+
+        /* Totals footer row */
+        .result-table tfoot tr {
+            background: var(--accent-light);
+            border-top: 2px solid var(--accent);
+            font-weight: 700;
+        }
+
+        .result-table tfoot td {
+            font-size: 10.5px;
+            color: var(--neutral-900);
+            border-color: var(--neutral-300);
+            padding: 5px;
+        }
+
+        /* N/A styling */
+        .na {
+            color: var(--neutral-500);
+            font-style: italic;
+            font-size: 10px;
+        }
+
+        /* Grade badges */
+        .grade-badge {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .grade-a { background: #DCFCE7; color: #166534; }
+        .grade-b { background: #DBEAFE; color: #1e40af; }
+        .grade-c { background: #FEF9C3; color: #854d0e; }
+        .grade-d { background: #FEE2E2; color: #991b1b; }
+        .grade-f { background: #F1F5F9; color: #475569; }
+
+        /* Score colours */
+        .score-pass { color: var(--success); font-weight: 700; }
+        .score-fail { color: var(--danger);  font-weight: 700; }
+
+        /* =========================================
+           GRADING SCALE KEY
+        ========================================= */
+        .grading-section { padding: 0 16px 8px; }
+
+        .grading-scale { display: flex; gap: 5px; flex-wrap: wrap; }
+
+        .grade-key {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--neutral-100);
+            border: var(--border);
+            border-radius: var(--radius-sm);
+            padding: 3px 8px;
+            font-size: 10px;
+        }
+
+        .grade-key .gk-range { color: var(--neutral-500); }
+
+        /* =========================================
+           REMARKS
+        ========================================= */
+        .remarks-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 0 16px 10px;
+        }
+
+        .remark-box {
+            border: var(--border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+
+        .remark-box-head {
+            background: var(--primary);
+            color: #fff;
+            padding: 5px 12px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .remark-box-body {
+            padding: 8px 12px;
+            font-size: 11px;
+            color: var(--neutral-700);
+            line-height: 1.5;
+            min-height: 48px;
+            background: var(--neutral-100);
+        }
+
+        .signature-line {
+            border-top: 1px solid var(--neutral-300);
+            margin-top: 10px;
             padding-top: 5px;
-            margin-top: 5px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--neutral-500);
+            text-transform: uppercase;
+            letter-spacing: .3px;
         }
 
-        /* --- Footer Action Bar --- */
-        .action-bar {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: white; padding: 15px; border-top: 1px solid #ddd; z-index: 1000;
-        }
-        .action-bar-inner { display: flex; gap: 10px; max-width: 850px; margin: 0 auto; }
-        .action-btn { flex: 1; padding: 15px; font-size: 16px; font-weight: 700; border-radius: 10px; display: flex; align-items: center; justify-content: center; text-decoration: none !important; }
-
-        @media (max-width: 600px) {
-            .action-bar-inner { flex-direction: column; }
+        .signature-img {
+            max-height: 44px;
+            display: block;
+            margin-bottom: 3px;
         }
 
+        /* =========================================
+           FOOTER
+        ========================================= */
+        .report-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 10px 16px 12px;
+            border-top: 2px dashed var(--neutral-300);
+            background: var(--neutral-100);
+        }
+
+        .footer-note {
+            font-size: 10px;
+            color: var(--neutral-500);
+            line-height: 1.5;
+        }
+
+        .school-motto {
+            font-family: var(--font-head);
+            font-size: 10.5px;
+            font-style: italic;
+            color: var(--primary-mid);
+            margin-top: 4px;
+        }
+
+        .qr-block { text-align: center; }
+
+        .qr-block img {
+            width: 60px;
+            height: 60px;
+            border: 2px solid var(--primary);
+            border-radius: var(--radius-sm);
+            padding: 2px;
+            background: #fff;
+        }
+
+        .qr-block small {
+            display: block;
+            margin-top: 3px;
+            font-size: 9px;
+            color: var(--neutral-500);
+        }
+
+        /* =========================================
+           PRINT STYLES
+           Target: A4, 20+ subjects on one page.
+        ========================================= */
         @media print {
-            body { background: white; padding: 0; }
-            .report-viewport { overflow: visible; padding: 0; }
-            .report-card-container { box-shadow: none; margin: 0; width: 100%; border-top: none; }
-            .no-print, .scroll-hint { display: none !important; }
+
+            @page {
+                size: A4 portrait;
+                margin: 5mm 6mm;
+            }
+
+            body {
+                background: #fff !important;
+                padding: 0 !important;
+                font-size: 9pt !important;
+            }
+
+            .action-bar   { display: none !important; }
+            .page-wrapper { max-width: 100% !important; }
+
+            .report-card {
+                box-shadow: none !important;
+                border-radius: 0 !important;
+            }
+
+            /* Watermark prints reliably as <img> */
+            .watermark img {
+                opacity: 0.045 !important;
+                width: 280px !important;
+                height: 280px !important;
+            }
+
+            /* Header */
+            .report-header {
+                padding: 5px 10px;
+                grid-template-columns: 52px 1fr 52px;
+                gap: 6px;
+            }
+
+            .school-logo img,
+            .school-logo-placeholder { width: 48px; height: 48px; }
+            .school-info h1          { font-size: 12pt; }
+            .school-info .school-sub { font-size: 8pt; }
+            .student-passport img,
+            .passport-placeholder    { width: 44px; height: 54px; }
+
+            /* Title band */
+            .title-band    { padding: 4px 10px; }
+            .title-band h2 { font-size: 10pt; letter-spacing: 1.5px; }
+            .title-band p  { font-size: 8pt; }
+
+            /* Student info */
+            .info-section   { padding: 4px 10px 3px; }
+            .info-cell      { padding: 3px 7px; }
+            .info-cell .lbl { font-size: 7.5pt; }
+            .info-cell .val { font-size: 8.5pt; }
+
+            /* Summary strip */
+            .summary-strip          { padding: 4px 10px; gap: 5px; }
+            .summary-card           { padding: 4px 6px; }
+            .summary-card .s-lbl    { font-size: 7pt; }
+            .summary-card .s-val    { font-size: 13pt; }
+
+            /* Table */
+            .table-section   { padding: 5px 10px 3px; overflow-x: visible; }
+            .section-heading { font-size: 8pt; margin-bottom: 3px; }
+
+            .result-table    { font-size: 8pt; }
+
+            .result-table th {
+                font-size: 7.5pt;
+                padding: 4px 3px;
+                line-height: 1.15;
+            }
+
+            .result-table th.col-subject {
+                min-width: 100px;
+                padding-left: 5px;
+            }
+
+            .result-table td {
+                font-size: 8pt;
+                padding: 3.5px 3px;
+                line-height: 1.1;
+            }
+
+            .result-table td.col-subject { padding-left: 5px; font-size: 8pt; }
+            .result-table td.col-remark  { font-size: 7.5pt; min-width: 80px; }
+            .result-table tfoot td       { font-size: 8pt; padding: 4px 3px; }
+
+            .grade-badge { font-size: 7.5pt; padding: 1px 4px; }
+            .na          { font-size: 7.5pt; }
+
+            /* Grading key */
+            .grading-section { padding: 0 10px 5px; }
+            .grade-key       { padding: 2px 6px; font-size: 7.5pt; }
+
+            /* Remarks */
+            .remarks-section { padding: 0 10px 6px; gap: 6px; }
+            .remark-box-head { padding: 3px 10px; font-size: 7.5pt; }
+            .remark-box-body { padding: 5px 10px; font-size: 8pt; min-height: 36px; }
+            .signature-line  { font-size: 7.5pt; margin-top: 6px; padding-top: 4px; }
+            .signature-img   { max-height: 34px; }
+
+            /* Footer */
+            .report-footer { padding: 6px 10px 8px; }
+            .footer-note   { font-size: 7.5pt; }
+            .school-motto  { font-size: 8pt; margin-top: 2px; }
+            .qr-block img  { width: 50px; height: 50px; }
+            .qr-block small { font-size: 7pt; }
+
+            /* Pagination */
+            .result-table          { page-break-inside: auto; }
+            .result-table thead    { display: table-header-group; }
+            .result-table tbody tr { page-break-inside: avoid; }
+
+            /* Suppress hover bg in print */
+            .result-table tbody tr:hover { background: transparent !important; }
+
+            /* Force colours to print */
+            .top-stripe, .bottom-stripe,
+            .title-band, .remark-box-head,
+            .summary-card.highlight {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
         }
+
+        /* =========================================
+           MOBILE — max 600px
+           Header stays 3-col, just tighter.
+        ========================================= */
+        @media (max-width: 600px) {
+
+            body { padding: 8px 6px 24px; }
+
+            .report-header {
+                grid-template-columns: 56px 1fr 52px;
+                gap: 7px;
+                padding: 8px 10px 7px;
+            }
+
+            .school-logo img,
+            .school-logo-placeholder { width: 52px; height: 52px; font-size: 16px; }
+            .school-info h1          { font-size: 12px; }
+            .school-info .school-sub { font-size: 10px; }
+            .student-passport img,
+            .passport-placeholder    { width: 46px; height: 56px; }
+
+            /* Info: 2-col on mobile */
+            .info-grid                      { grid-template-columns: repeat(2, 1fr); }
+            .info-cell:nth-child(2n)        { border-right: none; }
+            .info-cell:nth-child(3n)        { border-right: var(--border); }
+            .info-cell:nth-last-child(-n+3) { border-bottom: var(--border); }
+            .info-cell:last-child,
+            .info-cell:nth-last-child(2)    { border-bottom: none; }
+
+            /* Summary: 2x2 */
+            .summary-strip   { grid-template-columns: repeat(2, 1fr); }
+
+            /* Remarks stacked */
+            .remarks-section { grid-template-columns: 1fr; }
+
+            /* Footer stacked */
+            .report-footer   { flex-direction: column; gap: 10px; align-items: flex-start; }
+
+            .action-bar { justify-content: flex-start; }
+        }
+
     </style>
 </head>
+
 <body>
 
-<div class="report-viewport">
-    <div class="scroll-hint no-print">
-        <i class="fas fa-arrows-alt-h"></i> Swipe left/right to view full report
-    </div>
+<div class="page-wrapper">
 
-    <div class="report-card-container">
-        {% with school_data=school_info|default:school_identity %}
+    <!-- ==========================================
+         ACTION BAR (screen only — hidden on print)
+    =========================================== -->
+    <div class="action-bar">
 
-        <div class="watermark-text">{{ school_data.name|default:"OFFICIAL" }}</div>
-        {% if school_data.logo %}
-            <img src="{{ school_data.logo.url }}" class="watermark-logo">
-        {% endif %}
-
-        <div class="school-header">
-            <div class="logo-box">
-                {% if school_data.logo %}<img src="{{ school_data.logo.url }}">{% endif %}
-            </div>
-            <div class="school-details">
-                <h4>{{ school_data.name|upper }}</h4>
-                <p><i class="fas fa-map-marker-alt"></i> {{ school_data.address_line_1 }}</p>
-                <p>Tel: {{ school_data.phone|default:"N/A" }} | Email: {{ school_data.email|default:"N/A" }}</p>
-            </div>
-        </div>
-        {% endwith %}
-
-        <div class="report-meta-title">
-            <span>MID-TERM PERFORMANCE REPORT</span>
-            <span>{{ term.name|upper }} | {{ term.session.name }}</span>
-        </div>
-
-        <div class="student-info-panel">
-            <div class="info-pill"><span>Student Name</span><strong>{{ student.get_full_name|upper }}</strong></div>
-            <div class="info-pill"><span>Class</span><strong>{{ student.current_class.name }}</strong></div>
-            <div class="info-pill"><span>Admission No</span><strong>{{ student.USN }}</strong></div>
-            <div class="info-pill"><span>Total Subjects</span><strong>{{ report_data|length }}</strong></div>
-            <div class="info-pill"><span>Gender</span><strong>{{ student.gender|upper }}</strong></div>
-            <div class="info-pill"><span>Issue Date</span><strong>{% now "d/m/Y" %}</strong></div>
-        </div>
-
-        <table class="scores-table">
-            <thead>
-                <tr>
-                    <th style="width: 25%;">Subject</th>
-                    <th style="width: 10%;">Score</th>
-                    <th style="width: 10%;">Grade</th>
-                    <th style="width: 10%;">High</th>
-                    <th style="width: 10%;">Low</th>
-                    <th style="width: 10%;">Avg</th>
-                    <th style="width: 25%;">Remarks</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for data in report_data %}
-                <tr>
-                    <td class="subject-name">{{ data.subject|upper }}</td>
-                    <td style="font-weight: bold;">{{ data.total_score|floatformat:"0" }}</td>
-                    <td>{{ data.grade }}</td>
-                    <td class="stat-cell">{{ data.class_high|floatformat:"0" }}</td>
-                    <td class="stat-cell">{{ data.class_low|floatformat:"0" }}</td>
-                    <td class="stat-cell">{{ data.class_avg|floatformat:"1" }}</td>
-                    <td style="font-size: 8pt; text-align: left; font-style: italic;">{{ data.remark }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <div class="bottom-grid">
-            <div class="comment-area">
-                <h6 style="color:var(--brand-main); font-weight:bold; font-size:8pt;">GENERAL REMARK</h6>
-                <p style="font-style: italic; font-size: 9.5pt;">"{{ overall_remark|default:"Satisfactory performance. Keep it up." }}"</p>
-            </div>
-            <div class="score-summary-circle">
-                <span style="font-size: 7pt;">TERM AVERAGE</span>
-                <div style="font-size: 20pt; font-weight: 800;">{{ overall_average|floatformat:"1" }}%</div>
-            </div>
-        </div>
-
-        <div class="signature-section">
-            {% with school_data=school_info|default:school_identity %}
-                {% if school_data.signature %}
-                    <img src="{{ school_data.signature.url }}" class="signature-image" alt="Principal Signature">
-                {% else %}
-                    <img src="https://bwipjs-api.metafloor.com/?bcid=qrcode&text=VERIFIED:{{ student.USN }}-{{ term }}-{{ school_data.name }}&scale=2" class="qr-code" alt="QR Verification">
-                {% endif %}
-            {% endwith %}
-            <div class="sig-line">
-                <strong style="font-size: 9pt; text-transform: uppercase;">School Administrator</strong><br>
-                <small style="color: #666; font-size: 7pt;">Digital Verification & Date: {% now "d/m/Y" %}</small>
-            </div>
-        </div>
-
-        <div style="text-align: center; margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px;">
-            <small style="color: #999; font-size: 7.5pt;">This mid-term report is an official record generated by the school portal.</small>
-        </div>
-    </div>
-</div>
-
-<div class="action-bar no-print">
-    <div class="action-bar-inner">
         {% if user.parent %}
-      <a href="{% url 'students:parent-dashboard' %}" class="btn btn-secondary btn-lg">
-            <i class="fas fa-arrow-left mr-2"></i> Parent Dashboard
-        </a>
-        {% else%}
-        <a href="{% url 'results:student_midterm_list' %}" class="btn btn-outline-secondary action-btn">
-            <i class="fas fa-arrow-left mr-2"></i> Back To List
-        </a>
+            <a href="{% url 'students:parent-dashboard' %}" class="btn btn-outline">← Parent Dashboard</a>
+        {% elif user.student %}
+            <a href="{% url 'results:student_dashboard' %}" class="btn btn-outline">← Dashboard</a>
+        {% else %}
+            <a href="{% url 'results:student_midterm_list' %}" class="btn btn-outline">← Back to List</a>
         {% endif %}
-        <button class="btn btn-primary action-btn" onclick="window.print()">
-            <i class="fas fa-print mr-2"></i> Print Report
-        </button>
+
+        <a href="?download=pdf" class="btn btn-outline">⬇ Download PDF</a>
+        <button onclick="window.print()" class="btn btn-primary">🖨 Print Report</button>
+
     </div>
-</div>
+
+    <!-- ==========================================
+         REPORT CARD
+    =========================================== -->
+    <div class="report-card">
+
+        <!-- WATERMARK: real <img> so it prints reliably -->
+        {% if school_identity.logo %}
+        <div class="watermark">
+            <img src="{{ school_identity.logo.url }}" alt="">
+        </div>
+        {% endif %}
+
+        <div class="top-stripe"></div>
+
+        <!-- ========== HEADER ========== -->
+        <div class="report-header">
+
+            <div class="school-logo">
+                {% if school_identity.logo %}
+                    <img src="{{ school_identity.logo.url }}" alt="{{ school_identity.name }} logo">
+                {% else %}
+                    <div class="school-logo-placeholder">
+                        {{ school_identity.name|slice:":2"|upper }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="school-info">
+                <h1>{{ school_identity.name|default:"School Name" }}</h1>
+                <div class="school-sub">
+                    {{ school_identity.address_line_1 }}<br>
+                    {% if school_identity.phone %}Tel: {{ school_identity.phone }}{% endif %}
+                    {% if school_identity.email %}&nbsp;|&nbsp;{{ school_identity.email }}{% endif %}
+                </div>
+            </div>
+
+            <div class="student-passport">
+                {% if student.user.profile.image %}
+                    <img src="{{ student.user.profile.image.url }}" alt="{{ student.get_full_name }}">
+                {% else %}
+                    <div class="passport-placeholder">
+                        {{ student.first_name|slice:":1"|upper }}{{ student.last_name|slice:":1"|upper }}
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <!-- ========== TITLE BAND ========== -->
+        <div class="title-band">
+            <h2>Midterm Report Card / <small>{{ term.session.name }} &mdash; {{ term.name }}</small></h2>
+        </div>
+
+        <!-- ========== STUDENT DETAILS ========== -->
+        <div class="info-section">
+            <div class="info-grid">
+
+                <div class="info-cell">
+                    <div class="lbl">Student Name</div>
+                    <div class="val">{{ student.get_full_name|upper }}</div>
+                </div>
+
+                <div class="info-cell">
+                    <div class="lbl">Admission No.</div>
+                    <div class="val">{{ student.USN }}</div>
+                </div>
+
+                <div class="info-cell">
+                    <div class="lbl">Gender</div>
+                    <div class="val">{{ student.gender|capfirst }}</div>
+                </div>
+
+                <div class="info-cell">
+                    <div class="lbl">Class</div>
+                    <div class="val">{{ student.current_class.name }}</div>
+                </div>
+
+                <div class="info-cell">
+                    <div class="lbl">Subjects Taken</div>
+                    <div class="val">{{ total_subjects_scored }}</div>
+                </div>
+
+                <div class="info-cell">
+                    <div class="lbl">Date Issued</div>
+                    <div class="val">{% now "d F Y" %}</div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========== SUMMARY STRIP ========== -->
+        <div class="summary-strip">
+
+            <div class="summary-card">
+                <div class="s-lbl">Subjects Taken</div>
+                <div class="s-val">{{ total_subjects_scored }}</div>
+            </div>
+
+            <div class="summary-card">
+                <div class="s-lbl">Total Score</div>
+                <div class="s-val">{{ total_raw_score|floatformat:0 }}</div>
+            </div>
+
+            <div class="summary-card">
+                <div class="s-lbl">Max Obtainable</div>
+                <div class="s-val">{{ total_obtainable|floatformat:0 }}</div>
+            </div>
+
+            <div class="summary-card highlight">
+                <div class="s-lbl">Overall Average</div>
+                <div class="s-val">
+                    {% if overall_average %}{{ overall_average|floatformat:1 }}%{% else %}N/A{% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ========== RESULTS TABLE ========== -->
+        <div class="table-section">
+
+            <div class="section-heading">Academic Performance</div>
+
+            <table class="result-table">
+
+                <thead>
+                    <tr>
+                        <th class="col-subject">Subject</th>
+
+                        {% for comp in component_headers %}
+                            <th>{{ comp.title }}<br>
+                                <span style="font-size:8px;opacity:.8;">({{ comp.max_score }})</span>
+                            </th>
+                        {% endfor %}
+
+                        <th>Total<br><span style="font-size:8px;opacity:.8;">({{ central_max }})</span></th>
+                        <th>%</th>
+                        <th>Grade</th>
+                        <th>Low</th>
+                        <th>High</th>
+                        <th>Avg</th>
+                        <th class="col-remark">Remark</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for data in report_data %}
+                    <tr>
+
+                        <td class="col-subject">{{ data.subject }}</td>
+
+                        {% for cell in data.component_breakdown %}
+                            <td>
+                                {% if cell.score is not None %}
+                                    {{ cell.score|floatformat:0 }}
+                                {% else %}
+                                    <span class="na">N/A</span>
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+
+                        <!-- Total -->
+                        <td>
+                            {% if data.raw_score is not None %}
+                                {% if data.raw_score < 40 %}
+                                    <span class="score-fail">{{ data.raw_score|floatformat:0 }}</span>
+                                {% else %}
+                                    <span class="score-pass">{{ data.raw_score|floatformat:0 }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="na">N/A</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Percentage -->
+                        <td>
+                            {% if data.percentage_score is not None %}
+                                {{ data.percentage_score|floatformat:1 }}%
+                            {% else %}
+                                <span class="na">N/A</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Grade -->
+                        <td>
+                            {% if data.grade %}
+                                {% with g=data.grade %}
+                                    {% if g == "A" or g == "A+" %}
+                                        <span class="grade-badge grade-a">{{ g }}</span>
+                                    {% elif g == "B" or g == "B+" %}
+                                        <span class="grade-badge grade-b">{{ g }}</span>
+                                    {% elif g == "C" or g == "C+" %}
+                                        <span class="grade-badge grade-c">{{ g }}</span>
+                                    {% elif g == "D" %}
+                                        <span class="grade-badge grade-d">{{ g }}</span>
+                                    {% else %}
+                                        <span class="grade-badge grade-f">{{ g }}</span>
+                                    {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                <span class="na">N/A</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Class Low -->
+                        <td>
+                            {% if data.class_low is not None %}{{ data.class_low|floatformat:0 }}
+                            {% else %}<span class="na">N/A</span>{% endif %}
+                        </td>
+
+                        <!-- Class High -->
+                        <td>
+                            {% if data.class_high is not None %}{{ data.class_high|floatformat:0 }}
+                            {% else %}<span class="na">N/A</span>{% endif %}
+                        </td>
+
+                        <!-- Class Avg -->
+                        <td>
+                            {% if data.class_avg is not None %}{{ data.class_avg|floatformat:1 }}
+                            {% else %}<span class="na">N/A</span>{% endif %}
+                        </td>
+
+                        <!-- Remark -->
+                        <td class="col-remark">{{ data.remark|default:"N/A" }}</td>
+
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="20" style="text-align:center;padding:18px;color:var(--neutral-500);">
+                            No scores have been recorded for this student this term.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+                <tfoot>
+                    <tr>
+                        <td class="col-subject">Totals</td>
+                        {% for comp in component_headers %}<td></td>{% endfor %}
+                        <td><strong>{{ total_raw_score|floatformat:0 }}</strong></td>
+                        <td><strong>{{ overall_average|floatformat:1 }}%</strong></td>
+                        <td colspan="5"></td>
+                    </tr>
+                </tfoot>
+
+            </table>
+
+        </div>
+
+        <!-- ========== GRADING SCALE ========== -->
+        <div class="grading-section">
+            <div class="grading-scale">
+
+                <div class="grade-key">
+                    <span class="grade-badge grade-a">A</span>
+                    <span class="gk-range">75–100 &nbsp;Excellent</span>
+                </div>
+                <div class="grade-key">
+                    <span class="grade-badge grade-b">B</span>
+                    <span class="gk-range">65–74 &nbsp;Very Good</span>
+                </div>
+                <div class="grade-key">
+                    <span class="grade-badge grade-c">C</span>
+                    <span class="gk-range">50–64 &nbsp;Good</span>
+                </div>
+                <div class="grade-key">
+                    <span class="grade-badge grade-d">D</span>
+                    <span class="gk-range">40–49 &nbsp;Pass</span>
+                </div>
+                <div class="grade-key">
+                    <span class="grade-badge grade-f">F</span>
+                    <span class="gk-range">0–39 &nbsp;Fail</span>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========== REMARKS ========== -->
+        <div class="remarks-section">
+
+            <div class="remark-box">
+                <div class="remark-box-head">Class Teacher's Remark</div>
+                <div class="remark-box-body">
+                    <p>{{ teacher_remark }}</p>
+                    <div class="signature-line">
+                        {% if school_identity.signature %}
+                            <img src="{{ school_identity.signature.url }}" alt="Signature" class="signature-img">
+                        {% endif %}
+                        Class Teacher's Signature
+                    </div>
+                </div>
+            </div>
+
+            <div class="remark-box">
+                <div class="remark-box-head">Head Teacher's Remark</div>
+                <div class="remark-box-body">
+                    <p>{{ head_teacher_remark }}</p>
+                    <div class="signature-line">
+                        Head Teacher's Signature &amp; Stamp
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ========== FOOTER ========== -->
+        <div class="report-footer">
+
+            <div>
+                <div class="footer-note">
+                    This report is computer-generated and valid without a physical stamp unless indicated.<br>
+                    <strong>Next term begins:</strong> {{ term.next_term_begins|default:"To be announced" }}
+                </div>
+                {% if school_identity.motto %}
+                    <div class="school-motto">"{{ school_identity.motto }}"</div>
+                {% endif %}
+            </div>
+
+            <div class="qr-block">
+                <img
+                    src="https://bwipjs-api.metafloor.com/?bcid=qrcode&text=KS-MIDTERM-{{ student.USN }}-{{ term.id }}&scale=3"
+                    alt="Verification QR Code"
+                >
+                <small>Scan to verify</small>
+            </div>
+
+        </div>
+
+        <div class="bottom-stripe"></div>
+
+    </div><!-- /.report-card -->
+
+</div><!-- /.page-wrapper -->
 
 </body>
 </html>
