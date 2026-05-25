@@ -124,7 +124,7 @@
             width: 320px;
             height: 320px;
             object-fit: contain;
-            opacity: 0.045;
+            opacity: 0.145;
             display: block;
         }
 
@@ -186,7 +186,7 @@
 
         .school-info h1 {
             font-family: var(--font-head);
-            font-size: 15px;
+            font-size: 20px;
             font-weight: 700;
             color: var(--primary);
             text-transform: uppercase;
@@ -195,7 +195,7 @@
         }
 
         .school-info .school-sub {
-            font-size: 10.5px;
+            font-size: 14px;
             color: var(--neutral-500);
             margin-top: 3px;
             line-height: 1.45;
@@ -235,7 +235,7 @@
 
         .title-band h2 {
             font-family: var(--font-head);
-            font-size: 13px;
+            font-size: 15px;
             font-weight: 700;
             letter-spacing: 2px;
             text-transform: uppercase;
@@ -249,13 +249,13 @@
         }
 
         /* =========================================
-           STUDENT INFO GRID — 2-row x 3-col
+           STUDENT INFO GRID — 1-row x 5-col
         ========================================= */
         .info-section { padding: 8px 16px 6px; }
 
         .info-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             border: var(--border);
             border-radius: var(--radius-sm);
             overflow: hidden;
@@ -272,7 +272,7 @@
         .info-cell:nth-last-child(-n+3) { border-bottom: none; }
 
         .info-cell .lbl {
-            font-size: 9px;
+            font-size: 10px;
             font-weight: 700;
             color: var(--primary-mid);
             text-transform: uppercase;
@@ -283,7 +283,7 @@
         .info-cell .val {
             font-weight: 600;
             color: var(--neutral-900);
-            font-size: 11.5px;
+            font-size: 12.5px;
         }
 
         /* =========================================
@@ -354,7 +354,7 @@
         .result-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 10.5px;
+            font-size: 12px;
         }
 
         .result-table thead tr {
@@ -365,7 +365,7 @@
         .result-table th {
             padding: 6px 5px;
             text-align: center;
-            font-size: 9.5px;
+            font-size: 12.5px;
             font-weight: 700;
             letter-spacing: .3px;
             text-transform: uppercase;
@@ -396,7 +396,7 @@
             font-weight: 700;
             color: var(--primary);
             padding-left: 8px;
-            font-size: 10.5px;
+            font-size: 12px;
         }
 
         .result-table td.col-remark {
@@ -404,7 +404,7 @@
             font-style: italic;
             color: var(--neutral-700);
             min-width: 100px;
-            font-size: 10px;
+            font-size: 11.5px;
         }
 
         /* Totals footer row */
@@ -415,7 +415,7 @@
         }
 
         .result-table tfoot td {
-            font-size: 10.5px;
+            font-size: 14.5px;
             color: var(--neutral-900);
             border-color: var(--neutral-300);
             padding: 5px;
@@ -425,7 +425,7 @@
         .na {
             color: var(--neutral-500);
             font-style: italic;
-            font-size: 10px;
+            font-size: 11px;
         }
 
         /* Grade badges */
@@ -433,7 +433,7 @@
             display: inline-block;
             padding: 1px 6px;
             border-radius: 20px;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 700;
         }
 
@@ -462,7 +462,7 @@
             border: var(--border);
             border-radius: var(--radius-sm);
             padding: 3px 8px;
-            font-size: 10px;
+            font-size: 11px;
         }
 
         .grade-key .gk-range { color: var(--neutral-500); }
@@ -487,7 +487,7 @@
             background: var(--primary);
             color: #fff;
             padding: 5px 12px;
-            font-size: 10px;
+            font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: .5px;
@@ -495,7 +495,7 @@
 
         .remark-box-body {
             padding: 8px 12px;
-            font-size: 11px;
+            font-size: 12px;
             color: var(--neutral-700);
             line-height: 1.5;
             min-height: 48px;
@@ -506,7 +506,7 @@
             border-top: 1px solid var(--neutral-300);
             margin-top: 10px;
             padding-top: 5px;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 700;
             color: var(--neutral-500);
             text-transform: uppercase;
@@ -752,7 +752,7 @@
             <a href="{% url 'results:student_midterm_list' %}" class="btn btn-outline">← Back to List</a>
         {% endif %}
 
-        <a href="?download=pdf" class="btn btn-outline">⬇ Download PDF</a>
+        {% comment %} <a href="?download=pdf" class="btn btn-outline">⬇ Download PDF</a> {% endcomment %}
         <button onclick="window.print()" class="btn btn-primary">🖨 Print Report</button>
 
     </div>
@@ -787,8 +787,10 @@
             <div class="school-info">
                 <h1>{{ school_identity.name|default:"School Name" }}</h1>
                 <div class="school-sub">
-                    {{ school_identity.address_line_1 }}<br>
-                    {% if school_identity.phone %}Tel: {{ school_identity.phone }}{% endif %}
+                    {{ school_identity.address_line_1 }}
+                    {% if school_identity.address_line_2 %},  {{ school_identity.address_line_2 }} {% endif %}<br>
+                    {% if school_identity.phone1 %}Tel: {{ school_identity.phone1 }}{% endif %}
+                    {% if school_identity.phone2 %}, {{ school_identity.phone2 }}{% endif %}
                     {% if school_identity.email %}&nbsp;|&nbsp;{{ school_identity.email }}{% endif %}
                 </div>
             </div>
@@ -834,10 +836,10 @@
                     <div class="val">{{ student.current_class.name }}</div>
                 </div>
 
-                <div class="info-cell">
+                {% comment %} <div class="info-cell">
                     <div class="lbl">Subjects Taken</div>
                     <div class="val">{{ total_subjects_scored }}</div>
-                </div>
+                </div> {% endcomment %}
 
                 <div class="info-cell">
                     <div class="lbl">Date Issued</div>
@@ -887,11 +889,11 @@
 
                         {% for comp in component_headers %}
                             <th>{{ comp.title }}<br>
-                                <span style="font-size:8px;opacity:.8;">({{ comp.max_score }})</span>
+                                <span style="font-size:10px;opacity:.8;">({{ comp.max_score }})</span>
                             </th>
                         {% endfor %}
 
-                        <th>Total<br><span style="font-size:8px;opacity:.8;">({{ central_max }})</span></th>
+                        <th>Total<br><span style="font-size:10px;opacity:.8;">({{ central_max }})</span></th>
                         <th>%</th>
                         <th>Grade</th>
                         <th>Low</th>
@@ -1029,6 +1031,7 @@
                     <span class="grade-badge grade-f">F</span>
                     <span class="gk-range">0–39 &nbsp;Fail</span>
                 </div>
+                
 
             </div>
         </div>
@@ -1067,7 +1070,7 @@
             <div>
                 <div class="footer-note">
                     This report is computer-generated and valid without a physical stamp unless indicated.<br>
-                    <strong>Next term begins:</strong> {{ term.next_term_begins|default:"To be announced" }}
+                    <strong>Mid Term Resumption:</strong> {{ term.next_term_begins|default:"To be announced" }}
                 </div>
                 {% if school_identity.motto %}
                     <div class="school-motto">"{{ school_identity.motto }}"</div>
