@@ -11,7 +11,8 @@ from django.db.models import Avg, Sum
 from django.contrib import admin
 from django.core.exceptions import ValidationError
 from .models import SchoolYearSettings, MidTermReportRemark, MidTermScore,  MidTermReportRemark, MidTermComponentScore, MidTermComponent
-
+from .models import MidTermReportRemark, MidTermScore, ExamSetting
+from .utils import mdterm_get_overall_remark
 
 
 
@@ -468,101 +469,11 @@ class MidTermComponentScoreAdmin(admin.ModelAdmin):
     )
 
 
-# ============================================
-# REPORT REMARK ADMIN
-# ============================================
-
-# @admin.register(MidTermReportRemark)
-# class MidTermReportRemarkAdmin(admin.ModelAdmin):
-
-#     list_display = (
-#         'student',
-#         'term',
-#         'short_teacher_remark',
-#         'short_head_teacher_remark',
-#         'updated_at',
-#     )
-
-#     list_filter = (
-#         'term',
-#     )
-
-#     search_fields = (
-#         'student__first_name',
-#         'student__last_name',
-#         'teacher_remark',
-#         'head_teacher_remark',
-#     )
-
-#     readonly_fields = (
-#         'created_at',
-#         'updated_at',
-#     )
-
-#     fieldsets = (
-
-#         ('Student Information', {
-#             'fields': (
-#                 'student',
-#                 'term',
-#             )
-#         }),
-
-#         ('Teacher Remark', {
-#             'fields': (
-#                 'teacher_remark',
-#             )
-#         }),
-
-#         ('Head Teacher Remark', {
-#             'fields': (
-#                 'head_teacher_remark',
-#             )
-#         }),
-
-#         ('Timestamps', {
-#             'fields': (
-#                 'created_at',
-#                 'updated_at',
-#             )
-#         }),
-#     )
-
-#     def short_teacher_remark(self, obj):
-
-#         if obj.teacher_remark:
-#             return obj.teacher_remark[:50]
-
-#         return "Auto Generated"
-
-#     short_teacher_remark.short_description = (
-#         'Teacher Remark'
-#     )
-
-#     def short_head_teacher_remark(self, obj):
-
-#         if obj.head_teacher_remark:
-#             return obj.head_teacher_remark[:50]
-
-#         return "Auto Generated"
-
-#     short_head_teacher_remark.short_description = (
-#         'Head Teacher Remark'
-#     )
-
 
 # ============================================
 # ADMIN.PY
 # UPDATED REPORT REMARK ADMIN
 # ============================================
-
-
-from django.contrib import admin
-from django.db.models import Avg
-
-from .models import MidTermReportRemark, MidTermScore, ExamSetting
-from .utils import mdterm_get_overall_remark
-
 
 @admin.register(MidTermReportRemark)
 class MidTermReportRemarkAdmin(admin.ModelAdmin):

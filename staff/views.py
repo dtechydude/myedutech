@@ -55,10 +55,6 @@ from .forms import (
 
 
 
-
-
-
-
 # All Techers
 @login_required
 def teachers_list(request):

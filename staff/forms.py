@@ -4,8 +4,9 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .models import Teacher
+from .models import Teacher, StaffAttendance
 from curriculum.models import Subject, Standard
+from django.utils import timezone
 # your_app_name/forms.py
 
 
@@ -104,51 +105,6 @@ class TeacherForm(forms.ModelForm):
 
 # Teachers Attendance
 # apps/staff/forms.py
-
-from django import forms
-from .models import StaffAttendance
-
-# attendance/forms.py
-
-# class StaffAttendanceForm(forms.ModelForm):
-
-#     teacher_name = forms.CharField(
-#         required=False,
-#         disabled=True,
-#         label='Teacher'
-#     )
-
-#     class Meta:
-#         model = StaffAttendance
-
-#         fields = [
-#             'check_in_time',
-#             'check_out_time',
-#             'status',
-#             'remarks',
-#         ]
-
-#         widgets = {
-#             'check_in_time': forms.TimeInput(
-#                 attrs={'type': 'time'}
-#             ),
-
-#             'check_out_time': forms.TimeInput(
-#                 attrs={'type': 'time'}
-#             ),
-
-#             'remarks': forms.Textarea(
-#                 attrs={'rows': 2}
-#             )
-#         }
-
-
-# attendance/forms.py
-
-from django import forms
-from django.utils import timezone
-from .models import StaffAttendance
-
 
 class AttendanceDateForm(forms.Form):
     """
