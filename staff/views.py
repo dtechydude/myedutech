@@ -8,7 +8,7 @@ from django.urls import reverse, reverse_lazy
 from django.contrib import messages
 from django.db.models import Count
 import csv
-from django.db.models import F
+from django.db.models import F, Q
 from django.db import transaction
 #converting html to pdf
 from django.http import HttpResponse, HttpResponseRedirect
@@ -25,7 +25,6 @@ from django.contrib.auth.decorators import user_passes_test
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import logging
-from .models import StaffAttendance
 from django.utils import timezone
 from datetime import date, timedelta # Make sure to import these!
 import json
@@ -37,8 +36,22 @@ from django.core.paginator import Paginator
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
-from .models import StaffAttendance
-from staff.models import Teacher
+from .models import StaffAttendance, Teacher
+from datetime import time
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.forms import modelformset_factory
+from django.shortcuts import redirect, render
+from django.utils import timezone
+
+from .models import Teacher, StaffAttendance
+from .forms import (
+    StaffAttendanceForm,
+    AttendanceDateForm
+)
+
 
 
 
@@ -503,35 +516,89 @@ class TeacherIDCardView(LoginRequiredMixin, View):
 # # Staff Attendance Views
 # # attendance/views.py
 
-# take attendance 1
-
 @login_required
 def take_staff_attendance(request):
 
+    # =====================================
+    # ACCESS CONTROL
+    # =====================================
     if not (
         request.user.is_staff or
         request.user.is_superuser
     ):
-        messages.error(request, "Unauthorized access.")
+        messages.error(
+            request,
+            "Unauthorized access."
+        )
         return redirect('/dashboard/')
 
-    # ==============================
-    # DATE SELECTION (NEW FEATURE)
-    # ==============================
+    # =====================================
+    # DATE FILTER
+    # =====================================
     selected_date = timezone.localdate()
 
-    date_form = AttendanceDateForm(request.GET or None)
+    date_form = AttendanceDateForm(
+        request.GET or None
+    )
 
     if date_form.is_valid():
         selected_date = date_form.cleaned_data['date']
 
-    teachers = Teacher.objects.select_related('user').all().order_by(
+    # =====================================
+    # SEARCH + PAGE SIZE
+    # =====================================
+    search_query = request.GET.get('search', '').strip()
+
+    per_page = request.GET.get('per_page', 20)
+
+    try:
+        per_page = int(per_page)
+    except ValueError:
+        per_page = 20
+
+    # =====================================
+    # TEACHERS QUERYSET
+    # =====================================
+    teachers = Teacher.objects.select_related(
+        'user'
+    ).all().order_by(
         'user__first_name'
     )
 
+    # =====================================
+    # SEARCH FILTER
+    # =====================================
+    if search_query:
+
+        teachers = teachers.filter(
+
+            Q(user__first_name__icontains=search_query) |
+            Q(user__last_name__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
+
+        )
+
+    # =====================================
+    # PAGINATION
+    # =====================================
+    paginator = Paginator(
+        teachers,
+        per_page
+    )
+
+    page_number = request.GET.get('page')
+
+    page_obj = paginator.get_page(
+        page_number
+    )
+
+    # =====================================
+    # INITIAL DATA
+    # =====================================
     initial_data = []
 
-    for teacher in teachers:
+    for teacher in page_obj:
 
         attendance, created = StaffAttendance.objects.get_or_create(
             teacher=teacher,
@@ -547,6 +614,9 @@ def take_staff_attendance(request):
             'remarks': attendance.remarks,
         })
 
+    # =====================================
+    # FORMSET
+    # =====================================
     StaffAttendanceFormSet = modelformset_factory(
         StaffAttendance,
         form=StaffAttendanceForm,
@@ -555,9 +625,15 @@ def take_staff_attendance(request):
     )
 
     queryset = StaffAttendance.objects.filter(
-        pk__in=[d['id'] for d in initial_data]
+        pk__in=[
+            d['id']
+            for d in initial_data
+        ]
     )
 
+    # =====================================
+    # SAVE ATTENDANCE
+    # =====================================
     if request.method == 'POST':
 
         formset = StaffAttendanceFormSet(
@@ -571,19 +647,24 @@ def take_staff_attendance(request):
 
                 for form in formset:
 
-                    attendance = form.save(commit=False)
+                    attendance = form.save(
+                        commit=False
+                    )
 
-                    # ==========================
-                    # AUTO LATE LOGIC (CLEANED)
-                    # ==========================
+                    # =========================
+                    # AUTO LATE LOGIC
+                    # =========================
                     if attendance.check_in_time:
 
                         late_time = time(8, 0)
 
                         if attendance.check_in_time > late_time:
+
                             attendance.is_late = True
                             attendance.status = 'late'
+
                         else:
+
                             attendance.is_late = False
                             attendance.status = 'present'
 
@@ -591,22 +672,43 @@ def take_staff_attendance(request):
 
             messages.success(
                 request,
-                "Staff attendance saved successfully."
+                f"Staff attendance for {selected_date} saved successfully."
             )
 
-            return redirect('staff:take_staff_attendance')
+            return redirect(
+                f"{request.path}?date={selected_date}&search={search_query}&per_page={per_page}"
+            )
+
+        else:
+
+            messages.error(
+                request,
+                "Please correct the errors below."
+            )
 
     else:
 
-        formset = StaffAttendanceFormSet(queryset=queryset)
+        formset = StaffAttendanceFormSet(
+            queryset=queryset
+        )
 
         for i, form in enumerate(formset):
-            form.initial['teacher_name'] = initial_data[i]['teacher_name']
 
+            form.initial['teacher_name'] = (
+                initial_data[i]['teacher_name']
+            )
+
+    # =====================================
+    # CONTEXT
+    # =====================================
     context = {
         'formset': formset,
         'date_form': date_form,
         'selected_date': selected_date,
+        'search_query': search_query,
+        'per_page': per_page,
+        'page_obj': page_obj,
+        'total_staff': teachers.count(),
     }
 
     return render(
@@ -614,6 +716,7 @@ def take_staff_attendance(request):
         'staff/take_staff_attendance.html',
         context
     )
+
 
 # Qr Scanner view 2
 @login_required
@@ -729,46 +832,6 @@ def scan_staff_attendance_ajax(request, staff_id):
         })
 
 # 4
-# @login_required
-# def staff_attendance_report(request):
-
-#     if not (
-#         request.user.is_staff or
-#         request.user.is_superuser
-#     ):
-#         return redirect('/dashboard/')
-
-#     records = StaffAttendance.objects.select_related(
-#         'teacher',
-#         'teacher__user'
-#     )
-
-#     start_date = request.GET.get('start_date')
-#     end_date = request.GET.get('end_date')
-
-#     # =========================
-#     # FILTERING (IMPROVED SAFE)
-#     # =========================
-#     if start_date and end_date:
-#         records = records.filter(date__range=[start_date, end_date])
-
-#     # Optional future TERM SUPPORT HOOK (READY)
-#     # term = Term.objects.filter(is_current=True).first()
-#     # if term:
-#     #     records = records.filter(date__range=[term.start_date, term.end_date])
-
-#     context = {
-#         'records': records,
-#         'start_date': start_date,
-#         'end_date': end_date,
-#     }
-
-#     return render(
-#         request,
-#         'staff/staff_attendance_report.html',
-#         context
-#     )
-
 @login_required
 def staff_attendance_report(request):
 

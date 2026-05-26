@@ -3,14 +3,25 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff Attendance</title>
-    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
 
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <title>
+        Staff Attendance
+    </title>
+
+    <link rel="shortcut icon"
+          type="image/png"
+          href="{% static 'pages/images/favicon.png' %}" />
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+          rel="stylesheet">
 
     <style>
 
@@ -20,17 +31,17 @@
         }
 
         .header {
-            background: linear-gradient(135deg,#198754,#157347);
+            background: linear-gradient(135deg, #198754, #157347);
             color: white;
             padding: 25px;
-            border-radius: 15px;
+            border-radius: 18px;
             margin-bottom: 20px;
         }
 
         .card-box {
             border: none;
             border-radius: 18px;
-            box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
         }
 
         .table thead th {
@@ -40,7 +51,8 @@
             border: none;
         }
 
-        .form-control, .form-select {
+        .form-control,
+        .form-select {
             border-radius: 10px;
         }
 
@@ -50,7 +62,144 @@
             background: white;
             padding: 15px;
             border-top: 1px solid #dee2e6;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+        }
+
+        .staff-name {
+            font-weight: 600;
+            display: inline-block;
+            max-width: 220px;
+            white-space: normal;
+            word-break: break-word;
+            line-height: 1.3;
+        }
+
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+            padding-bottom: 20px;
+        }
+
+        /* =============================================
+           RESPONSIVE TABLE — card view on mobile
+           ============================================= */
+
+        @media (max-width: 768px) {
+
+            /* Hide the real thead on mobile */
+            .attendance-table thead {
+                display: none;
+            }
+
+            /* Each row becomes a card */
+            .attendance-table tbody tr {
+                display: block;
+                background: #fff;
+                border-radius: 14px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+                margin-bottom: 16px;
+                padding: 14px 16px;
+                border: 1px solid #e2e8f0;
+            }
+
+            /* Hide the empty-state row's card look */
+            .attendance-table tbody tr.no-records {
+                box-shadow: none;
+                border: none;
+                background: transparent;
+            }
+
+            /* Each cell becomes a flex row: label on left, value on right */
+            .attendance-table tbody td {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 10px;
+                padding: 7px 0;
+                border: none;
+                border-bottom: 1px solid #f1f5f9;
+                font-size: 14px;
+            }
+
+            .attendance-table tbody td:last-child {
+                border-bottom: none;
+            }
+
+            /* The label is injected via data-label + ::before */
+            .attendance-table tbody td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #495057;
+                min-width: 90px;
+                flex-shrink: 0;
+                font-size: 13px;
+                padding-top: 2px;
+            }
+
+            /* Row number cell — no label, just the counter */
+            .attendance-table tbody td.row-num {
+                font-size: 11px;
+                color: #adb5bd;
+                border-bottom: none;
+                padding-bottom: 2px;
+                justify-content: flex-start;
+                gap: 4px;
+            }
+
+            .attendance-table tbody td.row-num::before {
+                content: "# ";
+                min-width: auto;
+                font-size: 11px;
+                color: #adb5bd;
+                font-weight: 400;
+            }
+
+            /* Staff name — larger and prominent inside the card */
+            .attendance-table .staff-name {
+                max-width: 100%;
+                font-size: 15px;
+                font-weight: 700;
+                color: #198754;
+                word-break: break-word;
+            }
+
+            /* Input fields fill the available space on mobile */
+            .attendance-table tbody td .form-control,
+            .attendance-table tbody td .form-select {
+                font-size: 13px;
+                width: 100%;
+                min-width: 0;
+                flex: 1;
+            }
+
+            /* Hidden id field cell — no visual space */
+            .attendance-table tbody td.field-id {
+                display: none;
+            }
+
+            .save-bar {
+                padding: 12px;
+            }
+        }
+
+        @media (min-width: 769px) {
+            /* Desktop: standard table styles */
+            .attendance-table {
+                width: 100%;
+            }
+
+            .attendance-table td,
+            .attendance-table th {
+                vertical-align: middle;
+            }
+
+            .staff-name {
+                max-width: 220px;
+                font-size: 14px;
+            }
         }
 
     </style>
@@ -62,40 +211,116 @@
 <div class="container-fluid py-4 px-lg-5">
 
     <!-- HEADER -->
-    <div class="header">
+    <div class="header d-flex justify-content-between align-items-center flex-wrap">
 
-        <h3 class="mb-1">
-            <i class="fas fa-user-check me-2"></i>
-            Staff Attendance Management
-        </h3>
+        <div>
 
-        <p class="mb-0">
-            Mark staff check-in and check-out records
-        </p>
+            <h4 class="fw-bold mb-1">
+                {{ school_info.name }}
+            </h4>
+
+            <p class="mb-0">
+                <i class="fas fa-user-check me-2"></i>
+                Staff Attendance Management
+            </p>
+
+        </div>
+
+        <a href="/dashboard/"
+           class="btn btn-light mt-3 mt-md-0">
+
+            <i class="fas fa-arrow-left me-2"></i>
+            Dashboard
+
+        </a>
 
     </div>
 
-    <!-- DATE FILTER -->
+    <!-- ALERT MESSAGES -->
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm">
+
+                <i class="fas fa-circle-info me-2"></i>
+
+                {{ message }}
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert">
+                </button>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+    <!-- STATS -->
+    <div class="row mb-3">
+
+        <div class="col-md-4 mb-3">
+
+            <div class="stats-box p-3 bg-white rounded-3 shadow-sm">
+
+                <h6 class="text-muted">Total Staff</h6>
+                <h3 class="fw-bold text-success">{{ total_staff }}</h3>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4 mb-3">
+
+            <div class="stats-box p-3 bg-white rounded-3 shadow-sm">
+
+                <h6 class="text-muted">Attendance Date</h6>
+                <h5 class="fw-bold">{{ selected_date }}</h5>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- FILTERS -->
     <div class="card card-box mb-3">
 
         <div class="card-body">
 
-            <form method="GET" class="row g-2 align-items-end">
+            <form method="GET"
+                  class="row g-3 align-items-end">
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Date</label>
+                    {{ date_form.date }}
+                </div>
 
                 <div class="col-md-4">
-
-                    <label class="form-label fw-bold">Select Date</label>
-
-                    {{ date_form.date }}
-
+                    <label class="form-label fw-bold">Search</label>
+                    <input type="text"
+                           name="search"
+                           class="form-control"
+                           value="{{ search_query }}"
+                           placeholder="Search staff...">
                 </div>
 
                 <div class="col-md-2">
+                    <label class="form-label fw-bold">Page Size</label>
+                    <select name="per_page" class="form-select">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
 
+                <div class="col-md-2">
                     <button class="btn btn-success w-100">
                         Load
                     </button>
-
                 </div>
 
             </form>
@@ -104,7 +329,7 @@
 
     </div>
 
-    <!-- FORM -->
+    <!-- TABLE -->
     <div class="card card-box">
 
         <div class="card-body p-0">
@@ -116,7 +341,7 @@
 
                 <div class="table-responsive">
 
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0 attendance-table">
 
                         <thead>
                             <tr>
@@ -135,28 +360,31 @@
 
                             <tr>
 
-                                <td>{{ forloop.counter }}</td>
+                                <td class="row-num">{{ forloop.counter }}</td>
 
-                                <td>
-                                    <strong>{{ form.teacher_name }}</strong>
-                                    {{ form.id }}
+                                <td data-label="Staff">
+                                    <span class="staff-name d-block">
+                                        {{ form.teacher_name }}
+                                    </span>
+                                    {# Hidden id field rendered inline so it's always part of the DOM #}
+                                    <span class="d-none">{{ form.id }}</span>
                                 </td>
 
-                                <td>{{ form.check_in_time }}</td>
-
-                                <td>{{ form.check_out_time }}</td>
-
-                                <td>{{ form.status }}</td>
-
-                                <td>{{ form.remarks }}</td>
+                                <td data-label="Check In">{{ form.check_in_time }}</td>
+                                <td data-label="Check Out">{{ form.check_out_time }}</td>
+                                <td data-label="Status">{{ form.status }}</td>
+                                <td data-label="Remarks">{{ form.remarks }}</td>
 
                             </tr>
 
                         {% empty %}
 
-                            <tr>
-                                <td colspan="6" class="text-center text-muted py-4">
+                            <tr class="no-records">
+                                <td colspan="6"
+                                    class="text-center text-muted py-4">
+
                                     No staff records found.
+
                                 </td>
                             </tr>
 
@@ -184,7 +412,16 @@
 
     </div>
 
+    <!-- FOOTER -->
+    <footer>
+        © {{ now|date:"Y" }}
+        {{ school_info.name|default:"School Portal" }}
+        • Staff Attendance System
+    </footer>
+
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

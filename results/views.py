@@ -3090,6 +3090,121 @@ class ClassBroadsheetView(LoginRequiredMixin, UserPassesTestMixin, View):
 
 
 # Bulk Report Card View
+# class BulkReportCardPrintView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
+#     template_name = 'results/bulk_report_cards_print.html'
+
+#     def get(self, request, standard_id, term_id, *args, **kwargs):
+#         standard = get_object_or_404(Standard, id=standard_id)
+#         term = get_object_or_404(Term, id=term_id)
+#         students = Student.objects.filter(current_class=standard).order_by('last_name')
+        
+#         school_identity = SchoolIdentity.objects.first()
+#         next_term = Term.objects.filter(start_date__gt=term.end_date).order_by('start_date').first()
+#         next_term_start_date = next_term.start_date if next_term else None
+#         total_students_in_class = students.count()
+
+#         # Class-wide Average Stats
+#         student_averages = []
+#         for stu in students:
+#             stu_scores = Score.objects.filter(student=stu, term=term)
+#             agg = stu_scores.aggregate(total=Sum('total_score'))
+#             total = agg.get('total')
+#             count = stu_scores.filter(total_score__isnull=False).count()
+#             if total is not None and count > 0:
+#                 student_averages.append(total / count)
+
+#         class_avg = sum(student_averages) / len(student_averages) if student_averages else 0
+#         class_max_avg = max(student_averages) if student_averages else 0
+#         class_min_avg = min(student_averages) if student_averages else 0
+
+#         # Global Position Setting for the Class
+#         try:
+#             position_setting = ClassPositionSetting.objects.get(
+#                 standard=standard, term=term, session=term.session
+#             )
+#             show_class_position = position_setting.show_class_position
+#         except:
+#             show_class_position = True
+
+#         all_reports = []
+
+#         for student in students:
+#             # Attendance
+#             student_attendance = Attendance.objects.filter(
+#                 student=student, date__gte=term.start_date, date__lte=term.end_date
+#             )
+#             days_present = student_attendance.filter(present=True).count()
+#             days_absent = student_attendance.filter(present=False).count()
+#             total_school_days = Attendance.objects.filter(
+#                 student__current_class=standard, date__gte=term.start_date, date__lte=term.end_date
+#             ).values('date').distinct().count()
+
+#             # Scores
+#             scores = Score.objects.filter(student=student, term=term).select_related('subject').order_by('subject__name')
+#             report_data = []
+#             total_scores_sum = 0
+#             subjects_count = 0
+            
+#             for score in scores:
+#                 if score.total_score is not None:
+#                     total_ca = (score.ca1 or 0) + (score.ca2 or 0) + (score.ca3 or 0)
+#                     class_scores = Score.objects.filter(subject=score.subject, term=term, student__current_class=standard, total_score__isnull=False)
+#                     stats = class_scores.aggregate(avg=Avg('total_score'), min=Min('total_score'), max=Max('total_score'))
+                    
+#                     higher_scores = class_scores.filter(total_score__gt=score.total_score).count()
+                    
+#                     report_data.append({
+#                         'subject': score.subject.name,
+#                         'ca1': score.ca1, 'ca2': score.ca2, 'ca3': score.ca3,
+#                         'total_ca': total_ca, 'exam_score': score.exam_score,
+#                         'total_score': score.total_score,
+#                         'grade': get_grade(score.total_score),
+#                         'remark': get_subject_remark(score.total_score),
+#                         'subject_avg': stats.get('avg') or 0,
+#                         'subject_min': stats.get('min') or 0,
+#                         'subject_max': stats.get('max') or 0,
+#                         'subject_position': higher_scores + 1,
+#                     })
+#                     total_scores_sum += score.total_score
+#                     subjects_count += 1
+
+#             overall_avg = total_scores_sum / subjects_count if subjects_count > 0 else 0
+#             rank, total_rank_count = get_student_class_rank(student, standard, term)
+            
+#             # Comments & Psychomotor
+#             comments = ReportComments.objects.filter(student=student, standard=standard, term=term, session=term.session).first()
+#             motor = MotorAbilityScore.objects.filter(student=student, term=term).first()
+
+#             all_reports.append({
+#                 'student': student,
+#                 'report_data': report_data,
+#                 'overall_average': overall_avg,
+#                 'student_position_display': f"{rank} out of {total_rank_count}" if rank != 'N/A' else 'N/A',
+#                 'days_present': days_present,
+#                 'days_absent': days_absent,
+#                 'teacher_comment': comments.teacher_comment if comments else None,
+#                 'principal_comment': comments.principal_comment if comments else None,
+#                 'motor_ability_score': motor,
+#                 'total_marks_obtained': total_scores_sum,
+#                 'subjects_with_scores_count': subjects_count,
+#             })
+
+#         context = {
+#             'standard': standard,
+#             'term': term,
+#             'all_reports': all_reports,
+#             'school_identity': school_identity,
+#             'class_avg': class_avg,
+#             'class_max_avg': class_max_avg,
+#             'class_min_avg': class_min_avg,
+#             'total_school_days': total_school_days,
+#             'next_term_start_date': next_term_start_date,
+#             'total_students_in_class': total_students_in_class,
+#             'show_class_position': show_class_position,
+#         }
+#         return render(request, self.template_name, context)
+
+
 class BulkReportCardPrintView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
     template_name = 'results/bulk_report_cards_print.html'
 
@@ -3097,11 +3212,18 @@ class BulkReportCardPrintView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View
         standard = get_object_or_404(Standard, id=standard_id)
         term = get_object_or_404(Term, id=term_id)
         students = Student.objects.filter(current_class=standard).order_by('last_name')
-        
+
         school_identity = SchoolIdentity.objects.first()
         next_term = Term.objects.filter(start_date__gt=term.end_date).order_by('start_date').first()
         next_term_start_date = next_term.start_date if next_term else None
         total_students_in_class = students.count()
+
+        # ── MOVED OUT OF LOOP: class-wide stat, computed once ──────────────
+        total_school_days = Attendance.objects.filter(
+            student__current_class=standard,
+            date__gte=term.start_date,
+            date__lte=term.end_date
+        ).values('date').distinct().count()
 
         # Class-wide Average Stats
         student_averages = []
@@ -3135,24 +3257,28 @@ class BulkReportCardPrintView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View
             )
             days_present = student_attendance.filter(present=True).count()
             days_absent = student_attendance.filter(present=False).count()
-            total_school_days = Attendance.objects.filter(
-                student__current_class=standard, date__gte=term.start_date, date__lte=term.end_date
-            ).values('date').distinct().count()
 
             # Scores
             scores = Score.objects.filter(student=student, term=term).select_related('subject').order_by('subject__name')
             report_data = []
             total_scores_sum = 0
             subjects_count = 0
-            
+
             for score in scores:
                 if score.total_score is not None:
                     total_ca = (score.ca1 or 0) + (score.ca2 or 0) + (score.ca3 or 0)
-                    class_scores = Score.objects.filter(subject=score.subject, term=term, student__current_class=standard, total_score__isnull=False)
-                    stats = class_scores.aggregate(avg=Avg('total_score'), min=Min('total_score'), max=Max('total_score'))
-                    
+                    class_scores = Score.objects.filter(
+                        subject=score.subject, term=term,
+                        student__current_class=standard,
+                        total_score__isnull=False
+                    )
+                    stats = class_scores.aggregate(
+                        avg=Avg('total_score'),
+                        min=Min('total_score'),
+                        max=Max('total_score')
+                    )
                     higher_scores = class_scores.filter(total_score__gt=score.total_score).count()
-                    
+
                     report_data.append({
                         'subject': score.subject.name,
                         'ca1': score.ca1, 'ca2': score.ca2, 'ca3': score.ca3,
@@ -3170,9 +3296,11 @@ class BulkReportCardPrintView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View
 
             overall_avg = total_scores_sum / subjects_count if subjects_count > 0 else 0
             rank, total_rank_count = get_student_class_rank(student, standard, term)
-            
+
             # Comments & Psychomotor
-            comments = ReportComments.objects.filter(student=student, standard=standard, term=term, session=term.session).first()
+            comments = ReportComments.objects.filter(
+                student=student, standard=standard, term=term, session=term.session
+            ).first()
             motor = MotorAbilityScore.objects.filter(student=student, term=term).first()
 
             all_reports.append({
