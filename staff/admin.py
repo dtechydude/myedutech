@@ -32,6 +32,9 @@ class StaffAttendanceAdmin(admin.ModelAdmin):
         'status',
         'is_late',
     )
+    raw_id_fields = (
+        'teacher',
+    )
 
     list_filter = (
         'status',
