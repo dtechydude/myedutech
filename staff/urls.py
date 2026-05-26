@@ -42,6 +42,42 @@ urlpatterns = [
 
     path('teacher/<int:teacher_id>/id-card/', TeacherIDCardView.as_view(), name='teacher_id_card'),
     
+    # apps/staff/urls.py
+
+    # MANUAL
+    path(
+        'staff/manual/',
+        staff_views.take_staff_attendance,
+        name='take_staff_attendance'
+    ),
+
+    # QR
+    path(
+        'staff/scanner/',
+        staff_views.staff_attendance_scanner_view,
+        name='staff_attendance_scanner'
+    ),
+
+    path(
+        'staff/scan/<str:staff_id>/',
+        staff_views.scan_staff_attendance_ajax,
+        name='scan_staff_attendance_ajax'
+    ),
+
+    # REPORT
+    path(
+        'staff/report/',
+        staff_views.staff_attendance_report,
+        name='staff_attendance_report'
+    ),
+
+    # TEACHER SELF VIEW
+    path(
+        'teacher/my-attendance/',
+        staff_views.teacher_self_attendance,
+        name='teacher_self_attendance'
+    ),
+
      
 
 ]

@@ -34,6 +34,7 @@ import io # Needed for file-like object
 from django.template.loader import get_template
 
 
+
 # important PLEASE DONT DELETE
 def get_student_class_rank(student, standard, term):
     """
@@ -2880,7 +2881,73 @@ class BroadsheetSelectionView(LoginRequiredMixin, UserPassesTestMixin, View):
         }
         return render(request, self.template_name, context)
 
+#=================================================
+# DO NOT DELETE THIS CODE, IT WAS WORKING
+#===============================================
 # 2. THE ACTUAL BROADSHEET GENERATOR
+# class ClassBroadsheetView(LoginRequiredMixin, UserPassesTestMixin, View):
+#     template_name = 'results/class_broadsheet.html'
+
+#     def test_func(self):
+#         return self.request.user.is_staff
+
+#     def get(self, request, class_id, term_id):
+#         standard = get_object_or_404(Standard, id=class_id)
+#         term = get_object_or_404(Term, id=term_id)
+        
+#         students = Student.objects.filter(current_class=standard).order_by('last_name')
+#         subject_ids = Score.objects.filter(student__current_class=standard, term=term).values_list('subject_id', flat=True).distinct()
+#         subjects = Subject.objects.filter(id__in=subject_ids).order_by('name')
+
+#         broadsheet_data = []
+#         for student in students:
+#             student_scores = {}
+#             row_total = 0
+#             count = 0
+#             scores = Score.objects.filter(student=student, term=term)
+            
+#             for sub in subjects:
+#                 score_obj = scores.filter(subject=sub).first()
+#                 if score_obj:
+#                     total = score_obj.total_score or 0
+#                     student_scores[sub.id] = {
+#                         'ca': (score_obj.ca1 or 0) + (score_obj.ca2 or 0) + (score_obj.ca3 or 0),
+#                         'exam': score_obj.exam_score or 0,
+#                         'total': total
+#                     }
+#                     row_total += total
+#                     count += 1
+#                 else:
+#                     student_scores[sub.id] = {'ca': 0, 'exam': 0, 'total': 0}
+
+#             broadsheet_data.append({
+#                 'student': student,
+#                 'scores': student_scores,
+#                 'total_sum': row_total,
+#                 'average': row_total / count if count > 0 else 0
+#             })
+
+#         broadsheet_data = sorted(broadsheet_data, key=lambda x: x['average'], reverse=True)
+
+#         if 'export' in request.GET:
+#             return self.export_csv(standard, term, subjects, broadsheet_data)
+
+#         return render(request, self.template_name, {
+#             'standard': standard, 'term': term, 'subjects': subjects, 'broadsheet_data': broadsheet_data
+#         })
+
+#     def export_csv(self, standard, term, subjects, broadsheet_data):
+#         response = HttpResponse(content_type='text/csv')
+#         response['Content-Disposition'] = f'attachment; filename="Broadsheet_{standard.name}.csv"'
+#         writer = csv.writer(response)
+#         writer.writerow(['S/N', 'Name'] + [f"{s.name} (TOT)" for s in subjects] + ['Total', 'Avg', 'Rank'])
+#         for i, row in enumerate(broadsheet_data, 1):
+#             scores = [row['scores'][s.id]['total'] for s in subjects]
+#             writer.writerow([i, row['student'].get_full_name()] + scores + [row['total_sum'], round(row['average'], 2), i])
+#         return response
+ #==================================================   
+# DO NOT DELETE THE CODE ABOVE IT IS THE OLD CODE
+#==================================================
 class ClassBroadsheetView(LoginRequiredMixin, UserPassesTestMixin, View):
     template_name = 'results/class_broadsheet.html'
 
@@ -2888,28 +2955,41 @@ class ClassBroadsheetView(LoginRequiredMixin, UserPassesTestMixin, View):
         return self.request.user.is_staff
 
     def get(self, request, class_id, term_id):
-        standard = get_object_or_404(Standard, id=class_id)
-        term = get_object_or_404(Term, id=term_id)
-        
-        students = Student.objects.filter(current_class=standard).order_by('last_name')
-        subject_ids = Score.objects.filter(student__current_class=standard, term=term).values_list('subject_id', flat=True).distinct()
-        subjects = Subject.objects.filter(id__in=subject_ids).order_by('name')
 
+        standard = get_object_or_404(Standard, id=class_id)
+        term     = get_object_or_404(Term, id=term_id)
+
+        students = Student.objects.filter(
+            current_class=standard
+        ).order_by('last_name')
+
+        subject_ids = Score.objects.filter(
+            student__current_class=standard, term=term
+        ).values_list('subject_id', flat=True).distinct()
+
+        subjects = Subject.objects.filter(
+            id__in=subject_ids
+        ).order_by('name')
+
+        # ============================================
+        # BUILD BROADSHEET DATA  (original logic — unchanged)
+        # ============================================
         broadsheet_data = []
+
         for student in students:
             student_scores = {}
             row_total = 0
             count = 0
             scores = Score.objects.filter(student=student, term=term)
-            
+
             for sub in subjects:
                 score_obj = scores.filter(subject=sub).first()
                 if score_obj:
                     total = score_obj.total_score or 0
                     student_scores[sub.id] = {
-                        'ca': (score_obj.ca1 or 0) + (score_obj.ca2 or 0) + (score_obj.ca3 or 0),
-                        'exam': score_obj.exam_score or 0,
-                        'total': total
+                        'ca':    (score_obj.ca1 or 0) + (score_obj.ca2 or 0) + (score_obj.ca3 or 0),
+                        'exam':  score_obj.exam_score or 0,
+                        'total': total,
                     }
                     row_total += total
                     count += 1
@@ -2917,31 +2997,96 @@ class ClassBroadsheetView(LoginRequiredMixin, UserPassesTestMixin, View):
                     student_scores[sub.id] = {'ca': 0, 'exam': 0, 'total': 0}
 
             broadsheet_data.append({
-                'student': student,
-                'scores': student_scores,
+                'student':   student,
+                'scores':    student_scores,
                 'total_sum': row_total,
-                'average': row_total / count if count > 0 else 0
+                'average':   row_total / count if count > 0 else 0,
             })
 
-        broadsheet_data = sorted(broadsheet_data, key=lambda x: x['average'], reverse=True)
+        broadsheet_data = sorted(
+            broadsheet_data, key=lambda x: x['average'], reverse=True
+        )
 
+        # ============================================
+        # PRINT ORIENTATION LOGIC
+        # Automatically picks the best print dimension
+        # based on subject count so nothing gets cut off.
+        #
+        #   ≤ 7  subjects → portrait   (A4)
+        #   8–14 subjects → landscape  (A4)
+        #   15+  subjects → landscape  (A3) + compact font
+        #
+        # User can also force via URL:
+        #   ?print=portrait
+        #   ?print=landscape
+        #   ?print=landscape&page=a3
+        # ============================================
+        subject_count  = subjects.count()
+        forced_mode    = request.GET.get('print', '').lower()
+        forced_page    = request.GET.get('page', '').lower()
+
+        if forced_mode in ('portrait', 'landscape'):
+            print_orientation = forced_mode
+        elif subject_count <= 7:
+            print_orientation = 'portrait'
+        else:
+            print_orientation = 'landscape'
+
+        # Page size: A4 default, A3 when subjects ≥ 15
+        if forced_page in ('a3', 'a4'):
+            print_page = forced_page.upper()
+        elif subject_count >= 15:
+            print_page = 'A3'
+        else:
+            print_page = 'A4'
+
+        # Font scale class for the template
+        if subject_count >= 15:
+            print_scale = 'compact'   # 7pt in print
+        elif subject_count >= 8:
+            print_scale = 'medium'    # 8pt in print
+        else:
+            print_scale = 'normal'    # 9pt in print
+
+        # ============================================
+        # CSV EXPORT  (original logic — unchanged)
+        # ============================================
         if 'export' in request.GET:
             return self.export_csv(standard, term, subjects, broadsheet_data)
 
-        return render(request, self.template_name, {
-            'standard': standard, 'term': term, 'subjects': subjects, 'broadsheet_data': broadsheet_data
-        })
+        context = {
+            'standard':          standard,
+            'term':              term,
+            'subjects':          subjects,
+            'broadsheet_data':   broadsheet_data,
+            # print helpers
+            'print_orientation': print_orientation,
+            'print_page':        print_page,
+            'print_scale':       print_scale,
+            'subject_count':     subject_count,
+        }
+
+        return render(request, self.template_name, context)
 
     def export_csv(self, standard, term, subjects, broadsheet_data):
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = f'attachment; filename="Broadsheet_{standard.name}.csv"'
+        response['Content-Disposition'] = (
+            f'attachment; filename="Broadsheet_{standard.name}.csv"'
+        )
         writer = csv.writer(response)
-        writer.writerow(['S/N', 'Name'] + [f"{s.name} (TOT)" for s in subjects] + ['Total', 'Avg', 'Rank'])
+        writer.writerow(
+            ['S/N', 'Name'] +
+            [f"{s.name} (TOT)" for s in subjects] +
+            ['Total', 'Avg', 'Rank']
+        )
         for i, row in enumerate(broadsheet_data, 1):
             scores = [row['scores'][s.id]['total'] for s in subjects]
-            writer.writerow([i, row['student'].get_full_name()] + scores + [row['total_sum'], round(row['average'], 2), i])
+            writer.writerow(
+                [i, row['student'].get_full_name()] +
+                scores +
+                [row['total_sum'], round(row['average'], 2), i]
+            )
         return response
-    
 
 
 # Bulk Report Card View

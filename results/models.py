@@ -10,6 +10,7 @@ from django.urls import reverse, reverse_lazy
 from django.db import models
 from django.db.models import UniqueConstraint, Sum, Avg # Import Avg for average calculations
 from django.core.exceptions import ValidationError
+#New Logic For midterm score setting
 
 
 
@@ -289,35 +290,6 @@ class ExamSetting(models.Model):
         verbose_name_plural = 'Mid-Term Score Settings'
 
 
-
-# # New Mid Term Score
-
-# class MidTermScore(models.Model):
-#     student = models.ForeignKey(Student, on_delete=models.CASCADE)
-#     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-#     term = models.ForeignKey(Term, on_delete=models.CASCADE)
-
-#     exam_total_score = models.FloatField(null=True, blank=True)
-
-#     def percentage(self):
-#         setting = ExamSetting.objects.get(
-#             term=self.term,
-#             exam_type="Midterm"
-#         )
-#         return (self.exam_total_score / setting.max_score) * 100
-
-    
-#     class Meta:
-#         # Each student can only have one mid-term score entry per subject per term
-#         unique_together = ('student', 'subject', 'term')
-#         ordering = ['student__last_name', 'subject__name']
-#         verbose_name = 'Mid-Term Score'
-#         verbose_name_plural = 'Mid-Term Scores'
-
-#     def __str__(self):
-#         return f"{self.student.first_name} - {self.subject.name} (Mid-Term {self.term.name})"
- 
-
 # New addition for midterm scores
 
 class MidTermScore(models.Model):
@@ -358,8 +330,8 @@ class MidTermScore(models.Model):
     class Meta:
         unique_together = ('student', 'subject', 'term')
         ordering = ['student__last_name', 'subject__name']
-        verbose_name = 'Mid-Term Score'
-        verbose_name_plural = 'Mid-Term Scores'
+        verbose_name = 'Mid-Term Score Summary'
+        verbose_name_plural = 'Mid-Term Scores Summary'
 
     def __str__(self):
         return (
@@ -368,9 +340,6 @@ class MidTermScore(models.Model):
             f"(Mid-Term {self.term.name})"
         )
 
-#New Logic For midterm score setting
-from django.db import models
-from django.core.exceptions import ValidationError
 
 
 class MidTermComponent(models.Model):
@@ -387,6 +356,9 @@ class MidTermComponent(models.Model):
     class Meta:
         ordering = ['order']
         unique_together = ('term', 'title')
+   
+        verbose_name = 'Mid-Term Component Settings'
+        verbose_name_plural = 'Mid-Term Component Settings'
 
     def __str__(self):
         return f"{self.title} ({self.max_score})"
@@ -419,6 +391,7 @@ class MidTermComponent(models.Model):
                 f"cannot exceed Midterm setting score "
                 f"({setting.max_score})."
             )
+        
         
 class MidTermComponentScore(models.Model):
     midterm_score = models.ForeignKey(

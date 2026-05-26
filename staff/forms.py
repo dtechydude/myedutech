@@ -100,3 +100,122 @@ class TeacherForm(forms.ModelForm):
             'guarantor_address': forms.Textarea(attrs={'rows': 2}),
             'next_of_kin_address': forms.Textarea(attrs={'rows': 2}),
         }
+
+
+# Teachers Attendance
+# apps/staff/forms.py
+
+from django import forms
+from .models import StaffAttendance
+
+# attendance/forms.py
+
+# class StaffAttendanceForm(forms.ModelForm):
+
+#     teacher_name = forms.CharField(
+#         required=False,
+#         disabled=True,
+#         label='Teacher'
+#     )
+
+#     class Meta:
+#         model = StaffAttendance
+
+#         fields = [
+#             'check_in_time',
+#             'check_out_time',
+#             'status',
+#             'remarks',
+#         ]
+
+#         widgets = {
+#             'check_in_time': forms.TimeInput(
+#                 attrs={'type': 'time'}
+#             ),
+
+#             'check_out_time': forms.TimeInput(
+#                 attrs={'type': 'time'}
+#             ),
+
+#             'remarks': forms.Textarea(
+#                 attrs={'rows': 2}
+#             )
+#         }
+
+
+# attendance/forms.py
+
+from django import forms
+from django.utils import timezone
+from .models import StaffAttendance
+
+
+class AttendanceDateForm(forms.Form):
+    """
+    Used for selecting attendance date.
+    """
+
+    date = forms.DateField(
+        required=False,
+        initial=timezone.localdate,
+        widget=forms.DateInput(
+            attrs={
+                'type': 'date',
+                'class': 'form-control'
+            }
+        )
+    )
+
+
+class StaffAttendanceForm(forms.ModelForm):
+
+    teacher_name = forms.CharField(
+        required=False,
+        disabled=True,
+        label='Teacher',
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control'
+            }
+        )
+    )
+
+    class Meta:
+        model = StaffAttendance
+
+        fields = [
+            'check_in_time',
+            'check_out_time',
+            'status',
+            'remarks',
+        ]
+
+        widgets = {
+
+            'check_in_time': forms.TimeInput(
+                attrs={
+                    'type': 'time',
+                    'class': 'form-control'
+                }
+            ),
+
+            'check_out_time': forms.TimeInput(
+                attrs={
+                    'type': 'time',
+                    'class': 'form-control'
+                }
+            ),
+
+            'status': forms.Select(
+                attrs={
+                    'class': 'form-select'
+                }
+            ),
+
+            'remarks': forms.Textarea(
+                attrs={
+                    'rows': 2,
+                    'class': 'form-control'
+                }
+            ),
+        }

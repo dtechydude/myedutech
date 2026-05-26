@@ -1,0 +1,429 @@
+{% comment %} {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Staff Attendance Scanner
+    </title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- Html5 QR Scanner -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style>
+
+        body{
+            background:#f4f6f9;
+            font-family:"Segoe UI", sans-serif;
+        }
+
+        .scanner-header{
+            background:linear-gradient(135deg,#0d6efd,#0b5ed7);
+            color:white;
+            padding:30px;
+            border-radius:20px;
+            margin-bottom:25px;
+        }
+
+        .card-custom{
+            border:none;
+            border-radius:20px;
+            box-shadow:0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .stats-card{
+            border-radius:18px;
+            padding:20px;
+            color:white;
+            box-shadow:0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        #reader{
+            width:100%;
+            border-radius:15px;
+            overflow:hidden;
+        }
+
+        .school-logo{
+            width:60px;
+            height:60px;
+            object-fit:contain;
+            background:white;
+            padding:5px;
+            border-radius:12px;
+        }
+
+        .scan-result{
+            min-height:70px;
+        }
+
+        footer{
+            margin-top:40px;
+            background:white;
+            border-top:1px solid #dee2e6;
+            padding:20px;
+            text-align:center;
+            color:#6c757d;
+            font-size:14px;
+        }
+
+        @media(max-width:768px){
+
+            .scanner-header{
+                text-align:center;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container-fluid py-4 px-lg-5 px-3">
+
+    <!-- HEADER -->
+
+    <div class="scanner-header">
+
+        <div class="row align-items-center">
+
+            <div class="col-lg-8">
+
+                <div class="d-flex align-items-center">
+
+                    {% if school_info.logo %}
+                        <img src="{{ school_info.logo.url }}"
+                             class="school-logo me-3"
+                             alt="School Logo">
+                    {% endif %}
+
+                    <div>
+
+                        <h2 class="fw-bold mb-1">
+                            <i class="fas fa-qrcode me-2"></i>
+                            Staff Attendance Scanner
+                        </h2>
+
+                        <p class="mb-0 opacity-75">
+                            Scan teacher ID QR code for check-in/check-out attendance.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+
+                <span class="badge bg-light text-dark p-3 fs-6">
+                    {{ now|date:"F d, Y" }}
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- STATS -->
+
+    <div class="row mb-4">
+
+        <div class="col-md-6">
+
+            <div class="stats-card bg-primary">
+
+                <h6>Total Staff</h6>
+
+                <h2 class="fw-bold">
+                    {{ total_staff }}
+                </h2>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-6">
+
+            <div class="stats-card bg-success">
+
+                <h6>Present Today</h6>
+
+                <h2 class="fw-bold"
+                    id="present-count">
+
+                    {{ present_count }}
+
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- SCANNER -->
+
+    <div class="card card-custom">
+
+        <div class="card-header bg-white border-0 py-3">
+
+            <h5 class="fw-bold mb-0">
+
+                <i class="fas fa-camera me-2"></i>
+                QR Scanner
+
+            </h5>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <div class="col-lg-6 mb-4">
+
+                    <div id="reader"></div>
+
+                </div>
+
+                <div class="col-lg-6">
+
+                    <div class="alert alert-info">
+
+                        <h5 class="fw-bold">
+                            Instructions
+                        </h5>
+
+                        <ul class="mb-0">
+
+                            <li>
+                                Point camera at teacher QR code
+                            </li>
+
+                            <li>
+                                First scan = Check In
+                            </li>
+
+                            <li>
+                                Second scan = Check Out
+                            </li>
+
+                            <li>
+                                Third scan = Ignored
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+                    <div class="scan-result mt-4"
+                         id="scan-result">
+
+                        <div class="alert alert-secondary">
+
+                            Waiting for QR scan...
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<footer>
+
+    © {{ now|date:"Y" }}
+    {{ school_info.school_name|default:"School Portal" }}
+
+    <br>
+
+    Staff Attendance Scanner System
+
+</footer>
+
+<script>
+
+    function onScanSuccess(decodedText, decodedResult) {
+
+        fetch(`/attendance/staff/scan/${decodedText}/`)
+        .then(response => response.json())
+        .then(data => {
+
+            let resultBox = document.getElementById('scan-result');
+
+            if(data.status === 'success'){
+
+                resultBox.innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>Success:</strong><br>
+                        ${data.message}
+                    </div>
+                `;
+
+                document.getElementById('present-count').innerText =
+                    data.present_count;
+
+            }else{
+
+                resultBox.innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>Error:</strong><br>
+                        ${data.message}
+                    </div>
+                `;
+            }
+
+        });
+
+    }
+
+    let html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader",
+        {
+            fps: 10,
+            qrbox: 250
+        }
+    );
+
+    html5QrcodeScanner.render(onScanSuccess);
+
+</script>
+
+</body>
+</html> {% endcomment %}
+
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Scanner</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style>
+
+        body {
+            background: #f4f6f9;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        .header {
+            background: linear-gradient(135deg,#0d6efd,#0b5ed7);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+        }
+
+        #reader {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .card-box {
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container py-4">
+
+    <!-- HEADER -->
+    <div class="header mb-3">
+
+        <h3>
+            <i class="fas fa-qrcode me-2"></i>
+            Staff Attendance Scanner
+        </h3>
+
+        <small>Scan staff QR for check-in/out</small>
+
+    </div>
+
+    <!-- STATS -->
+    <div class="row mb-3">
+
+        <div class="col-md-6">
+            <div class="card card-box p-3 bg-primary text-white">
+                Total Staff: {{ total_staff }}
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card card-box p-3 bg-success text-white">
+                Present Today: <span id="present-count">{{ present_count }}</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SCANNER -->
+    <div class="card card-box p-3">
+
+        <div id="reader"></div>
+
+        <div id="result" class="mt-3"></div>
+
+    </div>
+
+</div>
+
+<script>
+
+function onScanSuccess(decodedText) {
+
+    fetch(`/attendance/scan-staff/${decodedText}/`)
+    .then(res => res.json())
+    .then(data => {
+
+        document.getElementById("result").innerHTML =
+            `<div class="alert alert-info">${data.message}</div>`;
+
+        document.getElementById("present-count").innerText =
+            data.present_count;
+
+    });
+
+}
+
+new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 })
+    .render(onScanSuccess);
+
+</script>
+
+</body>
+
+</html>

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import StaffPosition, Teacher
+from .models import StaffPosition, Teacher, StaffAttendance
 from import_export.admin import ImportExportModelAdmin
 
 
@@ -16,6 +16,39 @@ class TeacherAdmin(ImportExportModelAdmin):
     list_filter = ['staff_role',]
     ordering = ['dept__name', 'first_name']
     raw_id_fields = ['user', 'dept']
+
+
+
+# attendance/admin.py
+
+@admin.register(StaffAttendance)
+class StaffAttendanceAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'teacher',
+        'date',
+        'check_in_time',
+        'check_out_time',
+        'status',
+        'is_late',
+    )
+
+    list_filter = (
+        'status',
+        'is_late',
+        'date',
+    )
+
+    search_fields = (
+        'teacher__user__first_name',
+        'teacher__user__last_name',
+        'teacher__staff_id',
+    )
+
+    ordering = ('-date',)
+
+
+
 
 
 

@@ -481,10 +481,11 @@
 							<li><a href="{% url 'attendance:attendance_scanner' %}"><i class="fas fa-qrcode"></i><span>Take Attendance-SCANNING</span></a>
 							</li>
 							{% elif user.teacher %}
-							<li><a href="{% url 'attendance:take_daily_attendance' %}">Mark Attendance</a></li>
+							<li><a href="{% url 'attendance:take_daily_attendance' %}">Mark STUDENT Attendance</a></li>
+							<li><a href="{% url 'staff:teacher_self_attendance' %}">MY ATTENDANCE</a></li>
 							{% endif %}							
-							<li><a href="{% url 'attendance:attendance_report' %}">Attendance Report</a></li>
-							<li><a href="{% url 'attendance:attendance-student-list' %}">Attendance List</a></li>
+							<li><a href="{% url 'attendance:attendance_report' %}">STUDENT Attendance Report</a></li>
+							<li><a href="{% url 'attendance:attendance-student-list' %}">STUDENT Attendance List</a></li>
 							
 							</ul>
 						{% endif %}
@@ -543,6 +544,10 @@
 							{% comment %} <li><a href="{% url 'staff:assign_form_teacher_to_classgroup' %}">Assign FormTeacher To CLASSGROUP</a></li> {% endcomment %}
 							<li><a href="{% url 'staff:teacher_assignments' %}">Subj/Classes Allocation List</a></li>
 							<li><a href="{% url 'staff:cbv_all_teachers_student_counts' %}">Form Teachers</a></li>
+							
+							<li><a href="{% url 'staff:take_staff_attendance' %}">Take Staff Attendance(MANUAL)</a></li>
+							<li><a href="{% url 'staff:staff_attendance_scanner' %}">Take Staff Attendance(scanning)</a></li>
+							<li><a href="{% url 'staff:staff_attendance_report' %}">Staff Attendance Report</a></li>
 							{% comment %} <li><a href="{% url 'curriculum:form_teachers_head' %}">FormTeachers List</a></li> {% endcomment %}
 							{% comment %} <li><a href="{% url 'curriculum:classgroup_form_teachers' %}">ClassGroup FormTeachers</a></li> {% endcomment %}
 
