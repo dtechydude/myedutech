@@ -85,3 +85,10 @@ class QuestionForm(forms.ModelForm):
                 choices=self.MCQ_CHOICES,
                 attrs={'class': 'form-select'}
             )
+
+# Bulk CBT upload
+class BulkQuestionUploadForm(forms.Form):
+    csv_file = forms.FileField(
+        label="Upload CSV File",
+        help_text="Upload a .csv file with your questions. Download the template below to get started."
+    )

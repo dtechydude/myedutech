@@ -99,6 +99,13 @@
                                             <i class="bi bi-eye me-1"></i> View Questions
                                         </a>
                                     </div>
+                                    <hr>
+                                    <a href="{% url 'cbt:teacher-bulk-upload-questions' quiz_id=quiz.id %}"
+                                class="btn btn-sm btn-outline-primary ms-1"
+                                title="Bulk Upload Questions via CSV">
+                                    <i class="fas fa-file-csv me-1"></i>Bulk Upload
+                                </a>
+                            
                                 </div>
                             </div>
                         </div>

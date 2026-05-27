@@ -41,5 +41,10 @@ urlpatterns = [
 
     path('teacher/quiz/<int:quiz_id>/export/<str:export_type>/', cbt_views.export_questions,  name='export-questions'),
 
+    path(
+    'quiz/<int:quiz_id>/bulk-upload/',
+    cbt_views.teacher_bulk_upload_questions,
+    name='teacher-bulk-upload-questions',
+),
 
 ]

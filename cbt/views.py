@@ -12,7 +12,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from .models import Quiz, Question, Answer, QuizResult, QuizAttempt
 from results.models import Examination
-from .forms import AdminQuizForm, QuestionForm
+from .forms import AdminQuizForm, QuestionForm, BulkQuestionUploadForm
 from staff.models import Teacher
 from django.core.exceptions import PermissionDenied
 import csv
@@ -20,9 +20,9 @@ from django.http import HttpResponse
 from django.utils import timezone
 from django.db.models import Q, F
 from curriculum.models import Standard, Subject
-
-
 import csv
+import io
+
 from django.http import HttpResponse
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -793,3 +793,399 @@ def export_results_csv(request):
         ])
 
     return response
+
+
+# Bulk CBT Upload
+
+# @login_required
+# def teacher_bulk_upload_questions(request, quiz_id):
+#     """
+#     Allows teachers and admins to bulk upload questions for a quiz via CSV.
+#     Does not alter any existing view logic.
+#     """
+#     user = request.user
+#     quiz = get_object_or_404(Quiz, id=quiz_id)
+
+#     # ── PERMISSION CHECK (mirrors teacher_add_question logic) ──────────────
+#     if not (user.is_staff or user.is_superuser):
+#         try:
+#             teacher = Teacher.objects.get(user=user)
+#         except Teacher.DoesNotExist:
+#             raise PermissionDenied("You must be a registered teacher.")
+
+#         is_authorized_standard = quiz.examination.standard in teacher.standards_assigned.all()
+#         is_authorized_subject = quiz.subject in teacher.subjects_taught.all()
+
+#         if not (is_authorized_standard and is_authorized_subject):
+#             messages.error(request, "Access Denied: You are not assigned to this Class or Subject.")
+#             return redirect('cbt:main-view')
+
+#     # ── HANDLE CSV TEMPLATE DOWNLOAD ───────────────────────────────────────
+#     if request.GET.get('download_template'):
+#         import csv
+#         from django.http import HttpResponse
+
+#         response = HttpResponse(content_type='text/csv')
+#         response['Content-Disposition'] = 'attachment; filename="questions_template.csv"'
+
+#         writer = csv.writer(response)
+#         # Header row
+#         writer.writerow([
+#             'content',
+#             'question_type',
+#             'option_a',
+#             'option_b',
+#             'option_c',
+#             'option_d',
+#             'correct_answer',
+#             'image_url',
+#         ])
+#         # Two example rows so the teacher understands the format
+#         writer.writerow([
+#             'What is the capital of Nigeria?',
+#             'MCQ',
+#             'Lagos',
+#             'Abuja',
+#             'Kano',
+#             'Ibadan',
+#             'B',
+#             '',
+#         ])
+#         writer.writerow([
+#             'The largest planet in the solar system is ___',
+#             'SHORT',
+#             '',
+#             '',
+#             '',
+#             '',
+#             'Jupiter',
+#             '',
+#         ])
+#         return response
+
+#     # ── HANDLE CSV UPLOAD ──────────────────────────────────────────────────
+#     form = BulkQuestionUploadForm()
+#     errors = []
+#     preview_rows = []
+#     success_count = 0
+
+#     if request.method == 'POST':
+#         form = BulkQuestionUploadForm(request.POST, request.FILES)
+
+#         if form.is_valid():
+#             csv_file = request.FILES['csv_file']
+
+#             # Validate file extension
+#             if not csv_file.name.endswith('.csv'):
+#                 messages.error(request, "Invalid file type. Please upload a .csv file.")
+#                 return render(request, 'cbt/bulk_upload_questions.html', {
+#                     'form': form,
+#                     'quiz': quiz,
+#                     'errors': errors,
+#                     'success_count': success_count,
+#                 })
+
+#             # Decode the uploaded file safely
+#             try:
+#                 decoded = csv_file.read().decode('utf-8-sig')  # utf-8-sig handles Excel BOM
+#             except UnicodeDecodeError:
+#                 messages.error(request, "Could not read the file. Please ensure it is saved as UTF-8 CSV.")
+#                 return render(request, 'cbt/bulk_upload_questions.html', {
+#                     'form': form,
+#                     'quiz': quiz,
+#                     'errors': errors,
+#                     'success_count': success_count,
+#                 })
+
+#             reader = csv.DictReader(io.StringIO(decoded))
+
+#             # Validate headers
+#             required_headers = {'content', 'question_type', 'correct_answer'}
+#             if not required_headers.issubset(set(reader.fieldnames or [])):
+#                 messages.error(
+#                     request,
+#                     f"Missing required columns. Your CSV must have at least: "
+#                     f"{', '.join(required_headers)}. Download the template for reference."
+#                 )
+#                 return render(request, 'cbt/bulk_upload_questions.html', {
+#                     'form': form,
+#                     'quiz': quiz,
+#                     'errors': errors,
+#                     'success_count': success_count,
+#                 })
+
+#             questions_to_create = []
+
+#             for row_num, row in enumerate(reader, start=2):  # start=2 because row 1 is header
+
+#                 row_errors = []
+
+#                 # ── Validate content ───────────────────────────────────────
+#                 content = row.get('content', '').strip()
+#                 if not content:
+#                     row_errors.append(f"Row {row_num}: 'content' is empty — skipped.")
+#                     errors.extend(row_errors)
+#                     continue
+
+#                 # ── Validate question_type ─────────────────────────────────
+#                 question_type = row.get('question_type', 'MCQ').strip().upper()
+#                 if question_type not in ('MCQ', 'SHORT'):
+#                     row_errors.append(
+#                         f"Row {row_num}: Invalid question_type '{question_type}'. "
+#                         f"Use MCQ or SHORT — defaulting to MCQ."
+#                     )
+#                     question_type = 'MCQ'
+
+#                 # ── Validate correct_answer ────────────────────────────────
+#                 correct_answer = row.get('correct_answer', '').strip()
+#                 if not correct_answer:
+#                     row_errors.append(f"Row {row_num}: 'correct_answer' is empty — skipped.")
+#                     errors.extend(row_errors)
+#                     continue
+
+#                 if question_type == 'MCQ':
+#                     if correct_answer.upper() not in ('A', 'B', 'C', 'D'):
+#                         row_errors.append(
+#                             f"Row {row_num}: For MCQ, correct_answer must be A, B, C, or D. "
+#                             f"Got '{correct_answer}' — skipped."
+#                         )
+#                         errors.extend(row_errors)
+#                         continue
+
+#                 # ── Optional fields ────────────────────────────────────────
+#                 option_a = row.get('option_a', '').strip() or None
+#                 option_b = row.get('option_b', '').strip() or None
+#                 option_c = row.get('option_c', '').strip() or None
+#                 option_d = row.get('option_d', '').strip() or None
+#                 image_url = row.get('image_url', '').strip() or None
+
+#                 # Warn if MCQ has no options
+#                 if question_type == 'MCQ' and not any([option_a, option_b, option_c, option_d]):
+#                     row_errors.append(
+#                         f"Row {row_num}: MCQ question has no options (A–D). "
+#                         f"Question will be saved but options are blank."
+#                     )
+
+#                 # Collect non-fatal warnings
+#                 errors.extend(row_errors)
+
+#                 questions_to_create.append(
+#                     Question(
+#                         quiz=quiz,
+#                         content=content,
+#                         question_type=question_type,
+#                         option_a=option_a,
+#                         option_b=option_b,
+#                         option_c=option_c,
+#                         option_d=option_d,
+#                         correct_answer=correct_answer,
+#                         image_url=image_url,
+#                     )
+#                 )
+
+#                 preview_rows.append({
+#                     'row': row_num,
+#                     'content': content[:60],
+#                     'type': question_type,
+#                     'answer': correct_answer,
+#                     'status': 'Ready' if not row_errors else 'Warning',
+#                 })
+
+#             # ── Bulk insert all valid questions in one DB query ────────────
+#             if questions_to_create:
+#                 Question.objects.bulk_create(questions_to_create)
+#                 success_count = len(questions_to_create)
+
+#                 # Update quiz question count in one query
+#                 Quiz.objects.filter(id=quiz.id).update(
+#                     number_of_questions=F('number_of_questions') + success_count
+#                 )
+
+#                 messages.success(
+#                     request,
+#                     f"{success_count} question(s) uploaded successfully to '{quiz.exam_name}'."
+#                 )
+#             else:
+#                 messages.warning(request, "No valid questions found in the file. Check the errors below.")
+
+#     return render(request, 'cbt/bulk_upload_questions.html', {
+#         'form': form,
+#         'quiz': quiz,
+#         'errors': errors,
+#         'preview_rows': preview_rows,
+#         'success_count': success_count,
+#     })
+
+@login_required
+def teacher_bulk_upload_questions(request, quiz_id):
+    user = request.user
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+
+    # ── PERMISSION CHECK ───────────────────────────────────────────────────
+    if not (user.is_staff or user.is_superuser):
+        try:
+            teacher = Teacher.objects.get(user=user)
+        except Teacher.DoesNotExist:
+            raise PermissionDenied("You must be a registered teacher.")
+
+        is_authorized_standard = quiz.examination.standard in teacher.standards_assigned.all()
+        is_authorized_subject = quiz.subject in teacher.subjects_taught.all()
+
+        if not (is_authorized_standard and is_authorized_subject):
+            messages.error(request, "Access Denied: You are not assigned to this Class or Subject.")
+            return redirect('cbt:main-view')
+
+    # ── HANDLE CSV TEMPLATE DOWNLOAD ───────────────────────────────────────
+    if request.GET.get('download_template'):
+        from django.http import HttpResponse  # this one is fine inline
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="questions_template.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow([
+            'content', 'question_type', 'option_a', 'option_b',
+            'option_c', 'option_d', 'correct_answer', 'image_url',
+        ])
+        writer.writerow([
+            'What is the capital of Nigeria?', 'MCQ',
+            'Lagos', 'Abuja', 'Kano', 'Ibadan', 'B', '',
+        ])
+        writer.writerow([
+            'The largest planet in the solar system is ___',
+            'SHORT', '', '', '', '', 'Jupiter', '',
+        ])
+        return response
+
+    # ── HANDLE CSV UPLOAD ──────────────────────────────────────────────────
+    form = BulkQuestionUploadForm()
+    errors = []
+    preview_rows = []
+    success_count = 0
+
+    if request.method == 'POST':
+        form = BulkQuestionUploadForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            csv_file = request.FILES['csv_file']
+
+            if not csv_file.name.endswith('.csv'):
+                messages.error(request, "Invalid file type. Please upload a .csv file.")
+                return render(request, 'cbt/bulk_upload_questions.html', {
+                    'form': form, 'quiz': quiz,
+                    'errors': errors, 'success_count': success_count,
+                })
+
+            try:
+                decoded = csv_file.read().decode('utf-8-sig')
+            except UnicodeDecodeError:
+                messages.error(request, "Could not read the file. Please ensure it is saved as UTF-8 CSV.")
+                return render(request, 'cbt/bulk_upload_questions.html', {
+                    'form': form, 'quiz': quiz,
+                    'errors': errors, 'success_count': success_count,
+                })
+
+            reader = csv.DictReader(io.StringIO(decoded))
+
+            required_headers = {'content', 'question_type', 'correct_answer'}
+            if not required_headers.issubset(set(reader.fieldnames or [])):
+                messages.error(
+                    request,
+                    f"Missing required columns. Your CSV must have at least: "
+                    f"{', '.join(required_headers)}. Download the template for reference."
+                )
+                return render(request, 'cbt/bulk_upload_questions.html', {
+                    'form': form, 'quiz': quiz,
+                    'errors': errors, 'success_count': success_count,
+                })
+
+            questions_to_create = []
+
+            for row_num, row in enumerate(reader, start=2):
+
+                row_errors = []
+
+                content = row.get('content', '').strip()
+                if not content:
+                    errors.append(f"Row {row_num}: 'content' is empty — skipped.")
+                    continue
+
+                question_type = row.get('question_type', 'MCQ').strip().upper()
+                if question_type not in ('MCQ', 'SHORT'):
+                    row_errors.append(
+                        f"Row {row_num}: Invalid question_type '{question_type}'. "
+                        f"Use MCQ or SHORT — defaulting to MCQ."
+                    )
+                    question_type = 'MCQ'
+
+                correct_answer = row.get('correct_answer', '').strip()
+                if not correct_answer:
+                    errors.append(f"Row {row_num}: 'correct_answer' is empty — skipped.")
+                    continue
+
+                if question_type == 'MCQ' and correct_answer.upper() not in ('A', 'B', 'C', 'D'):
+                    row_errors.append(
+                        f"Row {row_num}: For MCQ, correct_answer must be A, B, C, or D. "
+                        f"Got '{correct_answer}' — skipped."
+                    )
+                    errors.extend(row_errors)
+                    continue
+
+                option_a = row.get('option_a', '').strip() or None
+                option_b = row.get('option_b', '').strip() or None
+                option_c = row.get('option_c', '').strip() or None
+                option_d = row.get('option_d', '').strip() or None
+                image_url = row.get('image_url', '').strip() or None
+
+                if question_type == 'MCQ' and not any([option_a, option_b, option_c, option_d]):
+                    row_errors.append(
+                        f"Row {row_num}: MCQ question has no options (A–D). "
+                        f"Question will be saved but options are blank."
+                    )
+
+                errors.extend(row_errors)
+
+                questions_to_create.append(
+                    Question(
+                        quiz=quiz,
+                        content=content,
+                        question_type=question_type,
+                        option_a=option_a,
+                        option_b=option_b,
+                        option_c=option_c,
+                        option_d=option_d,
+                        correct_answer=correct_answer,
+                        image_url=image_url,
+                    )
+                )
+
+                preview_rows.append({
+                    'row': row_num,
+                    'content': content[:60],
+                    'type': question_type,
+                    'answer': correct_answer,
+                    'status': 'Ready' if not row_errors else 'Warning',
+                })
+
+            if questions_to_create:
+                Question.objects.bulk_create(questions_to_create)
+                success_count = len(questions_to_create)
+
+                Quiz.objects.filter(id=quiz.id).update(
+                    number_of_questions=F('number_of_questions') + success_count
+                )
+
+                messages.success(
+                    request,
+                    f"{success_count} question(s) uploaded successfully to '{quiz.exam_name}'."
+                )
+            else:
+                messages.warning(request, "No valid questions found in the file. Check the errors below.")
+
+    return render(request, 'cbt/bulk_upload_questions.html', {
+        'form': form,
+        'quiz': quiz,
+        'errors': errors,
+        'preview_rows': preview_rows,
+        'success_count': success_count,
+    })
