@@ -1,13 +1,18 @@
 from django.urls import path
 from students import views as students_views
 from students.views import StudentDetailView, StudentUpdateView, StudentDeleteView, StudentSelfDetailView, MyTeacherDetailView
-
+from django.urls import path
+from .views import (
+    StudentBulkUploadView,
+    download_sample_csv,
+    ajax_validate_csv_headers,
+)
 
 
 app_name ='students'
 
 urlpatterns = [
-
+  
     path('student_list/', students_views.student_list, name='student-list'),
     path('parent-dashboard/', students_views.parent_dashboard, name='parent-dashboard'),
     path('parents/', students_views.parent_list_view, name='parent_list'),
@@ -37,6 +42,24 @@ urlpatterns = [
     path('promote-individual-students/', students_views.promote_individual_students_view, name='promote_individual_students'),
     path('assign-classgroup-to-students/', students_views.assign_classgroup_to_students_view, name='assign_classgroup_to_students'),
 
+    # Bulk Students Upload
+    path(
+        'bulk-upload/',
+        StudentBulkUploadView.as_view(),
+        name='bulk-upload',
+    ),
+    path(
+        'bulk-upload/sample-csv/',
+        download_sample_csv,
+        name='bulk-upload-sample',
+    ),
+    path(
+        'bulk-upload/validate-headers/',
+        ajax_validate_csv_headers,
+        name='bulk-upload-validate',
+    ),
+
+
     # path('create-student-profile/', views.create_student_profile, name='create_student_profile'), # Example
     # Search student detail app
     # path('search/', students_views.search, name='search'),
@@ -50,6 +73,23 @@ urlpatterns = [
     # path('<str:id>/update/', StudentUpdateView.as_view(), name="student-update"),
     path('<str:id>/delete/', StudentDeleteView.as_view(), name="student-delete"), 
     path('<str:id>/', MyTeacherDetailView.as_view(), name="my-teacher-detail"),
+
+    # # Bulk Students Upload
+    # path(
+    #     'bulk-upload/',
+    #     StudentBulkUploadView.as_view(),
+    #     name='bulk-upload',
+    # ),
+    # path(
+    #     'bulk-upload/sample-csv/',
+    #     download_sample_csv,
+    #     name='bulk-upload-sample',
+    # ),
+    # path(
+    #     'bulk-upload/validate-headers/',
+    #     ajax_validate_csv_headers,
+    #     name='bulk-upload-validate',
+    # ),
 
          
 ]

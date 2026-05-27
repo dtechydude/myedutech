@@ -437,6 +437,8 @@
 						<ul aria-expanded="false">
 							{% if user.is_superuser or user.is_staff %}
 							<li><a href="{% url 'enroll_student' %}">Enroll Student</a></li>
+							<li><a href="{% url 'students:bulk-upload' %}">BULK UPLOAD (Enroll Student)</a></li>
+
 							<li><a href="{% url 'students:student-list' %}">All CURRENT Students</a></li>
 							<li><a href="{% url 'students:boarder-list' %}">All Boarders</a></li>
 							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>	

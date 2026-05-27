@@ -1128,3 +1128,154 @@ def student_archive(request):
         "q": q,
         "query_string": query_string, # Used to preserve filters in pagination links
     })
+
+
+# student bulk upload
+"""
+views.py — Bulk Student Upload Views
+KwikSchools — Smarter Schools!
+"""
+
+import logging
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render, redirect
+from django.views.decorators.http import require_GET, require_POST
+from django.utils.decorators import method_decorator
+from django.views import View
+
+from .forms import StudentBulkUploadForm
+from .services.bulk_upload import process_student_csv, generate_sample_csv
+
+logger = logging.getLogger(__name__)
+
+
+def _is_staff_or_superuser(user):
+    """Permission check: only staff or superusers may bulk upload."""
+    return user.is_active and (user.is_staff or user.is_superuser)
+
+
+staff_required = user_passes_test(
+    _is_staff_or_superuser,
+    login_url='login',  # adjust to your login URL name
+)
+
+
+# ─── Bulk Upload View ────────────────────────────────────────────────────────
+
+@method_decorator([login_required(login_url='login'), staff_required], name='dispatch')
+class StudentBulkUploadView(View):
+    """
+    GET  — show the upload form + instructions.
+    POST — process the CSV and display results.
+    """
+    template_name = 'students/bulk_upload.html'
+
+    def get(self, request):
+        form = StudentBulkUploadForm()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        form = StudentBulkUploadForm(request.POST, request.FILES)
+
+        if not form.is_valid():
+            return render(request, self.template_name, {
+                'form': form,
+                'form_errors': form.errors,
+            })
+
+        csv_file = form.cleaned_data['csv_file']
+        overwrite = form.cleaned_data.get('overwrite_existing', False)
+
+        try:
+            results = process_student_csv(
+                file_obj=csv_file,
+                overwrite=overwrite,
+                request_user=request.user,
+            )
+        except Exception as e:
+            logger.exception('Bulk upload failed unexpectedly.')
+            messages.error(request, f'Upload failed: {e}')
+            return render(request, self.template_name, {'form': form})
+
+        # Build summary message
+        summary = (
+            f"Upload complete — "
+            f"{results['created']} created, "
+            f"{results['updated']} updated, "
+            f"{results['skipped']} skipped "
+            f"out of {results['total_rows']} rows."
+        )
+
+        if results['errors']:
+            messages.warning(request, summary)
+        else:
+            messages.success(request, summary)
+
+        return render(request, self.template_name, {
+            'form': StudentBulkUploadForm(),
+            'results': results,
+            'summary': summary,
+        })
+
+
+# ─── Sample CSV Download ─────────────────────────────────────────────────────
+
+@login_required(login_url='login')
+@user_passes_test(_is_staff_or_superuser, login_url='login')
+@require_GET
+def download_sample_csv(request):
+    """
+    Returns a pre-filled sample CSV for staff to use as a template.
+    """
+    csv_content = generate_sample_csv()
+    response = HttpResponse(csv_content, content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="kwikschools_student_upload_template.csv"'
+    return response
+
+
+# ─── AJAX: validate headers only (optional progressive enhancement) ──────────
+
+@login_required(login_url='login')
+@user_passes_test(_is_staff_or_superuser, login_url='login')
+def ajax_validate_csv_headers(request):
+    """
+    Light-weight AJAX endpoint: receives a CSV file and returns
+    header validation result so the user gets instant feedback
+    before full upload.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'valid': False, 'error': 'POST only.'}, status=405)
+
+    uploaded = request.FILES.get('csv_file')
+    if not uploaded:
+        return JsonResponse({'valid': False, 'error': 'No file received.'})
+
+    try:
+        import csv as csv_mod
+        import io
+        from .forms import REQUIRED_HEADERS
+
+        content = uploaded.read().decode('utf-8-sig')
+        reader = csv_mod.DictReader(io.StringIO(content))
+        headers = [h.strip() for h in (reader.fieldnames or [])]
+        missing = [h for h in REQUIRED_HEADERS if h not in headers]
+
+        if missing:
+            return JsonResponse({
+                'valid': False,
+                'missing': missing,
+                'message': f'Missing columns: {", ".join(missing)}'
+            })
+
+        rows = list(reader)
+        return JsonResponse({
+            'valid': True,
+            'row_count': len(rows),
+            'message': f'{len(rows)} data rows detected. All required headers found.',
+        })
+
+    except Exception as e:
+        return JsonResponse({'valid': False, 'error': str(e)})

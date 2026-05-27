@@ -1,0 +1,990 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bulk Student Upload — {{ school_info.name }}</title>
+  <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink:        #0d1117;
+      --ink-soft:   #4a5568;
+      --ink-muted:  #a0aec0;
+      --surface:    #f7f8fc;
+      --card:       #ffffff;
+      --border:     #e2e8f0;
+      --border-focus: #3b82f6;
+      --primary:    #1a56db;
+      --primary-dk: #1447b8;
+      --primary-lt: #eff4ff;
+      --success:    #0d9e6e;
+      --success-lt: #ecfdf5;
+      --warning:    #d97706;
+      --warning-lt: #fffbeb;
+      --danger:     #dc2626;
+      --danger-lt:  #fef2f2;
+      --accent:     #7c3aed;
+      --radius:     12px;
+      --radius-lg:  18px;
+      --shadow-sm:  0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+      --shadow-md:  0 4px 16px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.05);
+      --shadow-lg:  0 10px 40px rgba(0,0,0,.10);
+      --transition: .2s cubic-bezier(.4,0,.2,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--surface);
+      color: var(--ink);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Top bar ─────────────────────────────────────────────────────────── */
+    .topbar {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.25rem;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+    .topbar-logo {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      text-decoration: none;
+    }
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      border-radius: 8px;
+      display: grid; place-items: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: .85rem;
+      flex-shrink: 0;
+    }
+    .logo-text { font-weight: 800; font-size: 1.05rem; color: var(--ink); line-height: 1; }
+    .logo-sub  { font-size: .65rem; color: var(--primary); font-weight: 600; letter-spacing: .05em; text-transform: uppercase; }
+    .topbar-title {
+      margin-left: auto;
+      font-size: .8rem;
+      color: var(--ink-muted);
+      font-weight: 500;
+    }
+    .topbar-user {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      display: grid; place-items: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: .8rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Page wrapper ────────────────────────────────────────────────────── */
+    .page {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 3rem;
+    }
+
+    /* ── Page header ─────────────────────────────────────────────────────── */
+    .page-header { margin-bottom: 1.5rem; }
+    .page-header h1 {
+      font-size: clamp(1.3rem, 4vw, 1.75rem);
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+    .page-header p {
+      font-size: .875rem;
+      color: var(--ink-soft);
+      margin-top: .35rem;
+    }
+    .breadcrumb {
+      display: flex; align-items: center; gap: .3rem;
+      font-size: .75rem; color: var(--ink-muted);
+      margin-bottom: .6rem;
+    }
+    .breadcrumb a { color: var(--primary); text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { color: var(--ink-muted); }
+
+    /* ── Card ────────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .card + .card { margin-top: 1.25rem; }
+
+    .card-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: .6rem;
+    }
+    .card-header-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: grid; place-items: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .card-header-icon.blue  { background: var(--primary-lt); }
+    .card-header-icon.green { background: var(--success-lt); }
+    .card-header-icon.amber { background: var(--warning-lt); }
+
+    .card-header h2 {
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .card-body { padding: 1.25rem; }
+
+    /* ── Upload zone ─────────────────────────────────────────────────────── */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 2rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      background: var(--surface);
+      position: relative;
+    }
+    .upload-zone:hover,
+    .upload-zone.drag-over {
+      border-color: var(--primary);
+      background: var(--primary-lt);
+    }
+    .upload-zone.has-file {
+      border-color: var(--success);
+      background: var(--success-lt);
+    }
+    .upload-zone.error-file {
+      border-color: var(--danger);
+      background: var(--danger-lt);
+    }
+    .upload-icon {
+      font-size: 2.5rem;
+      margin-bottom: .5rem;
+      display: block;
+      transition: var(--transition);
+    }
+    .upload-title {
+      font-weight: 700;
+      font-size: .95rem;
+      color: var(--ink);
+      margin-bottom: .25rem;
+    }
+    .upload-sub {
+      font-size: .8rem;
+      color: var(--ink-muted);
+    }
+    .upload-sub strong { color: var(--primary); }
+
+    /* ── File info pill ──────────────────────────────────────────────────── */
+    .file-info {
+      display: none;
+      align-items: center;
+      gap: .5rem;
+      background: var(--success-lt);
+      border: 1px solid #6ee7b7;
+      border-radius: 8px;
+      padding: .6rem .8rem;
+      margin-top: .75rem;
+      font-size: .82rem;
+    }
+    .file-info.show { display: flex; }
+    .file-info-name {
+      font-weight: 600;
+      color: var(--success);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .file-info-size { color: var(--ink-muted); flex-shrink: 0; }
+    .file-remove {
+      background: none; border: none; cursor: pointer;
+      color: var(--ink-muted); font-size: 1rem;
+      padding: 0 .2rem;
+      line-height: 1;
+    }
+    .file-remove:hover { color: var(--danger); }
+
+    /* ── Header validation badge ─────────────────────────────────────────── */
+    .header-badge {
+      display: none;
+      align-items: center;
+      gap: .4rem;
+      padding: .45rem .75rem;
+      border-radius: 8px;
+      font-size: .78rem;
+      font-weight: 600;
+      margin-top: .6rem;
+    }
+    .header-badge.show { display: flex; }
+    .header-badge.ok   { background: var(--success-lt); color: var(--success); }
+    .header-badge.fail { background: var(--danger-lt);  color: var(--danger);  }
+
+    /* ── Form controls ───────────────────────────────────────────────────── */
+    .form-group { margin-bottom: 1rem; }
+    .form-label {
+      display: block;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: .35rem;
+    }
+    .form-hint {
+      font-size: .75rem;
+      color: var(--ink-muted);
+      margin-top: .3rem;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      padding: .75rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .toggle-row:hover { border-color: var(--primary); background: var(--primary-lt); }
+    .toggle-row input[type=checkbox] { display: none; }
+    .toggle-switch {
+      width: 40px; height: 22px;
+      border-radius: 11px;
+      background: var(--border);
+      position: relative;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      top: 3px; left: 3px;
+      transition: var(--transition);
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .toggle-row.checked .toggle-switch { background: var(--warning); }
+    .toggle-row.checked .toggle-switch::after { transform: translateX(18px); }
+    .toggle-label { font-size: .83rem; font-weight: 600; color: var(--ink); }
+    .toggle-desc  { font-size: .74rem; color: var(--ink-muted); margin-top: .1rem; }
+
+    /* ── Submit button ───────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .45rem;
+      padding: .7rem 1.4rem;
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: .875rem;
+      cursor: pointer;
+      border: none;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(26,86,219,.35);
+      width: 100%;
+    }
+    .btn-primary:hover { background: var(--primary-dk); transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--ink-soft);
+      font-size: .8rem;
+      padding: .5rem 1rem;
+    }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-lt); }
+
+    .btn-sm { padding: .4rem .85rem; font-size: .78rem; }
+
+    /* ── Progress bar ────────────────────────────────────────────────────── */
+    .progress-wrap { display: none; margin-top: .75rem; }
+    .progress-wrap.show { display: block; }
+    .progress-bar-track {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 3px;
+      width: 0%;
+      transition: width .3s ease;
+      animation: indeterminate 1.4s ease infinite;
+    }
+    @keyframes indeterminate {
+      0%   { width: 0%; margin-left: 0; }
+      50%  { width: 60%; margin-left: 20%; }
+      100% { width: 0%; margin-left: 100%; }
+    }
+    .progress-label {
+      font-size: .75rem;
+      color: var(--ink-muted);
+      margin-top: .35rem;
+      text-align: center;
+    }
+
+    /* ── Results card ────────────────────────────────────────────────────── */
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .75rem;
+      margin-bottom: 1.25rem;
+    }
+    @media (max-width: 400px) {
+      .results-grid { grid-template-columns: 1fr 1fr; }
+    }
+    .stat-card {
+      border-radius: var(--radius);
+      padding: .85rem .75rem;
+      text-align: center;
+    }
+    .stat-card.green { background: var(--success-lt); border: 1px solid #a7f3d0; }
+    .stat-card.blue  { background: var(--primary-lt); border: 1px solid #bfdbfe; }
+    .stat-card.amber { background: var(--warning-lt); border: 1px solid #fde68a; }
+    .stat-card.red   { background: var(--danger-lt);  border: 1px solid #fca5a5; }
+    .stat-num {
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .stat-card.green .stat-num { color: var(--success); }
+    .stat-card.blue  .stat-num { color: var(--primary); }
+    .stat-card.amber .stat-num { color: var(--warning); }
+    .stat-card.red   .stat-num { color: var(--danger); }
+    .stat-lbl {
+      font-size: .72rem;
+      font-weight: 600;
+      margin-top: .2rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--ink-soft);
+    }
+
+    /* ── Alert / messages ────────────────────────────────────────────────── */
+    .alert {
+      display: flex;
+      gap: .6rem;
+      padding: .8rem 1rem;
+      border-radius: var(--radius);
+      font-size: .83rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      align-items: flex-start;
+    }
+    .alert-icon { font-size: 1rem; flex-shrink: 0; margin-top: .05rem; }
+    .alert.success { background: var(--success-lt); border: 1px solid #6ee7b7; color: #065f46; }
+    .alert.warning { background: var(--warning-lt); border: 1px solid #fcd34d; color: #92400e; }
+    .alert.error   { background: var(--danger-lt);  border: 1px solid #fca5a5; color: #991b1b; }
+    .alert.info    { background: var(--primary-lt); border: 1px solid #93c5fd; color: #1e3a5f; }
+
+    /* ── Error list ──────────────────────────────────────────────────────── */
+    .error-list-wrap {
+      border: 1px solid #fca5a5;
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .error-list-header {
+      background: var(--danger-lt);
+      padding: .65rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+    .error-list-header span {
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--danger);
+    }
+    .error-list-toggle {
+      font-size: .75rem;
+      color: var(--danger);
+      font-weight: 600;
+    }
+    .error-list-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .3s ease;
+    }
+    .error-list-body.open { max-height: 320px; overflow-y: auto; }
+    .error-item {
+      display: flex;
+      gap: .5rem;
+      padding: .5rem 1rem;
+      font-size: .78rem;
+      border-top: 1px solid #fee2e2;
+      color: var(--ink-soft);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .error-item::before { content: '⚠'; flex-shrink: 0; color: var(--warning); }
+
+    /* ── Instructions / column guide ─────────────────────────────────────── */
+    .column-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .4rem;
+    }
+    @media (max-width: 480px) { .column-grid { grid-template-columns: 1fr; } }
+    .column-pill {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .35rem .6rem;
+      border-radius: 6px;
+      font-size: .76rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .column-pill.required { background: #fef3c7; color: #92400e; }
+    .column-pill.optional { background: #f1f5f9; color: var(--ink-soft); }
+    .column-pill-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .column-pill.required .column-pill-dot { background: var(--warning); }
+    .column-pill.optional .column-pill-dot { background: var(--ink-muted); }
+
+    /* ── Sample download button ──────────────────────────────────────────── */
+    .sample-download {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .85rem 1rem;
+      background: var(--primary-lt);
+      border: 1.5px dashed #93c5fd;
+      border-radius: var(--radius);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    .sample-download:hover { background: #dbeafe; border-color: var(--primary); }
+    .sample-download-icon { font-size: 1.5rem; }
+    .sample-download-text strong {
+      display: block;
+      font-size: .85rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .sample-download-text span {
+      font-size: .75rem;
+      color: var(--ink-muted);
+    }
+
+    /* ── Divider ─────────────────────────────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.1rem 0;
+    }
+
+    /* ── Section label ───────────────────────────────────────────────────── */
+    .section-label {
+      font-size: .7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--ink-muted);
+      margin-bottom: .6rem;
+    }
+
+    /* ── Scrollable steps ────────────────────────────────────────────────── */
+    .steps { display: flex; flex-direction: column; gap: .65rem; }
+    .step {
+      display: flex;
+      gap: .75rem;
+      align-items: flex-start;
+    }
+    .step-num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: .7rem;
+      font-weight: 800;
+      display: grid; place-items: center;
+      flex-shrink: 0;
+    }
+    .step-text { font-size: .82rem; color: var(--ink-soft); padding-top: .25rem; }
+    .step-text strong { color: var(--ink); font-weight: 600; }
+
+    /* ── Floating submit (mobile sticky) ─────────────────────────────────── */
+    .submit-section { margin-top: 1.25rem; }
+
+    /* ── Utility ──────────────────────────────────────────────────────────── */
+    .hidden { display: none !important; }
+    .mt-1  { margin-top: .4rem; }
+    .mt-2  { margin-top: .75rem; }
+    .text-center { text-align: center; }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .gap-2 { gap: .5rem; }
+    .fw-bold { font-weight: 700; }
+
+    /* ── Responsive ───────────────────────────────────────────────────────── */
+    @media (min-width: 640px) {
+      .topbar { padding: 0 2rem; }
+      .page   { padding: 2rem 1.5rem 4rem; }
+      .card-header { padding: 1.1rem 1.5rem; }
+      .card-body   { padding: 1.5rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Top bar -->
+  <nav class="topbar">
+    <a href="#" class="topbar-logo">
+      <div class="logo-icon">KS</div>
+      <div>
+        <div class="logo-text">{{ school_info.name }}</div>
+        <div class="logo-sub">Smarter Schools!</div>
+      </div>
+    </a>
+    <span class="topbar-title"><a href="/dashboard">Back To Dashboard</a></span>
+    <div class="topbar-user" title="{{ request.user.get_full_name|default:request.user.username }}">
+      {{ request.user.username|slice:":1"|upper }}
+    </div>
+  </nav>
+
+  <main class="page">
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="#">Dashboard</a>
+      <span>›</span>
+      <a href="#">Students</a>
+      <span>›</span>
+      <span>Bulk Upload</span>
+    </nav>
+
+    <!-- Page heading -->
+    <div class="page-header">
+      <h1>📥 Bulk Student Upload</h1>
+      <p>Import multiple student records at once using a CSV file. Staff &amp; administrators only.</p>
+    </div>
+
+    <!-- ── Django messages ──────────────────────────────────────────────── -->
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="alert {% if msg.tags == 'success' %}success{% elif msg.tags == 'warning' %}warning{% elif msg.tags == 'error' %}error{% else %}info{% endif %}">
+          <span class="alert-icon">
+            {% if msg.tags == 'success' %}✅{% elif msg.tags == 'warning' %}⚠️{% elif msg.tags == 'error' %}❌{% else %}ℹ️{% endif %}
+          </span>
+          <span>{{ msg }}</span>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- ── Results block ─────────────────────────────────────────────────── -->
+    {% if results %}
+    <div class="card" id="results-card">
+      <div class="card-header">
+        <div class="card-header-icon {% if results.errors %}amber{% else %}green{% endif %}">
+          {% if results.errors %}📊{% else %}🎉{% endif %}
+        </div>
+        <h2>Upload Results</h2>
+      </div>
+      <div class="card-body">
+        <div class="results-grid">
+          <div class="stat-card green">
+            <div class="stat-num">{{ results.created }}</div>
+            <div class="stat-lbl">Created</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-num">{{ results.updated }}</div>
+            <div class="stat-lbl">Updated</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-num">{{ results.skipped }}</div>
+            <div class="stat-lbl">Skipped</div>
+          </div>
+        </div>
+
+        <div class="alert {% if results.errors %}warning{% else %}success{% endif %}">
+          <span class="alert-icon">{% if results.errors %}⚠️{% else %}✅{% endif %}</span>
+          <span>{{ summary }}</span>
+        </div>
+
+        {% if results.errors %}
+        <div class="error-list-wrap">
+          <div class="error-list-header" onclick="toggleErrors(this)">
+            <span>⚠ {{ results.errors|length }} issue{{ results.errors|length|pluralize }} detected</span>
+            <span class="error-list-toggle" id="err-toggle-label">Show ▾</span>
+          </div>
+          <div class="error-list-body" id="error-list-body">
+            {% for err in results.errors %}
+              <div class="error-item">{{ err }}</div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Upload form ────────────────────────────────────────────────────── -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-icon blue">📋</div>
+        <h2>Upload CSV File</h2>
+      </div>
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data" id="upload-form" novalidate>
+          {% csrf_token %}
+
+          <!-- Drop zone -->
+          <div class="form-group">
+            <div class="upload-zone" id="upload-zone"
+                 onclick="document.getElementById('csv-file-input').click()"
+                 ondragover="handleDragOver(event)"
+                 ondragleave="handleDragLeave(event)"
+                 ondrop="handleDrop(event)">
+              <span class="upload-icon" id="upload-icon">📂</span>
+              <div class="upload-title" id="upload-title">Tap or drag &amp; drop your CSV here</div>
+              <div class="upload-sub">
+                <strong>.csv files only</strong> — max 5MB — up to 1,000 students
+              </div>
+            </div>
+
+            <!-- Hidden actual input -->
+            {{ form.csv_file }}
+
+            <!-- File info strip -->
+            <div class="file-info" id="file-info">
+              <span>📄</span>
+              <span class="file-info-name" id="file-name">filename.csv</span>
+              <span class="file-info-size" id="file-size"></span>
+              <button class="file-remove" type="button" onclick="clearFile()" title="Remove file">✕</button>
+            </div>
+
+            <!-- Header validation badge -->
+            <div class="header-badge" id="header-badge"></div>
+
+            {% if form.csv_file.errors %}
+              {% for err in form.csv_file.errors %}
+                <div class="alert error mt-1"><span class="alert-icon">❌</span><span>{{ err }}</span></div>
+              {% endfor %}
+            {% endif %}
+          </div>
+
+          <!-- Overwrite toggle -->
+          <div class="form-group">
+            <label class="toggle-row" id="overwrite-toggle" onclick="toggleOverwrite()">
+              {{ form.overwrite_existing }}
+              <div class="toggle-switch"></div>
+              <div>
+                <div class="toggle-label">Overwrite existing students</div>
+                <div class="toggle-desc">Match by USN and update existing records</div>
+              </div>
+            </label>
+            <p class="form-hint">⚠ Use with caution — this will overwrite current student data.</p>
+          </div>
+
+          <!-- Upload button -->
+          <div class="submit-section">
+            <button type="submit" class="btn btn-primary" id="submit-btn" disabled>
+              <span id="submit-icon">🚀</span>
+              <span id="submit-text">Upload Students</span>
+            </button>
+
+            <!-- Progress bar (shown on submit) -->
+            <div class="progress-wrap" id="progress-wrap">
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill"></div>
+              </div>
+              <div class="progress-label">Processing... please do not close this page.</div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Instructions & Template ───────────────────────────────────────── -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-icon green">📖</div>
+        <h2>How to Use</h2>
+      </div>
+      <div class="card-body">
+
+        <!-- Steps -->
+        <p class="section-label">Steps</p>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-text"><strong>Download the template</strong> below and open it in Excel, Google Sheets, or any spreadsheet app.</div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-text"><strong>Fill in student data</strong> — one student per row. Do not change or delete column headers.</div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-text"><strong>Save as CSV</strong> (File → Save as → CSV UTF-8) and upload using the form above.</div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-text"><strong>Review the results</strong> after upload. Rows with errors are listed so you can fix and re-upload.</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Template download -->
+        <p class="section-label">Sample Template</p>
+        <a href="{% url 'students:bulk-upload-sample' %}" class="sample-download">
+          <span class="sample-download-icon">📥</span>
+          <div class="sample-download-text">
+            <strong>Download CSV Template</strong>
+            <span>Pre-filled with 3 example students — all correct headers included</span>
+          </div>
+        </a>
+
+        <div class="divider"></div>
+
+        <!-- Column guide -->
+        <p class="section-label">Column Reference</p>
+        <div class="column-grid">
+          <!-- Required -->
+          <div class="column-pill required"><div class="column-pill-dot"></div>USN <em style="font-size:.7em;opacity:.7">*required</em></div>
+          <div class="column-pill required"><div class="column-pill-dot"></div>first_name <em style="font-size:.7em;opacity:.7">*required</em></div>
+          <div class="column-pill required"><div class="column-pill-dot"></div>last_name <em style="font-size:.7em;opacity:.7">*required</em></div>
+          <div class="column-pill required"><div class="column-pill-dot"></div>gender <em style="font-size:.7em;opacity:.7">*required</em></div>
+          <div class="column-pill required"><div class="column-pill-dot"></div>DOB <em style="font-size:.7em;opacity:.7">*required</em></div>
+          <div class="column-pill required"><div class="column-pill-dot"></div>student_type <em style="font-size:.7em;opacity:.7">*required</em></div>
+          <div class="column-pill required"><div class="column-pill-dot"></div>date_admitted <em style="font-size:.7em;opacity:.7">*required</em></div>
+          <!-- Optional -->
+          <div class="column-pill optional"><div class="column-pill-dot"></div>middle_name</div>
+          <div class="column-pill optional"><div class="column-pill-dot"></div>blood_group</div>
+          <div class="column-pill optional"><div class="column-pill-dot"></div>genotype</div>
+          <div class="column-pill optional"><div class="column-pill-dot"></div>guardian_name</div>
+          <div class="column-pill optional"><div class="column-pill-dot"></div>guardian_phone</div>
+          <div class="column-pill optional"><div class="column-pill-dot"></div>guardian_email</div>
+          <div class="column-pill optional"><div class="column-pill-dot"></div>guardian_address</div>
+          <div class="column-pill optional"><div class="column-pill-dot"></div>relationship</div>
+          <div class="column-pill optional"><div class="column-pill-dot"></div>student_status</div>
+          <div class="column-pill optional"><div class="column-pill-dot"></div>current_class</div>
+          <div class="column-pill optional"><div class="column-pill-dot"></div>class_group</div>
+          <div class="column-pill optional"><div class="column-pill-dot"></div>health_remark</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Valid values reference -->
+        <p class="section-label">Valid Values</p>
+        <div style="display:grid;gap:.55rem;font-size:.78rem;">
+          <div><strong>gender:</strong> <code>male</code>, <code>female</code>, <code>select_gender</code></div>
+          <div><strong>student_type:</strong> <code>day_student</code>, <code>boarder</code></div>
+          <div><strong>student_status:</strong> <code>active</code>, <code>inactive</code>, <code>graduated</code>, <code>dropped</code>, <code>expelled</code>, <code>suspended</code></div>
+          <div><strong>blood_group:</strong> <code>A+</code>, <code>A-</code>, <code>B+</code>, <code>B-</code>, <code>AB+</code>, <code>AB-</code>, <code>O+</code>, <code>O-</code></div>
+          <div><strong>genotype:</strong> <code>AA</code>, <code>AS</code>, <code>SS</code>, <code>AC</code>, <code>SC</code></div>
+          <div><strong>relationship:</strong> <code>parent</code>, <code>father</code>, <code>mother</code>, <code>sister</code>, <code>brother</code>, <code>aunt</code>, <code>uncle</code>, <code>other</code></div>
+          <div><strong>DOB / date_admitted:</strong> <code>YYYY-MM-DD</code> or <code>DD/MM/YYYY</code></div>
+          <div><strong>current_class:</strong> must match exactly a class name in the system (e.g. <code>JSS 1</code>)</div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    /* ── CSRF helper ──────────────────────────────────────────────────── */
+    function getCookie(name) {
+      const val = `; ${document.cookie}`;
+      const parts = val.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    /* ── Drag & drop ──────────────────────────────────────────────────── */
+    function handleDragOver(e) {
+      e.preventDefault();
+      document.getElementById('upload-zone').classList.add('drag-over');
+    }
+    function handleDragLeave(e) {
+      document.getElementById('upload-zone').classList.remove('drag-over');
+    }
+    function handleDrop(e) {
+      e.preventDefault();
+      document.getElementById('upload-zone').classList.remove('drag-over');
+      const files = e.dataTransfer.files;
+      if (files.length) attachFile(files[0]);
+    }
+
+    /* ── File input change ────────────────────────────────────────────── */
+    document.getElementById('csv-file-input').addEventListener('change', function () {
+      if (this.files.length) attachFile(this.files[0]);
+    });
+
+    function attachFile(file) {
+      // Assign to input
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      document.getElementById('csv-file-input').files = dt.files;
+
+      // Show info strip
+      const nameEl = document.getElementById('file-name');
+      const sizeEl = document.getElementById('file-size');
+      const infoEl = document.getElementById('file-info');
+      const zone   = document.getElementById('upload-zone');
+      const icon   = document.getElementById('upload-icon');
+      const title  = document.getElementById('upload-title');
+
+      nameEl.textContent = file.name;
+      sizeEl.textContent = formatSize(file.size);
+      infoEl.classList.add('show');
+
+      if (!file.name.toLowerCase().endsWith('.csv')) {
+        zone.classList.add('error-file');
+        zone.classList.remove('has-file');
+        icon.textContent = '❌';
+        title.textContent = 'Wrong file type — please use .csv';
+        setBadge(false, 'Only .csv files are accepted.');
+        document.getElementById('submit-btn').disabled = true;
+        return;
+      }
+
+      zone.classList.add('has-file');
+      zone.classList.remove('error-file');
+      icon.textContent = '✅';
+      title.textContent = file.name;
+      validateHeaders(file);
+    }
+
+    function clearFile() {
+      document.getElementById('csv-file-input').value = '';
+      document.getElementById('file-info').classList.remove('show');
+      document.getElementById('header-badge').classList.remove('show');
+      const zone = document.getElementById('upload-zone');
+      zone.classList.remove('has-file', 'error-file', 'drag-over');
+      document.getElementById('upload-icon').textContent = '📂';
+      document.getElementById('upload-title').textContent = 'Tap or drag & drop your CSV here';
+      document.getElementById('submit-btn').disabled = true;
+    }
+
+    /* ── AJAX header validation ───────────────────────────────────────── */
+    function validateHeaders(file) {
+      const badge = document.getElementById('header-badge');
+      badge.classList.remove('show', 'ok', 'fail');
+      badge.textContent = '⏳ Checking headers…';
+      badge.classList.add('show', 'ok');
+
+      const fd = new FormData();
+      fd.append('csv_file', file);
+
+      fetch("{% url 'students:bulk-upload-validate' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: fd,
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.valid) {
+          setBadge(true, `✔ ${data.message}`);
+          document.getElementById('submit-btn').disabled = false;
+        } else {
+          setBadge(false, `✖ ${data.message || data.error}`);
+          document.getElementById('submit-btn').disabled = true;
+        }
+      })
+      .catch(() => {
+        // If AJAX fails, still let user attempt submit
+        setBadge(true, '⚠ Could not pre-validate headers — proceed to upload.');
+        document.getElementById('submit-btn').disabled = false;
+      });
+    }
+
+    function setBadge(ok, msg) {
+      const b = document.getElementById('header-badge');
+      b.textContent = msg;
+      b.classList.remove('ok', 'fail', 'show');
+      b.classList.add(ok ? 'ok' : 'fail', 'show');
+    }
+
+    /* ── Submit: show progress ────────────────────────────────────────── */
+    document.getElementById('upload-form').addEventListener('submit', function () {
+      document.getElementById('submit-btn').disabled = true;
+      document.getElementById('submit-icon').textContent = '⏳';
+      document.getElementById('submit-text').textContent = 'Uploading…';
+      document.getElementById('progress-wrap').classList.add('show');
+    });
+
+    /* ── Overwrite toggle ─────────────────────────────────────────────── */
+    function toggleOverwrite() {
+      const label = document.getElementById('overwrite-toggle');
+      const cb    = label.querySelector('input[type=checkbox]');
+      cb.checked  = !cb.checked;
+      label.classList.toggle('checked', cb.checked);
+    }
+    // Sync on page load (e.g. after form re-render with errors)
+    (function () {
+      const label = document.getElementById('overwrite-toggle');
+      const cb    = label.querySelector('input[type=checkbox]');
+      if (cb.checked) label.classList.add('checked');
+    })();
+
+    /* ── Error list toggle ────────────────────────────────────────────── */
+    function toggleErrors(header) {
+      const body  = document.getElementById('error-list-body');
+      const label = document.getElementById('err-toggle-label');
+      const open  = body.classList.toggle('open');
+      label.textContent = open ? 'Hide ▴' : 'Show ▾';
+    }
+    // Auto-open if results exist
+    {% if results and results.errors %}
+    (function () {
+      document.getElementById('error-list-body').classList.add('open');
+      document.getElementById('err-toggle-label').textContent = 'Hide ▴';
+      document.getElementById('results-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    })();
+    {% endif %}
+
+    /* ── Utility ──────────────────────────────────────────────────────── */
+    function formatSize(bytes) {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${(bytes / 1048576).toFixed(2)} MB`;
+    }
+  </script>
+</body>
+</html>
