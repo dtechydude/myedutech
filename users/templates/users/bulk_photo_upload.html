@@ -519,7 +519,7 @@
     <a href="#" class="logo">
       <div class="logo-mark">KS</div>
       <div>
-        <div class="logo-name">KwikSchools</div>
+        <div class="logo-name">{{ school_info.name }}</div>
         <div class="logo-sub">Smarter Schools!</div>
       </div>
     </a>
@@ -533,8 +533,8 @@
 
     <!-- Breadcrumb -->
     <nav class="breadcrumb">
-      <a href="#">Dashboard</a> ›
-      <a href="#">Users</a> ›
+      <a href="/dashboard">Dashboard</a> ›
+      <a href="{% url 'students:student-list'%}">Users</a> ›
       <span>Bulk Photo Upload</span>
     </nav>
 
