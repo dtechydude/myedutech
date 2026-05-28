@@ -411,6 +411,8 @@
 							{% if user.is_superuser or user.is_staff %}
 							<li><a href="/admin/" target="_blank">Main Settings (ADMIN PANEL)</a></li>
 							<li><a href="{% url 'all_users' %}">All Registered Users</a></li>
+							<li><a href="{% url 'bulk-photo-upload' %}">UPLOAD/EDIT PHOTOS(All Users)</a></li>
+
 							<li><a href="{% url 'students:student_search_list' %}">Search Students</a></li>
 							<li><a href="{% url 'events:event_new' %}">Add New Event</a></li>							
 

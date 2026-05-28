@@ -308,21 +308,21 @@ def generate_sample_csv() -> str:
 
     sample_rows = [
         [
-            'KWK/2024/001', 'Amara', 'Chisom', 'Okafor', 'female', '2010-05-14',
+            'KWK2024001', 'Amara', 'Chisom', 'Okafor', 'female', '2010-05-14',
             'O+', 'AA', 'No known illness', 'day_student',
             '2024-09-01', 'Mr. Emeka Okafor', '08012345678',
             'emeka@email.com', '12 Lagos Street, Abuja', 'father',
             'active', 'JSS 1', 'JSS 1A',
         ],
         [
-            'KWK/2024/002', 'Tunde', '', 'Adeyemi', 'male', '2009-11-22',
+            'KWK2024002', 'Tunde', '', 'Adeyemi', 'male', '2009-11-22',
             'A+', 'AS', 'Mild asthma', 'boarder',
             '2024-09-01', 'Mrs. Bola Adeyemi', '08098765432',
             'bola@email.com', '5 Ibadan Road, Lagos', 'mother',
             'active', 'JSS 2', 'JSS 2B',
         ],
         [
-            'KWK/2024/003', 'Ngozi', 'Faith', 'Eze', 'female', '2011-03-08',
+            'KWK2024003', 'Ngozi', 'Faith', 'Eze', 'female', '2011-03-08',
             'B+', 'AA', 'Healthy', 'day_student',
             '2024-09-01', 'Dr. Kelechi Eze', '07011223344',
             '', '', 'father',

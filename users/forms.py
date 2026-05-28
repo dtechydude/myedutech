@@ -112,3 +112,47 @@ class StudentEnrollmentForm(forms.ModelForm):
  
     # Guardian details are part of the Student model, so we don't need separate fields here.
     # The form automatically handles the fields defined in `Meta`.
+
+
+"""
+forms.py — Bulk Profile Photo Upload Form
+KwikSchools — Smarter Schools!
+"""
+
+from django import forms
+
+MAX_IMAGE_SIZE_KB = 100
+MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_KB * 1024
+ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp']
+
+USER_TYPE_CHOICES = [
+    ('', '-- Select User Type --'),
+    ('student', 'Students'),
+    ('teacher', 'Teachers'),
+    ('parent', 'Parents'),
+]
+
+
+class BulkPhotoUploadForm(forms.Form):
+    """
+    Handles the top-level filter selection before showing the user grid.
+    user_type: which category to load (student / teacher / parent)
+    class_filter: optional Standard pk — only shown when user_type == student
+    """
+    user_type = forms.ChoiceField(
+        choices=USER_TYPE_CHOICES,
+        label='User Category',
+        widget=forms.Select(attrs={'id': 'id_user_type', 'class': 'ks-select'}),
+    )
+    class_filter = forms.IntegerField(
+        required=False,
+        label='Filter by Class',
+        widget=forms.Select(attrs={'id': 'id_class_filter', 'class': 'ks-select'}),
+    )
+
+    def clean_user_type(self):
+        val = self.cleaned_data.get('user_type', '')
+        if not val:
+            raise forms.ValidationError('Please select a user category.')
+        return val

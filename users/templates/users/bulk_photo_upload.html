@@ -1,0 +1,1001 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bulk Photo Upload — {{ school_info.name }}</title>
+  <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png'%} " />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:         #0e1117;
+      --bg2:        #161b25;
+      --bg3:        #1e2433;
+      --card:       #1a2030;
+      --border:     #2a3347;
+      --border-lt:  #374159;
+      --text:       #e8edf5;
+      --text-soft:  #8b97b0;
+      --text-muted: #5a6478;
+      --primary:    #4f8ef7;
+      --primary-dk: #3a75e0;
+      --primary-glow: rgba(79,142,247,.18);
+      --success:    #22d48a;
+      --success-bg: rgba(34,212,138,.1);
+      --warning:    #f5a623;
+      --warning-bg: rgba(245,166,35,.1);
+      --danger:     #f05252;
+      --danger-bg:  rgba(240,82,82,.1);
+      --accent:     #a78bfa;
+      --radius:     10px;
+      --radius-lg:  16px;
+      --shadow:     0 4px 24px rgba(0,0,0,.4);
+      --t:          .2s cubic-bezier(.4,0,.2,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Topbar ──────────────────────────────────────────────────────── */
+    .topbar {
+      height: 58px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 1.25rem;
+      gap: .75rem;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+    }
+    .logo {
+      display: flex; align-items: center; gap: .5rem;
+      text-decoration: none;
+    }
+    .logo-mark {
+      width: 30px; height: 30px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 7px;
+      display: grid; place-items: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: .75rem;
+      color: #fff; flex-shrink: 0;
+    }
+    .logo-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: .95rem;
+      color: var(--text);
+    }
+    .logo-sub { font-size: .58rem; color: var(--primary); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: .6rem; }
+    .topbar-badge {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: .2rem .55rem;
+      font-size: .7rem;
+      color: var(--text-soft);
+      font-weight: 500;
+    }
+    .topbar-badge.admin { color: var(--primary); border-color: var(--primary); }
+    .avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: grid; place-items: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: .75rem;
+      color: #fff;
+    }
+
+    /* ── Page ────────────────────────────────────────────────────────── */
+    .page { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+    /* ── Header ──────────────────────────────────────────────────────── */
+    .page-head { margin-bottom: 1.5rem; }
+    .breadcrumb {
+      display: flex; gap: .35rem; align-items: center;
+      font-size: .72rem; color: var(--text-muted);
+      margin-bottom: .5rem;
+    }
+    .breadcrumb a { color: var(--primary); text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .page-head h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.35rem, 4vw, 1.9rem);
+      font-weight: 800;
+      line-height: 1.15;
+      color: var(--text);
+    }
+    .page-head h1 span { color: var(--primary); }
+    .page-head p { font-size: .875rem; color: var(--text-soft); margin-top: .35rem; }
+
+    /* ── Card ────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .card + .card { margin-top: 1.1rem; }
+    .card-head {
+      padding: .9rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: .6rem;
+    }
+    .card-head h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: .9rem; font-weight: 700;
+      color: var(--text);
+    }
+    .card-head-icon {
+      width: 28px; height: 28px;
+      border-radius: 7px;
+      display: grid; place-items: center;
+      font-size: .85rem; flex-shrink: 0;
+    }
+    .icon-blue   { background: var(--primary-glow); }
+    .icon-green  { background: var(--success-bg); }
+    .icon-amber  { background: var(--warning-bg); }
+    .card-body { padding: 1.25rem; }
+
+    /* ── Filter bar ──────────────────────────────────────────────────── */
+    .filter-row {
+      display: flex; flex-wrap: wrap; gap: .75rem;
+      align-items: flex-end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: .35rem; flex: 1; min-width: 160px; }
+    .filter-label {
+      font-size: .72rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .06em;
+      color: var(--text-muted);
+    }
+    .ks-select {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .875rem;
+      padding: .6rem .85rem;
+      outline: none;
+      width: 100%;
+      cursor: pointer;
+      transition: var(--t);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b97b0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right .75rem center;
+      padding-right: 2.25rem;
+    }
+    .ks-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
+    .ks-select:disabled { opacity: .4; cursor: not-allowed; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: .4rem; padding: .62rem 1.2rem;
+      border-radius: var(--radius);
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: .82rem;
+      cursor: pointer; border: none;
+      transition: var(--t); text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--primary); color: #fff;
+      box-shadow: 0 2px 12px rgba(79,142,247,.3);
+    }
+    .btn-primary:hover { background: var(--primary-dk); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .btn-ghost {
+      background: var(--bg3); color: var(--text-soft);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-danger-sm {
+      background: var(--danger-bg); color: var(--danger);
+      border: 1px solid rgba(240,82,82,.25);
+      font-size: .7rem; padding: .2rem .5rem;
+      border-radius: 5px;
+    }
+
+    /* ── Upload counter bar ──────────────────────────────────────────── */
+    .upload-bar {
+      display: flex; align-items: center; gap: .75rem;
+      flex-wrap: wrap;
+      padding: .8rem 1.25rem;
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+    }
+    .upload-bar-stat {
+      font-size: .8rem; color: var(--text-soft);
+    }
+    .upload-bar-stat strong { color: var(--text); font-weight: 600; }
+    .upload-bar-stat.green strong { color: var(--success); }
+    .upload-bar-stat.amber strong { color: var(--warning); }
+    .upload-bar .btn { margin-left: auto; }
+
+    /* ── User grid ───────────────────────────────────────────────────── */
+    .user-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: .85rem;
+      padding: 1.25rem;
+    }
+    @media (max-width: 420px) {
+      .user-grid { grid-template-columns: repeat(2, 1fr); gap: .6rem; }
+    }
+
+    .user-card {
+      background: var(--bg3);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: var(--t);
+      position: relative;
+      cursor: pointer;
+    }
+    .user-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow); }
+    .user-card.has-photo { border-color: var(--success); }
+    .user-card.has-error { border-color: var(--danger); }
+
+    /* Photo area */
+    .user-photo-wrap {
+      position: relative;
+      aspect-ratio: 1;
+      background: var(--bg2);
+      overflow: hidden;
+    }
+    .user-photo {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .user-photo-placeholder {
+      width: 100%; height: 100%;
+      display: grid; place-items: center;
+      font-size: 2.2rem;
+      color: var(--text-muted);
+    }
+    .photo-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,.55);
+      display: grid; place-items: center;
+      opacity: 0;
+      transition: var(--t);
+      font-size: 1.4rem;
+    }
+    .user-card:hover .photo-overlay { opacity: 1; }
+    .user-card.has-photo .photo-overlay { opacity: 0; }
+    .user-card.has-photo:hover .photo-overlay { opacity: 1; }
+
+    /* Status badge on photo */
+    .photo-status {
+      position: absolute;
+      top: .35rem; right: .35rem;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: .65rem;
+      font-weight: 700;
+    }
+    .photo-status.ok    { background: var(--success); color: #fff; }
+    .photo-status.err   { background: var(--danger);  color: #fff; }
+    .photo-status.saved { background: var(--primary);  color: #fff; }
+
+    /* Info section */
+    .user-info {
+      padding: .55rem .6rem .6rem;
+    }
+    .user-name {
+      font-family: 'Syne', sans-serif;
+      font-size: .75rem; font-weight: 700;
+      color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      line-height: 1.2;
+    }
+    .user-meta {
+      font-size: .66rem; color: var(--text-muted);
+      margin-top: .15rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .user-size {
+      font-size: .64rem;
+      margin-top: .2rem;
+    }
+    .user-size.ok  { color: var(--success); }
+    .user-size.err { color: var(--danger); }
+
+    .user-usn {
+      font-size: .63rem;
+      color: var(--primary);
+      font-weight: 600;
+      margin-top: .1rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      font-family: 'DM Sans', monospace;
+    }
+    .user-status-dot {
+      position: absolute;
+      bottom: .35rem; left: .35rem;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--warning);
+      border: 1.5px solid var(--bg2);
+    }
+    .user-error-msg {
+      font-size: .64rem;
+      color: var(--danger);
+      margin-top: .25rem;
+      line-height: 1.3;
+    }
+
+    /* Hidden file input per card */
+    .hidden-file { display: none; }
+
+    /* ── Empty state ─────────────────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+    .empty-state-icon { font-size: 3rem; margin-bottom: .75rem; opacity: .5; }
+    .empty-state h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem; font-weight: 700;
+      color: var(--text-soft); margin-bottom: .35rem;
+    }
+    .empty-state p { font-size: .82rem; }
+
+    /* ── Loading skeleton ────────────────────────────────────────────── */
+    .skeleton-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: .85rem;
+      padding: 1.25rem;
+    }
+    .skeleton-card {
+      background: var(--bg3);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .skeleton-photo {
+      aspect-ratio: 1;
+      background: linear-gradient(90deg, var(--bg3) 25%, var(--bg2) 50%, var(--bg3) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    .skeleton-text {
+      height: 10px; background: var(--border);
+      border-radius: 4px; margin: .55rem .6rem .25rem;
+      animation: shimmer 1.4s infinite;
+    }
+    .skeleton-text.short { width: 60%; height: 8px; margin-bottom: .6rem; }
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ── Results summary card ────────────────────────────────────────── */
+    .result-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem;
+      margin-bottom: 1rem;
+    }
+    @media (max-width: 380px) { .result-stats { grid-template-columns: 1fr 1fr; } }
+    .rstat {
+      border-radius: var(--radius); padding: .8rem;
+      text-align: center;
+    }
+    .rstat.green { background: var(--success-bg); border: 1px solid rgba(34,212,138,.2); }
+    .rstat.amber { background: var(--warning-bg); border: 1px solid rgba(245,166,35,.2); }
+    .rstat.red   { background: var(--danger-bg);  border: 1px solid rgba(240,82,82,.2); }
+    .rstat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.7rem; font-weight: 800; line-height: 1;
+    }
+    .rstat.green .rstat-num { color: var(--success); }
+    .rstat.amber .rstat-num { color: var(--warning); }
+    .rstat.red   .rstat-num { color: var(--danger); }
+    .rstat-lbl {
+      font-size: .7rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .05em; color: var(--text-soft); margin-top: .2rem;
+    }
+
+    /* ── Error list ──────────────────────────────────────────────────── */
+    .err-list-wrap {
+      border: 1px solid rgba(240,82,82,.3);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .err-list-head {
+      background: var(--danger-bg);
+      padding: .6rem 1rem;
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer;
+    }
+    .err-list-head span { font-size: .8rem; font-weight: 700; color: var(--danger); }
+    .err-list-body { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+    .err-list-body.open { max-height: 280px; overflow-y: auto; }
+    .err-item {
+      display: flex; gap: .5rem; padding: .45rem 1rem;
+      font-size: .75rem; color: var(--text-soft);
+      border-top: 1px solid rgba(240,82,82,.15);
+      font-family: 'DM Sans', monospace;
+    }
+    .err-item::before { content: '⚠'; color: var(--warning); flex-shrink: 0; }
+
+    /* ── Alert ───────────────────────────────────────────────────────── */
+    .alert {
+      display: flex; gap: .55rem; align-items: flex-start;
+      padding: .75rem 1rem; border-radius: var(--radius);
+      font-size: .82rem; font-weight: 500; margin-bottom: 1rem;
+    }
+    .alert.success { background: var(--success-bg); border: 1px solid rgba(34,212,138,.25); color: #6effc4; }
+    .alert.warning { background: var(--warning-bg); border: 1px solid rgba(245,166,35,.25); color: #ffd98a; }
+    .alert.error   { background: var(--danger-bg);  border: 1px solid rgba(240,82,82,.25);  color: #ffaaaa; }
+
+    /* ── Progress ────────────────────────────────────────────────────── */
+    .upload-progress { display: none; margin-top: .75rem; }
+    .upload-progress.show { display: block; }
+    .progress-track {
+      height: 5px; background: var(--border);
+      border-radius: 3px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 3px;
+      animation: progress-pulse 1.2s ease infinite alternate;
+      width: 0%;
+    }
+    @keyframes progress-pulse {
+      from { width: 30%; } to { width: 80%; }
+    }
+    .progress-lbl { font-size: .73rem; color: var(--text-muted); margin-top: .3rem; text-align: center; }
+
+    /* ── Submit row ──────────────────────────────────────────────────── */
+    .submit-row {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+      background: var(--bg2);
+    }
+    .submit-count { font-size: .82rem; color: var(--text-soft); }
+    .submit-count strong { color: var(--primary); }
+    .submit-row .btn-primary { margin-left: auto; min-width: 160px; }
+
+    /* ── Search ──────────────────────────────────────────────────────── */
+    .search-wrap { position: relative; flex: 1; min-width: 180px; }
+    .search-input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .82rem;
+      padding: .55rem .85rem .55rem 2.2rem;
+      outline: none;
+      transition: var(--t);
+    }
+    .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
+    .search-icon {
+      position: absolute; left: .7rem; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted); font-size: .85rem;
+      pointer-events: none;
+    }
+
+    /* ── Responsive ──────────────────────────────────────────────────── */
+    @media (min-width: 640px) {
+      .topbar { padding: 0 2rem; }
+      .page   { padding: 2rem 1.5rem 4rem; }
+      .card-body { padding: 1.5rem; }
+      .card-head { padding: 1rem 1.5rem; }
+    }
+
+    /* ── Utility ─────────────────────────────────────────────────────── */
+    .hidden { display: none !important; }
+    .mt-1 { margin-top: .4rem; }
+    .mt-2 { margin-top: .85rem; }
+    .divider { height: 1px; background: var(--border); margin: 1rem 0; }
+  </style>
+</head>
+
+<body>
+  <!-- Topbar -->
+  <nav class="topbar">
+    <a href="#" class="logo">
+      <div class="logo-mark">KS</div>
+      <div>
+        <div class="logo-name">KwikSchools</div>
+        <div class="logo-sub">Smarter Schools!</div>
+      </div>
+    </a>
+    <div class="topbar-right">
+      <span class="topbar-badge admin">{% if request.user.is_superuser %}Super Admin{% else %}Staff{% endif %}</span>
+      <div class="avatar">{{ request.user.username|slice:":1"|upper }}</div>
+    </div>
+  </nav>
+
+  <main class="page">
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+      <a href="#">Dashboard</a> ›
+      <a href="#">Users</a> ›
+      <span>Bulk Photo Upload</span>
+    </nav>
+
+    <!-- Page heading -->
+    <div class="page-head">
+      <h1>🖼 Bulk <span>Photo</span> Upload</h1>
+      <p>Assign profile pictures to students, teachers, or parents in one go. Max 100 KB per image.</p>
+    </div>
+
+    <!-- Django messages -->
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="alert {% if msg.tags == 'success' %}success{% elif msg.tags == 'warning' %}warning{% else %}error{% endif %}">
+          <span>{% if msg.tags == 'success' %}✅{% elif msg.tags == 'warning' %}⚠️{% else %}❌{% endif %}</span>
+          <span>{{ msg }}</span>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Results block (after POST) -->
+    {% if results %}
+    <div class="card" id="results-card">
+      <div class="card-head">
+        <div class="card-head-icon {% if results.errors %}icon-amber{% else %}icon-green{% endif %}">
+          {% if results.errors %}📊{% else %}🎉{% endif %}
+        </div>
+        <h2>Upload Results</h2>
+      </div>
+      <div class="card-body">
+        <div class="result-stats">
+          <div class="rstat green">
+            <div class="rstat-num">{{ results.saved }}</div>
+            <div class="rstat-lbl">Saved</div>
+          </div>
+          <div class="rstat amber">
+            <div class="rstat-num">{{ results.skipped }}</div>
+            <div class="rstat-lbl">Skipped</div>
+          </div>
+          <div class="rstat red">
+            <div class="rstat-num">{{ results.errors|length }}</div>
+            <div class="rstat-lbl">Errors</div>
+          </div>
+        </div>
+
+        {% if results.errors %}
+        <div class="err-list-wrap">
+          <div class="err-list-head" onclick="toggleErrList(this)">
+            <span>⚠ {{ results.errors|length }} error{{ results.errors|length|pluralize }}</span>
+            <span id="err-toggle">Show ▾</span>
+          </div>
+          <div class="err-list-body" id="err-list-body">
+            {% for e in results.errors %}
+              <div class="err-item">
+                <strong>{{ e.username }}</strong>: {{ e.message }}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Filter & Load card -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-head-icon icon-blue">🔍</div>
+        <h2>Select Users to Update</h2>
+      </div>
+      <div class="card-body">
+        <div class="filter-row">
+          <!-- User type -->
+          <div class="filter-group">
+            <label class="filter-label" for="sel-user-type">User Category</label>
+            <select id="sel-user-type" class="ks-select" onchange="onTypeChange()">
+              <option value="">-- Select --</option>
+              <option value="student">🎓 Students</option>
+              <option value="teacher">📚 Teachers</option>
+              <option value="parent">👨‍👩‍👧 Parents</option>
+              <option value="all">👥 All Users</option>
+            </select>
+          </div>
+
+          <!-- Class filter (students only) -->
+          <div class="filter-group" id="class-filter-wrap" style="display:none">
+            <label class="filter-label" for="sel-class">Filter by Class</label>
+            <select id="sel-class" class="ks-select" onchange="loadUsers()">
+              <option value="">All Classes</option>
+              {% for pk, name in class_choices %}
+                <option value="{{ pk }}">{{ name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Search -->
+          <div class="filter-group" id="search-wrap" style="display:none">
+            <label class="filter-label" for="grid-search">Search Name</label>
+            <div class="search-wrap">
+              <span class="search-icon">🔎</span>
+              <input type="text" id="grid-search" class="search-input"
+                     placeholder="Type a name…" oninput="filterGrid()"/>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload form -->
+    <form method="post" enctype="multipart/form-data" id="upload-form">
+      {% csrf_token %}
+
+      <!-- User grid card -->
+      <div class="card" id="grid-card" style="display:none">
+
+        <!-- Action bar above grid -->
+        <div class="upload-bar" id="upload-bar">
+          <span class="upload-bar-stat">
+            <strong id="bar-total">0</strong> users loaded
+          </span>
+          <span class="upload-bar-stat green">
+            <strong id="bar-selected">0</strong> photos ready
+          </span>
+          <span class="upload-bar-stat amber">
+            <strong id="bar-errors">0</strong> oversized
+          </span>
+          <button type="button" class="btn btn-ghost" onclick="clearAllPhotos()" style="font-size:.75rem;padding:.35rem .75rem;">
+            🗑 Clear All
+          </button>
+        </div>
+
+        <!-- Skeleton loader -->
+        <div id="skeleton-loader" class="skeleton-grid hidden">
+          {% for i in "12345678" %}
+          <div class="skeleton-card">
+            <div class="skeleton-photo"></div>
+            <div class="skeleton-text"></div>
+            <div class="skeleton-text short"></div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Actual grid (populated by JS) -->
+        <div class="user-grid" id="user-grid">
+          <div class="empty-state" id="empty-state">
+            <div class="empty-state-icon">👥</div>
+            <h3>No users loaded yet</h3>
+            <p>Select a user category above to see the grid.</p>
+          </div>
+        </div>
+
+        <!-- Submit row -->
+        <div class="submit-row" id="submit-row" style="display:none">
+          <div class="submit-count">
+            <strong id="submit-count-num">0</strong> photo(s) ready to upload
+          </div>
+          <div class="upload-progress" id="upload-progress">
+            <div class="progress-track"><div class="progress-fill"></div></div>
+            <div class="progress-lbl">Uploading… please wait.</div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="submit-btn" disabled>
+            💾 Save Photos
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Instructions card -->
+    <div class="card mt-2">
+      <div class="card-head">
+        <div class="card-head-icon icon-amber">💡</div>
+        <h2>How It Works</h2>
+      </div>
+      <div class="card-body" style="font-size:.83rem;color:var(--text-soft);display:flex;flex-direction:column;gap:.7rem;">
+        <div>① <strong style="color:var(--text)">Choose a category</strong> — Students, Teachers, or Parents. Students can also be filtered by class.</div>
+        <div>② <strong style="color:var(--text)">Click any card</strong> to pick a photo for that user. The image previews instantly on the card.</div>
+        <div>③ <strong style="color:var(--text)">Size is checked immediately</strong> — images over <strong style="color:var(--danger)">100 KB</strong> are flagged in red and excluded from upload.</div>
+        <div>④ <strong style="color:var(--text)">Click Save Photos</strong> when ready. Only valid photos are saved; errors are listed in the result summary.</div>
+        <div style="background:var(--warning-bg);border:1px solid rgba(245,166,35,.25);border-radius:8px;padding:.6rem .8rem;color:var(--warning);">
+          ⚠ <strong>Tip:</strong> Compress images to under 100 KB before uploading. Use tools like <em>TinyPNG</em> or <em>Squoosh</em> for free online compression.
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    /* ── State ────────────────────────────────────────────────────────── */
+    let loadedUsers = [];
+    let photoMap    = {};   // { user_id: { file, previewUrl, sizeKB, valid } }
+
+    /* ── CSRF ─────────────────────────────────────────────────────────── */
+    function csrf() {
+      const el = document.querySelector('[name=csrfmiddlewaretoken]');
+      return el ? el.value : '';
+    }
+
+    /* ── Type change ──────────────────────────────────────────────────── */
+    function onTypeChange() {
+      const type = document.getElementById('sel-user-type').value;
+      const classWrap = document.getElementById('class-filter-wrap');
+
+      // Class filter only visible for students
+      classWrap.style.display = type === 'student' ? '' : 'none';
+      if (type !== 'student') {
+        document.getElementById('sel-class').value = '';
+      }
+
+      if (type) loadUsers();
+      else {
+        document.getElementById('grid-card').style.display = 'none';
+        document.getElementById('search-wrap').style.display = 'none';
+      }
+    }
+
+    /* ── Load user list via AJAX ──────────────────────────────────────── */
+    function loadUsers() {
+      const type  = document.getElementById('sel-user-type').value;
+      const cls   = document.getElementById('sel-class')?.value || '';
+      if (!type) return;
+
+      // Show skeleton
+      const gridCard = document.getElementById('grid-card');
+      gridCard.style.display = '';
+      document.getElementById('skeleton-loader').classList.remove('hidden');
+      document.getElementById('user-grid').style.display = 'none';
+      document.getElementById('submit-row').style.display = 'none';
+      document.getElementById('search-wrap').style.display = 'none';
+
+      const url = `{% url 'bulk-photo-load-users' %}?user_type=${type}&class_filter=${cls}`;
+      fetch(url, { headers: { 'X-CSRFToken': csrf() } })
+        .then(r => r.json())
+        .then(data => {
+          document.getElementById('skeleton-loader').classList.add('hidden');
+          document.getElementById('user-grid').style.display = '';
+          document.getElementById('submit-row').style.display = '';
+          document.getElementById('search-wrap').style.display = '';
+
+          if (data.error) {
+            showEmptyState(`Error: ${data.error}`);
+            return;
+          }
+
+          loadedUsers = data.users || [];
+          photoMap = {};
+          renderGrid(loadedUsers);
+          updateBar();
+        })
+        .catch(err => {
+          document.getElementById('skeleton-loader').classList.add('hidden');
+          document.getElementById('user-grid').style.display = '';
+          showEmptyState('Failed to load users. Please try again.');
+          console.error(err);
+        });
+    }
+
+    /* ── Render grid ──────────────────────────────────────────────────── */
+    function renderGrid(users) {
+      const grid = document.getElementById('user-grid');
+      document.getElementById('bar-total').textContent = users.length;
+
+      if (!users.length) {
+        showEmptyState('No users found for this selection.');
+        return;
+      }
+
+      grid.innerHTML = '';
+
+      users.forEach(u => {
+        const card = document.createElement('div');
+        card.className = 'user-card';
+        card.dataset.userId   = u.user_id;
+        // Search works on name, USN, and username
+        card.dataset.searchKey = ((u.full_name||'') + ' ' + (u.usn||'') + ' ' + (u.username||'')).toLowerCase();
+
+        const existingPhoto = u.current_photo
+          ? `<img class="user-photo" src="${u.current_photo}" alt="${u.full_name}" id="img-${u.user_id}"/>`
+          : `<div class="user-photo-placeholder" id="img-${u.user_id}">&#128100;</div>`;
+
+        // Coloured dot for inactive/suspended/expelled users
+        const isInactive = u.status && u.status !== 'active';
+        const statusDot  = isInactive
+          ? `<div class="user-status-dot" title="Status: ${u.status}"></div>`
+          : '';
+
+        // Show USN only for students (where USN differs from username)
+        const usnLine = (u.usn && u.usn !== u.username)
+          ? `<div class="user-usn">USN: ${u.usn}</div>`
+          : `<div class="user-usn">${u.username}</div>`;
+
+        card.innerHTML =
+          `<div class="user-photo-wrap" onclick="triggerFilePick(${u.user_id})">` +
+            existingPhoto +
+            `<div class="photo-overlay">&#128247;</div>` +
+            `<div class="photo-status hidden" id="status-${u.user_id}"></div>` +
+            statusDot +
+          `</div>` +
+          `<div class="user-info">` +
+            `<div class="user-name" title="${u.full_name}">${u.full_name}</div>` +
+            `<div class="user-meta">${u.label}</div>` +
+            usnLine +
+            `<div class="user-size hidden" id="size-${u.user_id}"></div>` +
+            `<div class="user-error-msg hidden" id="err-${u.user_id}"></div>` +
+          `</div>` +
+          `<input type="file" class="hidden-file" id="file-${u.user_id}"` +
+          ` accept="image/jpeg,image/png,image/webp"` +
+          ` data-user-id="${u.user_id}"` +
+          ` onchange="onPhotoSelected(this)"/>`;
+
+        grid.appendChild(card);
+      });
+    }
+
+    /* ── File pick trigger ────────────────────────────────────────────── */
+    function triggerFilePick(userId) {
+      document.getElementById(`file-${userId}`).click();
+    }
+
+    /* ── Photo selected ───────────────────────────────────────────────── */
+    function onPhotoSelected(input) {
+      const userId = parseInt(input.dataset.userId);
+      const file   = input.files[0];
+      if (!file) return;
+
+      const sizeKB  = file.size / 1024;
+      const valid   = file.size <= 100 * 1024;
+      const preview = URL.createObjectURL(file);
+
+      // Update photoMap
+      photoMap[userId] = { file, preview, sizeKB, valid };
+
+      // UI update
+      const card      = document.querySelector(`.user-card[data-user-id="${userId}"]`);
+      const imgWrap   = card.querySelector('.user-photo-wrap');
+      const statusEl  = document.getElementById(`status-${userId}`);
+      const sizeEl    = document.getElementById(`size-${userId}`);
+      const errEl     = document.getElementById(`err-${userId}`);
+
+      // Replace placeholder/img with preview
+      let imgEl = document.getElementById(`img-${userId}`);
+      if (imgEl.tagName === 'DIV') {
+        const newImg = document.createElement('img');
+        newImg.id        = `img-${userId}`;
+        newImg.className = 'user-photo';
+        newImg.alt       = 'Preview';
+        imgWrap.replaceChild(newImg, imgEl);
+        imgEl = newImg;
+      }
+      imgEl.src = preview;
+
+      if (valid) {
+        card.className = 'user-card has-photo';
+        statusEl.textContent = '✓';
+        statusEl.className   = 'photo-status ok';
+        statusEl.classList.remove('hidden');
+        sizeEl.textContent   = `${sizeKB.toFixed(1)} KB ✓`;
+        sizeEl.className     = 'user-size ok';
+        sizeEl.classList.remove('hidden');
+        errEl.classList.add('hidden');
+
+        // Attach file to a real hidden input in the form
+        attachToForm(userId, file);
+      } else {
+        card.className = 'user-card has-error';
+        statusEl.textContent = '✕';
+        statusEl.className   = 'photo-status err';
+        statusEl.classList.remove('hidden');
+        sizeEl.textContent   = `${sizeKB.toFixed(1)} KB — too large`;
+        sizeEl.className     = 'user-size err';
+        sizeEl.classList.remove('hidden');
+        errEl.textContent    = `Exceeds 100 KB limit. Please compress this image.`;
+        errEl.classList.remove('hidden');
+
+        // Remove from form if previously attached
+        removeFromForm(userId);
+        delete photoMap[userId];
+      }
+
+      updateBar();
+    }
+
+    /* ── Attach file to form via DataTransfer hack ────────────────────── */
+    function attachToForm(userId, file) {
+      // Reuse the existing hidden input (name=photo_<userId>)
+      const input = document.getElementById(`file-${userId}`);
+      input.name  = `photo_${userId}`;
+      // file is already set via input.files from the change event
+    }
+
+    function removeFromForm(userId) {
+      const input = document.getElementById(`file-${userId}`);
+      input.name  = '';  // exclude from form submission
+      input.value = '';
+    }
+
+    /* ── Clear all ────────────────────────────────────────────────────── */
+    function clearAllPhotos() {
+      Object.keys(photoMap).forEach(uid => {
+        const card = document.querySelector(`.user-card[data-user-id="${uid}"]`);
+        if (card) {
+          card.className = 'user-card';
+          document.getElementById(`status-${uid}`).classList.add('hidden');
+          document.getElementById(`size-${uid}`).classList.add('hidden');
+          document.getElementById(`err-${uid}`).classList.add('hidden');
+        }
+        removeFromForm(uid);
+      });
+      photoMap = {};
+      updateBar();
+    }
+
+    /* ── Update bar counters ──────────────────────────────────────────── */
+    function updateBar() {
+      const validCount = Object.values(photoMap).filter(p => p.valid !== false).length;
+      const errCount   = document.querySelectorAll('.user-card.has-error').length;
+
+      document.getElementById('bar-selected').textContent    = validCount;
+      document.getElementById('bar-errors').textContent      = errCount;
+      document.getElementById('submit-count-num').textContent = validCount;
+
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = validCount === 0;
+    }
+
+    /* ── Search / filter ──────────────────────────────────────────────── */
+    function filterGrid() {
+      const q = document.getElementById('grid-search').value.toLowerCase().trim();
+      document.querySelectorAll('.user-card').forEach(card => {
+        card.style.display = card.dataset.searchKey.includes(q) ? '' : 'none';
+      });
+    }
+
+    /* ── Submit: show progress ────────────────────────────────────────── */
+    document.getElementById('upload-form').addEventListener('submit', function () {
+      document.getElementById('submit-btn').disabled = true;
+      document.getElementById('upload-progress').classList.add('show');
+    });
+
+    /* ── Empty state helper ───────────────────────────────────────────── */
+    function showEmptyState(msg) {
+      const grid = document.getElementById('user-grid');
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="empty-state-icon">🔍</div>
+          <h3>No results</h3>
+          <p>${msg}</p>
+        </div>`;
+    }
+
+    /* ── Error list toggle ────────────────────────────────────────────── */
+    function toggleErrList(head) {
+      const body   = document.getElementById('err-list-body');
+      const toggle = document.getElementById('err-toggle');
+      const open   = body.classList.toggle('open');
+      toggle.textContent = open ? 'Hide ▴' : 'Show ▾';
+    }
+
+    {% if results and results.errors %}
+    document.getElementById('err-list-body').classList.add('open');
+    document.getElementById('err-toggle').textContent = 'Hide ▴';
+    document.getElementById('results-card').scrollIntoView({ behavior:'smooth', block:'start' });
+    {% endif %}
+  </script>
+</body>
+</html>

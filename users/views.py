@@ -1,3 +1,4 @@
+from __future__ import annotations
 from django.shortcuts import render, redirect
 import csv
 from django.urls import reverse
@@ -17,6 +18,21 @@ from django.core.exceptions import PermissionDenied
 
 from django.contrib.auth import views as auth_views
 from django.db.utils import OperationalError, ProgrammingError
+
+
+import json
+import logging
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.views import View
+from django.utils.decorators import method_decorator
+
+from .forms import BulkPhotoUploadForm
+from .services import save_bulk_photos, get_users_for_type, get_class_choices
+
 # Create your views here.
 
 # Enrollment of new student
@@ -357,3 +373,90 @@ class SafePasswordResetView(auth_views.PasswordResetView):
             context['school_info'] = None
 
         return context
+
+
+"""
+views.py — Bulk Profile Photo Upload Views  (REFACTORED)
+KwikSchools — Smarter Schools!
+"""
+
+logger = logging.getLogger(__name__)
+
+VALID_USER_TYPES = ('student', 'teacher', 'parent', 'all')
+
+
+def _is_staff(user):
+    return user.is_active and (user.is_staff or user.is_superuser)
+
+
+staff_only = user_passes_test(_is_staff, login_url='login')
+
+
+# ── Main view ─────────────────────────────────────────────────────────────────
+
+@method_decorator([login_required(login_url='login'), staff_only], name='dispatch')
+class BulkPhotoUploadView(View):
+    template_name = 'users/bulk_photo_upload.html'
+
+    def _ctx(self):
+        return {
+            'form': BulkPhotoUploadForm(),
+            'class_choices': get_class_choices(),
+        }
+
+    def get(self, request):
+        return render(request, self.template_name, self._ctx())
+
+    def post(self, request):
+        uploaded_files = {
+            k: request.FILES[k]
+            for k in request.FILES
+            if k.startswith('photo_')
+        }
+
+        if not uploaded_files:
+            messages.warning(request, 'No photos were selected. Click a card and pick an image first.')
+            return render(request, self.template_name, self._ctx())
+
+        results = save_bulk_photos(uploaded_files)
+
+        summary = (
+            f"Done — {results['saved']} photo(s) saved, "
+            f"{results['skipped']} skipped."
+        )
+        level = messages.warning if results['errors'] else messages.success
+        level(request, summary)
+
+        ctx = self._ctx()
+        ctx.update({'results': results, 'summary': summary})
+        return render(request, self.template_name, ctx)
+
+
+# ── AJAX: load user grid ──────────────────────────────────────────────────────
+
+@login_required(login_url='login')
+@user_passes_test(_is_staff, login_url='login')
+def ajax_load_users(request):
+    """
+    GET ?user_type=student|teacher|parent|all  [&class_filter=<pk>]
+
+    Returns JSON list of user dicts for the photo grid.
+    Logs full tracebacks — no silent failures.
+    """
+    user_type    = request.GET.get('user_type', '').strip()
+    class_filter = request.GET.get('class_filter', '').strip()
+
+    if user_type not in VALID_USER_TYPES:
+        return JsonResponse(
+            {'error': f'Invalid user_type "{user_type}". Must be one of: {", ".join(VALID_USER_TYPES)}.'},
+            status=400,
+        )
+
+    class_pk = int(class_filter) if class_filter.isdigit() else None
+
+    try:
+        users = get_users_for_type(user_type, class_pk)
+        return JsonResponse({'users': users, 'count': len(users)})
+    except Exception as e:
+        logger.exception('ajax_load_users: unhandled exception')
+        return JsonResponse({'error': str(e)}, status=500)
