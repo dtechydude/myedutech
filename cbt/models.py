@@ -185,5 +185,13 @@ class QuizResult(models.Model):
 
     cancelled = models.BooleanField(default=False)  # ✅ NEW FIELD
 
+    # def __str__(self):
+    #     return f"{self.user} - {self.quiz} ({self.score}%)"
+    
+    #     # Before
+    # def __str__(self):
+    #     return f"{self.user} - {self.quiz} ({self.score}%)"
+
+    # After
     def __str__(self):
-        return f"{self.user} - {self.quiz} ({self.score}%)"
+        return f"{self.user} - {self.quiz} ({self.score:.1f}%)"
