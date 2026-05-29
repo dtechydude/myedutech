@@ -8,6 +8,16 @@ from import_export.admin import ImportExportModelAdmin
 from django.contrib.auth.admin import UserAdmin as DefaultUserAdmin # Import the default UserAdmin
 from import_export import resources # You might need this if you customize resource
 
+import logging
+import os
+
+from django.contrib import admin
+from django.contrib.auth import get_user_model
+
+# ── Change this import to match your app ─────────────────────────────────────
+from users.models import Profile
+# from users.models import Profile  ← use this if your app is named 'users'
+
 
 User = get_user_model()
 # 1. Unregister the default UserAdmin
@@ -57,23 +67,6 @@ class StudentClassFilter(admin.SimpleListFilter):
         return queryset
  
 
-# class UserProfileAdmin(ImportExportModelAdmin):
-           
-#     list_display=('user', 'last_name', 'first_name', 'code', 'user_type', 'phone', 'state_of_origin', 'code')
-#     def last_name(self, obj):
-#         return obj.user.last_name
-
-#     def first_name(self, obj):
-#         return obj.user.first_name
-
-#     last_name.admin_order_field = 'user__last_name'
-#     first_name.admin_order_field = 'user__first_name'
-
-#     list_filter  = [StudentClassFilter, 'user_type',]
-#     search_fields = ('user__username', 'user_type', 'user__last_name', 'user__first_name', 'code')
-#     raw_id_fields = ['user',]
-
-
 class DeptAdmin(ImportExportModelAdmin):
        
     list_display=('id', 'name')
@@ -93,15 +86,6 @@ of the signals.py logic — works for both inline and standalone admin saves.
 """
 # from __future__ import annotations
 
-import logging
-import os
-
-from django.contrib import admin
-from django.contrib.auth import get_user_model
-
-# ── Change this import to match your app ─────────────────────────────────────
-from users.models import Profile
-# from users.models import Profile  ← use this if your app is named 'users'
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -183,12 +167,13 @@ class ProfileInline(admin.StackedInline):
 # ── Standalone Profile admin ──────────────────────────────────────────────────
 
 @admin.register(Profile)
-class ProfileAdmin(admin.ModelAdmin):
+# class ProfileAdmin(admin.ModelAdmin):
+class ProfileAdmin(ImportExportModelAdmin):
     list_display  = (
         'get_username', 'get_full_name', 'user_type',
         'phone', 'state_of_origin', 'activate', 'has_custom_photo',
     )
-    list_filter   = ('user_type', 'activate', 'state_of_origin')
+    list_filter   = ('user_type', 'activate', StudentClassFilter)
     search_fields = (
         'user__username', 'user__first_name',
         'user__last_name', 'user__email', 'phone',
