@@ -747,7 +747,7 @@
         {% if user.parent %}
             <a href="{% url 'students:parent-dashboard' %}" class="btn btn-outline">← Parent Dashboard</a>
         {% elif user.student %}
-            <a href="{% url 'results:student_dashboard' %}" class="btn btn-outline">← Dashboard</a>
+            <a href="{% url 'results:student_midterm_list' %}" class="btn btn-outline">← Mid-Term List</a>
         {% else %}
             <a href="{% url 'results:student_midterm_list' %}" class="btn btn-outline">← Back to List</a>
         {% endif %}

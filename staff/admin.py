@@ -34,6 +34,8 @@ class StaffAttendanceAdmin(admin.ModelAdmin):
     )
     raw_id_fields = (
         'teacher',
+        'checked_in_by',
+        'checked_out_by',
     )
 
     list_filter = (
