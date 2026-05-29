@@ -11,6 +11,11 @@ from users.models import Dept
 from curriculum.models import Subject, Standard
 from datetime import datetime
 from django.utils import timezone
+from django.db import models
+from django.utils import timezone
+from django.contrib.auth.models import User
+from datetime import datetime
+
 
 
 
@@ -116,114 +121,8 @@ class Teacher(models.Model):
         verbose_name_plural = 'Teachers & Staff Details'
 
 
-# TEACHERS ATTENDANCE 
-# apps/staff/models.py
 
-# from django.db import models
-# from django.utils import timezone
-# from django.contrib.auth import get_user_model
-# from django.core.exceptions import ValidationError
-
-# from .models import Teacher  # adjust import path
-
-# User = get_user_model()
-
-
-# # attendance/models.py
-# # attendance/models.py
-
-# class StaffAttendance(models.Model):
-
-#     STATUS_CHOICES = (
-#         ('present', 'Present'),
-#         ('late', 'Late'),
-#         ('excused', 'Excused'),
-#         ('half_day', 'Half Day'),
-#     )
-
-#     teacher = models.ForeignKey(
-#         Teacher,
-#         on_delete=models.CASCADE,
-#         related_name='attendance_records'
-#     )
-
-#     date = models.DateField(
-#         default=timezone.localdate
-#     )
-
-#     check_in_time = models.TimeField(
-#         null=True,
-#         blank=True
-#     )
-
-#     check_out_time = models.TimeField(
-#         null=True,
-#         blank=True
-#     )
-
-#     checked_in_by = models.ForeignKey(
-#         User,
-#         on_delete=models.SET_NULL,
-#         null=True,
-#         blank=True,
-#         related_name='staff_checked_in'
-#     )
-
-#     checked_out_by = models.ForeignKey(
-#         User,
-#         on_delete=models.SET_NULL,
-#         null=True,
-#         blank=True,
-#         related_name='staff_checked_out'
-#     )
-
-#     is_late = models.BooleanField(default=False)
-
-#     status = models.CharField(
-#         max_length=20,
-#         choices=STATUS_CHOICES,
-#         default='present'
-#     )
-
-#     remarks = models.TextField(
-#         blank=True,
-#         null=True
-#     )
-
-#     created_at = models.DateTimeField(auto_now_add=True)
-
-#     class Meta:
-#         unique_together = ('teacher', 'date')
-#         ordering = ['-date']
-
-#     def __str__(self):
-#         return f"{self.teacher} - {self.date}"
-
-#     @property
-#     def work_duration(self):
-
-#         if self.check_in_time and self.check_out_time:
-
-#             start = datetime.combine(
-#                 self.date,
-#                 self.check_in_time
-#             )
-
-#             end = datetime.combine(
-#                 self.date,
-#                 self.check_out_time
-#             )
-
-#             return end - start
-
-#         return None
-
-
-from django.db import models
-from django.utils import timezone
-from django.contrib.auth.models import User
-from datetime import datetime
-
+# Teachers Attendance
 
 class StaffAttendance(models.Model):
 
