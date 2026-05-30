@@ -1,0 +1,61 @@
+{# prep_reports/partials/subject_skill_form.html — rendered by SubjectSkillAjaxView #}
+<form method="post"
+      action="/prep-reports/report/{{ card.pk }}/edit/"
+      id="skill-form-{{ subject.pk }}">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="save_skills">
+  <input type="hidden" name="subject_id" value="{{ subject.pk }}">
+
+  <div class="table-responsive">
+    <table class="table table-sm table-bordered mb-0 align-middle">
+      <thead>
+        <tr>
+          <th style="min-width:260px">Skill / Objective</th>
+          {% for col in columns %}
+          <th class="text-center" style="min-width:70px">{{ col.label }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for skill in skills %}
+        {% with entry=entries|get_item:skill.pk %}
+        <tr>
+          <td><small>{{ skill.description }}</small></td>
+          {% for col in columns %}
+          <td class="text-center">
+            {% if can_edit %}
+            <input type="radio"
+                   name="skill_{{ skill.pk }}"
+                   id="s{{ skill.pk }}_c{{ col.pk }}"
+                   value="{{ col.pk }}"
+                   class="tick-radio"
+                   {% if entry and entry.selected_column_id == col.pk %}checked{% endif %}>
+            <label for="s{{ skill.pk }}_c{{ col.pk }}" class="tick-label mx-auto">✓</label>
+            {% else %}
+              {% if entry and entry.selected_column_id == col.pk %}
+              <span class="text-success fw-bold">✓</span>
+              {% else %}—{% endif %}
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endwith %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="p-2 bg-light border-top">
+    <label class="form-label small fw-semibold mb-1">Comment for {{ subject.name }}:</label>
+    <textarea name="subject_comment_{{ subject.pk }}"
+              rows="2"
+              class="form-control form-control-sm"
+              {% if not can_edit %}disabled{% endif %}>{{ subject_comment }}</textarea>
+  </div>
+
+  {% if can_edit %}
+  <div class="p-2 d-flex justify-content-end border-top">
+    <button type="submit" class="btn btn-sm btn-primary">💾 Save {{ subject.name }}</button>
+  </div>
+  {% endif %}
+</form>

@@ -23,6 +23,8 @@ urlpatterns = [
     path('curriculum/', include('curriculum.urls', namespace='curriculum')),
     path('tickets/', include('tickets.urls', namespace='tickets')),
     path('events/', include('events.urls', namespace='events')),
+    path('prep_reports/', include('prep_reports.urls', namespace='prep_reports')),
+
 
        
     # Add this line below to fix the NoReverseMatch error

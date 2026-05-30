@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="KwikSchools — School Management Portal">
+  <title>{% block title %}KwikSchools Portal{% endblock %} | {{ school_info.name|default:"KwikSchools" }}</title>
+
+  {# ── Google Fonts ── #}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+
+  {# ── Bootstrap 5 ── #}
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  {# ── Bootstrap Icons ── #}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <style>
+    /* ══════════════════════════════════════════════════════
+       KWIKSCHOOLS — DESIGN SYSTEM
+       Theme: Deep Navy + Gold · Clean institutional authority
+    ══════════════════════════════════════════════════════ */
+
+    :root {
+      --ks-navy:       #0f1f3d;
+      --ks-navy-mid:   #1a3260;
+      --ks-navy-light: #243f7a;
+      --ks-gold:       #c9a84c;
+      --ks-gold-light: #e8c96b;
+      --ks-gold-pale:  #fdf6e3;
+      --ks-surface:    #f4f6fb;
+      --ks-white:      #ffffff;
+      --ks-border:     #dde3ef;
+      --ks-text:       #1e2a3b;
+      --ks-muted:      #6b7a99;
+      --ks-success:    #1a7d5a;
+      --ks-warning:    #d08c00;
+      --ks-danger:     #b83232;
+      --ks-info:       #1671b8;
+
+      --sidebar-width:     240px;
+      --topbar-height:     58px;
+      --radius-sm:         6px;
+      --radius-md:         10px;
+      --radius-lg:         16px;
+      --shadow-card:       0 2px 12px rgba(15,31,61,.08);
+      --shadow-elevated:   0 8px 32px rgba(15,31,61,.14);
+      --font-body:         'DM Sans', sans-serif;
+      --font-display:      'DM Serif Display', serif;
+      --transition:        all .2s ease;
+    }
+
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--ks-text);
+      background: var(--ks-surface);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ══════════════════════
+       TOPBAR
+    ══════════════════════ */
+    .ks-topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--topbar-height);
+      background: var(--ks-navy);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      z-index: 1030;
+      border-bottom: 2px solid var(--ks-gold);
+      gap: 12px;
+    }
+
+    /* Sidebar toggle (mobile) */
+    .ks-toggle {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+      display: none;
+    }
+    .ks-toggle:hover { background: rgba(255,255,255,.1); }
+
+    /* School identity */
+    .ks-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      flex: 1;
+    }
+    .ks-brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--ks-gold);
+    }
+    .ks-brand-logo-fallback {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--ks-gold);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-size: 15px;
+      color: var(--ks-navy);
+      font-weight: bold;
+      flex-shrink: 0;
+      border: 2px solid var(--ks-gold-light);
+    }
+    .ks-brand-name {
+      font-family: var(--font-display);
+      font-size: 16px;
+      color: #fff;
+      letter-spacing: .3px;
+      line-height: 1.2;
+    }
+    .ks-brand-tagline {
+      font-size: 9px;
+      color: var(--ks-gold-light);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      display: block;
+    }
+
+    /* Back to dashboard pill */
+    .ks-back-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: rgba(255,255,255,.75);
+      font-size: 12.5px;
+      text-decoration: none;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.2);
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .ks-back-link:hover {
+      color: #fff;
+      background: rgba(255,255,255,.1);
+      border-color: rgba(255,255,255,.4);
+    }
+
+    /* Topbar right cluster */
+    .ks-topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    /* User avatar / name */
+    .ks-user-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 24px;
+      padding: 4px 12px 4px 5px;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+    .ks-user-pill:hover { background: rgba(255,255,255,.15); }
+    .ks-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--ks-gold);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ks-navy);
+      flex-shrink: 0;
+    }
+    .ks-user-name {
+      font-size: 12.5px;
+      color: rgba(255,255,255,.9);
+      font-weight: 500;
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Notification bell */
+    .ks-notif-btn {
+      position: relative;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,.7);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 5px 8px;
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+    }
+    .ks-notif-btn:hover { color: #fff; background: rgba(255,255,255,.1); }
+    .ks-notif-badge {
+      position: absolute;
+      top: 2px; right: 3px;
+      width: 8px; height: 8px;
+      background: var(--ks-gold);
+      border-radius: 50%;
+      border: 1.5px solid var(--ks-navy);
+    }
+
+    /* ══════════════════════
+       SIDEBAR
+    ══════════════════════ */
+    .ks-sidebar {
+      position: fixed;
+      top: var(--topbar-height);
+      left: 0;
+      width: var(--sidebar-width);
+      bottom: 0;
+      background: var(--ks-white);
+      border-right: 1px solid var(--ks-border);
+      overflow-y: auto;
+      overflow-x: hidden;
+      z-index: 1020;
+      transition: transform .28s cubic-bezier(.4,0,.2,1);
+      scrollbar-width: thin;
+      scrollbar-color: var(--ks-border) transparent;
+    }
+    .ks-sidebar::-webkit-scrollbar { width: 4px; }
+    .ks-sidebar::-webkit-scrollbar-thumb { background: var(--ks-border); border-radius: 4px; }
+
+    /* Sidebar section labels */
+    .ks-nav-section {
+      padding: 18px 16px 6px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--ks-muted);
+    }
+
+    /* Nav items */
+    .ks-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 16px;
+      color: var(--ks-text);
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 500;
+      border-left: 3px solid transparent;
+      transition: var(--transition);
+      position: relative;
+    }
+    .ks-nav-item i { font-size: 16px; color: var(--ks-muted); transition: var(--transition); }
+    .ks-nav-item:hover {
+      background: var(--ks-surface);
+      color: var(--ks-navy);
+      border-left-color: var(--ks-border);
+    }
+    .ks-nav-item:hover i { color: var(--ks-navy-light); }
+    .ks-nav-item.active {
+      background: var(--ks-gold-pale);
+      color: var(--ks-navy);
+      border-left-color: var(--ks-gold);
+      font-weight: 600;
+    }
+    .ks-nav-item.active i { color: var(--ks-gold); }
+
+    /* Nav badge */
+    .ks-nav-badge {
+      margin-left: auto;
+      background: var(--ks-gold);
+      color: var(--ks-navy);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 10px;
+    }
+
+    /* Sidebar divider */
+    .ks-nav-divider {
+      border: none;
+      border-top: 1px solid var(--ks-border);
+      margin: 8px 16px;
+    }
+
+    /* ══════════════════════
+       MAIN CONTENT
+    ══════════════════════ */
+    .ks-main {
+      margin-left: var(--sidebar-width);
+      margin-top: var(--topbar-height);
+      min-height: calc(100vh - var(--topbar-height));
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .ks-content {
+      flex: 1;
+      padding: 24px 24px 0;
+    }
+
+    /* ══════════════════════
+       PAGE HEADER STRIP
+    ══════════════════════ */
+    .ks-page-header {
+      background: var(--ks-white);
+      border-bottom: 1px solid var(--ks-border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .ks-page-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      color: var(--ks-navy);
+      margin: 0;
+    }
+    .ks-breadcrumb {
+      font-size: 12px;
+      color: var(--ks-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 2px;
+    }
+    .ks-breadcrumb a { color: var(--ks-navy-light); text-decoration: none; }
+    .ks-breadcrumb a:hover { text-decoration: underline; }
+
+    /* ══════════════════════
+       CARDS
+    ══════════════════════ */
+    .ks-card {
+      background: var(--ks-white);
+      border: 1px solid var(--ks-border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+    .ks-card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--ks-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .ks-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ks-navy);
+      margin: 0;
+    }
+    .ks-card-body { padding: 18px; }
+
+    /* ══════════════════════
+       STAT / KPI CARDS
+    ══════════════════════ */
+    .ks-stat-card {
+      background: var(--ks-white);
+      border: 1px solid var(--ks-border);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: var(--transition);
+    }
+    .ks-stat-card:hover { box-shadow: var(--shadow-elevated); transform: translateY(-1px); }
+    .ks-stat-icon {
+      width: 48px; height: 48px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .ks-stat-icon.navy { background: rgba(15,31,61,.08); color: var(--ks-navy); }
+    .ks-stat-icon.gold  { background: rgba(201,168,76,.12); color: var(--ks-gold); }
+    .ks-stat-icon.green { background: rgba(26,125,90,.1); color: var(--ks-success); }
+    .ks-stat-icon.red   { background: rgba(184,50,50,.1); color: var(--ks-danger); }
+    .ks-stat-value { font-family: var(--font-display); font-size: 26px; color: var(--ks-navy); line-height: 1; }
+    .ks-stat-label { font-size: 12px; color: var(--ks-muted); margin-top: 3px; }
+
+    /* ══════════════════════
+       ALERTS / MESSAGES
+    ══════════════════════ */
+    .ks-alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      margin-bottom: 14px;
+      border-left: 4px solid;
+      animation: slideDown .25s ease;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .ks-alert-success { background: #edfaf4; border-color: var(--ks-success); color: #145c41; }
+    .ks-alert-error,
+    .ks-alert-danger  { background: #fdf0f0; border-color: var(--ks-danger);  color: #8b2020; }
+    .ks-alert-warning { background: #fdf8ec; border-color: var(--ks-warning); color: #7a5200; }
+    .ks-alert-info    { background: #eef5fd; border-color: var(--ks-info);    color: #104d7f; }
+    .ks-alert-close {
+      margin-left: auto;
+      background: none; border: none;
+      font-size: 16px; cursor: pointer;
+      opacity: .5; transition: var(--transition);
+      padding: 0 2px;
+      line-height: 1;
+    }
+    .ks-alert-close:hover { opacity: 1; }
+
+    /* ══════════════════════
+       BUTTONS
+    ══════════════════════ */
+    .ks-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--font-body);
+      border: 1.5px solid transparent;
+      cursor: pointer;
+      text-decoration: none;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .ks-btn-primary {
+      background: var(--ks-navy);
+      color: #fff;
+      border-color: var(--ks-navy);
+    }
+    .ks-btn-primary:hover {
+      background: var(--ks-navy-mid);
+      color: #fff;
+    }
+    .ks-btn-gold {
+      background: var(--ks-gold);
+      color: var(--ks-navy);
+      border-color: var(--ks-gold);
+    }
+    .ks-btn-gold:hover { background: var(--ks-gold-light); }
+    .ks-btn-outline {
+      background: transparent;
+      color: var(--ks-navy);
+      border-color: var(--ks-border);
+    }
+    .ks-btn-outline:hover { background: var(--ks-surface); }
+    .ks-btn-sm { padding: 5px 11px; font-size: 12px; }
+    .ks-btn-danger { background: var(--ks-danger); color: #fff; border-color: var(--ks-danger); }
+    .ks-btn-danger:hover { background: #9b2a2a; }
+    .ks-btn-success { background: var(--ks-success); color: #fff; border-color: var(--ks-success); }
+
+    /* ══════════════════════
+       TABLES
+    ══════════════════════ */
+    .ks-table-wrap { overflow-x: auto; border-radius: var(--radius-md); }
+    .ks-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+    .ks-table thead tr {
+      background: var(--ks-navy);
+      color: #fff;
+    }
+    .ks-table thead th {
+      padding: 10px 14px;
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .ks-table tbody tr {
+      border-bottom: 1px solid var(--ks-border);
+      transition: background .15s;
+    }
+    .ks-table tbody tr:last-child { border-bottom: none; }
+    .ks-table tbody tr:hover { background: var(--ks-surface); }
+    .ks-table td { padding: 10px 14px; vertical-align: middle; }
+
+    /* ══════════════════════
+       BADGES
+    ══════════════════════ */
+    .ks-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .3px;
+      text-transform: uppercase;
+    }
+    .ks-badge-draft     { background: #f0f0f0;  color: #555; }
+    .ks-badge-submitted { background: #ddf0fb;  color: #0f5d8a; }
+    .ks-badge-approved  { background: #d9f5ea;  color: var(--ks-success); }
+    .ks-badge-published { background: #fdf3d9;  color: #8a5e00; }
+    .ks-badge-gold      { background: var(--ks-gold-pale); color: var(--ks-warning); }
+    .ks-badge-navy      { background: rgba(15,31,61,.08); color: var(--ks-navy); }
+
+    /* ══════════════════════
+       FORM CONTROLS (override Bootstrap)
+    ══════════════════════ */
+    .form-control, .form-select {
+      border-color: var(--ks-border);
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      font-family: var(--font-body);
+      color: var(--ks-text);
+      transition: var(--transition);
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: var(--ks-navy-light);
+      box-shadow: 0 0 0 3px rgba(26,50,96,.1);
+    }
+    .form-label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ks-navy);
+      margin-bottom: 4px;
+    }
+
+    /* ══════════════════════
+       SIDEBAR OVERLAY (mobile)
+    ══════════════════════ */
+    .ks-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15,31,61,.45);
+      z-index: 1015;
+      backdrop-filter: blur(2px);
+    }
+
+    /* ══════════════════════
+       FOOTER
+    ══════════════════════ */
+    .ks-footer {
+      margin-left: var(--sidebar-width);
+      background: var(--ks-white);
+      border-top: 1px solid var(--ks-border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: auto;
+    }
+    .ks-footer-left {
+      font-size: 12px;
+      color: var(--ks-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ks-footer-school {
+      font-weight: 600;
+      color: var(--ks-navy);
+    }
+    .ks-footer-divider {
+      color: var(--ks-border);
+    }
+    .ks-footer-right {
+      font-size: 11.5px;
+      color: var(--ks-muted);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .ks-footer-right a {
+      color: var(--ks-muted);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    .ks-footer-right a:hover { color: var(--ks-navy); }
+    .ks-powered {
+      font-size: 11px;
+      color: var(--ks-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .ks-powered strong { color: var(--ks-gold); font-weight: 700; }
+
+    /* ══════════════════════
+       RESPONSIVE BREAKPOINTS
+    ══════════════════════ */
+    @media (max-width: 991px) {
+      .ks-toggle { display: flex; }
+      .ks-sidebar {
+        transform: translateX(-100%);
+        box-shadow: var(--shadow-elevated);
+      }
+      .ks-sidebar.open { transform: translateX(0); }
+      .ks-overlay.open { display: block; }
+      .ks-main { margin-left: 0; }
+      .ks-footer { margin-left: 0; }
+      .ks-back-link span { display: none; }
+      .ks-user-name { display: none; }
+    }
+
+    @media (max-width: 575px) {
+      .ks-content { padding: 16px 14px 0; }
+      .ks-page-header { padding: 12px 14px; }
+      .ks-footer { padding: 12px 14px; flex-direction: column; align-items: flex-start; }
+    }
+
+    /* ══════════════════════
+       UTILITY
+    ══════════════════════ */
+    .text-navy    { color: var(--ks-navy) !important; }
+    .text-gold    { color: var(--ks-gold) !important; }
+    .text-muted-ks{ color: var(--ks-muted) !important; }
+    .bg-navy      { background: var(--ks-navy) !important; }
+    .bg-gold-pale { background: var(--ks-gold-pale) !important; }
+    .border-gold  { border-color: var(--ks-gold) !important; }
+    .fw-display   { font-family: var(--font-display) !important; }
+    .rounded-ks   { border-radius: var(--radius-md) !important; }
+
+    /* Page-load fade */
+    .ks-main { animation: pageFade .3s ease; }
+    @keyframes pageFade {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+  {# ══════════════════════════════
+     TOPBAR
+  ══════════════════════════════ #}
+  <header class="ks-topbar">
+
+    {# Mobile sidebar toggle #}
+    <button class="ks-toggle" id="sidebarToggle" aria-label="Toggle menu">
+      <i class="bi bi-list"></i>
+    </button>
+
+    {# School brand #}
+    <a href="/dashboard" class="ks-brand">
+      {% if school_info.logo %}
+        <img src="{{ school_info.logo.url }}"
+             alt="{{ school_info.name }} logo"
+             class="ks-brand-logo">
+      {% else %}
+        <div class="ks-brand-logo-fallback">
+          {{ school_info.name|default:"K"|slice:":1"|upper }}
+        </div>
+      {% endif %}
+      <div>
+        <div class="ks-brand-name">{{ school_info.name|default:"KwikSchools" }}</div>
+        <span class="ks-brand-tagline">School Management Portal</span>
+      </div>
+    </a>
+
+    {# Back to Dashboard link #}
+    <a href="/dashboard" class="ks-back-link">
+      <i class="bi bi-grid-3x3-gap-fill"></i>
+      <span>Dashboard</span>
+    </a>
+
+    {# Right cluster #}
+    <div class="ks-topbar-right">
+
+      {# Notification bell #}
+      <button class="ks-notif-btn" title="Notifications">
+        <i class="bi bi-bell"></i>
+        <span class="ks-notif-badge"></span>
+      </button>
+
+      {# User pill + dropdown #}
+      {% if user.is_authenticated %}
+      <div class="dropdown">
+        <a class="ks-user-pill" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+          <div class="ks-avatar">
+            {{ user.get_full_name|default:user.username|slice:":2"|upper }}
+          </div>
+          <span class="ks-user-name">{{ user.get_full_name|default:user.username }}</span>
+          <i class="bi bi-chevron-down" style="font-size:10px;color:rgba(255,255,255,.5);margin-left:2px"></i>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-1" style="min-width:190px;font-size:13px">
+          <li>
+            <div class="px-3 py-2 border-bottom">
+              <div class="fw-semibold text-navy">{{ user.get_full_name|default:user.username }}</div>
+              <div style="font-size:11px;color:var(--ks-muted)">{{ user.email }}</div>
+              {% if user.is_superuser %}
+              <span class="ks-badge ks-badge-gold mt-1">Superuser</span>
+              {% elif user.is_staff %}
+              <span class="ks-badge ks-badge-navy mt-1">Staff</span>
+              {% endif %}
+            </div>
+          </li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 py-2"
+               href="{% url 'users_home' %}">
+              <i class="bi bi-person-circle" style="color:var(--ks-muted)"></i> My Profile
+            </a>
+          </li>
+          {% if user.is_staff or user.is_superuser %}
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="/admin/">
+              <i class="bi bi-shield-lock" style="color:var(--ks-muted)"></i> Admin Panel
+            </a>
+          </li>
+          {% endif %}
+          <li><hr class="dropdown-divider my-1"></li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger"
+               href="{% url 'user_logout' %}">
+              <i class="bi bi-box-arrow-right"></i> Sign Out
+            </a>
+          </li>
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+  </header>
+
+  {# ══════════════════════════════
+     MOBILE OVERLAY
+  ══════════════════════════════ #}
+  <div class="ks-overlay" id="sidebarOverlay"></div>
+
+  {# ══════════════════════════════
+     SIDEBAR
+  ══════════════════════════════ #}
+  <nav class="ks-sidebar" id="sidebar">
+
+    {# Current module label #}
+    <div style="padding:14px 16px 8px;background:var(--ks-gold-pale);border-bottom:1px solid var(--ks-border)">
+      <div style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--ks-muted);font-weight:700">
+        Current Module
+      </div>
+      <div style="font-size:13px;font-weight:600;color:var(--ks-navy);margin-top:2px">
+        {% block module_name %}Prep Report Cards{% endblock %}
+      </div>
+    </div>
+
+    {# ── Prep Reports section ── #}
+    <div class="ks-nav-section">Report Cards</div>
+
+    <a href="{% url 'prep_reports:dashboard' %}"
+       class="ks-nav-item {% block nav_dashboard %}{% endblock %}">
+      <i class="bi bi-grid-1x2"></i>
+      Overview
+    </a>
+
+    <a href="{% url 'prep_reports:select_period' %}"
+       class="ks-nav-item {% block nav_select %}{% endblock %}">
+      <i class="bi bi-calendar3"></i>
+      Select Period
+    </a>
+
+    {% if user.is_staff or user.is_superuser %}
+    <a href="{% url 'prep_reports:admin_class_list' %}"
+       class="ks-nav-item {% block nav_classes %}{% endblock %}">
+      <i class="bi bi-gear"></i>
+      Manage Classes
+    </a>
+    {% endif %}
+
+    <hr class="ks-nav-divider">
+
+    {# ── Main portal links ── #}
+    <div class="ks-nav-section">Portal</div>
+
+    <a href="/dashboard" class="ks-nav-item">
+      <i class="bi bi-house"></i>
+      Main Dashboard
+    </a>
+
+    <a href="/students/" class="ks-nav-item">
+      <i class="bi bi-people"></i>
+      Students
+    </a>
+
+    <a href="/results/" class="ks-nav-item">
+      <i class="bi bi-bar-chart-line"></i>
+      Results
+    </a>
+
+    <a href="/attendance/" class="ks-nav-item">
+      <i class="bi bi-calendar-check"></i>
+      Attendance
+    </a>
+
+    <a href="/finance/" class="ks-nav-item">
+      <i class="bi bi-cash-stack"></i>
+      Finance
+    </a>
+
+    <a href="/e-learning/" class="ks-nav-item">
+      <i class="bi bi-book"></i>
+      E-Learning
+    </a>
+
+    <hr class="ks-nav-divider">
+
+    {# ── Extra block for child templates to add nav items ── #}
+    {% block extra_nav %}{% endblock %}
+
+    {# ── Admin link ── #}
+    {% if user.is_staff or user.is_superuser %}
+    <div class="ks-nav-section">Admin</div>
+    <a href="/admin/" class="ks-nav-item">
+      <i class="bi bi-shield-lock"></i>
+      Django Admin
+    </a>
+    {% endif %}
+
+    {# Sidebar bottom padding #}
+    <div style="height:24px"></div>
+  </nav>
+
+  {% comment %} {# ══════════════════════════════
+     MAIN CONTENT AREA
+  ══════════════════════════════ #} {% endcomment %}
+  <main class="ks-main">
+
+    {# Optional page header strip — child templates can populate #}
+    {% block page_header %}{% endblock %}
+
+    <div class="ks-content">
+
+      {# ── Django messages ── #}
+      {% if messages %}
+      <div class="mb-3" id="ks-messages">
+        {% for message in messages %}
+        <div class="ks-alert ks-alert-{{ message.tags|default:'info' }}" role="alert">
+          <i class="bi
+            {% if message.tags == 'success' %}bi-check-circle-fill
+            {% elif message.tags == 'error' or message.tags == 'danger' %}bi-x-circle-fill
+            {% elif message.tags == 'warning' %}bi-exclamation-triangle-fill
+            {% else %}bi-info-circle-fill{% endif %}">
+          </i>
+          <span>{{ message }}</span>
+          <button class="ks-alert-close" onclick="this.closest('.ks-alert').remove()"
+                  aria-label="Close">×</button>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {# ── Page content ── #}
+      {% block content %}{% endblock %}
+
+    </div>{# /ks-content #}
+  </main>
+
+  {% comment %} {# ══════════════════════════════
+     FOOTER
+  ══════════════════════════════ #} {% endcomment %}
+  <footer class="ks-footer">
+    <div class="ks-footer-left">
+      <i class="bi bi-building" style="color:var(--ks-gold)"></i>
+      <span class="ks-footer-school">{{ school_info.name|default:"KwikSchools" }}</span>
+      {% if school_info.address %}
+      <span class="ks-footer-divider">·</span>
+      <span>{{ school_info.address }}</span>
+      {% endif %}
+      {% if school_info.phone %}
+      <span class="ks-footer-divider">·</span>
+      <span>{{ school_info.phone }}</span>
+      {% endif %}
+    </div>
+    <div class="ks-footer-right">
+      <span class="ks-powered">
+        Powered by <strong>KwikSchools</strong>
+        <i class="bi bi-lightning-charge-fill" style="color:var(--ks-gold);font-size:10px"></i>
+      </span>
+      <span style="color:var(--ks-border)">|</span>
+      <a href="/dashboard">Dashboard</a>
+      <a href="{% url 'user_logout' %}">Sign Out</a>
+      <span>&copy; {% now "Y" %}</span>
+    </div>
+  </footer>
+
+  {% comment %} {# ══════════════════════════════
+     SCRIPTS
+  ══════════════════════════════ #} {% endcomment %}
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    /* ── Sidebar toggle ── */
+    const sidebar  = document.getElementById('sidebar');
+    const overlay  = document.getElementById('sidebarOverlay');
+    const toggleBtn = document.getElementById('sidebarToggle');
+
+    function openSidebar() {
+      sidebar.classList.add('open');
+      overlay.classList.add('open');
+      toggleBtn.innerHTML = '<i class="bi bi-x-lg"></i>';
+    }
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('open');
+      toggleBtn.innerHTML = '<i class="bi bi-list"></i>';
+    }
+    toggleBtn.addEventListener('click', () => {
+      sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+    });
+    overlay.addEventListener('click', closeSidebar);
+
+    /* ── Auto-dismiss messages after 6s ── */
+    setTimeout(() => {
+      document.querySelectorAll('#ks-messages .ks-alert').forEach(el => {
+        el.style.transition = 'opacity .4s ease';
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 420);
+      });
+    }, 6000);
+
+    /* ── Active nav highlight based on current path ── */
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('.ks-nav-item').forEach(link => {
+      const href = link.getAttribute('href');
+      if (href && href !== '/' && currentPath.startsWith(href)) {
+        link.classList.add('active');
+      }
+    });
+  </script>
+
+  {% block extra_js %}{% endblock %}
+
+</body>
+</html>

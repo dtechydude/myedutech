@@ -1,0 +1,57 @@
+{% extends "prep_reports/base.html" %}
+{% block title %}Prep Class Management{% endblock %}
+{% block content %}
+<div class="container-fluid px-3 py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0">⚙ Prep Class Configuration</h5>
+    <a href="{% url 'admin:prep_reports_prepclass_add' %}" class="btn btn-sm btn-success">
+      + Add Prep Class
+    </a>
+  </div>
+
+
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>Standard / Class</th>
+            <th>Report Cards</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pc in prep_classes %}
+          <tr>
+            <td class="fw-semibold">{{ pc.standard }}</td>
+            <td>{{ pc.card_count }}</td>
+            <td>
+              {% if pc.is_active %}
+              <span class="badge bg-success">Active</span>
+              {% else %}
+              <span class="badge bg-secondary">Inactive</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{% url 'admin:prep_reports_prepclass_change' pc.pk %}"
+                 class="btn btn-sm btn-outline-primary">Edit</a>
+              <a href="{% url 'prep_reports:dashboard' %}"
+                 class="btn btn-sm btn-outline-secondary">View Cards</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="text-center text-muted py-4">
+              No prep classes configured.
+              <a href="{% url 'admin:prep_reports_prepclass_add' %}">Add one</a>.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

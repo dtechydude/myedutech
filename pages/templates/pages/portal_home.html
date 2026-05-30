@@ -411,7 +411,7 @@
 							{% if user.is_superuser or user.is_staff %}
 							<li><a href="/admin/" target="_blank">Main Settings (ADMIN PANEL)</a></li>
 							<li><a href="{% url 'all_users' %}">All Registered Users</a></li>
-							<li><a href="{% url 'bulk-photo-upload' %}">UPLOAD/EDIT PHOTOS(All Users)</a></li>
+							{% comment %} <li><a href="{% url 'bulk-photo-upload' %}">UPLOAD/EDIT PHOTOS(All Users)</a></li> {% endcomment %}
 
 							<li><a href="{% url 'students:student_search_list' %}">Search Students</a></li>
 							<li><a href="{% url 'events:event_new' %}">Add New Event</a></li>							
@@ -439,13 +439,13 @@
 						<ul aria-expanded="false">
 							{% if user.is_superuser or user.is_staff %}
 							<li><a href="{% url 'enroll_student' %}">Enroll Student</a></li>
-							<li><a href="{% url 'students:bulk-upload' %}">BULK UPLOAD (Enroll Student)</a></li>
+							{% comment %} <li><a href="{% url 'students:bulk-upload' %}">BULK UPLOAD (Enroll Student)</a></li> {% endcomment %}
 
 							<li><a href="{% url 'students:student-list' %}">All CURRENT Students</a></li>
 							<li><a href="{% url 'students:boarder-list' %}">All Boarders</a></li>
 							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>	
 							<li><a href="{% url 'students:student-in-class' %}">Class Distribution</a></li>
-							<li><a href="{% url 'students:bulk_student_id_cards' %}">Print Bulk Students ID</a></li>
+							{% comment %} <li><a href="{% url 'students:bulk_student_id_cards' %}">Print Bulk Students ID</a></li> {% endcomment %}
 							{% comment %} <li><a href="{% url 'students:assign_classgroup_to_students' %}">Assign Students To ClassGroup</a></li> {% endcomment %}
 							<li><a href="{% url 'students:parent_list' %}">PARENTS LIST</a></li>	
 							<li><a href="{% url 'students:parent-dashboard' %}">PARENTS DASHBOARD</a></li>
@@ -507,7 +507,7 @@
 							<li><a href="{% url 'results:score_entry' %}">Enter End-Of-Term Scores</a></li>
 							<li><a href="{% url 'results:student_midterm_list' %}">View Mid-Term Results</a></li>
 							<li><a href="{% url 'results:report_card_list' %}">View Termly Results</a></li>
-							<li><a href="{% url 'results:bulk_report_card_selector' %}">PRINT BULK Termly Results</a></li>
+							{% comment %} <li><a href="{% url 'results:bulk_report_card_selector' %}">PRINT BULK Termly Results</a></li> {% endcomment %}
 
 							<li><a href="{% url 'results:session_report_card_list' %}">View Session Results</a></li>
 						
@@ -701,6 +701,20 @@
 								</ul>
 							</li>
 							{% endif %}
+							{% if user.is_superuser or user.is_staff %}
+						<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
+							<i class="flaticon-013-checkmark"></i>
+								<span class="nav-text">BULK ACTIONS</span>
+							</a>
+							<ul aria-expanded="false">
+							<li><a href="{% url 'students:bulk-upload' %}">BULK UPLOAD (Enroll Student)</a></li>
+							<li><a href="{% url 'results:bulk_report_card_selector' %}">PRINT BULK Termly Results</a></li>
+							<li><a href="{% url 'bulk-photo-upload' %}">UPLOAD/EDIT PROFILE PHOTOS</a></li>
+							<li><a href="{% url 'students:bulk_student_id_cards' %}">Print Bulk Students ID</a></li>
+
+							</ul>
+					</li>
+					{% endif %}				
 					
 						<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 							<i class="flaticon-013-checkmark"></i>

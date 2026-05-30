@@ -1,0 +1,96 @@
+{% extends "prep_reports/base.html" %}
+
+{% block title %}Prep Report Cards — Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 py-3">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h4 class="fw-bold mb-0">📋 Prep Report Cards</h4>
+      <small class="text-muted">Checklist-based report cards for preparatory classes</small>
+    </div>
+    {% if request.user.is_staff or request.user.is_superuser %}
+    <a href="{% url 'prep_reports:admin_class_list' %}" class="btn btn-sm btn-outline-primary">
+      ⚙ Manage Prep Classes
+    </a>
+    {% endif %}
+  </div>
+
+
+
+  {# Current period banner #}
+  {% if current_period %}
+  <div class="alert alert-info d-flex align-items-center gap-2 py-2 mb-3">
+    <span>📅</span>
+    <span>Current Period: <strong>{{ current_period }}</strong></span>
+    <a href="{% url 'prep_reports:select_period' %}" class="ms-auto btn btn-sm btn-outline-info">
+      Change Period
+    </a>
+  </div>
+  {% else %}
+  <div class="alert alert-warning py-2 mb-3">
+    No current academic period set.
+    {% if request.user.is_staff %}
+    <a href="{% url 'admin:prep_reports_prepacademicperiod_changelist' %}">Set one in Admin</a>.
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {# Class cards #}
+  <div class="row g-3">
+    {% for stat in stats %}
+    <div class="col-sm-6 col-lg-4">
+      <div class="card h-100 shadow-sm hover-shadow">
+        <div class="card-body">
+          <h6 class="card-title fw-bold text-primary">
+            🏫 {{ stat.prep_class.standard }}
+          </h6>
+          <div class="d-flex gap-3 my-2">
+            <div class="text-center">
+              <div class="fs-4 fw-bold text-dark">{{ stat.total }}</div>
+              <small class="text-muted">Total</small>
+            </div>
+            <div class="text-center">
+              <div class="fs-4 fw-bold text-success">{{ stat.completed }}</div>
+              <small class="text-muted">Done</small>
+            </div>
+            <div class="text-center">
+              <div class="fs-4 fw-bold text-warning">{{ stat.pending }}</div>
+              <small class="text-muted">Pending</small>
+            </div>
+          </div>
+          {% if stat.total > 0 %}
+          <div class="progress mt-1" style="height:6px">
+            <div class="progress-bar bg-success"
+                 style="width:{% widthratio stat.completed stat.total 100 %}%"></div>
+          </div>
+          {% endif %}
+        </div>
+        <div class="card-footer bg-white border-top d-flex gap-2">
+          {% if current_period %}
+          <a href="{% url 'prep_reports:class_students' stat.prep_class.pk current_period.pk %}"
+             class="btn btn-sm btn-primary flex-fill">
+            View Students
+          </a>
+          {% endif %}
+          <a href="{% url 'prep_reports:select_period' %}" class="btn btn-sm btn-outline-secondary">
+            Other Period
+          </a>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="alert alert-secondary text-center py-4">
+        No prep classes assigned to you yet.<br>
+        {% if request.user.is_staff or request.user.is_superuser %}
+        <a href="{% url 'admin:prep_reports_prepclass_add' %}">Create a Prep Class</a> first.
+        {% else %}
+        Contact the administrator.
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

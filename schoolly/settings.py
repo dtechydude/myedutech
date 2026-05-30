@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'cbt.apps.CbtConfig',
     'tickets.apps.TicketsConfig',
     'events.apps.EventsConfig',
+    'prep_reports.apps.PrepReportsConfig',
 
 
     # Installed Apps

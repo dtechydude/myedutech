@@ -1,0 +1,48 @@
+{% extends "prep_reports/base.html" %}
+{% block title %}Select Class & Period{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:600px">
+  <a href="{% url 'prep_reports:dashboard' %}" class="btn btn-sm btn-outline-secondary mb-3">← Back</a>
+  <div class="card shadow-sm">
+    <div class="card-header bg-white fw-bold">Select Class & Academic Period</div>
+    <div class="card-body">
+      <form method="get" action="">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Prep Class</label>
+          <select name="prep_class" class="form-select" required>
+            <option value="">— Select Class —</option>
+            {% for pc in prep_classes %}
+            <option value="{{ pc.pk }}">{{ pc.standard }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Academic Period</label>
+          <select name="period" class="form-select" required>
+            <option value="">— Select Period —</option>
+            {% for p in periods %}
+            <option value="{{ p.pk }}" {% if p.is_current %}selected{% endif %}>
+              {{ p }}{% if p.is_current %} (Current){% endif %}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Go →</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+// Redirect to correct URL on form submit
+document.querySelector('form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const pc = this.querySelector('[name=prep_class]').value;
+  const p  = this.querySelector('[name=period]').value;
+  if (pc && p) {
+    window.location.href = `/prep-reports/class/${pc}/period/${p}/`;
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block content %}
+{% if original and original.pk %}
+  {% with entry_count=original.skill_entries.count %}
+  <div style="
+    margin: 0 0 20px;
+    padding: 13px 18px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    {% if entry_count %}
+      background: #f0fff4; border-left: 4px solid #276749;
+    {% else %}
+      background: #fff5f5; border-left: 4px solid #e53e3e;
+    {% endif %}
+  ">
+    <div>
+      {% if entry_count %}
+        <strong style="color:#276749">✔ {{ entry_count }} skill entr{{ entry_count|pluralize:"y,ies" }} loaded</strong>
+        <span style="color:#4a5568;font-size:13px;margin-left:8px">
+          — scroll down to the <em>Skill Entries</em> section to enter ratings.
+        </span>
+      {% else %}
+        <strong style="color:#e53e3e">⚠ No skill entries yet.</strong>
+        <span style="color:#4a5568;font-size:13px;margin-left:8px">
+          Click <strong>Populate Skill Entries</strong> to pull from PrepSubjectSkills.
+        </span>
+      {% endif %}
+    </div>
+    <a href="{% url 'admin:prep_reports_prepreportcard_populate_skills' original.pk %}"
+       style="
+         {% if entry_count %}background:#c8952a;{% else %}background:#e53e3e;{% endif %}
+         color:#fff; padding:7px 16px; border-radius:4px;
+         text-decoration:none; font-size:13px; font-weight:600; white-space:nowrap;
+       ">
+      {% if entry_count %}↺ Re-populate{% else %}⚡ Populate Skill Entries{% endif %}
+    </a>
+  </div>
+  {% endwith %}
+{% else %}
+  <div style="
+    margin: 0 0 18px; padding: 11px 16px; border-radius: 5px;
+    background: #ebf8ff; border-left: 4px solid #3182ce;
+    color: #2b6cb0; font-size: 13px;
+  ">
+    <strong>ℹ New card:</strong> Skill entries will be <strong>auto-populated</strong>
+    from the active PrepSubjectSkills for the selected Prep Class immediately after
+    you save.
+  </div>
+{% endif %}
+
+{{ block.super }}
+{% endblock %}

@@ -1,0 +1,851 @@
+{% extends "prep_reports/base.html" %}
+{% load static %}
+
+{% block title %}Report Card — {{ student.student_full_name|default:report_card.student_full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ═══════════════════════════════════════════════
+     KwikSchools — Prep Report Card Preview
+     Aesthetic: Refined academic / institutional
+     Palette: Deep navy, warm gold, ivory, slate
+  ═══════════════════════════════════════════════ */
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --navy:        #1a2744;
+    --navy-light:  #243460;
+    --gold:        #c8952a;
+    --gold-light:  #e8b84b;
+    --ivory:       #f9f6f0;
+    --ivory-dark:  #ede8de;
+    --slate:       #4a5568;
+    --slate-light: #718096;
+    --success:     #276749;
+    --danger:      #9b2c2c;
+    --card-shadow: 0 4px 32px rgba(26,39,68,0.13);
+    --border:      1px solid rgba(26,39,68,0.12);
+  }
+
+  body {
+    background: var(--ivory);
+    font-family: 'Source Serif 4', Georgia, serif;
+    color: var(--navy);
+  }
+
+  /* ── Page wrapper ── */
+  .rc-page {
+    max-width: 960px;
+    margin: 2rem auto 4rem;
+    padding: 0 1rem;
+  }
+
+  /* ── Action bar (print / pdf / back) ── */
+  .rc-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: .75rem;
+  }
+  .rc-actions .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-family: 'DM Mono', monospace;
+    font-size: .78rem;
+    letter-spacing: .06em;
+    color: var(--slate);
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+  .rc-actions .back-link:hover { color: var(--navy); }
+  .rc-actions .btn-group { display: flex; gap: .5rem; }
+  .rc-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .45rem 1rem;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: .78rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    transition: filter .15s;
+  }
+  .rc-btn:hover { filter: brightness(1.08); }
+  .rc-btn-primary { background: var(--navy); color: #fff; }
+  .rc-btn-gold    { background: var(--gold); color: #fff; }
+  .rc-btn-outline {
+    background: transparent;
+    border: 1.5px solid var(--navy);
+    color: var(--navy);
+  }
+
+  /* ── Card shell ── */
+  .rc-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+  }
+
+  /* ── Header band ── */
+  .rc-header {
+    background: var(--navy);
+    color: #fff;
+    padding: 2rem 2.5rem 1.6rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .rc-header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: rgba(200,149,42,.15);
+    pointer-events: none;
+  }
+  .rc-header::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 30%;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: rgba(200,149,42,.09);
+    pointer-events: none;
+  }
+  .rc-school-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.55rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    margin: 0 0 .2rem;
+  }
+  .rc-school-tagline {
+    font-family: 'DM Mono', monospace;
+    font-size: .72rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    margin: 0 0 1.2rem;
+  }
+  .rc-header-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.2rem;
+  }
+  @media (max-width: 640px) {
+    .rc-header-grid { grid-template-columns: 1fr 1fr; }
+  }
+  .rc-info-item {}
+  .rc-info-label {
+    font-family: 'DM Mono', monospace;
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    margin-bottom: .18rem;
+  }
+  .rc-info-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.3;
+  }
+
+  /* ── Status badge ── */
+  .rc-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .22rem .7rem;
+    border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: .72rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    font-weight: 500;
+    position: absolute;
+    top: 1.4rem; right: 1.8rem;
+  }
+  .status-draft      { background: rgba(255,255,255,.12); color: #cbd5e0; }
+  .status-submitted  { background: rgba(200,149,42,.25); color: var(--gold-light); }
+  .status-approved   { background: rgba(39,103,73,.3); color: #9ae6b4; }
+  .status-published  { background: rgba(39,103,73,.5); color: #c6f6d5; }
+
+  /* ── Body ── */
+  .rc-body { padding: 2rem 2.5rem; }
+
+  /* ── Section heading ── */
+  .rc-section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--navy);
+    margin: 0 0 .9rem;
+    padding-bottom: .45rem;
+    border-bottom: 2px solid var(--gold);
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  .rc-section-title svg { color: var(--gold); flex-shrink: 0; }
+
+  /* ── Attendance strip ── */
+  .rc-attendance {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .8rem;
+    margin-bottom: 1.8rem;
+  }
+  @media (max-width: 560px) { .rc-attendance { grid-template-columns: 1fr 1fr; } }
+  .rc-att-box {
+    background: var(--ivory);
+    border: var(--border);
+    border-radius: 6px;
+    padding: .9rem 1rem;
+    text-align: center;
+  }
+  .rc-att-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--navy);
+  }
+  .rc-att-num.absent { color: var(--danger); }
+  .rc-att-label {
+    font-family: 'DM Mono', monospace;
+    font-size: .68rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--slate-light);
+    margin-top: .3rem;
+  }
+
+  /* ── Skills table ── */
+  .rc-subject-block { margin-bottom: 1.6rem; }
+  .rc-subject-name {
+    font-family: 'Playfair Display', serif;
+    font-size: .92rem;
+    font-weight: 600;
+    color: var(--navy-light);
+    background: var(--ivory-dark);
+    padding: .4rem .85rem;
+    border-left: 3px solid var(--gold);
+    border-radius: 0 4px 4px 0;
+    margin-bottom: .5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .rc-subject-comment {
+    font-size: .82rem;
+    font-style: italic;
+    color: var(--slate);
+    font-family: 'Source Serif 4', serif;
+  }
+
+  .rc-skills-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .84rem;
+  }
+  .rc-skills-table thead th {
+    font-family: 'DM Mono', monospace;
+    font-size: .68rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--slate);
+    padding: .4rem .6rem;
+    border-bottom: 1.5px solid var(--ivory-dark);
+    text-align: left;
+    background: #fff;
+    white-space: nowrap;
+  }
+  .rc-skills-table thead th.col-rating {
+    text-align: center;
+    min-width: 54px;
+    max-width: 72px;
+  }
+  .rc-skills-table tbody tr:nth-child(even) td { background: var(--ivory); }
+  .rc-skills-table tbody td {
+    padding: .42rem .6rem;
+    border-bottom: 1px solid var(--ivory-dark);
+    vertical-align: middle;
+    color: var(--navy);
+  }
+  .rc-skills-table tbody td.col-rating {
+    text-align: center;
+  }
+
+  /* Column tick indicator */
+  .rc-tick {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--navy);
+    color: #fff;
+    font-family: 'DM Mono', monospace;
+    font-size: .72rem;
+    font-weight: 500;
+  }
+  .rc-tick-empty {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1.5px dashed var(--ivory-dark);
+    color: var(--ivory-dark);
+    font-size: .8rem;
+  }
+
+  /* ── Domain ratings ── */
+  .rc-domain-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.8rem;
+  }
+  @media (max-width: 600px) { .rc-domain-grid { grid-template-columns: 1fr; } }
+
+  .rc-domain-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .84rem;
+  }
+  .rc-domain-table thead th {
+    font-family: 'DM Mono', monospace;
+    font-size: .67rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--slate);
+    padding: .38rem .65rem;
+    border-bottom: 1.5px solid var(--ivory-dark);
+    text-align: left;
+    background: #fff;
+  }
+  .rc-domain-table thead th:last-child { text-align: center; }
+  .rc-domain-table tbody tr:nth-child(even) td { background: var(--ivory); }
+  .rc-domain-table tbody td {
+    padding: .4rem .65rem;
+    border-bottom: 1px solid var(--ivory-dark);
+    color: var(--navy);
+    vertical-align: middle;
+  }
+  .rc-domain-table tbody td:last-child {
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: .78rem;
+    font-weight: 500;
+    color: var(--navy);
+  }
+  .rating-val {
+    display: inline-block;
+    min-width: 2rem;
+    padding: .18rem .4rem;
+    background: var(--ivory-dark);
+    border-radius: 3px;
+    text-align: center;
+  }
+
+  /* ── Comments ── */
+  .rc-comments-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+    margin-bottom: 1.8rem;
+  }
+  @media (max-width: 600px) { .rc-comments-grid { grid-template-columns: 1fr; } }
+  .rc-comment-box {
+    background: var(--ivory);
+    border: var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.1rem;
+  }
+  .rc-comment-who {
+    font-family: 'DM Mono', monospace;
+    font-size: .68rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: .4rem;
+  }
+  .rc-comment-text {
+    font-size: .88rem;
+    line-height: 1.55;
+    color: var(--slate);
+    font-style: italic;
+    min-height: 2rem;
+  }
+  .rc-comment-empty {
+    color: var(--ivory-dark);
+    font-style: normal;
+    font-family: 'DM Mono', monospace;
+    font-size: .72rem;
+    letter-spacing: .05em;
+  }
+
+  /* ── Promotion ── */
+  .rc-promotion {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    background: var(--ivory);
+    border: var(--border);
+    border-left: 3px solid var(--success);
+    border-radius: 4px;
+    padding: .6rem 1rem;
+    margin-bottom: 1.8rem;
+    font-size: .86rem;
+  }
+  .rc-promotion .promo-label {
+    font-family: 'DM Mono', monospace;
+    font-size: .68rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--success);
+  }
+  .rc-promotion .promo-val {
+    font-weight: 600;
+    color: var(--navy);
+  }
+
+  /* ── Footer strip ── */
+  .rc-footer {
+    background: var(--ivory-dark);
+    border-top: var(--border);
+    padding: .9rem 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+  .rc-footer-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: .7rem;
+    letter-spacing: .05em;
+    color: var(--slate-light);
+  }
+
+  /* ── Divider ── */
+  .rc-divider {
+    height: 1px;
+    background: var(--ivory-dark);
+    margin: 1.6rem 0;
+  }
+
+  /* ── No-data placeholder ── */
+  .rc-empty {
+    font-family: 'DM Mono', monospace;
+    font-size: .78rem;
+    color: var(--slate-light);
+    letter-spacing: .05em;
+    padding: .6rem 0;
+  }
+
+  /* ── Admin workflow actions ── */
+  .rc-workflow {
+    display: flex;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.8rem;
+    padding: 1rem 1.2rem;
+    background: var(--ivory);
+    border: var(--border);
+    border-radius: 6px;
+    align-items: center;
+  }
+  .rc-workflow-label {
+    font-family: 'DM Mono', monospace;
+    font-size: .7rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--slate-light);
+    flex: 1;
+    min-width: 120px;
+  }
+
+  /* ── Print styles ── */
+  @media print {
+    .rc-actions, .rc-workflow { display: none !important; }
+    .rc-page { margin: 0; padding: 0; max-width: 100%; }
+    .rc-card  { box-shadow: none; border-radius: 0; }
+    body      { background: #fff; }
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="rc-page">
+
+  {# ─── Action bar ─── #}
+  <div class="rc-actions">
+    <a href="javascript:history.back()" class="back-link">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      Back
+    </a>
+
+    <div class="btn-group">
+      {% if not readonly or user.is_staff or user.is_superuser %}
+        {% if report_card.status == 'draft' %}
+          <a href="{% url 'prep_reports:edit' report_card.pk %}" class="rc-btn rc-btn-outline">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            Edit
+          </a>
+        {% endif %}
+      {% endif %}
+
+      {% comment %} <a href="{% url 'prep_reports:pdf' report_card.pk %}" class="rc-btn rc-btn-gold" target="_blank"> {% endcomment %}
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        Export PDF
+      </a>
+
+      <button onclick="window.print()" class="rc-btn rc-btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 6 2 18 2 18 9"></polyline>
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+          <rect x="6" y="14" width="12" height="8"></rect>
+        </svg>
+        Print
+      </button>
+    </div>
+  </div>
+
+  {# ─── Main card ─── #}
+  <div class="rc-card">
+
+    {# ── Header ── #}
+    <div class="rc-header">
+      <span class="rc-status-badge status-{{ report_card.status }}">
+        {% if report_card.status == 'published' %}
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        {% endif %}
+        {{ report_card.get_status_display }}
+      </span>
+
+      <p class="rc-school-tagline">KwikSchools — Smarter Schools</p>
+      <h1 class="rc-school-name">
+        {% if prep_class.standard.school %}
+          {{ prep_class.standard.school.name }}
+        {% else %}
+          Progress Report Card
+        {% endif %}
+      </h1>
+
+      <div class="rc-header-grid">
+        <div class="rc-info-item">
+          <div class="rc-info-label">Pupil</div>
+          <div class="rc-info-value">{{ report_card.student_full_name }}</div>
+        </div>
+        <div class="rc-info-item">
+          <div class="rc-info-label">Class</div>
+          <div class="rc-info-value">{{ prep_class.standard }}</div>
+        </div>
+        <div class="rc-info-item">
+          <div class="rc-info-label">Session</div>
+          <div class="rc-info-value">{{ period.session }}</div>
+        </div>
+        <div class="rc-info-item">
+          <div class="rc-info-label">Term</div>
+          <div class="rc-info-value">{{ period.term }}</div>
+        </div>
+        {% if student.admission_number %}
+        <div class="rc-info-item">
+          <div class="rc-info-label">Admission No.</div>
+          <div class="rc-info-value">{{ student.admission_number }}</div>
+        </div>
+        {% endif %}
+        {% if student.date_of_birth %}
+        <div class="rc-info-item">
+          <div class="rc-info-label">Date of Birth</div>
+          <div class="rc-info-value">{{ student.date_of_birth|date:"d M Y" }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# ── Body ── #}
+    <div class="rc-body">
+
+      {# ── Workflow actions (admin/staff only) ── #}
+      {% if not readonly %}
+        <div class="rc-workflow">
+          <span class="rc-workflow-label">Workflow</span>
+
+          {% if report_card.status == 'draft' %}
+            <form method="post" action="{% url 'prep_reports:submit' report_card.pk %}" style="margin:0">
+              {% csrf_token %}
+              <button type="submit" class="rc-btn rc-btn-outline">Submit for Approval</button>
+            </form>
+          {% endif %}
+
+          {% if report_card.status == 'submitted' and request.user.is_staff or request.user.is_superuser %}
+            <form method="post" action="{% url 'prep_reports:approve' report_card.pk %}" style="margin:0">
+              {% csrf_token %}
+              <button type="submit" class="rc-btn" style="background:#276749;color:#fff">Approve</button>
+            </form>
+          {% endif %}
+
+          {% if report_card.status == 'approved' and request.user.is_staff or request.user.is_superuser %}
+            <form method="post" action="{% url 'prep_reports:publish' report_card.pk %}" style="margin:0">
+              {% csrf_token %}
+              <button type="submit" class="rc-btn rc-btn-primary">Publish to Parents</button>
+            </form>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      {# ── Attendance ── #}
+      <h2 class="rc-section-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        Attendance
+      </h2>
+      <div class="rc-attendance">
+        <div class="rc-att-box">
+          <div class="rc-att-num">{{ report_card.days_school_opened }}</div>
+          <div class="rc-att-label">School Days</div>
+        </div>
+        <div class="rc-att-box">
+          <div class="rc-att-num">{{ report_card.days_present }}</div>
+          <div class="rc-att-label">Days Present</div>
+        </div>
+        <div class="rc-att-box">
+          <div class="rc-att-num absent">{{ report_card.days_absent }}</div>
+          <div class="rc-att-label">Days Absent</div>
+        </div>
+      </div>
+
+      <div class="rc-divider"></div>
+
+      {# ── Subject Skills ── #}
+      {% if subjects_data %}
+        <h2 class="rc-section-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+          </svg>
+          Subject Skills Assessment
+        </h2>
+
+        {% for subject_name, subject_info in subjects_data.items %}
+          <div class="rc-subject-block">
+            <div class="rc-subject-name">
+              {{ subject_name }}
+              {% if subject_info.comment %}
+                <span class="rc-subject-comment">&ldquo;{{ subject_info.comment }}&rdquo;</span>
+              {% endif %}
+            </div>
+
+            <table class="rc-skills-table">
+              <thead>
+                <tr>
+                  <th>Skill / Learning Outcome</th>
+                  {% for col in columns %}
+                    <th class="col-rating">{{ col.label }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in subject_info.skills %}
+                  <tr>
+                    <td>{{ item.skill.name }}</td>
+                    {% for col in columns %}
+                      <td class="col-rating">
+                        {% if item.selected_column_id == col.pk %}
+                          <span class="rc-tick" title="{{ col.label }}">✓</span>
+                        {% else %}
+                          <span class="rc-tick-empty">·</span>
+                        {% endif %}
+                      </td>
+                    {% endfor %}
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endfor %}
+
+        <div class="rc-divider"></div>
+      {% endif %}
+
+      {# ── Psychomotor & Affective Domains ── #}
+      {% if psychomotor_ratings or affective_ratings %}
+        <h2 class="rc-section-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"></path>
+          </svg>
+          Developmental Domains
+        </h2>
+
+        <div class="rc-domain-grid">
+          {% if psychomotor_ratings %}
+            <div>
+              <h3 style="font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.09em;
+                          text-transform:uppercase;color:var(--gold);margin:0 0 .6rem;">
+                Psychomotor
+              </h3>
+              <table class="rc-domain-table">
+                <thead>
+                  <tr>
+                    <th>Trait</th>
+                    <th>Rating</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for rating in psychomotor_ratings %}
+                    <tr>
+                      <td>{{ rating.trait_name }}</td>
+                      <td>
+                        {% if rating.rating_text %}
+                          <span class="rating-val">{{ rating.rating_text }}</span>
+                        {% else %}
+                          <span style="color:var(--ivory-dark);font-family:'DM Mono',monospace;font-size:.7rem">—</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% endif %}
+
+          {% if affective_ratings %}
+            <div>
+              <h3 style="font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.09em;
+                          text-transform:uppercase;color:var(--gold);margin:0 0 .6rem;">
+                Affective
+              </h3>
+              <table class="rc-domain-table">
+                <thead>
+                  <tr>
+                    <th>Trait</th>
+                    <th>Rating</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for rating in affective_ratings %}
+                    <tr>
+                      <td>{{ rating.trait_name }}</td>
+                      <td>
+                        {% if rating.rating_text %}
+                          <span class="rating-val">{{ rating.rating_text }}</span>
+                        {% else %}
+                          <span style="color:var(--ivory-dark);font-family:'DM Mono',monospace;font-size:.7rem">—</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="rc-divider"></div>
+      {% endif %}
+
+      {# ── Teacher Comments ── #}
+      <h2 class="rc-section-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        Remarks
+      </h2>
+      <div class="rc-comments-grid">
+        <div class="rc-comment-box">
+          <div class="rc-comment-who">Class Teacher</div>
+          <div class="rc-comment-text">
+            {% if report_card.class_teacher_comment %}
+              {{ report_card.class_teacher_comment }}
+            {% else %}
+              <span class="rc-comment-empty">No comment recorded.</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="rc-comment-box">
+          <div class="rc-comment-who">Head Teacher / Principal</div>
+          <div class="rc-comment-text">
+            {% if report_card.head_teacher_comment %}
+              {{ report_card.head_teacher_comment }}
+            {% else %}
+              <span class="rc-comment-empty">No comment recorded.</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      {# ── Promotion ── #}
+      {% if report_card.promoted_to %}
+        <div class="rc-promotion">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+               fill="none" stroke="#276749" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+            <polyline points="17 6 23 6 23 12"></polyline>
+          </svg>
+          <span class="promo-label">Promoted to&nbsp;&nbsp;</span>
+          <span class="promo-val">{{ report_card.promoted_to }}</span>
+        </div>
+      {% endif %}
+
+    </div>{# end rc-body #}
+
+    {# ── Footer ── #}
+    <div class="rc-footer">
+      <span class="rc-footer-meta">
+        Generated: {% now "j N Y, H:i" %}
+      </span>
+      <span class="rc-footer-meta">
+        {% if report_card.approved_by %}
+          Approved by {{ report_card.approved_by.get_full_name|default:report_card.approved_by.username }}
+        {% elif report_card.created_by %}
+          Prepared by {{ report_card.created_by.get_full_name|default:report_card.created_by.username }}
+        {% endif %}
+      </span>
+      <span class="rc-footer-meta" style="font-weight:500;color:var(--navy)">
+        KwikSchools™
+      </span>
+    </div>
+
+  </div>{# end rc-card #}
+</div>{# end rc-page #}
+{% endblock %}
