@@ -343,7 +343,7 @@ class PrepReportCard(models.Model):
     @property
     def student_full_name(self):
         u = self.student.user
-        return f"{u.last_name} {u.first_name}".strip().upper()
+        return f"{u.last_name} {u.first_name} {u.student.middle_name}".strip().upper()
 
 
 # ---------------------------------------------------------------------------

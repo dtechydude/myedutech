@@ -55,4 +55,12 @@
 {% endif %}
 
 {{ block.super }}
+
+
+<script>
+window.prepDomainTraitMap =
+    {{ prep_trait_map|default:"{}"|safe }};
+</script>
+
 {% endblock %}
+

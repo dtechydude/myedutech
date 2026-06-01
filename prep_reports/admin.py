@@ -215,7 +215,7 @@ WHAT THIS FILE DOES
    • Select multiple cards in list view → re-run _populate_card()
    • Safe: bulk_create uses ignore_conflicts=True in _populate_card()
 """
-
+from django import forms
 from django.contrib import admin
 from django.contrib import messages
 from django.utils.html import format_html
@@ -248,11 +248,988 @@ class PrepSubjectSkillInline(admin.TabularInline):
     fields = ['description', 'prep_class', 'order', 'is_active']
 
 
-class PrepDomainRatingInline(admin.TabularInline):
+# class PrepDomainRatingInline(admin.TabularInline):
+#     model = PrepDomainRating
+#     extra = 0
+#     fields = ['domain', 'trait_name', 'rating_text', 'order']
+#     ordering = ['domain', 'order']
+
+# ═══════════════════════════════════════════════════════════════════
+# NEW — Scoped Domain Rating Form (surgical correction only)
+# ═══════════════════════════════════════════════════════════════════
+
+# class PrepDomainRatingForm(forms.ModelForm):
+#     class Meta:
+#         model = PrepDomainRating
+#         fields = '__all__'
+
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+
+#         card = None
+
+#         if self.instance and self.instance.pk:
+#             card = self.instance.report_card
+
+#         elif getattr(self, 'parent_instance', None):
+#             card = self.parent_instance
+
+#         if card and card.prep_class:
+#             qs = PrepDomainTraitTemplate.objects.filter(
+#                 prep_class=card.prep_class
+#             ).order_by('domain', 'order')
+
+#             choices = [('', '---------')]
+#             seen = set()
+
+#             for t in qs:
+#                 key = (t.domain, t.trait_name)
+#                 if key not in seen:
+#                     seen.add(key)
+#                     choices.append((t.trait_name, t.trait_name))
+
+#             self.fields['trait_name'] = forms.ChoiceField(
+#                 choices=choices,
+#                 required=False,
+#                 label='Trait',
+#             )
+
+#         # Only rating should be required
+#         self.fields['rating_text'].required = False
+
+
+# class PrepDomainRatingInline(admin.TabularInline):
+#     model = PrepDomainRating
+#     form = PrepDomainRatingForm
+#     extra = 0
+#     fields = ['domain', 'trait_name', 'rating_text', 'order']
+#     ordering = ['domain', 'order']
+
+#     def get_formset(self, request, obj=None, **kwargs):
+#         formset = super().get_formset(request, obj, **kwargs)
+#         formset.parent_instance = obj
+
+#         original_init = formset.form.__init__
+
+#         def form_init(form_self, *args, **kw):
+#             original_init(form_self, *args, **kw)
+#             form_self.parent_instance = obj
+
+#         formset.form.__init__ = form_init
+#         return formset
+
+
+# # Remaining admin.py logic unchanged from user's working version.
+# # Apply this block by replacing ONLY the old PrepDomainRatingInline
+# # and adding PrepDomainRatingForm above it.
+
+
+# """
+# PrepDomainRatingInline — corrected for BOTH existing and NEW inline rows
+# =======================================================================
+
+# FIX APPLIED
+# ───────────
+# The previous patch only populated trait dropdowns for existing rows
+# because it relied on instance/parent form binding.
+
+# This correction makes BOTH dropdowns work on:
+
+# ✓ Existing PrepDomainRating rows
+# ✓ NEW "Add another Prep Domain Rating" rows
+# ✓ Psychomotor domain
+# ✓ Affective/Cognitive domain
+
+# WITHOUT changing your existing logic.
+
+# HOW IT WORKS
+# ────────────
+# 1. Domain remains dropdown (model choice/choices field)
+# 2. Trait Name becomes dependent dropdown
+# 3. Trait dropdown is scoped to:
+#       current PrepReportCard
+#       → current prep_class
+#       → PrepDomainTraitTemplate
+#       → selected domain
+# 4. JS hook updates trait choices instantly when domain changes
+# 5. rating_text remains the only real data entry
+
+# No logic changes to:
+# - _populate_card()
+# - report workflow
+# - approvals
+# - save_model
+# - skill entries
+# - URLs
+# - queryset logic
+# """
+
+# from django import forms
+# from django.contrib import admin
+# from .models import (
+#     PrepDomainRating,
+#     PrepDomainTraitTemplate,
+# )
+
+
+# # ═══════════════════════════════════════════════════════════════════
+# # Dynamic form
+# # ═══════════════════════════════════════════════════════════════════
+
+# class PrepDomainRatingForm(forms.ModelForm):
+
+#     class Meta:
+#         model = PrepDomainRating
+#         fields = '__all__'
+
+#     def __init__(self, *args, **kwargs):
+#         card = kwargs.pop('card', None)
+#         super().__init__(*args, **kwargs)
+
+#         self.fields['trait_name'].required = False
+#         self.fields['rating_text'].required = False
+
+#         trait_choices = [('', '---------')]
+
+#         selected_domain = None
+
+#         if self.instance and self.instance.pk:
+#             selected_domain = self.instance.domain
+#             if not card:
+#                 card = self.instance.report_card
+
+#         if self.data.get('domain'):
+#             selected_domain = self.data.get('domain')
+
+#         if card and card.prep_class and selected_domain:
+#             qs = (
+#                 PrepDomainTraitTemplate.objects
+#                 .filter(
+#                     prep_class=card.prep_class,
+#                     domain=selected_domain,
+#                 )
+#                 .order_by('order')
+#             )
+
+#             trait_choices += [
+#                 (t.trait_name, t.trait_name)
+#                 for t in qs
+#             ]
+
+#         self.fields['trait_name'] = forms.ChoiceField(
+#             label='Trait',
+#             choices=trait_choices,
+#             required=False,
+#         )
+
+
+# # ═══════════════════════════════════════════════════════════════════
+# # Inline — corrected for Add Another rows
+# # ═══════════════════════════════════════════════════════════════════
+
+# class PrepDomainRatingInline(admin.TabularInline):
+#     model = PrepDomainRating
+#     form = PrepDomainRatingForm
+#     extra = 1
+#     fields = ['domain', 'trait_name', 'rating_text', 'order']
+#     ordering = ['domain', 'order']
+
+#     def get_formset(self, request, obj=None, **kwargs):
+#         FormSet = super().get_formset(request, obj, **kwargs)
+
+#         class ScopedFormSet(FormSet):
+#             def _construct_form(self, i, **kw):
+#                 kw['card'] = obj
+#                 return super()._construct_form(i, **kw)
+
+#         return ScopedFormSet
+
+#     class Media:
+#         js = (
+#             'admin/js/jquery.init.js',
+#             'prep_reports/js/domain_trait_filter.js',
+#         )
+
+
+# """
+# Create this JS file:
+
+# static/prep_reports/js/domain_trait_filter.js
+
+# This enables NEW "Add another" rows to update Trait dropdown
+# when Domain changes.
+# """
+
+# from django import forms
+# from django.contrib import admin
+
+# from .models import (
+#     PrepDomainRating,
+#     PrepDomainTraitTemplate,
+# )
+
+
+# # ═══════════════════════════════════════════════════════════════════
+# # PrepDomainRatingForm
+# # ═══════════════════════════════════════════════════════════════════
+
+# class PrepDomainRatingForm(forms.ModelForm):
+
+#     class Meta:
+#         model = PrepDomainRating
+#         fields = '__all__'
+
+#     def __init__(self, *args, **kwargs):
+#         card = kwargs.pop('card', None)
+#         super().__init__(*args, **kwargs)
+
+#         # Rating is the only required field
+#         self.fields['rating_text'].required = True
+#         self.fields['trait_name'].required = False
+
+#         selected_domain = None
+
+#         # Existing saved row
+#         if self.instance and self.instance.pk:
+#             selected_domain = self.instance.domain
+#             if not card:
+#                 card = self.instance.report_card
+
+#         # Posted form row
+#         posted_domain = self.data.get(
+#             self.add_prefix('domain')
+#         )
+#         if posted_domain:
+#             selected_domain = posted_domain
+
+#         trait_choices = [
+#             ('', '---------')
+#         ]
+
+#         if (
+#             card
+#             and card.prep_class
+#             and selected_domain
+#         ):
+#             qs = (
+#                 PrepDomainTraitTemplate.objects
+#                 .filter(
+#                     prep_class=card.prep_class,
+#                     domain=selected_domain,
+#                 )
+#                 .order_by('order')
+#             )
+
+#             trait_choices += [
+#                 (t.trait_name, t.trait_name)
+#                 for t in qs
+#             ]
+
+#         self.fields['trait_name'] = forms.ChoiceField(
+#             label='Trait',
+#             choices=trait_choices,
+#             required=False,
+#         )
+
+
+# # ═══════════════════════════════════════════════════════════════════
+# # PrepDomainRatingInline
+# # ═══════════════════════════════════════════════════════════════════
+
+# class PrepDomainRatingInline(admin.TabularInline):
+#     model = PrepDomainRating
+#     form = PrepDomainRatingForm
+#     extra = 1
+#     fields = [
+#         'domain',
+#         'trait_name',
+#         'rating_text',
+#         'order',
+#     ]
+#     ordering = [
+#         'domain',
+#         'order',
+#     ]
+
+#     def get_formset(self, request, obj=None, **kwargs):
+#         FormSet = super().get_formset(
+#             request,
+#             obj,
+#             **kwargs
+#         )
+
+#         class ScopedFormSet(FormSet):
+#             def _construct_form(
+#                 self,
+#                 i,
+#                 **kw
+#             ):
+#                 kw['card'] = obj
+#                 return super()._construct_form(
+#                     i,
+#                     **kw
+#                 )
+
+#         return ScopedFormSet
+
+#     # Correct Django Media declaration
+#     class Media:
+#         js = (
+#             'admin/js/jquery.init.js',
+#             'static/prep_reports/js/domain_trait_filter.js',
+#         )
+
+# from django import forms
+# from django.contrib import admin
+# from django.core.exceptions import ValidationError
+# from django.forms.models import BaseInlineFormSet
+# from django.utils.safestring import mark_safe
+# import json
+
+# from .models import (
+#     PrepDomainRating,
+#     PrepDomainTraitTemplate,
+# )
+
+
+# # ═══════════════════════════════════════════════════════════════════
+# # Inline Form
+# # ═══════════════════════════════════════════════════════════════════
+
+# class PrepDomainRatingForm(forms.ModelForm):
+
+#     trait_name = forms.ChoiceField(
+#         label='Trait',
+#         required=False,
+#         choices=[('', '---------')],
+#     )
+
+#     class Meta:
+#         model = PrepDomainRating
+#         fields = '__all__'
+
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+
+#         # Only rating required
+#         self.fields['rating_text'].required = True
+#         self.fields['trait_name'].required = False
+
+
+# # ═══════════════════════════════════════════════════════════════════
+# # Prevent duplicates
+# # ═══════════════════════════════════════════════════════════════════
+
+# class PrepDomainRatingInlineFormSet(BaseInlineFormSet):
+
+#     def clean(self):
+#         super().clean()
+
+#         seen = set()
+
+#         for form in self.forms:
+
+#             if (
+#                 not hasattr(form, 'cleaned_data')
+#                 or form.cleaned_data.get('DELETE')
+#             ):
+#                 continue
+
+#             domain = form.cleaned_data.get('domain')
+#             trait = form.cleaned_data.get('trait_name')
+
+#             if not domain or not trait:
+#                 continue
+
+#             key = (domain, trait)
+
+#             if key in seen:
+#                 raise ValidationError(
+#                     f'Duplicate domain/trait entry: '
+#                     f'{domain} → {trait}'
+#                 )
+
+#             seen.add(key)
+
+
+# # ═══════════════════════════════════════════════════════════════════
+# # Inline
+# # ═══════════════════════════════════════════════════════════════════
+
+# class PrepDomainRatingInline(admin.TabularInline):
+#     model = PrepDomainRating
+#     form = PrepDomainRatingForm
+#     formset = PrepDomainRatingInlineFormSet
+#     extra = 1
+
+#     fields = [
+#         'domain',
+#         'trait_name',
+#         'rating_text',
+#         'order',
+#     ]
+
+#     ordering = [
+#         'domain',
+#         'order',
+#     ]
+
+#     class Media:
+#         js = (
+#             'admin/js/jquery.init.js',
+#             'prep_reports/js/domain_trait_filter.js',
+#         )
+
+#     def get_formset(self, request, obj=None, **kwargs):
+
+#         FormSet = super().get_formset(
+#             request,
+#             obj,
+#             **kwargs
+#         )
+
+#         if obj and obj.prep_class:
+
+#             qs = (
+#                 PrepDomainTraitTemplate.objects
+#                 .filter(
+#                     prep_class=obj.prep_class
+#                 )
+#                 .order_by(
+#                     'domain',
+#                     'order'
+#                 )
+#             )
+
+#             trait_map = {}
+
+#             for t in qs:
+
+#                 trait_map.setdefault(
+#                     str(t.domain),
+#                     []
+#                 )
+
+#                 trait_map[
+#                     str(t.domain)
+#                 ].append({
+#                     'value': t.trait_name,
+#                     'label': t.trait_name,
+#                 })
+
+#             request._prep_trait_map = mark_safe(
+#                 json.dumps(trait_map)
+#             )
+
+#         else:
+#             request._prep_trait_map = '{}'
+
+#         return FormSet
+
+#======================================================
+
+from django import forms
+from django.contrib import admin
+from django.core.exceptions import ValidationError
+from django.forms.models import BaseInlineFormSet
+from .models import (
+    PrepDomainRating,
+    PrepDomainTraitTemplate,
+)
+
+
+# ==========================================================
+# Form
+# ==========================================================
+
+# class PrepDomainRatingForm(forms.ModelForm):
+
+#     class Meta:
+#         model = PrepDomainRating
+#         fields = '__all__'
+
+#     def __init__(self, *args, **kwargs):
+#         card = kwargs.pop('card', None)
+#         super().__init__(*args, **kwargs)
+
+#         self.fields['rating_text'].required = True
+#         self.fields['trait_name'].required = False
+
+#         trait_choices = [
+#             ('', '---------')
+#         ]
+
+#         selected_domain = None
+
+#         # Existing row
+#         if self.instance and self.instance.pk:
+#             selected_domain = self.instance.domain
+#             if not card:
+#                 card = self.instance.report_card
+
+#         # POST / changed row
+#         posted_domain = self.data.get(
+#             self.add_prefix('domain')
+#         )
+
+#         if posted_domain:
+#             selected_domain = posted_domain
+
+#         # IMPORTANT:
+#         # Always populate choices server-side
+#         if (
+#             card
+#             and card.prep_class
+#             and selected_domain
+#         ):
+
+#             qs = (
+#                 PrepDomainTraitTemplate.objects
+#                 .filter(
+#                     prep_class=card.prep_class,
+#                     domain=selected_domain,
+#                 )
+#                 .order_by('order')
+#             )
+
+#             trait_choices += [
+#                 (
+#                     t.trait_name,
+#                     t.trait_name
+#                 )
+#                 for t in qs
+#             ]
+
+#         # preserve existing saved value
+#         current_trait = getattr(
+#             self.instance,
+#             'trait_name',
+#             None
+#         )
+
+#         if (
+#             current_trait
+#             and current_trait
+#             not in [
+#                 v
+#                 for v, _ in trait_choices
+#             ]
+#         ):
+#             trait_choices.append(
+#                 (
+#                     current_trait,
+#                     current_trait
+#                 )
+#             )
+
+#         self.fields['trait_name'].widget = (
+#             forms.Select(
+#                 choices=trait_choices
+#             )
+#         )
+
+from django import forms
+from django.core.exceptions import ValidationError
+
+from .models import (
+    PrepDomainRating,
+    PrepDomainTraitTemplate,
+)
+
+
+class PrepDomainRatingForm(forms.ModelForm):
+
+    class Meta:
+        model = PrepDomainRating
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        card = kwargs.pop('card', None)
+        super().__init__(*args, **kwargs)
+
+        self.card = card
+
+        self.fields['rating_text'].required = True
+        self.fields['trait_name'].required = False
+
+        trait_choices = [
+            ('', '---------')
+        ]
+
+        selected_domain = None
+
+        # Existing object
+        if self.instance and self.instance.pk:
+            selected_domain = self.instance.domain
+
+            if not card:
+                card = self.instance.report_card
+
+        # POST row
+        posted_domain = self.data.get(
+            self.add_prefix('domain')
+        )
+
+        if posted_domain:
+            selected_domain = posted_domain
+
+        if (
+            card
+            and card.prep_class
+            and selected_domain
+        ):
+            qs = (
+                PrepDomainTraitTemplate.objects
+                .filter(
+                    prep_class=card.prep_class,
+                    domain=selected_domain,
+                )
+                .order_by('order')
+            )
+
+            trait_choices += [
+                (
+                    t.trait_name,
+                    t.trait_name
+                )
+                for t in qs
+            ]
+
+        current_trait = getattr(
+            self.instance,
+            'trait_name',
+            None
+        )
+
+        if (
+            current_trait
+            and current_trait not in
+            [v for v, _ in trait_choices]
+        ):
+            trait_choices.append(
+                (
+                    current_trait,
+                    current_trait
+                )
+            )
+
+        self.fields['trait_name'].widget = (
+            forms.Select(
+                choices=trait_choices
+            )
+        )
+
+    # IMPORTANT
+    # catches DB duplicates BEFORE save
+    def clean(self):
+
+        cleaned = super().clean()
+
+        domain = cleaned.get('domain')
+        trait = cleaned.get('trait_name')
+
+        if not (
+            self.card
+            and self.card.pk
+            and domain
+            and trait
+        ):
+            return cleaned
+
+        qs = (
+            PrepDomainRating.objects
+            .filter(
+                report_card=self.card,
+                domain=domain,
+                trait_name=trait,
+            )
+        )
+
+        if self.instance.pk:
+            qs = qs.exclude(
+                pk=self.instance.pk
+            )
+
+        if qs.exists():
+            raise ValidationError(
+                {
+                    'trait_name':
+                    (
+                        f'"{trait}" already exists '
+                        f'under {domain}.'
+                    )
+                }
+            )
+
+        return cleaned
+
+# ==========================================================
+# Duplicate prevention
+# ==========================================================
+
+# class PrepDomainRatingInlineFormSet(
+#     BaseInlineFormSet
+# ):
+
+#     def clean(self):
+#         super().clean()
+
+#         seen = set()
+
+#         for form in self.forms:
+
+#             if (
+#                 not hasattr(
+#                     form,
+#                     'cleaned_data'
+#                 )
+#                 or form.cleaned_data.get(
+#                     'DELETE'
+#                 )
+#             ):
+#                 continue
+
+#             domain = form.cleaned_data.get(
+#                 'domain'
+#             )
+
+#             trait = form.cleaned_data.get(
+#                 'trait_name'
+#             )
+
+#             if not domain or not trait:
+#                 continue
+
+#             key = (
+#                 str(domain),
+#                 trait.strip().lower()
+#             )
+
+#             if key in seen:
+#                 raise ValidationError(
+#                     f'Duplicate entry: '
+#                     f'{domain} → {trait}'
+#                 )
+
+#             seen.add(key)
+
+
+# from django.core.exceptions import ValidationError
+# from django.forms.models import BaseInlineFormSet
+
+
+# class PrepDomainRatingInlineFormSet(
+#     BaseInlineFormSet
+# ):
+
+#     def clean(self):
+#         super().clean()
+
+#         seen = set()
+
+#         report_card = self.instance
+
+#         # Existing DB rows excluding deleted ones
+#         existing = set()
+
+#         if report_card and report_card.pk:
+
+#             existing_qs = (
+#                 PrepDomainRating.objects
+#                 .filter(
+#                     report_card=report_card
+#                 )
+#             )
+
+#             for obj in existing_qs:
+#                 existing.add(
+#                     (
+#                         str(obj.domain),
+#                         obj.trait_name.strip().lower(),
+#                         obj.pk,
+#                     )
+#                 )
+
+#         for form in self.forms:
+
+#             if (
+#                 not hasattr(form, 'cleaned_data')
+#                 or not form.cleaned_data
+#             ):
+#                 continue
+
+#             if form.cleaned_data.get('DELETE'):
+#                 continue
+
+#             domain = form.cleaned_data.get(
+#                 'domain'
+#             )
+
+#             trait = form.cleaned_data.get(
+#                 'trait_name'
+#             )
+
+#             if not domain or not trait:
+#                 continue
+
+#             key = (
+#                 str(domain),
+#                 trait.strip().lower(),
+#             )
+
+#             obj_pk = getattr(
+#                 form.instance,
+#                 'pk',
+#                 None
+#             )
+
+#             # Prevent duplicate inside same submission
+#             if key in seen:
+#                 raise ValidationError(
+#                     f'Duplicate domain/trait entry: '
+#                     f'{domain} → {trait}'
+#                 )
+
+#             seen.add(key)
+
+#             # Prevent duplicate against DB
+#             for (
+#                 db_domain,
+#                 db_trait,
+#                 db_pk,
+#             ) in existing:
+
+#                 if db_pk == obj_pk:
+#                     continue
+
+#                 if (
+#                     db_domain == key[0]
+#                     and db_trait == key[1]
+#                 ):
+#                     raise ValidationError(
+#                         f'"{trait}" already exists under '
+#                         f'{domain} for this report card.'
+#                     )
+
+from django.forms.models import BaseInlineFormSet
+from django.core.exceptions import ValidationError
+
+
+class PrepDomainRatingInlineFormSet(
+    BaseInlineFormSet
+):
+
+    def clean(self):
+        super().clean()
+
+        seen = set()
+
+        for form in self.forms:
+
+            if (
+                not hasattr(
+                    form,
+                    'cleaned_data'
+                )
+                or not form.cleaned_data
+                or form.cleaned_data.get(
+                    'DELETE'
+                )
+            ):
+                continue
+
+            domain = form.cleaned_data.get(
+                'domain'
+            )
+
+            trait = form.cleaned_data.get(
+                'trait_name'
+            )
+
+            if not domain or not trait:
+                continue
+
+            key = (
+                str(domain),
+                trait.strip().lower(),
+            )
+
+            if key in seen:
+                raise ValidationError(
+                    (
+                        f'Duplicate entry in form: '
+                        f'{domain} → {trait}'
+                    )
+                )
+
+            seen.add(key)
+
+
+# ==========================================================
+# Inline
+# ==========================================================
+
+class PrepDomainRatingInline(
+    admin.TabularInline
+):
     model = PrepDomainRating
-    extra = 0
-    fields = ['domain', 'trait_name', 'rating_text', 'order']
-    ordering = ['domain', 'order']
+    form = PrepDomainRatingForm
+    formset = PrepDomainRatingInlineFormSet
+
+    extra = 1
+
+    fields = [
+        'domain',
+        'trait_name',
+        'rating_text',
+        'order',
+    ]
+
+    ordering = [
+        'domain',
+        'order',
+    ]
+
+    class Media:
+        js = (
+            'admin/js/jquery.init.js',
+            'prep_reports/js/domain_trait_filter.js',
+        )
+
+    def get_formset(
+        self,
+        request,
+        obj=None,
+        **kwargs
+    ):
+
+        BaseFormSet = super().get_formset(
+            request,
+            obj,
+            **kwargs
+        )
+
+        class FormSet(
+            BaseFormSet
+        ):
+            def _construct_form(
+                self,
+                i,
+                **kw
+            ):
+                kw['card'] = obj
+                return super()._construct_form(
+                    i,
+                    **kw
+                )
+
+        return FormSet
+
+
+
+
+#==========================================================
+
 
 
 class PrepDomainTraitTemplateInline(admin.TabularInline):
@@ -674,6 +1651,32 @@ class PrepReportCardAdmin(admin.ModelAdmin):
             .get_queryset(request)
             .select_related('student__user', 'prep_class__standard', 'period')
             .annotate(_skill_entry_count=Count('skill_entries'))
+        )
+    
+    # New Def
+    def changeform_view(
+        self,
+        request,
+        object_id=None,
+        form_url='',
+        extra_context=None
+    ):
+
+        extra_context = extra_context or {}
+
+        extra_context[
+            'prep_trait_map'
+        ] = getattr(
+            request,
+            '_prep_trait_map',
+            '{}'
+        )
+
+        return super().changeform_view(
+            request,
+            object_id,
+            form_url,
+            extra_context,
         )
 
 

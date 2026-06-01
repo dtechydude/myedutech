@@ -1,3 +1,5 @@
+
+
 {% extends "prep_reports/base.html" %}
 {% load static %}
 
@@ -257,13 +259,14 @@
         </div>
       </div>
 
-      {# Psychomotor / Affective Domain Ratings #}
-      {% if psychomotor_ratings or affective_ratings %}
+      {# ── Motor Ability Scores (results.MotorAbilityScore) ── #}
       <div class="card shadow-sm mb-3">
         <div class="card-header bg-white">
-          <h6 class="mb-0 fw-bold">🧠 Psychomotor & Affective Domains</h6>
+          <h6 class="mb-0 fw-bold">🧠 Motor Ability & Psychomotor Scores</h6>
           {% if not can_edit_domains %}
-          <small class="text-warning">⚠ Only the form teacher can edit these ratings.</small>
+          <small class="text-warning">⚠ Only the form teacher can edit these scores.</small>
+          {% else %}
+          <small class="text-muted">Scores 1–5 (1=Very Poor · 5=Excellent). Shared with the main results system.</small>
           {% endif %}
         </div>
         <div class="card-body p-2">
@@ -271,79 +274,41 @@
           <form method="post" action="{% url 'prep_reports:report_card_edit' report_card.pk %}">
             {% csrf_token %}
             <input type="hidden" name="action" value="save_domains">
-
-            {% if psychomotor_ratings %}
-            <div class="domain-section rounded p-2 mb-2">
-              <strong class="small d-block mb-2 text-uppercase text-primary">Psychomotor Domain</strong>
-              <div class="row g-1">
-                {% for r in psychomotor_ratings %}
-                <div class="col-6">
-                  <label class="form-label mb-0" style="font-size:.72rem">{{ r.trait_name }}</label>
-                  <input type="text"
-                         name="domain_{{ r.pk }}"
-                         value="{{ r.rating_text }}"
-                         class="form-control form-control-sm"
-                         placeholder="e.g. Excellent">
-                </div>
-                {% endfor %}
+            <div class="row g-1">
+              {% for field_name, label, value in motor_ability_fields %}
+              <div class="col-6 col-md-4">
+                <label class="form-label mb-0" style="font-size:.72rem">{{ label }}</label>
+                <input type="number"
+                       name="motor_{{ field_name }}"
+                       value="{{ value|default:'' }}"
+                       min="1" max="5"
+                       class="form-control form-control-sm"
+                       placeholder="1–5">
               </div>
+              {% endfor %}
             </div>
-            {% endif %}
-
-            {% if affective_ratings %}
-            <div class="domain-section rounded p-2 mb-2">
-              <strong class="small d-block mb-2 text-uppercase text-primary">Affective / Cognitive Domain</strong>
-              <div class="row g-1">
-                {% for r in affective_ratings %}
-                <div class="col-6">
-                  <label class="form-label mb-0" style="font-size:.72rem">{{ r.trait_name }}</label>
-                  <input type="text"
-                         name="domain_{{ r.pk }}"
-                         value="{{ r.rating_text }}"
-                         class="form-control form-control-sm"
-                         placeholder="e.g. 4">
-                </div>
-                {% endfor %}
-              </div>
-            </div>
-            {% endif %}
-
-            <button type="submit" class="btn btn-sm btn-primary save-btn text-white w-100">
-              💾 Save Domain Ratings
+            <button type="submit" class="btn btn-sm btn-primary save-btn text-white w-100 mt-2">
+              💾 Save Motor Ability Scores
             </button>
           </form>
           {% else %}
-          {# Read-only domain display #}
-          {% if psychomotor_ratings %}
-          <div class="domain-section rounded p-2 mb-2">
-            <strong class="small d-block mb-1 text-uppercase text-primary">Psychomotor</strong>
-            <div class="row g-1">
-              {% for r in psychomotor_ratings %}
-              <div class="col-6 small">
-                <span class="text-muted">{{ r.trait_name }}:</span>
-                <strong>{{ r.rating_text|default:"—" }}</strong>
-              </div>
-              {% endfor %}
+          {# Read-only display #}
+          <div class="row g-1">
+            {% for field_name, label, value in motor_ability_fields %}
+            <div class="col-6 col-md-4 small">
+              <span class="text-muted">{{ label }}:</span>
+              <strong>{{ value|default:"—" }}</strong>
             </div>
+            {% endfor %}
           </div>
-          {% endif %}
-          {% if affective_ratings %}
-          <div class="domain-section rounded p-2">
-            <strong class="small d-block mb-1 text-uppercase text-primary">Affective</strong>
-            <div class="row g-1">
-              {% for r in affective_ratings %}
-              <div class="col-6 small">
-                <span class="text-muted">{{ r.trait_name }}:</span>
-                <strong>{{ r.rating_text|default:"—" }}</strong>
-              </div>
-              {% endfor %}
-            </div>
-          </div>
+          {% if not motor_ability_score %}
+          <p class="text-muted mt-2 small mb-0">
+            No motor ability scores recorded yet for this term.
+          </p>
           {% endif %}
           {% endif %}
         </div>
       </div>
-      {% endif %}
 
       {# Workflow actions #}
       <div class="card shadow-sm">
@@ -428,3 +393,431 @@ function slugify(text) {
 }
 </script>
 {% endblock %}
+
+
+
+{% comment %}
+{% extends "prep_reports/base.html" %}
+{% load static %}
+
+{% block title %}Edit Report Card — {{ student.user.get_full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Prep Report Card Edit Page ── */
+  .report-header-card { background: linear-gradient(135deg, #1a237e 0%, #283593 100%); }
+  .subject-tab-btn.active { border-bottom: 3px solid #1a237e; color: #1a237e; font-weight: 600; }
+  .subject-tab-btn { border-bottom: 3px solid transparent; }
+  .skill-row:hover { background: #f0f4ff; }
+  .rating-col-header { background: #1a237e; color: #fff; font-size: .75rem; text-align: center; min-width: 70px; }
+  .tick-radio { display: none; }
+  .tick-label {
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 2px solid #c5cae9; cursor: pointer;
+    transition: all .2s;
+  }
+  .tick-radio:checked + .tick-label {
+    background: #1a237e; border-color: #1a237e; color: #fff;
+  }
+  .tick-label:hover { border-color: #1a237e; background: #e8eaf6; }
+  .status-badge-draft    { background:#ffc107; color:#000; }
+  .status-badge-submitted{ background:#17a2b8; color:#fff; }
+  .status-badge-approved { background:#28a745; color:#fff; }
+  .status-badge-published{ background:#007bff; color:#fff; }
+  .domain-section { background: #f8f9fa; border-left: 4px solid #1a237e; }
+  .save-btn { background: #1a237e; }
+  .save-btn:hover { background: #283593; }
+  @media (max-width: 768px) {
+    .rating-col-header { min-width: 50px; font-size: .65rem; }
+    .tick-label { width: 26px; height: 26px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-md-4 py-3">
+
+  {# ── Page header ── #}
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div>
+      <a href="{% url 'prep_reports:class_students' prep_class.pk period.pk %}"
+         class="btn btn-sm btn-outline-secondary">
+        ← Back to Class
+      </a>
+    </div>
+    <h5 class="mb-0 fw-bold">Prep Report Card</h5>
+    <span class="badge status-badge-{{ report_card.status }} px-3 py-2 text-uppercase fs-6">
+      {{ report_card.status }}
+    </span>
+  </div>
+
+
+
+  {% comment %} {# ── Student Info Card ── #} {% endcomment %}
+  {% comment%}
+  <div class="card report-header-card text-white mb-3 shadow-sm">
+    <div class="card-body py-3">
+      <div class="row g-2">
+        <div class="col-md-4">
+          <small class="opacity-75">Full Name</small>
+          <div class="fw-bold fs-6">{{ report_card.student_full_name }}</div>
+        </div>
+        <div class="col-md-2">
+          <small class="opacity-75">USN</small>
+          <div class="fw-bold">{{ report_card.student.USN }}</div>
+        </div>
+        <div class="col-md-2">
+          <small class="opacity-75">Class</small>
+          <div class="fw-bold">{{ prep_class.standard }}</div>
+        </div>
+        <div class="col-md-2">
+          <small class="opacity-75">Term / Session</small>
+          <div class="fw-bold">{{ period }}</div>
+        </div>
+        <div class="col-md-2">
+          <small class="opacity-75">Rating Scale</small>
+          <div class="fw-bold">{{ report_card.rating_scale.name }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+
+    {% comment %} {# ════════════════════════════════════════════
+       LEFT COLUMN — Subject Skill Entry
+    ════════════════════════════════════════════ #} {% endcomment %}
+    {% comment %}
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white border-bottom">
+          <h6 class="mb-0 fw-bold">📚 Subject Skills</h6>
+          <small class="text-muted">Select the column that best describes the pupil's ability for each skill.</small>
+        </div>
+        <div class="card-body p-0">
+
+          <div class="border-bottom px-3 pt-2 overflow-auto">
+            <div class="d-flex gap-1 flex-nowrap" id="subjectTabs">
+              {% for subject_name, data in subjects_data.items %}
+              <button type="button"
+                      class="btn btn-sm subject-tab-btn py-2 px-3 text-nowrap {% if forloop.first %}active{% endif %}"
+                      data-subject="{{ subject_name }}"
+                      onclick="showSubjectPanel('{{ subject_name|slugify }}')">
+                {{ subject_name }}
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+
+          {% for subject_name, data in subjects_data.items %}
+          <div class="subject-panel {% if not forloop.first %}d-none{% endif %}"
+               id="panel-{{ subject_name|slugify }}">
+
+            {% with skill_count=data.skills|length %}
+            <form method="post" action="{% url 'prep_reports:report_card_edit' report_card.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="save_skills">
+              <input type="hidden" name="subject_id" value="{{ data.skills.0.skill.subject.pk }}">
+
+              <div class="table-responsive">
+                <table class="table table-sm mb-0 align-middle">
+                  <thead>
+                    <tr>
+                      <th class="ps-3" style="min-width:280px">Skill / Learning Objective</th>
+                      {% for col in columns %}
+                      <th class="rating-col-header">{{ col.label }}</th>
+                      {% endfor %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for item in data.skills %}
+                    <tr class="skill-row">
+                      <td class="ps-3 py-2">
+                        <small>{{ item.skill.description }}</small>
+                      </td>
+                      {% for col in columns %}
+                      <td class="text-center py-2">
+                        {% if is_editable %}
+                        <input type="radio"
+                               class="tick-radio"
+                               name="skill_{{ item.skill.pk }}"
+                               id="skill_{{ item.skill.pk }}_col_{{ col.pk }}"
+                               value="{{ col.pk }}"
+                               {% if item.selected_column_id == col.pk %}checked{% endif %}>
+                        <label for="skill_{{ item.skill.pk }}_col_{{ col.pk }}"
+                               class="tick-label mx-auto">✓</label>
+                        {% else %}
+                          {% if item.selected_column_id == col.pk %}
+                          <span class="text-success fw-bold">✓</span>
+                          {% else %}
+                          <span class="text-muted">—</span>
+                          {% endif %}
+                        {% endif %}
+                      </td>
+                      {% endfor %}
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="px-3 py-2 bg-light border-top">
+                <label class="form-label small fw-semibold mb-1">
+                  Teacher's Comment for {{ subject_name }}:
+                </label>
+                <textarea name="subject_comment_{{ data.skills.0.skill.subject.pk }}"
+                          class="form-control form-control-sm"
+                          rows="2"
+                          placeholder="Optional comment for this subject…"
+                          {% if not is_editable %}disabled{% endif %}>{{ data.comment }}</textarea>
+              </div>
+
+              {% if is_editable %}
+              <div class="px-3 py-2 d-flex justify-content-end border-top">
+                <button type="submit" class="btn btn-sm btn-primary save-btn text-white">
+                  💾 Save {{ subject_name }}
+                </button>
+              </div>
+              {% endif %}
+            </form>
+            {% endwith %}
+          </div>
+          {% empty %}
+          <div class="p-4 text-muted text-center">
+            No subjects with skills configured for this class.<br>
+            <small>Please add PrepSubjectSkills in Admin.</small>
+          </div>
+          {% endfor %}
+
+        </div>
+      </div>
+    </div>{# /col-lg-8 #}
+
+    {% comment %} {# ════════════════════════════════════════════
+       RIGHT COLUMN — Comments, Attendance, Domains
+    ════════════════════════════════════════════ #} {% endcomment %}
+    {% comment %}
+    <div class="col-lg-4">
+
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-white">
+          <h6 class="mb-0 fw-bold">📋 Attendance & Comments</h6>
+        </div>
+        <div class="card-body">
+          {% if is_editable %}
+          <form method="post" action="{% url 'prep_reports:report_card_edit' report_card.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save_comment">
+            <div class="row g-2 mb-2">
+              <div class="col-6">
+                <label class="form-label small">Days Present</label>
+                {{ comment_form.days_present }}
+              </div>
+              <div class="col-6">
+                <label class="form-label small">Days Absent</label>
+                {{ comment_form.days_absent }}
+              </div>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small">{{ comment_form.class_teacher_comment.label }}</label>
+              {{ comment_form.class_teacher_comment }}
+            </div>
+            {% if request.user.is_staff or request.user.is_superuser %}
+            <div class="mb-2">
+              <label class="form-label small">{{ comment_form.head_teacher_comment.label }}</label>
+              {{ comment_form.head_teacher_comment }}
+            </div>
+            <div class="mb-2">
+              <label class="form-label small">{{ comment_form.promoted_to.label }}</label>
+              {{ comment_form.promoted_to }}
+            </div>
+            {% endif %}
+            <button type="submit" class="btn btn-sm btn-primary save-btn text-white w-100">
+              💾 Save Comments
+            </button>
+          </form>
+          {% else %}
+          <dl class="row mb-0 small">
+            <dt class="col-6">Days Present</dt><dd class="col-6">{{ report_card.days_present }}</dd>
+            <dt class="col-6">Days Absent</dt><dd class="col-6">{{ report_card.days_absent }}</dd>
+            <dt class="col-6">School Opened</dt><dd class="col-6">{{ report_card.days_school_opened }}</dd>
+            <dt class="col-12 mt-2">Class Teacher</dt>
+            <dd class="col-12">{{ report_card.class_teacher_comment|default:"—" }}</dd>
+            <dt class="col-12 mt-1">Head Teacher</dt>
+            <dd class="col-12">{{ report_card.head_teacher_comment|default:"—" }}</dd>
+            {% if report_card.promoted_to %}
+            <dt class="col-6">Promoted To</dt>
+            <dd class="col-6 text-success fw-bold">{{ report_card.promoted_to }}</dd>
+            {% endif %}
+          </dl>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if psychomotor_ratings or affective_ratings %}
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-white">
+          <h6 class="mb-0 fw-bold">🧠 Psychomotor & Affective Domains</h6>
+          {% if not can_edit_domains %}
+          <small class="text-warning">⚠ Only the form teacher can edit these ratings.</small>
+          {% endif %}
+        </div>
+        <div class="card-body p-2">
+          {% if can_edit_domains and is_editable %}
+          <form method="post" action="{% url 'prep_reports:report_card_edit' report_card.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save_domains">
+
+            {% if psychomotor_ratings %}
+            <div class="domain-section rounded p-2 mb-2">
+              <strong class="small d-block mb-2 text-uppercase text-primary">Psychomotor Domain</strong>
+              <div class="row g-1">
+                {% for r in psychomotor_ratings %}
+                <div class="col-6">
+                  <label class="form-label mb-0" style="font-size:.72rem">{{ r.trait_name }}</label>
+                  <input type="text"
+                         name="domain_{{ r.pk }}"
+                         value="{{ r.rating_text }}"
+                         class="form-control form-control-sm"
+                         placeholder="e.g. Excellent">
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+
+            {% if affective_ratings %}
+            <div class="domain-section rounded p-2 mb-2">
+              <strong class="small d-block mb-2 text-uppercase text-primary">Affective / Cognitive Domain</strong>
+              <div class="row g-1">
+                {% for r in affective_ratings %}
+                <div class="col-6">
+                  <label class="form-label mb-0" style="font-size:.72rem">{{ r.trait_name }}</label>
+                  <input type="text"
+                         name="domain_{{ r.pk }}"
+                         value="{{ r.rating_text }}"
+                         class="form-control form-control-sm"
+                         placeholder="e.g. 4">
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-sm btn-primary save-btn text-white w-100">
+              💾 Save Domain Ratings
+            </button>
+          </form>
+          {% else %}
+          {% if psychomotor_ratings %}
+          <div class="domain-section rounded p-2 mb-2">
+            <strong class="small d-block mb-1 text-uppercase text-primary">Psychomotor</strong>
+            <div class="row g-1">
+              {% for r in psychomotor_ratings %}
+              <div class="col-6 small">
+                <span class="text-muted">{{ r.trait_name }}:</span>
+                <strong>{{ r.rating_text|default:"—" }}</strong>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          {% if affective_ratings %}
+          <div class="domain-section rounded p-2">
+            <strong class="small d-block mb-1 text-uppercase text-primary">Affective</strong>
+            <div class="row g-1">
+              {% for r in affective_ratings %}
+              <div class="col-6 small">
+                <span class="text-muted">{{ r.trait_name }}:</span>
+                <strong>{{ r.rating_text|default:"—" }}</strong>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="card shadow-sm">
+        <div class="card-header bg-white">
+          <h6 class="mb-0 fw-bold">⚙ Actions</h6>
+        </div>
+        <div class="card-body d-grid gap-2">
+          <a href="{% url 'prep_reports:report_card_preview' report_card.pk %}"
+             class="btn btn-outline-primary btn-sm" target="_blank">
+            👁 Preview Report Card
+          </a>
+          <a href="{% url 'prep_reports:report_card_pdf' report_card.pk %}"
+             class="btn btn-outline-danger btn-sm">
+            📄 Download PDF
+          </a>
+
+          {% if report_card.status == 'draft' and is_editable %}
+          <form method="post" action="{% url 'prep_reports:report_card_edit' report_card.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="submit">
+            <button type="submit" class="btn btn-warning btn-sm w-100"
+                    onclick="return confirm('Submit this report card for approval?')">
+              📤 Submit for Approval
+            </button>
+          </form>
+          {% endif %}
+
+          {% if request.user.is_staff or request.user.is_superuser %}
+          {% if report_card.status == 'submitted' %}
+          <form method="post" action="{% url 'prep_reports:report_card_edit' report_card.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="approve">
+            <button type="submit" class="btn btn-success btn-sm w-100">✅ Approve</button>
+          </form>
+          {% endif %}
+          {% if report_card.status == 'approved' %}
+          <form method="post" action="{% url 'prep_reports:report_card_edit' report_card.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="publish">
+            <button type="submit" class="btn btn-info btn-sm w-100 text-white">🚀 Publish</button>
+          </form>
+          {% endif %}
+          {% endif %}
+
+        </div>
+      </div>
+
+    </div>{# /col-lg-4 #}
+  </div>{# /row #}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showSubjectPanel(slugName) {
+  // Hide all panels
+  document.querySelectorAll('.subject-panel').forEach(p => p.classList.add('d-none'));
+  document.querySelectorAll('.subject-tab-btn').forEach(b => b.classList.remove('active'));
+  // Show selected
+  const panel = document.getElementById('panel-' + slugName);
+  if (panel) panel.classList.remove('d-none');
+  // Activate button
+  document.querySelectorAll('.subject-tab-btn').forEach(b => {
+    if (b.dataset.subject && slugify(b.dataset.subject) === slugName) {
+      b.classList.add('active');
+    }
+  });
+}
+
+// Simple JS slugify matching Django's |slugify
+function slugify(text) {
+  return text.toString().toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-')
+    .trim();
+}
+</script>
+{% endblock %}
+
+{% endcomment %}
+
