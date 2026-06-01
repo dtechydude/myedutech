@@ -647,10 +647,10 @@ html, body {
 </style>
 </head>
 <body>
-
+{% comment %} 
 {# ════════════════════════════════════════════
    WEB-ONLY TOP BAR
-════════════════════════════════════════════ #}
+════════════════════════════════════════════ #} {% endcomment %}
 <div class="rc-top-bar">
   <a href="javascript:history.back()" class="btn-back-rc">← Back</a>
   <div style="display:flex;gap:7px;flex-wrap:wrap">
@@ -662,10 +662,10 @@ html, body {
     <button onclick="window.print()" class="btn-print-rc">🖨 Print</button>
   </div>
 </div>
-
+{% comment %} 
 {# ════════════════════════════════════════════
    WEB-ONLY WORKFLOW BAR
-════════════════════════════════════════════ #}
+════════════════════════════════════════════ #} {% endcomment %}
 {% if not readonly %}
 <div class="rc-workflow">
   <div class="rc-workflow-inner">
@@ -691,13 +691,13 @@ html, body {
   </div>
 </div>
 {% endif %}
-
+{% comment %} 
 {# ════════════════════════════════════════════
    PAPER
-════════════════════════════════════════════ #}
+════════════════════════════════════════════ #} {% endcomment %}
 <div class="rc-wrapper">
 
-  {# ── 1. SCHOOL HEADER ── #}
+  {% comment %} {# ── 1. SCHOOL HEADER ── #} {% endcomment %}
   <div class="rc-header">
     <div class="rc-header-left">
       <div class="rc-logo">
