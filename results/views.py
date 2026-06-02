@@ -1474,6 +1474,151 @@ class SessionPublicationControlView(LoginRequiredMixin, UserPassesTestMixin, Vie
 
 
 
+# class StudentDashboardView(LoginRequiredMixin, View):
+#     template_name = 'results/student_dashboard.html'
+
+#     def get(self, request, *args, **kwargs):
+#         if hasattr(request.user, 'student'):
+#             student = request.user.student
+
+#             # 1. RESTORE ORIGINAL TERMLY LOGIC
+#             # This allows your existing termly publication logic to handle things.
+#             # (If your previous termly logic was just "if they have scores", this brings it back)
+#             terms_with_scores = Term.objects.filter(
+#                 score__student=student
+#             ).distinct().order_by('-start_date')
+
+#             # 2. APPLY NEW SESSION (ANNUAL) LOGIC SEPARATELY
+#             # We only filter the sessions based on the new SessionResultStatus table.
+#             published_session_ids = SessionResultStatus.objects.filter(
+#                 student=student, 
+#                 is_published=True
+#             ).values_list('session_id', flat=True)
+
+#             sessions_with_scores = Session.objects.filter(
+#                 id__in=published_session_ids, # Only published ones
+#                 terms__score__student=student # That have scores
+#             ).distinct().order_by('-start_date')
+
+#             # --- Debugging ---
+#             print(f"\n--- Dashboard Logic Sync ---")
+#             print(f"Terms Visible: {terms_with_scores.count()}")
+#             print(f"Sessions (Annual) Published: {sessions_with_scores.count()}")
+#             print("-----------------------------\n")
+
+#             context = {
+#                 'student': student,
+#                 'terms': terms_with_scores,    # Termly links (Restored)
+#                 'sessions': sessions_with_scores, # Annual links (Controlled)
+#             }
+#             return render(request, self.template_name, context)
+#         else:
+#             messages.error(request, "Your account is not linked to a student profile.")
+#             return redirect('portal-home')
+
+# from django.contrib.auth.mixins import LoginRequiredMixin
+# from django.shortcuts import render, redirect
+# from django.contrib import messages
+# from django.views import View
+# from django.urls import reverse, NoReverseMatch
+
+# # Import your models
+# from results.models import Term, Session, SessionResultStatus
+# from prep_reports.models import PrepReportCard
+
+
+# class StudentDashboardView(LoginRequiredMixin, View):
+#     template_name = 'results/student_dashboard.html'
+
+#     def get(self, request, *args, **kwargs):
+#         if hasattr(request.user, 'student'):
+#             student = request.user.student
+
+#             # 1. FETCH REGULAR TERMLY SCORES
+#             terms_with_scores = Term.objects.filter(
+#                 score__student=student
+#             ).distinct().order_by('-start_date')
+
+#             # 2. FETCH PREP TERMLY REPORTS (Matching your preview view status requirement)
+#             published_prep_cards = PrepReportCard.objects.filter(
+#                 student=student,
+#                 status='published'
+#             ).select_related('period', 'period__session').order_by('-period__start_date')
+
+#             # 3. UNIFY TERMLY VIEW LABELS
+#             unified_terms = []
+#             prep_term_ids = set()
+
+#             for card in published_prep_cards:
+#                 prep_term_ids.add(card.period.id)
+                
+#                 # Dynamically resolve URL using your exact Preview view name
+#                 try:
+#                     # Tries the standard namespaced pattern matching your view
+#                     card_url = reverse('prep_reports:report_card_preview', kwargs={'report_card_id': card.id})
+#                 except NoReverseMatch:
+#                     # Fallback string if app_name namespace differs in your urls.py
+#                     card_url = f"/prep/report-card/{card.id}/preview/"
+
+#                 unified_terms.append({
+#                     'is_prep': True,
+#                     'id': card.id,
+#                     'name': card.period.name,
+#                     'session_name': str(card.period.session),
+#                     'start_date': card.period.start_date,
+#                     'end_date': card.period.end_date,
+#                     'url': card_url
+#                 })
+
+#             for term in terms_with_scores:
+#                 # If a custom prep card exists for this term, prioritize it over the generic empty scores view
+#                 if term.id in prep_term_ids:
+#                     continue
+#                 unified_terms.append({
+#                     'is_prep': False,
+#                     'id': term.id,
+#                     'name': term.name,
+#                     'session_name': str(term.session),
+#                     'start_date': term.start_date,
+#                     'end_date': term.end_date,
+#                 })
+
+#             # Sort combined list by date descending
+#             unified_terms.sort(key=lambda x: x['start_date'] or x['end_date'], reverse=True)
+
+#             # 4. ANNUAL (SESSION) LOGIC
+#             published_session_ids = SessionResultStatus.objects.filter(
+#                 student=student, 
+#                 is_published=True
+#             ).values_list('session_id', flat=True)
+
+#             sessions_with_scores = Session.objects.filter(
+#                 id__in=published_session_ids,
+#                 terms__score__student=student
+#             ).distinct().order_by('-start_date')
+
+#             context = {
+#                 'student': student,
+#                 'unified_terms': unified_terms, 
+#                 'sessions': sessions_with_scores,
+#             }
+#             return render(request, self.template_name, context)
+#         else:
+#             messages.error(request, "Your account is not linked to a student profile.")
+#             return redirect('portal-home')
+
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.views import View
+from django.urls import reverse, NoReverseMatch
+
+# Models from both apps
+from results.models import Term, Session, SessionResultStatus
+from prep_reports.models import PrepReportCard
+
+
 class StudentDashboardView(LoginRequiredMixin, View):
     template_name = 'results/student_dashboard.html'
 
@@ -1481,35 +1626,84 @@ class StudentDashboardView(LoginRequiredMixin, View):
         if hasattr(request.user, 'student'):
             student = request.user.student
 
-            # 1. RESTORE ORIGINAL TERMLY LOGIC
-            # This allows your existing termly publication logic to handle things.
-            # (If your previous termly logic was just "if they have scores", this brings it back)
+            # 1. Fetch regular term records where the student has scores
             terms_with_scores = Term.objects.filter(
                 score__student=student
             ).distinct().order_by('-start_date')
 
-            # 2. APPLY NEW SESSION (ANNUAL) LOGIC SEPARATELY
-            # We only filter the sessions based on the new SessionResultStatus table.
+            # 2. Fetch published prep report cards for this student
+            # FIX: Updated order_by from '-period__start_date' to '-period__term__start_date'
+            published_prep_cards = PrepReportCard.objects.filter(
+                student=student,
+                status='published'
+            ).select_related('period', 'period__term', 'period__session').order_by('-period__term__start_date')
+
+            # 3. Unify both datasets into a single tracking structure
+            unified_terms = []
+            prep_term_ids = set()
+
+            # Process Prep Cards first
+            for card in published_prep_cards:
+                # Capture the actual Term ID associated with this Prep Period
+                if card.period and card.period.term:
+                    term_obj = card.period.term
+                    prep_term_ids.add(term_obj.id)
+                    start_date = term_obj.start_date
+                    end_date = term_obj.end_date
+                    term_name = term_obj.name
+                else:
+                    start_date = None
+                    end_date = None
+                    term_name = card.period.name if card.period else "Prep Term"
+                
+                # Dynamically resolve URL to target your PrepReportCardPreviewView namespace safely
+                try:
+                    card_url = reverse('prep_reports:report_card_preview', kwargs={'report_card_id': card.id})
+                except NoReverseMatch:
+                    card_url = f"/prep/report-card/{card.id}/preview/"
+
+                unified_terms.append({
+                    'is_prep': True,
+                    'id': card.id,
+                    'name': term_name,
+                    'session_name': str(card.period.session) if card.period else "",
+                    'start_date': start_date,
+                    'end_date': end_date,
+                    'url': card_url
+                })
+
+            # Process standard terms (preventing duplication if an overlap occurs)
+            for term in terms_with_scores:
+                if term.id in prep_term_ids:
+                    continue
+                unified_terms.append({
+                    'is_prep': False,
+                    'id': term.id,
+                    'name': term.name,
+                    'session_name': str(term.session),
+                    'start_date': term.start_date,
+                    'end_date': term.end_date,
+                    'url': reverse('results:student_report_card_detail', kwargs={'student_id': student.id, 'term_id': term.id})
+                })
+
+            # Chronologically sort everything from newest to oldest safely using inline date logic
+            unified_terms.sort(key=lambda x: x['start_date'] or x['end_date'] or '', reverse=True)
+
+            # 4. Handle standard session level reports
             published_session_ids = SessionResultStatus.objects.filter(
                 student=student, 
                 is_published=True
             ).values_list('session_id', flat=True)
 
             sessions_with_scores = Session.objects.filter(
-                id__in=published_session_ids, # Only published ones
-                terms__score__student=student # That have scores
+                id__in=published_session_ids,
+                terms__score__student=student
             ).distinct().order_by('-start_date')
-
-            # --- Debugging ---
-            print(f"\n--- Dashboard Logic Sync ---")
-            print(f"Terms Visible: {terms_with_scores.count()}")
-            print(f"Sessions (Annual) Published: {sessions_with_scores.count()}")
-            print("-----------------------------\n")
 
             context = {
                 'student': student,
-                'terms': terms_with_scores,    # Termly links (Restored)
-                'sessions': sessions_with_scores, # Annual links (Controlled)
+                'unified_terms': unified_terms, 
+                'sessions': sessions_with_scores,
             }
             return render(request, self.template_name, context)
         else:

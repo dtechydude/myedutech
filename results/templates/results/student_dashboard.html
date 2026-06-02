@@ -60,6 +60,204 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+        /* Custom Early Years Prep Accent Badge */
+        .prep-badge {
+            background-color: #6f42c1; /* Deep Purple */
+            color: white;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 4px;
+        }
+    </style>
+{% endblock head_extra %}
+
+{% block content_body %}
+    <div class="content-body">
+        <div class="container-fluid">
+            
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm" style="border-left: 5px solid #006699 !important;">
+                        <div class="card-body p-4">
+                            <h3 class="mb-1 text-black font-w600">ACADEMIC REPORT CENTER - <br> <small>{{ student.get_full_name }}! </small> 👋</h3>
+                            <p class="mb-0 text-secondary">Your academic performance reports are organized below. Use the tab to move between Termly & Annual Reports</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <ul class="nav nav-tabs nav-justified style-2 mb-4" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-bs-toggle="tab" href="#termly-reports" role="tab">
+                                        <i class="fa fa-list-alt me-2"></i> Termly Reports
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#annual-reports" role="tab">
+                                        <i class="fa fa-calendar-check-o me-2"></i> Annual Reports
+                                    </a>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content pt-2">
+                                <!-- Termly & Prep Reports Tab Wrapper -->
+                                <div class="tab-pane fade show active" id="termly-reports" role="tabpanel">
+                                    <div class="row">
+                                        {% if unified_terms %}
+                                            {% for item in unified_terms %}
+                                            <div class="col-xl-4 col-md-6 mb-4">
+                                                <!-- Dynamic URL switching logic context handles standard vs preview target definitions -->
+                                                <a href="{{ item.url }}" class="text-decoration-none">
+                                                    <div class="card report-card-item h-100 mb-0">
+                                                        <div class="card-body">
+                                                            <div class="d-flex align-items-center mb-3">
+                                                                <!-- Dynamic Accent UI Switching for Early Years Prep configurations -->
+                                                                <div class="icon-circle me-3" {% if item.is_prep %}style="background: #f3e5f5; color: #6f42c1;"{% endif %}>
+                                                                    <i class="fa {% if item.is_prep %}fa-eye{% else %}fa-file-text{% endif %}"></i>
+                                                                </div>
+                                                                <div>
+                                                                    <h5 class="mb-0 text-black font-w600">{{ item.name }}</h5>
+                                                                    <small class="text-primary font-w500">{{ item.session_name }}</small>
+                                                                    {% if item.is_prep %}
+                                                                        <br><span class="prep-badge">Prep Report Card</span>
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                            <hr class="my-3 opacity-10">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <span class="view-btn-badge" {% if item.is_prep %}style="background-color: #6f42c1;"{% endif %}>
+                                                                    {% if item.is_prep %}Preview Card{% else %}View Result{% endif %}
+                                                                </span>
+                                                                <span class="text-muted small">
+                                                                    <i class="fa fa-calendar me-1"></i> 
+                                                                    {{ item.start_date|date:"M Y" }} - {{ item.end_date|date:"M Y" }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="col-12 text-center py-5">
+                                                <div class="text-muted">No termly reports available.</div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Annual Reports Tab Wrapper -->
+                                <div class="tab-pane fade" id="annual-reports" role="tabpanel">
+                                    <div class="row">
+                                        {% if sessions %}
+                                            {% for session in sessions %}
+                                            <div class="col-md-6 mb-4">
+                                                <a href="{% url 'results:student_session_report_card_detail' student.id session.id %}" class="text-decoration-none">
+                                                    <div class="card report-card-item h-100 mb-0" style="background-color: #fcfcfc;">
+                                                        <div class="card-body d-flex align-items-center justify-content-between">
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="icon-circle bg-warning text-white me-3">
+                                                                    <i class="fa fa-trophy"></i>
+                                                                </div>
+                                                                <div>
+                                                                    <h5 class="mb-0 text-black font-w700">{{ session.name }}</h5>
+                                                                    <span class="text-muted small">Full Academic Session</span>
+                                                                </div>
+                                                            </div>
+                                                            <span class="view-btn-badge" style="background-color: #006400; color: white; padding: 6px 12px; font-size: 14px; border-radius: 4px;">Open</span>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="col-12 text-center py-5">
+                                                <div class="text-muted">No annual reports available.</div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+{% endblock content_body %}
+
+
+
+{% comment %} {% extends 'pages/portal_home.html' %}
+{% load static %}
+
+{% block head_extra %}
+    <title>Student Results Dashboard</title>
+    <link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+    <style>
+        /* Modern Card Styling */
+        .report-card-item {
+            transition: all 0.2s ease-in-out;
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            background: #ffffff;
+        }
+        .report-card-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.1) !important;
+            border-color: #006699; /* Matches your body background */
+        }
+
+        /* High Contrast Tab Styling */
+        .nav-tabs.style-2 {
+            border-bottom: none;
+            gap: 10px;
+        }
+        .nav-tabs.style-2 .nav-link {
+            border: 1px solid #dee2e6 !important;
+            border-radius: 8px !important;
+            color: #444 !important;
+            background: #f8f9fa;
+            font-weight: 600;
+            padding: 12px;
+        }
+        .nav-tabs.style-2 .nav-link.active {
+            background-color: #006699 !important; /* Deep Blue */
+            color: #ffffff !important;           /* Pure White for readability */
+            border-color: #006699 !important;
+        }
+
+        /* Badge and Icon Styling */
+        .icon-circle {
+            width: 45px;
+            height: 45px;
+            background: #e6f2ff;
+            color: #006699;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        .view-btn-badge {
+            background-color: #28a745; /* Success Green */
+            color: white !important;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
     </style>
 {% endblock head_extra %}
 
@@ -170,4 +368,201 @@
 
         </div>
     </div>
-{% endblock content_body %}
+{% endblock content_body %} {% endcomment %}
+
+{% comment %} 
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+
+{% block head_extra %}
+    <title>Student Results Dashboard</title>
+    <link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+    <style>
+        /* Modern Card Styling */
+        .report-card-item {
+            transition: all 0.2s ease-in-out;
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            background: #ffffff;
+        }
+        .report-card-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.1) !important;
+            border-color: #006699; /* Matches your body background */
+        }
+
+        /* High Contrast Tab Styling */
+        .nav-tabs.style-2 {
+            border-bottom: none;
+            gap: 10px;
+        }
+        .nav-tabs.style-2 .nav-link {
+            border: 1px solid #dee2e6 !important;
+            border-radius: 8px !important;
+            color: #444 !important;
+            background: #f8f9fa;
+            font-weight: 600;
+            padding: 12px;
+        }
+        .nav-tabs.style-2 .nav-link.active {
+            background-color: #006699 !important; /* Deep Blue */
+            color: #ffffff !important;           /* Pure White for readability */
+            border-color: #006699 !important;
+        }
+
+        /* Badge and Icon Styling */
+        .icon-circle {
+            width: 45px;
+            height: 45px;
+            background: #e6f2ff;
+            color: #006699;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        .view-btn-badge {
+            background-color: #28a745; /* Success Green */
+            color: white !important;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        /* Custom Early Years Prep Accent Badge */
+        .prep-badge {
+            background-color: #6f42c1; /* Deep Purple */
+            color: white;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 4px;
+        }
+    </style>
+{% endblock head_extra %}
+
+{% block content_body %}
+    <div class="content-body">
+        <div class="container-fluid">
+            
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm" style="border-left: 5px solid #006699 !important;">
+                        <div class="card-body p-4">
+                            <h3 class="mb-1 text-black font-w600">ACADEMIC REPORT CENTER - <br> <small>{{ student.get_full_name }}! </small> 👋</h3>
+                            <p class="mb-0 text-secondary">Your academic performance reports are organized below. Use the tab to move between Termly & Annual Reports</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <ul class="nav nav-tabs nav-justified style-2 mb-4" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-bs-toggle="tab" href="#termly-reports" role="tab">
+                                        <i class="fa fa-list-alt me-2"></i> Termly Reports
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#annual-reports" role="tab">
+                                        <i class="fa fa-calendar-check-o me-2"></i> Annual Reports
+                                    </a>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content pt-2">
+                                <!-- Termly & Prep Reports Tab Wrapper -->
+                                <div class="tab-pane fade show active" id="termly-reports" role="tabpanel">
+                                    <div class="row">
+                                        {% if unified_terms %}
+                                            {% for item in unified_terms %}
+                                            <div class="col-xl-4 col-md-6 mb-4">
+                                                <!-- Dynamic URL switching logic context handles standard vs preview target definitions -->
+                                                <a href="{{ item.url }}" class="text-decoration-none">
+                                                    <div class="card report-card-item h-100 mb-0">
+                                                        <div class="card-body">
+                                                            <div class="d-flex align-items-center mb-3">
+                                                                <!-- Dynamic Accent UI Switching for Early Years Prep configurations -->
+                                                                <div class="icon-circle me-3" {% if item.is_prep %}style="background: #f3e5f5; color: #6f42c1;"{% endif %}>
+                                                                    <i class="fa {% if item.is_prep %}fa-eye{% else %}fa-file-text{% endif %}"></i>
+                                                                </div>
+                                                                <div>
+                                                                    <h5 class="mb-0 text-black font-w600">{{ item.name }}</h5>
+                                                                    <small class="text-primary font-w500">{{ item.session_name }}</small>
+                                                                    {% if item.is_prep %}
+                                                                        <br><span class="prep-badge">Prep Report Card</span>
+                                                                    {% endif %}
+                                                                </div>
+                                                            </div>
+                                                            <hr class="my-3 opacity-10">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <span class="view-btn-badge" {% if item.is_prep %}style="background-color: #6f42c1;"{% endif %}>
+                                                                    {% if item.is_prep %}Preview Card{% else %}View Result{% endif %}
+                                                                </span>
+                                                                <span class="text-muted small">
+                                                                    <i class="fa fa-calendar me-1"></i> 
+                                                                    {{ item.start_date|date:"M Y" }} - {{ item.end_date|date:"M Y" }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="col-12 text-center py-5">
+                                                <div class="text-muted">No termly reports available.</div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Annual Reports Tab Wrapper -->
+                                <div class="tab-pane fade" id="annual-reports" role="tabpanel">
+                                    <div class="row">
+                                        {% if sessions %}
+                                            {% for session in sessions %}
+                                            <div class="col-md-6 mb-4">
+                                                <a href="{% url 'results:student_session_report_card_detail' student.id session.id %}" class="text-decoration-none">
+                                                    <div class="card report-card-item h-100 mb-0" style="background-color: #fcfcfc;">
+                                                        <div class="card-body d-flex align-items-center justify-content-between">
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="icon-circle bg-warning text-white me-3">
+                                                                    <i class="fa fa-trophy"></i>
+                                                                </div>
+                                                                <div>
+                                                                    <h5 class="mb-0 text-black font-w700">{{ session.name }}</h5>
+                                                                    <span class="text-muted small">Full Academic Session</span>
+                                                                </div>
+                                                            </div>
+                                                            <span class="view-btn-badge" style="background-color: #006400; color: white; padding: 6px 12px; font-size: 14px; border-radius: 4px;">Open</span>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="col-12 text-center py-5">
+                                                <div class="text-muted">No annual reports available.</div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+{% endblock content_body %} {% endcomment %}

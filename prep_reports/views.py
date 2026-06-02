@@ -457,6 +457,48 @@ class SubjectSkillAjaxView(LoginRequiredMixin, View):
 # Read-only Report Card Preview (for parents / admin)
 # ---------------------------------------------------------------------------
 
+# class PrepReportCardPreviewView(LoginRequiredMixin, TemplateView):
+#     template_name = 'prep_reports/report_card_preview.html'
+
+#     def get_context_data(self, **kwargs):
+#         ctx = super().get_context_data(**kwargs)
+#         card = get_object_or_404(
+#             PrepReportCard.objects.select_related(
+#                 'student__user', 'prep_class__standard', 'period',
+#                 'rating_scale', 'promoted_to'
+#             ),
+#             pk=self.kwargs['report_card_id']
+#         )
+#         # Parents can only see published cards for their own children
+#         user = self.request.user
+#         if not (user.is_superuser or user.is_staff or
+#                 user_can_edit_report(user, card)):
+#             # Check parent relationship
+#             try:
+#                 if not user.parent_profile.students.filter(
+#                     pk=card.student.pk
+#                 ).exists():
+#                     raise PermissionDenied
+#                 if card.status != 'published':
+#                     raise PermissionDenied(
+#                         "This report card is not yet published."
+#                     )
+#             except AttributeError:
+#                 raise PermissionDenied
+
+#         ctx.update(build_report_card_context(card))
+#         ctx['readonly'] = True
+#         return ctx
+
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404
+from django.core.exceptions import PermissionDenied
+
+from .models import PrepReportCard
+from .services import user_can_edit_report, build_report_card_context
+
+
 class PrepReportCardPreviewView(LoginRequiredMixin, TemplateView):
     template_name = 'prep_reports/report_card_preview.html'
 
@@ -469,22 +511,33 @@ class PrepReportCardPreviewView(LoginRequiredMixin, TemplateView):
             ),
             pk=self.kwargs['report_card_id']
         )
-        # Parents can only see published cards for their own children
+        
         user = self.request.user
-        if not (user.is_superuser or user.is_staff or
-                user_can_edit_report(user, card)):
-            # Check parent relationship
-            try:
-                if not user.parent_profile.students.filter(
-                    pk=card.student.pk
-                ).exists():
-                    raise PermissionDenied
-                if card.status != 'published':
-                    raise PermissionDenied(
-                        "This report card is not yet published."
-                    )
-            except AttributeError:
-                raise PermissionDenied
+        
+        # 1. Superusers, management staff, and assigned teachers bypass restriction checks
+        if not (user.is_superuser or user.is_staff or user_can_edit_report(user, card)):
+            
+            is_authorized = False
+            
+            # 2. Check if the logged-in user is the Student themselves
+            if hasattr(user, 'student') and user.student.pk == card.student.pk:
+                is_authorized = True
+                
+            # 3. Check Parent relationship if it wasn't the student
+            else:
+                try:
+                    if user.parent_profile.students.filter(pk=card.student.pk).exists():
+                        is_authorized = True
+                except AttributeError:
+                    # User has neither a student nor parent profile attached
+                    pass
+
+            # 4. Enforce authorization and publication status barriers
+            if not is_authorized:
+                raise PermissionDenied("You do not have permission to view this report card.")
+                
+            if card.status != 'published':
+                raise PermissionDenied("This report card is not yet published.")
 
         ctx.update(build_report_card_context(card))
         ctx['readonly'] = True

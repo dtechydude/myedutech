@@ -805,28 +805,38 @@
       <i class="bi bi-house"></i>
       Main Dashboard
     </a>
-
-    <a href="/students/" class="ks-nav-item">
+    {% if user.is_staff or user.is_superuser %}
+    <a href="{% url 'students:student-list' %}" class="ks-nav-item">
       <i class="bi bi-people"></i>
       Students
     </a>
+    {% else %}
+    <a href="{% url 'cbt:cbt-home' %}" class="ks-nav-item">
+      <i class="bi bi-people"></i>
+      CBT
+    </a>
+    {% endif %}
+     {% if user.is_staff or user.is_superuser or user.teacher %}
 
-    <a href="/results/" class="ks-nav-item">
+    <a href="{% url 'results:score_entry' %}" class="ks-nav-item">
       <i class="bi bi-bar-chart-line"></i>
-      Results
+      Non-Prep Results
     </a>
-
-    <a href="/attendance/" class="ks-nav-item">
+      {% endif %}
+     {% if user.is_staff or user.is_superuser %}
+    <a href="{% url 'attendance:attendance_report' %}" class="ks-nav-item">
       <i class="bi bi-calendar-check"></i>
-      Attendance
+      Attendance Report
     </a>
-
-    <a href="/finance/" class="ks-nav-item">
+    {% endif %}
+  {% if user.is_staff or user.is_superuser %}
+    <a href="{% url 'payments:finance_dashboard' %}" class="ks-nav-item">
       <i class="bi bi-cash-stack"></i>
       Finance
     </a>
+    {% endif %}
 
-    <a href="/e-learning/" class="ks-nav-item">
+    <a href="{% url 'curriculum:standard_list' %}" class="ks-nav-item">
       <i class="bi bi-book"></i>
       E-Learning
     </a>
@@ -841,7 +851,7 @@
     <div class="ks-nav-section">Admin</div>
     <a href="/admin/" class="ks-nav-item">
       <i class="bi bi-shield-lock"></i>
-      Django Admin
+      Admin Panel
     </a>
     {% endif %}
 
