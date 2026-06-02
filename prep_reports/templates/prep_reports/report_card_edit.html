@@ -99,6 +99,7 @@
         <div class="card-body p-0">
 
           {# Subject tabs #}
+      
           <div class="border-bottom px-3 pt-2 overflow-auto">
             <div class="d-flex gap-1 flex-nowrap" id="subjectTabs">
               {% for subject_name, data in subjects_data.items %}
@@ -111,6 +112,8 @@
               {% endfor %}
             </div>
           </div>
+         
+          
 
           {# Subject panels #}
           {% for subject_name, data in subjects_data.items %}
@@ -165,6 +168,8 @@
                 </table>
               </div>
 
+    
+
               {# Subject comment #}
               <div class="px-3 py-2 bg-light border-top">
                 <label class="form-label small fw-semibold mb-1">
@@ -193,10 +198,12 @@
             <small>Please add PrepSubjectSkills in Admin.</small>
           </div>
           {% endfor %}
+          
 
         </div>
       </div>
     </div>{# /col-lg-8 #}
+    
 {% comment %} 
     {# ════════════════════════════════════════════
        RIGHT COLUMN — Comments, Attendance, Domains
@@ -204,6 +211,8 @@
     <div class="col-lg-4">
 
       {# Attendance + Comments #}
+      {% if can_manage_class %}
+
       <div class="card shadow-sm mb-3">
         <div class="card-header bg-white">
           <h6 class="mb-0 fw-bold">📋 Attendance & Comments</h6>
@@ -258,6 +267,7 @@
           {% endif %}
         </div>
       </div>
+      {% endif %}
 
       {# ── Motor Ability Scores (results.MotorAbilityScore) ── #}
       <div class="card shadow-sm mb-3">
@@ -317,6 +327,7 @@
         </div>
         <div class="card-body d-grid gap-2">
           {# Preview #}
+          {% if can_manage_class %}
           <a href="{% url 'prep_reports:report_card_preview' report_card.pk %}"
              class="btn btn-outline-primary btn-sm" target="_blank">
             👁 Preview Report Card
@@ -326,6 +337,7 @@
              class="btn btn-outline-danger btn-sm">
             📄 Download PDF
           </a>
+          {% endif %}
 
           {# Submit (teacher) #}
           {% if report_card.status == 'draft' and is_editable %}

@@ -138,21 +138,159 @@ class BulkCreateReportCardsView(LoginRequiredMixin, View):
 # Single Report Card: teacher entry view (MAIN EDITING VIEW)
 # ---------------------------------------------------------------------------
 
+# class PrepReportCardEditView(LoginRequiredMixin, View):
+#     template_name = 'prep_reports/report_card_edit.html'
+
+#     def _get_objects(self, report_card_id):
+#         return get_object_or_404(
+#             PrepReportCard.select_related(
+#                 'student__user', 'prep_class__standard',
+#                 'period', 'rating_scale'
+#             ) if hasattr(PrepReportCard, 'select_related')
+#             else PrepReportCard.objects.select_related(
+#                 'student__user', 'prep_class__standard',
+#                 'period', 'rating_scale'
+#             ),
+#             pk=report_card_id
+#         )
+
+#     def get(self, request, report_card_id):
+#         card = get_object_or_404(
+#             PrepReportCard.objects.select_related(
+#                 'student__user', 'prep_class__standard', 'period', 'rating_scale'
+#             ),
+#             pk=report_card_id
+#         )
+#         if not user_can_edit_report(request.user, card):
+#             raise PermissionDenied
+
+#         subjects = get_teacher_prep_subjects(request.user, card.prep_class)
+#         ctx = build_report_card_context(card)
+#         ctx['subjects'] = subjects
+#         ctx['can_edit_domains'] = user_can_edit_domain_ratings(request.user, card)
+#         ctx['comment_form'] = PrepReportCardCommentForm(instance=card)
+#         ctx['is_editable'] = card.status in ('draft', 'submitted')
+#         return render(request, self.template_name, ctx)
+
+#     def post(self, request, report_card_id):
+#         card = get_object_or_404(PrepReportCard, pk=report_card_id)
+#         if not user_can_edit_report(request.user, card):
+#             raise PermissionDenied
+
+#         action = request.POST.get('action', 'save')
+
+#         # --- Save teacher comment ---
+#         if action == 'save_comment':
+#             form = PrepReportCardCommentForm(request.POST, instance=card)
+#             if form.is_valid():
+#                 form.save()
+#                 messages.success(request, "Comments saved successfully.")
+#             else:
+#                 messages.error(request, "Error saving comments.")
+#             return redirect('prep_reports:report_card_edit', report_card_id=card.pk)
+
+#         # --- Save skill entries for a subject ---
+#         if action == 'save_skills':
+#             subject_id = request.POST.get('subject_id')
+#             if not subject_id:
+#                 messages.error(request, "No subject specified.")
+#                 return redirect('prep_reports:report_card_edit', report_card_id=card.pk)
+
+#             from curriculum.models import Subject
+#             subject = get_object_or_404(Subject, pk=subject_id)
+#             subject_comment = request.POST.get(f'subject_comment_{subject_id}', '')
+
+#             # Build skill_data dict from POST: skill_<id> = column_id
+#             skill_data = {}
+#             skills = PrepSubjectSkill.objects.filter(
+#                 subject=subject, is_active=True
+#             ).filter(
+#                 Q(prep_class=card.prep_class) | Q(prep_class__isnull=True)
+#             )
+#             for skill in skills:
+#                 col_val = request.POST.get(f'skill_{skill.pk}', '')
+#                 skill_data[skill.pk] = col_val if col_val else None
+
+#             try:
+#                 save_subject_skill_entries(
+#                     request.user, card, subject, skill_data, subject_comment
+#                 )
+#                 messages.success(request, f"Scores saved for {subject.name}.")
+#             except PermissionDenied as e:
+#                 messages.error(request, str(e))
+
+#             return redirect('prep_reports:report_card_edit', report_card_id=card.pk)
+
+#         # --- Save domain ratings ---
+#         if action == 'save_domains':
+#             if not user_can_edit_domain_ratings(request.user, card):
+#                 raise PermissionDenied
+#             ratings_data = []
+#             for rating in card.domain_ratings.all():
+#                 val = request.POST.get(f'domain_{rating.pk}', '')
+#                 ratings_data.append({'id': rating.pk, 'rating_text': val})
+#             try:
+#                 save_domain_ratings(request.user, card, ratings_data)
+#                 messages.success(request, "Domain ratings saved.")
+#             except PermissionDenied as e:
+#                 messages.error(request, str(e))
+#             return redirect('prep_reports:report_card_edit', report_card_id=card.pk)
+
+#         # --- Submit card ---
+#         if action == 'submit':
+#             try:
+#                 submit_report_card(request.user, card)
+#                 messages.success(request, "Report card submitted for approval.")
+#             except (PermissionDenied, ValueError) as e:
+#                 messages.error(request, str(e))
+#             return redirect('prep_reports:report_card_edit', report_card_id=card.pk)
+
+#         # --- Approve / Publish (admin) ---
+#         if action == 'approve':
+#             try:
+#                 approve_report_card(request.user, card)
+#                 messages.success(request, "Report card approved.")
+#             except PermissionDenied as e:
+#                 messages.error(request, str(e))
+#             return redirect('prep_reports:report_card_edit', report_card_id=card.pk)
+
+#         if action == 'publish':
+#             try:
+#                 publish_report_card(request.user, card)
+#                 messages.success(request, "Report card published.")
+#             except PermissionDenied as e:
+#                 messages.error(request, str(e))
+#             return redirect('prep_reports:report_card_edit', report_card_id=card.pk)
+
+#         return redirect('prep_reports:report_card_edit', report_card_id=card.pk)
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
+from django.db.models import Q
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.contrib import messages
+
+# Assuming appropriate internal relative imports for your app architecture
+from .models import PrepReportCard, PrepSubjectSkill
+from .forms import PrepReportCardCommentForm  # Verify exact comment form import path
+from .services import (
+    user_can_edit_report,
+    user_can_modify_class_metadata,
+    user_can_edit_motor_scores,
+    user_can_edit_domain_ratings,
+    user_can_enter_subject_skills,
+    get_teacher_prep_subjects,
+    build_report_card_context,
+    save_subject_skill_entries,
+    submit_report_card,
+    approve_report_card,
+    publish_report_card
+)
+
 class PrepReportCardEditView(LoginRequiredMixin, View):
     template_name = 'prep_reports/report_card_edit.html'
-
-    def _get_objects(self, report_card_id):
-        return get_object_or_404(
-            PrepReportCard.select_related(
-                'student__user', 'prep_class__standard',
-                'period', 'rating_scale'
-            ) if hasattr(PrepReportCard, 'select_related')
-            else PrepReportCard.objects.select_related(
-                'student__user', 'prep_class__standard',
-                'period', 'rating_scale'
-            ),
-            pk=report_card_id
-        )
 
     def get(self, request, report_card_id):
         card = get_object_or_404(
@@ -161,35 +299,49 @@ class PrepReportCardEditView(LoginRequiredMixin, View):
             ),
             pk=report_card_id
         )
+        
+        # 1. Global View Authorization Check
         if not user_can_edit_report(request.user, card):
             raise PermissionDenied
 
+        # 2. Extract context configurations tailored to the current user's role
         subjects = get_teacher_prep_subjects(request.user, card.prep_class)
         ctx = build_report_card_context(card)
+        
+        # Class-level capability tags passed directly down to template layout engine
+        can_manage_class = user_can_modify_class_metadata(request.user, card)
+        
         ctx['subjects'] = subjects
-        ctx['can_edit_domains'] = user_can_edit_domain_ratings(request.user, card)
+        ctx['can_edit_domains'] = user_can_edit_motor_scores(request.user, card)
+        ctx['can_manage_class'] = can_manage_class  # Use in HTML to hide comment/attendance blocks
         ctx['comment_form'] = PrepReportCardCommentForm(instance=card)
         ctx['is_editable'] = card.status in ('draft', 'submitted')
+        
         return render(request, self.template_name, ctx)
 
     def post(self, request, report_card_id):
         card = get_object_or_404(PrepReportCard, pk=report_card_id)
+        
+        # Baseline authentication check
         if not user_can_edit_report(request.user, card):
             raise PermissionDenied
 
         action = request.POST.get('action', 'save')
 
-        # --- Save teacher comment ---
+        # ─── ACTION: SAVE COMMENT & ATTENDANCE ───
         if action == 'save_comment':
+            if not user_can_modify_class_metadata(request.user, card):
+                raise PermissionDenied  # Stop non-form teachers trying to save comments/attendance
+                
             form = PrepReportCardCommentForm(request.POST, instance=card)
             if form.is_valid():
                 form.save()
-                messages.success(request, "Comments saved successfully.")
+                messages.success(request, "Class records and comments saved successfully.")
             else:
-                messages.error(request, "Error saving comments.")
+                messages.error(request, "Error saving class records.")
             return redirect('prep_reports:report_card_edit', report_card_id=card.pk)
 
-        # --- Save skill entries for a subject ---
+        # ─── ACTION: SAVE SKILL ENTRIES FOR A SUBJECT ───
         if action == 'save_skills':
             subject_id = request.POST.get('subject_id')
             if not subject_id:
@@ -198,9 +350,14 @@ class PrepReportCardEditView(LoginRequiredMixin, View):
 
             from curriculum.models import Subject
             subject = get_object_or_404(Subject, pk=subject_id)
+            
+            # Enforce target object isolation: confirm they can grade *this specific* subject
+            if not user_can_enter_subject_skills(request.user, card, subject):
+                raise PermissionDenied
+
             subject_comment = request.POST.get(f'subject_comment_{subject_id}', '')
 
-            # Build skill_data dict from POST: skill_<id> = column_id
+            # Pull relevant checklist rows securely
             skill_data = {}
             skills = PrepSubjectSkill.objects.filter(
                 subject=subject, is_active=True
@@ -215,29 +372,16 @@ class PrepReportCardEditView(LoginRequiredMixin, View):
                 save_subject_skill_entries(
                     request.user, card, subject, skill_data, subject_comment
                 )
-                messages.success(request, f"Scores saved for {subject.name}.")
+                messages.success(request, f"Scores saved successfully for {subject.name}.")
             except PermissionDenied as e:
                 messages.error(request, str(e))
 
             return redirect('prep_reports:report_card_edit', report_card_id=card.pk)
 
-        # --- Save domain ratings ---
-        if action == 'save_domains':
-            if not user_can_edit_domain_ratings(request.user, card):
-                raise PermissionDenied
-            ratings_data = []
-            for rating in card.domain_ratings.all():
-                val = request.POST.get(f'domain_{rating.pk}', '')
-                ratings_data.append({'id': rating.pk, 'rating_text': val})
-            try:
-                save_domain_ratings(request.user, card, ratings_data)
-                messages.success(request, "Domain ratings saved.")
-            except PermissionDenied as e:
-                messages.error(request, str(e))
-            return redirect('prep_reports:report_card_edit', report_card_id=card.pk)
-
-        # --- Submit card ---
+        # ─── ACTION: SUBMIT CARD FOR REVIEW ───
         if action == 'submit':
+            if not user_can_modify_class_metadata(request.user, card):
+                raise PermissionDenied
             try:
                 submit_report_card(request.user, card)
                 messages.success(request, "Report card submitted for approval.")
@@ -245,25 +389,25 @@ class PrepReportCardEditView(LoginRequiredMixin, View):
                 messages.error(request, str(e))
             return redirect('prep_reports:report_card_edit', report_card_id=card.pk)
 
-        # --- Approve / Publish (admin) ---
-        if action == 'approve':
+        # ─── ACTION: MANAGEMENT APPROVALS ───
+        if action in ('approve', 'publish'):
+            # Only superusers or staff can access core administrative functions
+            if not (request.user.is_superuser or request.user.is_staff):
+                raise PermissionDenied
+                
             try:
-                approve_report_card(request.user, card)
-                messages.success(request, "Report card approved.")
+                if action == 'approve':
+                    approve_report_card(request.user, card)
+                    messages.success(request, "Report card approved.")
+                else:
+                    publish_report_card(request.user, card)
+                    messages.success(request, "Report card published.")
             except PermissionDenied as e:
                 messages.error(request, str(e))
-            return redirect('prep_reports:report_card_edit', report_card_id=card.pk)
-
-        if action == 'publish':
-            try:
-                publish_report_card(request.user, card)
-                messages.success(request, "Report card published.")
-            except PermissionDenied as e:
-                messages.error(request, str(e))
+                
             return redirect('prep_reports:report_card_edit', report_card_id=card.pk)
 
         return redirect('prep_reports:report_card_edit', report_card_id=card.pk)
-
 
 # ---------------------------------------------------------------------------
 # Subject-specific AJAX inline entry (optional enhancement)

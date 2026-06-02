@@ -84,19 +84,23 @@
                   {{ rc.status|capfirst }}
                 </span>
               </td>
-              <td class="text-center">
+              <td class="text-center">              
                 <a href="{% url 'prep_reports:report_card_edit' rc.pk %}"
                    class="btn btn-xs btn-outline-primary btn-sm">
                   ✏ Edit
                 </a>
+         
                 <a href="{% url 'prep_reports:report_card_preview' rc.pk %}"
                    class="btn btn-xs btn-outline-secondary btn-sm" target="_blank">
                   👁 View
                 </a>
-                <a href="{% url 'prep_reports:report_card_pdf' rc.pk %}"
+              
+                
+              
+                {% comment %} <a href="{% url 'prep_reports:report_card_pdf' rc.pk %}"
                    class="btn btn-xs btn-outline-danger btn-sm">
                   📄 PDF
-                </a>
+                </a> {% endcomment %}
               </td>
             </tr>
             {% empty %}

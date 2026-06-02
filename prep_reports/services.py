@@ -1178,59 +1178,248 @@ def _get_motor_ability_score(student, term):
 # SECTION 2 — Permission helpers
 # ═══════════════════════════════════════════════════════════════════
 
+# def user_can_edit_report(user, report_card):
+#     """
+#     Superusers and is_staff: unrestricted.
+#     Teacher: must have report card's Standard in standards_assigned.
+#     """
+#     if user.is_superuser or user.is_staff:
+#         return True
+#     teacher = _get_teacher(user)
+#     if teacher is None:
+#         return False
+#     return teacher.standards_assigned.filter(
+#         pk=report_card.prep_class.standard_id
+#     ).exists()
+
+
+# def user_can_edit_motor_scores(user, report_card):
+#     """
+#     Only the form teacher of the class (or admin/staff) may enter/edit
+#     MotorAbilityScores for pupils in this prep class.
+
+#     Standard.form_teacher FK → Teacher (related_name='form_class').
+#     """
+#     if user.is_superuser or user.is_staff:
+#         return True
+#     teacher = _get_teacher(user)
+#     if teacher is None:
+#         return False
+#     standard = report_card.prep_class.standard
+#     return (
+#         standard.form_teacher_id is not None
+#         and standard.form_teacher_id == teacher.pk
+#     )
+
+
+# # Keep old name as an alias so any code that still calls it doesn't break
+# user_can_edit_domain_ratings = user_can_edit_motor_scores
+
+
+# def user_can_enter_subject_skills(user, report_card, subject):
+#     """
+#     Teacher must teach the subject AND be assigned to the class.
+#     Superusers/staff bypass.
+#     """
+#     if user.is_superuser or user.is_staff:
+#         return True
+#     teacher = _get_teacher(user)
+#     if teacher is None:
+#         return False
+#     teaches_subject = teacher.subjects_taught.filter(pk=subject.pk).exists()
+#     assigned_class  = teacher.standards_assigned.filter(
+#         pk=report_card.prep_class.standard_id
+#     ).exists()
+#     return teaches_subject and assigned_class
+
+# ═══════════════════════════════════════════════════════════════════
+# SECTION 2 — Permission helpers
+# ═══════════════════════════════════════════════════════════════════
+
+# def user_can_edit_report(user, report_card):
+#     """
+#     Unrestricted: Superusers and is_staff.
+#     Teacher Rules: Must be assigned to the class via `standards_assigned` 
+#     OR be the designated `form_teacher` for that class's Standard.
+#     """
+#     if user.is_superuser or user.is_staff:
+#         return True
+    
+#     teacher = _get_teacher(user)
+#     if teacher is None:
+#         return False
+
+#     standard = report_card.prep_class.standard
+
+#     # Check if the teacher is the form teacher of this class's standard
+#     is_form_teacher = (standard.form_teacher_id == teacher.pk)
+#     if is_form_teacher:
+#         return True
+
+#     # Otherwise, fallback check: must have the standard in assigned classes
+#     return teacher.standards_assigned.filter(pk=standard.pk).exists()
+
+
+# def user_can_edit_motor_scores(user, report_card):
+#     """
+#     Only Superusers, is_staff, or the explicit class form_teacher can 
+#     enter or edit MotorAbilityScores for pupils in this class.
+#     """
+#     if user.is_superuser or user.is_staff:
+#         return True
+    
+#     teacher = _get_teacher(user)
+#     if teacher is None:
+#         return False
+        
+#     standard = report_card.prep_class.standard
+#     return standard.form_teacher_id == teacher.pk
+
+
+# # Keep old name as an alias so any legacy view or admin call-sites don't break
+# user_can_edit_domain_ratings = user_can_edit_motor_scores
+
+
+# def user_can_enter_subject_skills(user, report_card, subject):
+#     """
+#     Teacher entry matrix:
+#     - If they are the class form_teacher, they have access to all subjects for this class.
+#     - Otherwise, they must teach the specific subject AND be explicitly assigned to the class.
+#     """
+#     if user.is_superuser or user.is_staff:
+#         return True
+        
+#     teacher = _get_teacher(user)
+#     if teacher is None:
+#         return False
+
+#     standard = report_card.prep_class.standard
+
+#     # Rule 1: A class form teacher can manage all subjects for their own class
+#     if standard.form_teacher_id == teacher.pk:
+#         return True
+
+#     # Rule 2: Subject teachers must fulfill both assignments (Class + Subject)
+#     teaches_subject = teacher.subjects_taught.filter(pk=subject.pk).exists()
+#     assigned_class  = teacher.standards_assigned.filter(pk=standard.pk).exists()
+    
+#     return teaches_subject and assigned_class
+
+
+# def user_can_view_or_print_report(user, report_card):
+#     """
+#     Restricts viewing and compilation capabilities for official report documentation.
+#     Accessible only by Admins, Staff, or the class form_teacher.
+#     """
+#     if user.is_superuser or user.is_staff:
+#         return True
+
+#     teacher = _get_teacher(user)
+#     if teacher is None:
+#         return False
+
+#     standard = report_card.prep_class.standard
+#     return standard.form_teacher_id == teacher.pk
+
+# ═══════════════════════════════════════════════════════════════════
+# SECTION 2 — Permission helpers
+# ═══════════════════════════════════════════════════════════════════
+
 def user_can_edit_report(user, report_card):
     """
-    Superusers and is_staff: unrestricted.
-    Teacher: must have report card's Standard in standards_assigned.
+    Page-level gatekeeper. Determines if a user can open this report card's edit screen.
+    - Superusers / Staff: Unrestricted.
+    - Form Teacher: Allowed if managing their own class.
+    - Subject Teacher: Allowed if assigned to this class standard AND teaches 
+      at least one active subject for it.
     """
     if user.is_superuser or user.is_staff:
         return True
+    
     teacher = _get_teacher(user)
     if teacher is None:
         return False
-    return teacher.standards_assigned.filter(
-        pk=report_card.prep_class.standard_id
+
+    standard = report_card.prep_class.standard
+
+    # If they are the class form teacher, they automatically get edit workspace access
+    if standard.form_teacher_id == teacher.pk:
+        return True
+
+    # Check if they are assigned to this class standard at all
+    is_assigned_to_class = teacher.standards_assigned.filter(pk=standard.pk).exists()
+    if not is_assigned_to_class:
+        return False
+
+    # Verify if they teach any subjects tied to this class's report card entries
+    from .models import PrepSubjectSkill
+    teacher_subject_ids = teacher.subjects_taught.values_list('pk', flat=True)
+    
+    return PrepSubjectSkill.objects.filter(
+        prep_class=report_card.prep_class,
+        subject_id__in=teacher_subject_ids,
+        is_active=True
     ).exists()
+
+
+def user_can_modify_class_metadata(user, report_card):
+    """
+    Restricts administrative actions (Attendance modifications, Class Teacher Comments, 
+    and Submission workflows) strictly to Admins, Staff, or the assigned Class Form Teacher.
+    """
+    if user.is_superuser or user.is_staff:
+        return True
+        
+    teacher = _get_teacher(user)
+    if teacher is None:
+        return False
+        
+    return report_card.prep_class.standard.form_teacher_id == teacher.pk
 
 
 def user_can_edit_motor_scores(user, report_card):
     """
-    Only the form teacher of the class (or admin/staff) may enter/edit
-    MotorAbilityScores for pupils in this prep class.
-
-    Standard.form_teacher FK → Teacher (related_name='form_class').
+    Psychomotor parameters / MotorAbilityScores can only be updated by 
+    Admins, Staff, or the dedicated Form Teacher.
     """
-    if user.is_superuser or user.is_staff:
-        return True
-    teacher = _get_teacher(user)
-    if teacher is None:
-        return False
-    standard = report_card.prep_class.standard
-    return (
-        standard.form_teacher_id is not None
-        and standard.form_teacher_id == teacher.pk
-    )
+    return user_can_modify_class_metadata(user, report_card)
 
-
-# Keep old name as an alias so any code that still calls it doesn't break
+# Keep old name alias alive for backwards compatibility
 user_can_edit_domain_ratings = user_can_edit_motor_scores
 
 
 def user_can_enter_subject_skills(user, report_card, subject):
     """
-    Teacher must teach the subject AND be assigned to the class.
-    Superusers/staff bypass.
+    Subject Skill Matrix validation:
+    - Form Teacher: Can touch any subject within their own classroom.
+    - Subject Teacher: Can ONLY modify if assigned to both the Standard class AND the Subject.
     """
     if user.is_superuser or user.is_staff:
         return True
+        
     teacher = _get_teacher(user)
     if teacher is None:
         return False
+
+    standard = report_card.prep_class.standard
+
+    # Rule 1: Form teacher can access all items for their class standard
+    if standard.form_teacher_id == teacher.pk:
+        return True
+
+    # Rule 2: Subject teachers must fulfill both relationship bindings explicitly
     teaches_subject = teacher.subjects_taught.filter(pk=subject.pk).exists()
-    assigned_class  = teacher.standards_assigned.filter(
-        pk=report_card.prep_class.standard_id
-    ).exists()
+    assigned_class  = teacher.standards_assigned.filter(pk=standard.pk).exists()
+    
     return teaches_subject and assigned_class
+
+
+def user_can_view_or_print_report(user, report_card):
+    """
+    Restricts access to viewing completed previews or printable report documentation.
+    Accessible by Admins, Staff, or the class Form Teacher.
+    """
+    return user_can_modify_class_metadata(user, report_card)
 
 
 # ═══════════════════════════════════════════════════════════════════

@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Report Card — {{ report_card.student_full_name }}</title>
+<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+
 <style>
 /*
  * KwikSchools — Prep Report Card (standalone, print-ready)
@@ -268,7 +270,7 @@ html, body {
   display: block;
   margin-bottom: 1px;
 }
-.bio-val { font-size: 7.8pt; font-weight: 600; color: var(--ink); }
+.bio-val { font-size: 10pt; font-weight: 600; color: var(--ink); }
 .att-present { color: var(--green); font-weight: 700; }
 .att-absent  { color: var(--red);   font-weight: 700; }
 
@@ -279,7 +281,7 @@ html, body {
   background: var(--navy);
   color: #fff;
   font-family: 'DM Mono', monospace;
-  font-size: 6.5pt;
+  font-size: 8.5pt;
   font-weight: 500;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -305,7 +307,7 @@ html, body {
 .skills-master-tbl {
   width: 100%;
   border-collapse: collapse;
-  font-size: 7pt;
+  font-size: 8.5pt;
   table-layout: fixed;
 }
 .skills-master-tbl thead th {
@@ -332,7 +334,7 @@ html, body {
   border-left: 3.5px solid var(--gold) !important;
   padding: 3px 10px !important;
   font-family: 'Playfair Display', serif;
-  font-size: 8pt;
+  font-size: 9pt;
   font-weight: 700;
   color: var(--navy);
   letter-spacing: .2px;
@@ -658,7 +660,7 @@ html, body {
     <a href="{% url 'prep_reports:report_card_edit' report_card.pk %}" class="btn-edit-rc">✏ Edit</a>
     {% endif %}
     <a href="{% url 'prep_reports:class_students' prep_class.pk period.pk %}" class="btn-back-rc">← Class List</a>
-    <a href="{% url 'prep_reports:report_card_pdf' report_card.pk %}" class="btn-pdf-rc" target="_blank">⬇ PDF</a>
+    {% comment %} <a href="{% url 'prep_reports:report_card_pdf' report_card.pk %}" class="btn-pdf-rc" target="_blank">⬇ PDF</a> {% endcomment %}
     <button onclick="window.print()" class="btn-print-rc">🖨 Print</button>
   </div>
 </div>
@@ -742,7 +744,7 @@ html, body {
   <div class="rc-bio">
     <table class="bio-table">
       <tr>
-        <td style="width:34%">
+        <td style="width:31%">
           <span class="bio-lbl">Full Name</span>
           <span class="bio-val">{{ report_card.student_full_name }}</span>
         </td>
@@ -750,7 +752,7 @@ html, body {
           <span class="bio-lbl">USN / Adm No.</span>
           <span class="bio-val">{{ student.USN|default:"—" }}</span>
         </td>
-        <td style="width:17%">
+        <td style="width:20%">
           <span class="bio-lbl">Class</span>
           <span class="bio-val">{{ prep_class.standard }}</span>
         </td>
@@ -765,19 +767,19 @@ html, body {
       </tr>
       <tr>
         <td>
-          <span class="bio-lbl">Days School Opened</span>
-          <span class="bio-val">{{ report_card.days_school_opened }}</span>
+          <span class="bio-val">Days School Opened: </span>
+           <span class="bio-val">{{ report_card.days_school_opened }}</span>
         </td>
         <td>
-          <span class="bio-lbl">Days Present</span>
+          <span class="bio-val">Days Present</span>
           <span class="bio-val att-present">{{ report_card.days_present }}</span>
         </td>
         <td>
-          <span class="bio-lbl">Days Absent</span>
+          <span class="bio-val">Days Absent</span>
           <span class="bio-val att-absent">{{ report_card.days_absent }}</span>
         </td>
         <td colspan="2">
-          <span class="bio-lbl">Next Term Begins</span>
+          <span class="bio-val">Next Term Begins</span>
           <span class="bio-val">{{ period.next_term_begins|date:"d M Y"|default:"TBA" }}</span>
         </td>
       </tr>
@@ -962,7 +964,7 @@ html, body {
       {% elif report_card.created_by %}Prepared by: {{ report_card.created_by.get_full_name|default:report_card.created_by.username }}
       {% endif %}
     </span>
-    <span class="cf-brand">KwikSchools™</span>
+    <span class="cf-brand">{{ school_info.name }}</span>
   </div>
 
 </div>{# /rc-wrapper #}
