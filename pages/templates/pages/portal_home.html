@@ -693,12 +693,17 @@
 								{% endif %}	
 								{% if user.is_authenticated and user.is_superuser or user.is_staff %}
 								<ul aria-expanded="false">
-									<li><a href="#">School AI Tools</a></li>
+									<li><a href="{% url 'ai_center:ai_center_dashboard' %}">AI CENTER</a></li>
+									<li><a href="{% url 'ai_center:guide' %}">AI GUIDE</a></li>
+
+
 									{% if user.is_authenticated and user.is_superuser or user.student %}					
-									<li><a href="#">Student AI Tools</a></li>
+									<li><a href="#">Student AI Tools</a></li>									
 									{% endif %}	
 									{% if user.is_authenticated and user.is_superuser or user.teacher %}
-									<li><a href="#">Teachers AI Tools</a></li>
+									<li><a href="{% url 'ai_center:ai_center_dashboard' %}">AI CENTER</a></li>
+									<li><a href="{% url 'ai_center:guide' %}">AI GUIDE</a></li>
+
 									{% endif %}			
 								</ul>
 							</li>
