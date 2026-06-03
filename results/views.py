@@ -1616,21 +1616,57 @@ class StudentDashboardView(LoginRequiredMixin, View):
 # The new view with form_teacher ability to enter motor ability record
 # In your results/views.py
 
+# class MotorAbilityScoreCreateUpdateView(LoginRequiredMixin, TeacherRequiredMixin, View):
+#     template_name = 'results/test_motor_ability_score_form.html'
+
+#     def dispatch(self, request, *args, **kwargs):
+#         student = get_object_or_404(Student, id=kwargs['student_id'])
+
+#         # Check if the logged-in user's teacher profile is the student's form_teacher.
+#         # It's important to check if form_teacher exists to prevent errors.
+#         if student.form_teacher and student.form_teacher == request.user.teacher:
+#             # Permission granted, proceed to the view's get or post method
+#             return super().dispatch(request, *args, **kwargs)
+
+#         # If the user is not the form teacher, show an error message and redirect.
+#         messages.error(request, "You do not have permission to record scores for this student.")
+#         return redirect('pages:portal-home')
+
 class MotorAbilityScoreCreateUpdateView(LoginRequiredMixin, TeacherRequiredMixin, View):
     template_name = 'results/test_motor_ability_score_form.html'
 
     def dispatch(self, request, *args, **kwargs):
-        student = get_object_or_404(Student, id=kwargs['student_id'])
+        student = get_object_or_404(
+            Student,
+            id=kwargs['student_id']
+        )
 
-        # Check if the logged-in user's teacher profile is the student's form_teacher.
-        # It's important to check if form_teacher exists to prevent errors.
-        if student.form_teacher and student.form_teacher == request.user.teacher:
-            # Permission granted, proceed to the view's get or post method
+        user = request.user
+
+        if user.is_superuser or user.is_staff:
             return super().dispatch(request, *args, **kwargs)
 
-        # If the user is not the form teacher, show an error message and redirect.
-        messages.error(request, "You do not have permission to record scores for this student.")
-        return redirect('pages:portal-home')
+        teacher = getattr(user, 'teacher', None)
+
+        if teacher is None:
+            raise PermissionDenied
+
+        if student.form_teacher_id is None:
+            messages.error(
+                request,
+                "No form teacher has been assigned to this student."
+            )
+            return redirect('pages:portal-home')
+
+        if student.form_teacher_id != teacher.id:
+            messages.error(
+                request,
+                "You do not have permission to record scores for this student."
+            )
+            return redirect('pages:portal-home')
+
+        return super().dispatch(request, *args, **kwargs)
+
 
     def get(self, request, student_id, term_id):
         # ... (Your existing get method code goes here)
