@@ -52,10 +52,11 @@ INSTALLED_APPS = [
     'tickets.apps.TicketsConfig',
     'events.apps.EventsConfig',
     'prep_reports.apps.PrepReportsConfig',
+    'ai_center.apps.AiCenterConfig',
 
 
     # Installed Apps
-     'django_ckeditor_5',
+    'django_ckeditor_5',
     'storages',
     'crispy_forms',
     'crispy_bootstrap4',

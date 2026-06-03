@@ -332,11 +332,12 @@
              class="btn btn-outline-primary btn-sm" target="_blank">
             👁 Preview Report Card
           </a>
+{% comment %}       
           {# PDF #}
           <a href="{% url 'prep_reports:report_card_pdf' report_card.pk %}"
              class="btn btn-outline-danger btn-sm">
             📄 Download PDF
-          </a>
+          </a> {% endcomment %}
           {% endif %}
 
           {# Submit (teacher) #}

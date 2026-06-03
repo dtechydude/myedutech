@@ -24,6 +24,8 @@ urlpatterns = [
     path('tickets/', include('tickets.urls', namespace='tickets')),
     path('events/', include('events.urls', namespace='events')),
     path('prep_reports/', include('prep_reports.urls', namespace='prep_reports')),
+    path('ai_center/', include('ai_center.urls', namespace='ai_center')),
+
 
 
        

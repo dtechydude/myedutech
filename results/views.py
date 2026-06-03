@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.urls import reverse
+from django.urls import reverse, NoReverseMatch
 from django.http import HttpResponse # Import HttpResponse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse
@@ -32,6 +32,10 @@ from django.conf import settings # To access MEDIA_ROOT/STATIC_ROOT if needed fo
 from xhtml2pdf import pisa # ADD THIS IMPORT
 import io # Needed for file-like object
 from django.template.loader import get_template
+
+# Models from both apps
+# from results.models import Term, Session, SessionResultStatus
+from prep_reports.models import PrepReportCard
 
 
 
@@ -1516,107 +1520,6 @@ class SessionPublicationControlView(LoginRequiredMixin, UserPassesTestMixin, Vie
 #             messages.error(request, "Your account is not linked to a student profile.")
 #             return redirect('portal-home')
 
-# from django.contrib.auth.mixins import LoginRequiredMixin
-# from django.shortcuts import render, redirect
-# from django.contrib import messages
-# from django.views import View
-# from django.urls import reverse, NoReverseMatch
-
-# # Import your models
-# from results.models import Term, Session, SessionResultStatus
-# from prep_reports.models import PrepReportCard
-
-
-# class StudentDashboardView(LoginRequiredMixin, View):
-#     template_name = 'results/student_dashboard.html'
-
-#     def get(self, request, *args, **kwargs):
-#         if hasattr(request.user, 'student'):
-#             student = request.user.student
-
-#             # 1. FETCH REGULAR TERMLY SCORES
-#             terms_with_scores = Term.objects.filter(
-#                 score__student=student
-#             ).distinct().order_by('-start_date')
-
-#             # 2. FETCH PREP TERMLY REPORTS (Matching your preview view status requirement)
-#             published_prep_cards = PrepReportCard.objects.filter(
-#                 student=student,
-#                 status='published'
-#             ).select_related('period', 'period__session').order_by('-period__start_date')
-
-#             # 3. UNIFY TERMLY VIEW LABELS
-#             unified_terms = []
-#             prep_term_ids = set()
-
-#             for card in published_prep_cards:
-#                 prep_term_ids.add(card.period.id)
-                
-#                 # Dynamically resolve URL using your exact Preview view name
-#                 try:
-#                     # Tries the standard namespaced pattern matching your view
-#                     card_url = reverse('prep_reports:report_card_preview', kwargs={'report_card_id': card.id})
-#                 except NoReverseMatch:
-#                     # Fallback string if app_name namespace differs in your urls.py
-#                     card_url = f"/prep/report-card/{card.id}/preview/"
-
-#                 unified_terms.append({
-#                     'is_prep': True,
-#                     'id': card.id,
-#                     'name': card.period.name,
-#                     'session_name': str(card.period.session),
-#                     'start_date': card.period.start_date,
-#                     'end_date': card.period.end_date,
-#                     'url': card_url
-#                 })
-
-#             for term in terms_with_scores:
-#                 # If a custom prep card exists for this term, prioritize it over the generic empty scores view
-#                 if term.id in prep_term_ids:
-#                     continue
-#                 unified_terms.append({
-#                     'is_prep': False,
-#                     'id': term.id,
-#                     'name': term.name,
-#                     'session_name': str(term.session),
-#                     'start_date': term.start_date,
-#                     'end_date': term.end_date,
-#                 })
-
-#             # Sort combined list by date descending
-#             unified_terms.sort(key=lambda x: x['start_date'] or x['end_date'], reverse=True)
-
-#             # 4. ANNUAL (SESSION) LOGIC
-#             published_session_ids = SessionResultStatus.objects.filter(
-#                 student=student, 
-#                 is_published=True
-#             ).values_list('session_id', flat=True)
-
-#             sessions_with_scores = Session.objects.filter(
-#                 id__in=published_session_ids,
-#                 terms__score__student=student
-#             ).distinct().order_by('-start_date')
-
-#             context = {
-#                 'student': student,
-#                 'unified_terms': unified_terms, 
-#                 'sessions': sessions_with_scores,
-#             }
-#             return render(request, self.template_name, context)
-#         else:
-#             messages.error(request, "Your account is not linked to a student profile.")
-#             return redirect('portal-home')
-
-
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.views import View
-from django.urls import reverse, NoReverseMatch
-
-# Models from both apps
-from results.models import Term, Session, SessionResultStatus
-from prep_reports.models import PrepReportCard
 
 
 class StudentDashboardView(LoginRequiredMixin, View):
