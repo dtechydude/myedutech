@@ -298,6 +298,8 @@ class MidTermScore(models.Model):
     term = models.ForeignKey(Term, on_delete=models.CASCADE)
 
     exam_total_score = models.FloatField(null=True, blank=True, default=0)
+    # ... your existing fields ...
+    is_graded = models.BooleanField(default=False)
 
     def calculate_total_score(self):
         return self.component_scores.aggregate(
@@ -405,7 +407,8 @@ class MidTermComponentScore(models.Model):
         on_delete=models.CASCADE
     )
 
-    score = models.FloatField(default=0)
+    score = models.FloatField(default=0)  
+    
 
     class Meta:
         unique_together = ('midterm_score', 'component')

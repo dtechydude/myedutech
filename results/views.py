@@ -2091,36 +2091,67 @@ class MidTermScoreEntryView(TeacherRequiredMixin, LoginRequiredMixin, View):
 
         errors = False
 
+        # for score in queryset:
+
+        #     total = 0
+
+        #     for component in components:
+
+        #         key = f'component_{score.id}_{component.id}'
+        #         raw = request.POST.get(key)
+
+        #         try:
+        #             value = float(raw) if raw not in ['', None] else 0
+        #         except ValueError:
+        #             errors = True
+        #             continue
+
+        #         if value > component.max_score:
+        #             messages.error(
+        #                 request,
+        #                 f"{score.student} - {component.title} exceeds limit"
+        #             )
+        #             errors = True
+
+        #         total += value
+
+        #     if total > central_max:
+        #         messages.error(
+        #             request,
+        #             f"{score.student} exceeds total max score"
+        #         )
+        #         errors = True
+
         for score in queryset:
-
-            total = 0
-
-            for component in components:
-
-                key = f'component_{score.id}_{component.id}'
-                raw = request.POST.get(key)
-
-                try:
-                    value = float(raw) if raw not in ['', None] else 0
-                except ValueError:
-                    errors = True
-                    continue
-
-                if value > component.max_score:
-                    messages.error(
-                        request,
-                        f"{score.student} - {component.title} exceeds limit"
-                    )
-                    errors = True
-
-                total += value
-
-            if total > central_max:
-                messages.error(
-                    request,
-                    f"{score.student} exceeds total max score"
-                )
-                errors = True
+                total = 0
+                has_any_score = False # Track if any score is provided
+                
+                for component in components:
+                    key = f'component_{score.id}_{component.id}'
+                    raw = request.POST.get(key)
+                    
+                    # Only treat as a score if the user actually typed something
+                    if raw not in ['', None]:
+                        value = float(raw)
+                        has_any_score = True
+                        
+                        obj, _ = MidTermComponentScore.objects.get_or_create(
+                            midterm_score=score,
+                            component=component
+                        )
+                        obj.score = value
+                        obj.save()
+                        
+                        total += value
+                
+                # Update the score object
+                if has_any_score:
+                    score.exam_total_score = total
+                    score.is_graded = True # Mark as graded
+                    score.save()
+            
+                # messages.success(request, "Scores saved successfully.")
+                # return redirect('results:midterm_score_success')
 
         if errors:
             return render(request, self.template_name, {
@@ -2237,6 +2268,7 @@ class MidTermReportCardView(LoginRequiredMixin, View):
                 student=student,
                 term=term,
                 exam_total_score__isnull=False,
+                is_graded=True  # Ensure this filter is applied
             )
             .select_related('subject')
             .prefetch_related('component_scores__component')
