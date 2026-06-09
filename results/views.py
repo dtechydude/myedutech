@@ -2091,37 +2091,6 @@ class MidTermScoreEntryView(TeacherRequiredMixin, LoginRequiredMixin, View):
 
         errors = False
 
-        # for score in queryset:
-
-        #     total = 0
-
-        #     for component in components:
-
-        #         key = f'component_{score.id}_{component.id}'
-        #         raw = request.POST.get(key)
-
-        #         try:
-        #             value = float(raw) if raw not in ['', None] else 0
-        #         except ValueError:
-        #             errors = True
-        #             continue
-
-        #         if value > component.max_score:
-        #             messages.error(
-        #                 request,
-        #                 f"{score.student} - {component.title} exceeds limit"
-        #             )
-        #             errors = True
-
-        #         total += value
-
-        #     if total > central_max:
-        #         messages.error(
-        #             request,
-        #             f"{score.student} exceeds total max score"
-        #         )
-        #         errors = True
-
         for score in queryset:
                 total = 0
                 has_any_score = False # Track if any score is provided
