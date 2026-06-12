@@ -1,0 +1,189 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Progress - {% if school_info.name %}{{ school_info.name }}{% else %}KwikSchools Institute{% endif %}</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        body {
+            background: #f4f6f8;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .site-header {
+            background: #1a3c5e;
+            color: #fff;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .site-header img {
+            height: 48px;
+            width: 48px;
+            object-fit: contain;
+            background: #fff;
+            border-radius: 6px;
+            padding: 4px;
+        }
+        .site-header h1 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        .site-header p {
+            font-size: 0.8rem;
+            opacity: 0.85;
+        }
+
+        main {
+            flex: 1;
+            max-width: 800px;
+            width: 100%;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .page-title {
+            margin-bottom: 6px;
+            color: #1a3c5e;
+            font-size: 1.5rem;
+        }
+        .page-subtitle {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .progress-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .progress-list {
+            list-style: none;
+        }
+        .progress-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .progress-list li:last-child {
+            border-bottom: none;
+        }
+        .progress-list li:nth-child(even) {
+            background: #fafbfc;
+        }
+
+        .session-label {
+            font-weight: 600;
+            color: #1a3c5e;
+        }
+        .standard-label {
+            background: #e8f0fe;
+            color: #1a3c5e;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: #888;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 16px;
+            color: #1a3c5e;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .site-footer {
+            background: #1a3c5e;
+            color: #cdd9e5;
+            text-align: center;
+            padding: 14px 20px;
+            font-size: 0.8rem;
+        }
+        .site-footer a {
+            color: #fff;
+            text-decoration: none;
+        }
+        .site-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="site-header">
+        {% if school_info.logo %}
+            <img src="{{ school_info.logo.url }}" alt="School Logo">
+        {% else %}
+            <img src="{% static 'images/default_school_logo.png' %}" alt="School Logo">
+        {% endif %}
+        <div>
+            <h1>{% if school_info.name %}{{ school_info.name }}{% else %}KwikSchools Institute{% endif %}</h1>
+            {% if school_info.address_line_1 %}
+                <p>{{ school_info.address_line_1 }}{% if school_info.address_line_2 %}, {{ school_info.address_line_2 }}{% endif %}</p>
+            {% endif %}
+        </div>
+    </header>
+
+    <main>
+        {% if is_staff_view %}
+            <a href="javascript:history.back()" class="back-link">&larr; Back to Student List</a>
+            <h2 class="page-title">Class Progress: {{ student.get_full_name }}</h2>
+            <p class="page-subtitle">Admission No: {{ student.admission_number|default:"N/A" }}</p>
+        {% else %}
+            <a href="/dashboard" class="back-link"> Back To Dashboard</a>
+            <h2 class="page-title">My Class Progress</h2>
+            <p class="page-subtitle">A record of the classes you have progressed through</p>
+        {% endif %}
+
+        <div class="progress-card">
+            {% if history %}
+                <ul class="progress-list">
+                    {% for entry in history %}
+                        <li>
+                            <span class="session-label">{{ entry.session }}</span>
+                            <span class="standard-label">{{ entry.standard }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="empty-state">
+                    <p>No class history available yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        &copy; {% now "Y" %} {% if school_info.name %}{{ school_info.name }}{% else %}KwikSchools Institute{% endif %}.
+        All rights reserved. | By <a href="https://kwikschools.com">KwikSchools EdTech</a>
+    </footer>
+
+</body>
+</html>

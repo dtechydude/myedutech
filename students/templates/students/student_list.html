@@ -99,7 +99,7 @@
                                     <table id="example3" class="display" style="min-width: 845px">
                                         <thead>
                                             <tr>
-                                                <th>S/N</th>
+                                                <th>ID CARD</th>
                                                 <th>Img</th>
                                                 <th>USN</th>
                                                 <th>Name</th>
@@ -107,15 +107,23 @@
                                                 <th>Gender</th>
                                                 <th>Mobile</th>
                                                 <th>Adm.Date</th>  
-                                                <th>ID Card</th>                                              
-                                                <th>Sch. Bus</th>                                                
-                                                <th>View/Edit</th>
+                                                <th>Progress</th>                                              
+                                                <th>Sch.Bus</th>                                                
+                                                <th>View/Edit Info</th>
+                                                {% comment %} <th>Edit</th> {% endcomment %}
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {% for s in all_students %}
                                             <tr>
-                                                <td>{{ forloop.counter }}</td>
+                                                {% comment %} <td>{{ forloop.counter }}</td> {% endcomment %}
+                                                 <td>                                                    
+                                                    <a href="{% url 'students:student_id_card' s.id %}"
+                                                    target="_blank"
+                                                    class="btn btn-sm btn-outline-primary ml-2">
+                                                        ID Card
+                                                    </a>
+                                                </td>   
 												<td><a href="{% url 'students:student-detail' s.USN %}"><img class="rounded-circle" width="40" height="40" src="{{s.user.profile.image_url}}" alt=""></a></td>
                                                 <td><a href="{% url 'students:student-detail' s.USN %}">{{ s.USN }}</a></td>
                                                 <td><a href="{% url 'students:student-detail' s.USN %}"><strong>{{ s.last_name }} </strong> {{ s.first_name }} {% if s.middle_name %} {{ s.middle_name }} {% endif%}</a></td>
@@ -123,21 +131,17 @@
                                                 <td>{{ s.gender|upper }}</td>
                                                 <!-- <td>M.COM., P.H.D.</td> -->
                                                 <td><strong>{{ s.guardian_phone }}</strong></a></td>
-                                                <td>{{ s.date_admitted }}</td>
-                                                 <td>                                                    
-                                                    <a href="{% url 'students:student_id_card' s.id %}"
-                                                    target="_blank"
-                                                    class="btn btn-sm btn-outline-primary ml-2">
-                                                        ID Card
-                                                    </a>
-                                                </td>                                                
-                                                <td>
+                                                <td>{{ s.date_admitted }}</td>                                                                                                                           
+                                                    <td>
+                                                    <a href="{% url 'students:student_class_progress' s.id %}" class="btn btn-sm btn-warning ml-2"><i class="fa fa-user-graduate"></i>Progress</a>
+                                                    </td>
+                                                     <td>
                                                     <a href="{% url 'transport:enroll_or_pay_redirect' student_id=s.USN %}" class="btn btn-sm btn-primary">
     
                                                     <i class="fas fa-bus"></i> Enroll
                                                     </a>
-                                                </td>                                              
-                                                <td>
+                                                </td>   
+                                                    <td>
 													<div class="d-flex">
 														<a href="{% url 'students:student-detail' s.USN %}" class="btn btn-success me-1">View</a>
 														<a href="{% url 'students:student-update' s.USN %}" class="btn btn-warning">Edit</a>

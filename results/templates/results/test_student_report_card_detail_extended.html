@@ -271,9 +271,9 @@
             <table class="info-table w-100 mb-1">
               <tr>
                 <td colspan="2"><strong>NAME:</strong> {{ student.last_name|upper }} {{ student.first_name|upper }} {% if student.middle_name %}{{ student.middle_name|upper }}{% endif %}</td>
-                {% comment %} <td><strong>GENDER:</strong> {{ student.gender|default:"N/A" }}</td> {% endcomment %}
+                <td><strong>GENDER:</strong> {{ student.gender|default:"N/A" }}</td>
                 <td><strong>USN:</strong> {{ student.USN|default:"N/A" }}</td>
-                <td><strong>CLASS:</strong> {{ student.current_class.name|default:"N/A" }}</td>
+                <td><strong>CLASS:</strong> {{ result_class|default:"N/A" }}</td>
                 <td><strong>Class Size:</strong> {{ total_students_in_class|default:"N/A" }}</td>
 
               </tr>

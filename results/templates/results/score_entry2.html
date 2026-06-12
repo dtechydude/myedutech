@@ -171,9 +171,11 @@
 <body>
 
     <header class="header">
-        <a href="/" class="logo">
-            <img src="{% if school_identity.logo %}{{ school_identity.logo.url }}{% else %}{% static 'pages/images/logo.png' %}{% endif %}" alt="Logo">
-        </a>
+        <h5 class="logo">{{ school_info.name }}</h5>
+        {% comment %} <a href="/dashboard" class="logo">
+            <img src="{% if school_info.logo %}{{ school_info.logo.url }} 
+            {% else %}{% static 'pages/images/logo.png' %}{% endif %}" alt="Logo"> </a>
+        {% endcomment %}
         <div class="d-flex align-items-center gap-3">
             <span class="text-muted small d-none d-md-block">User: <strong>{{ user.username }}</strong></span>
             <a href="/dashboard/" class="btn btn-outline-primary btn-sm px-3">Dashboard</a>

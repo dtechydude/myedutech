@@ -1279,3 +1279,35 @@ def ajax_validate_csv_headers(request):
 
     except Exception as e:
         return JsonResponse({'valid': False, 'error': str(e)})
+
+
+# Student Class Progress
+# views.py
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, get_object_or_404
+from django.core.exceptions import PermissionDenied
+
+@login_required
+def class_progress(request, student_id=None):
+    user = request.user
+
+    if user.is_superuser or user.groups.filter(name__in=['Admin', 'Teacher']).exists():
+        # Staff viewing any student
+        if not student_id:
+            raise PermissionDenied("Student ID required for staff view.")
+        student = get_object_or_404(Student, pk=student_id)
+
+    else:
+        # Regular student viewing their own progress
+        student = get_object_or_404(Student, user=user)
+        if student_id and int(student_id) != student.id:
+            raise PermissionDenied("You can only view your own progress.")
+
+    history = student.get_class_history()
+
+    context = {
+        'student': student,
+        'history': history,
+        'is_staff_view': user.is_superuser or user.groups.filter(name__in=['Admin', 'Teacher']).exists(),
+    }
+    return render(request, 'students/class_progress.html', context)

@@ -300,6 +300,31 @@ class Student(models.Model):
         """
         return self.form_teacher if self.current_class else None
 
+        # models.py get history
+    def get_class_history(self):
+        from results.models import Score
+        from itertools import groupby
+
+        rows = (
+            Score.objects
+            .filter(student=self)
+            .exclude(standard__isnull=True)
+            .select_related('standard', 'term', 'term__session')
+            .order_by('term__session__start_date',)
+            .values('standard_id', 'standard__name', 'term__session_id', 'term__session__name')
+            .distinct()
+        )
+
+        grouped = []
+        for key, group in groupby(rows, key=lambda r: (r['standard_id'], r['term__session_id'])):
+            first = next(group)
+            grouped.append({
+                'standard': first['standard__name'],
+                'session': first['term__session__name'],
+            })
+
+        return grouped
+
 
 class GraduationRecord(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="graduation_records")
@@ -309,3 +334,6 @@ class GraduationRecord(models.Model):
 
     def __str__(self):
         return f"{self.student.first_name} - {self.session}"   
+
+
+

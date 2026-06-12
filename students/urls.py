@@ -58,6 +58,10 @@ urlpatterns = [
         ajax_validate_csv_headers,
         name='bulk-upload-validate',
     ),
+    
+    path('progress/', students_views.class_progress, name='my_class_progress'),           # student's own
+    path('progress/<int:student_id>/', students_views.class_progress, name='student_class_progress'),  # staff
+
 
 
     # path('create-student-profile/', views.create_student_profile, name='create_student_profile'), # Example
@@ -74,22 +78,9 @@ urlpatterns = [
     path('<str:id>/delete/', StudentDeleteView.as_view(), name="student-delete"), 
     path('<str:id>/', MyTeacherDetailView.as_view(), name="my-teacher-detail"),
 
-    # # Bulk Students Upload
-    # path(
-    #     'bulk-upload/',
-    #     StudentBulkUploadView.as_view(),
-    #     name='bulk-upload',
-    # ),
-    # path(
-    #     'bulk-upload/sample-csv/',
-    #     download_sample_csv,
-    #     name='bulk-upload-sample',
-    # ),
-    # path(
-    #     'bulk-upload/validate-headers/',
-    #     ajax_validate_csv_headers,
-    #     name='bulk-upload-validate',
-    # ),
+
+    # path('progress/', students_views.class_progress, name='my_class_progress'),           # student's own
+    # path('progress/<int:student_id>/', students_views.class_progress, name='student_class_progress'),  # staff
 
          
 ]

@@ -75,6 +75,21 @@ class Score(models.Model):
     exam_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
     total_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
 
+    standard = models.ForeignKey(
+        Standard,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='result_scores'
+    )
+
+    def save(self, *args, **kwargs):
+
+        if not self.standard and self.student:
+            self.standard = self.student.current_class
+
+        super().save(*args, **kwargs)
+
     class Meta:
         unique_together = ('student', 'subject', 'term')
         ordering = ['student__last_name', 'student__first_name']

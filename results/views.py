@@ -1026,7 +1026,15 @@ class StudentReportCardView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
         next_term_start_date = next_term.start_date if next_term else None
         total_students_in_class = Student.objects.filter(current_class=standard).count()
 
-       
+        # new logic to fetch the report card student class
+        first_score = Score.objects.filter(student=student, term=term).select_related('standard').first()
+
+        standard = (
+            first_score.standard
+            if first_score and first_score.standard
+            else student.current_class
+        )
+        
         # ---------------- SCORES ----------------
         scores = Score.objects.filter(
             student=student,
@@ -1136,6 +1144,7 @@ class StudentReportCardView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
 
         # ---------------- CONTEXT ----------------
         context = {
+            'result_class': standard,
             'student': student,
             'term': term,
             'report_data': report_data,

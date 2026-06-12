@@ -457,6 +457,7 @@
 							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>																	
 							
 							{% elif user.student %}	
+							<li><a href="{% url 'students:my_class_progress' %}">My Class Progress</a></li>
 							<li><a href="{% url 'students:student_id_card' student.id %}"> My ID Card</a></li>	
 							<li><a href="{% url 'attendance:self-attendance-summary' %}">Attendance Summary</a></li>	
 							<li><a href="{% url 'attendance:self-attendance-detail' %}">Attendance Detail</a></li>							
