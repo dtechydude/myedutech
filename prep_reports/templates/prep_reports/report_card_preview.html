@@ -705,7 +705,7 @@ html, body {
    WEB-ONLY TOP BAR
 ════════════════════════════════════════════ #} {% endcomment %}
 <div class="rc-top-bar">
-  <a href="javascript:history.back()" class="btn-back-rc">← Back</a>
+  <a href="/dashboard" class="btn-back-rc">← Dashboard</a>
   <div style="display:flex;gap:7px;flex-wrap:wrap">
     {% if not readonly %}
     <a href="{% url 'prep_reports:report_card_edit' report_card.pk %}" class="btn-edit-rc">✏ Edit</a>
