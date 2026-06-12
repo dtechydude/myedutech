@@ -352,9 +352,9 @@ html, body {
 }
 .skills-master-tbl tbody tr.sk-row td {
   border: .8px solid #d4d4e4;
-  padding: 2px 6px 2px 14px;
+  padding: 1px 4px 1px 10px;
   vertical-align: middle;
-  line-height: 1.28;
+  line-height: 1.05;
   color: var(--ink);
 }
 .skills-master-tbl tbody tr.sk-row.even td { background: var(--stripe); }
@@ -417,27 +417,48 @@ html, body {
 }
 
 /* Base structural row for the layout */
-.motor-cols {
+{% comment %} .motor-cols {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-bottom: 2px;
+} {% endcomment %}
+ .motor-cols{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:4px;
 }
 
 /* Compact internal sub-grid system to show items side-by-side */
-.motor-sub-grid {
+{% comment %} .motor-sub-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4px 10px;
+} {% endcomment %}
+
+.motor-sub-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:2px;
 }
 
-.motor-item {
+{% comment %} .motor-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 3px 6px;
   background: #fff;
   border-bottom: 1px dashed #d4d4e4;
+} {% endcomment %}
+ .motor-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:1px 4px;
+    border:1px solid #d8d8e5;
+    border-radius:3px;
+    font-size:5.8pt;
+    background:#fafafa;
 }
 /* Simulate your alternating rows in the grid context */
 .motor-item:nth-child(4n+3), .motor-item:nth-child(4n+4) {
@@ -445,7 +466,7 @@ html, body {
 }
 
 .motor-label-text {
-  font-size: 6.8pt;
+  font-size: 7.2pt;
   color: var(--ink);
 }
 
@@ -455,7 +476,7 @@ html, body {
   height: 16px;
   border-radius: 50%;
   font-family: 'DM Mono', monospace;
-  font-size: 6.5pt;
+  font-size: 7.5pt;
   font-weight: 700;
   color: #fff;
   background: var(--red);
@@ -575,7 +596,8 @@ html, body {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  padding: 8px 16px 10px;
+  {% comment %} padding: 4px 8px 5px; {% endcomment %}
+  padding: 3px 10px;
   border-top: 1px solid #ccc;
   margin-top: 6px;
   gap: 8px;
@@ -583,7 +605,7 @@ html, body {
 .sig-block { flex: 1; text-align: center; }
 .sig-line {
   border-top: .8px solid #333;
-  margin: 24px auto 4px;
+  margin: 10px auto 2px;
   width: 80%;
 }
 .sig-label {
@@ -646,6 +668,35 @@ html, body {
   .motor-edit-btn   { display: none !important; }
   .rc-section-heading a { display: none !important; }
 }
+
+@media print{
+
+    @page{
+        size:A4 portrait;
+        margin:4mm;
+    }
+
+    .rc-card-footer{
+        display:none !important;
+    }
+
+    .workflow,
+    .web-bar{
+        display:none !important;
+    }
+
+    .paper{
+        box-shadow:none !important;
+        margin:0 !important;
+    }
+
+    .motor-cols,
+    .skills-section,
+    .remarks-section,
+    .sig-row{
+        break-inside:avoid;
+    }
+}
 </style>
 </head>
 <body>
@@ -659,7 +710,9 @@ html, body {
     {% if not readonly %}
     <a href="{% url 'prep_reports:report_card_edit' report_card.pk %}" class="btn-edit-rc">✏ Edit</a>
     {% endif %}
+    {% if user.is_authenticated and user.is_superuser or user.is_staff %}
     <a href="{% url 'prep_reports:class_students' prep_class.pk period.pk %}" class="btn-back-rc">← Class List</a>
+    {% endif %}
     {% comment %} <a href="{% url 'prep_reports:report_card_pdf' report_card.pk %}" class="btn-pdf-rc" target="_blank">⬇ PDF</a> {% endcomment %}
     <button onclick="window.print()" class="btn-print-rc">🖨 Print</button>
   </div>
@@ -722,10 +775,9 @@ html, body {
       </div>
     </div>
     <div class="rc-passport">
-      {% if student.badge %}
-        <img src="{{ student.badge.url }}" alt="Student Photo">
-      {% elif student.user.profile.image %}
-        <img src="{{ student.user.profile.image_url }}" alt="Student Photo">
+    
+      {% if student.user.profile.image %}
+        <img src="{{ student.user.profile.image.url }}" alt="Student Photo">
       {% else %}
         <div class="rc-passport-placeholder">Passport<br>Photo</div>
       {% endif %}
@@ -734,10 +786,10 @@ html, body {
 
   {# ── 2. HEADING BAND ── #}
   <div class="rc-heading-band">
-    <div class="title">PUPIL PROGRESS REPORT</div>
-    <div class="subtitle">
+    <div class="title">PUPIL PROGRESS REPORT  <small class="subtitle">  {{ period.term_name|upper }} &nbsp;·&nbsp; {{ period.session_name }} Academic Session</small> </div>
+    {% comment %} <div class="subtitle">
       {{ period.term_name|upper }} &nbsp;·&nbsp; {{ period.session_name }} Academic Session
-    </div>
+    </div> {% endcomment %}
   </div>
 
   {# ── 3. BIO DATA ── #}

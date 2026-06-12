@@ -137,7 +137,7 @@
         <!-- TEACHER / ADMIN VIEW -->
         {% if current_user_type == 'teacher' or user.is_superuser %}
         
-        <h3 class="mb-4 text-primary">Reports for {{ assigned_class.name }} Students</h3>
+        <h3 class="mb-4 text-primary">Reports for Students</h3>
         <p class="text-muted mb-4">Viewing Page {{ page_obj.number|default:'1' }} of {{ page_obj.paginator.num_pages|default:'1' }}.</p>
 
         {% with reports_to_display=page_obj.object_list|default:available_reports %}
@@ -205,7 +205,7 @@
             {% else %}
             <div class="alert alert-warning text-center border-warning" role="alert">
                 <h4 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> No Reports Found</h4>
-                <p>No mid-term reports found for your assigned class ({{ assigned_class.name }}).</p>
+                <p>No mid-term reports found for your selected class.</p>
             </div>
             {% endif %}
         {% endwith %}
@@ -225,8 +225,11 @@
                                 <i class="fas fa-book-open mr-2"></i> {{ report.term_name }}
                             </h5>
                             <p class="card-text text-muted">Session: {{ report.session_name }}</p>
-                            <a href="{% url 'results:midterm_report_card_detail' student_id=student.id term_id=report.term_id %}" 
+                            {% comment %} <a href="{% url 'results:midterm_report_card_detail' student_id=student.id term_id=report.term_id %}" 
                                 class="btn btn-sm btn-outline-success mt-2">
+                             {% endcomment %}
+                                 <a href="{% url 'results:midterm_report_card_detail' student_id=report.student_id term_id=report.term_id %}"
+                                    class="btn btn-sm btn-outline-success mt-2">
                                 <i class="fas fa-file-alt"></i> View Report Card
                             </a>
                         </div>

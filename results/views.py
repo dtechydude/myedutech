@@ -2500,8 +2500,13 @@ class StudentMidTermListView(LoginRequiredMixin, View):
             scores_qs = MidTermScore.objects.all()
 
             # Filter by teacher's class
-            if assigned_class:
-                scores_qs = scores_qs.filter(student__current_class=assigned_class)
+            # if assigned_class:
+            #     scores_qs = scores_qs.filter(student__current_class=assigned_class)
+            if is_teacher and not is_admin:
+                scores_qs = scores_qs.filter(
+                    student__form_teacher=request.user.teacher
+                )
+
 
             # Filter by selected class (admin only)
             if is_admin and selected_class_id:

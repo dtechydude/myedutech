@@ -9,7 +9,7 @@ from attendance.models import Attendance
 from staff.models import Teacher
 from payments.models import BankDetail
 from users.models import Profile
-from curriculum.models import Standard, SchoolIdentity, Term
+from curriculum.models import Standard, SchoolIdentity, Term, Session
 from students.models import Parent
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.exceptions import ObjectDoesNotExist
@@ -38,6 +38,7 @@ def landing_page(request):
 @login_required
 def dashboard(request):  
     users_num = User.objects.count()
+    session = Session.objects.filter(is_current=True).first()
     student_num = Student.objects.count()
     student_num_current = Student.objects.filter(student_status__in=['active', 'inactive']).count()
     num_of_classes = Standard.objects.count()
@@ -81,6 +82,7 @@ def dashboard(request):
        
     context = {        
         'student_num': student_num,
+        'session': session,
         'boarder_std':boarder_std,
         'day_std': day_std,
         'students' : students,

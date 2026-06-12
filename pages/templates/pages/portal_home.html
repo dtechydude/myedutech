@@ -405,9 +405,7 @@
 							<span class="nav-text">DASHBOARD</span>
 						</a>
 						<ul aria-expanded="false">
-
-							<li><a href="{% url 'pages:portal-home' %}">Dashboard HOME</a></li>
-							
+							<li><a href="{% url 'pages:portal-home' %}">Dashboard HOME</a></li>							
 							{% if user.is_superuser or user.is_staff %}
 							<li><a href="/admin/" target="_blank">Main Settings (ADMIN PANEL)</a></li>
 							<li><a href="{% url 'all_users' %}">All Registered Users</a></li>
@@ -691,7 +689,7 @@
 									<span class="nav-text">AI TOOLS</span>
 								</a>
 								{% endif %}	
-								{% if user.is_authenticated and user.is_superuser or user.is_staff %}
+								{% if user.is_authenticated and user.is_superuser or user.is_staff or user.teacher %}
 								<ul aria-expanded="false">
 									<li><a href="{% url 'ai_center:ai_center_dashboard' %}">AI CENTER</a></li>
 									<li><a href="{% url 'ai_center:guide' %}">AI GUIDE</a></li>
@@ -700,11 +698,11 @@
 									{% if user.is_authenticated and user.is_superuser or user.student %}					
 									<li><a href="#">Student AI Tools</a></li>									
 									{% endif %}	
-									{% if user.is_authenticated and user.is_superuser or user.teacher %}
+									{% comment %} {% if user.is_authenticated and user.is_superuser or user.teacher %}
 									<li><a href="{% url 'ai_center:ai_center_dashboard' %}">AI CENTER</a></li>
 									<li><a href="{% url 'ai_center:guide' %}">AI GUIDE</a></li>
 
-									{% endif %}			
+									{% endif %}			 {% endcomment %}
 								</ul>
 							</li>
 							{% endif %}
@@ -864,6 +862,7 @@
 													<div class="ms-4">
 														<h5 class="mb-0 font-w600">{{user.username}}</h5>
 														<p class="mb-0 text-nowrap">UserName</p>
+														<small class="mb-0 text-nowrap"><strong>SESSION:</strong> {{ session.name }}</small>
 													</div>
 												</div>
 											</div>
