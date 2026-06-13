@@ -1,67 +1,3 @@
-# from django.contrib import admin
-# from .models import AITool, AIToolCategory, PromptCategory, PromptLibrary
-
-# # Register your models here.
-# @admin.register(AITool)
-# class AIToolAdmin(admin.ModelAdmin):
-
-#     list_display = (
-#         'name',
-#         'category',
-#         'is_featured',
-#         'is_active',
-#         'display_order',
-#     )
-
-#     list_filter = (
-#         'category',
-#         'is_featured',
-#         'is_active',
-#     )
-
-#     search_fields = (
-#         'name',
-#         'description',
-#     )
-
-#     list_editable = (
-#         'is_featured',
-#         'is_active',
-#         'display_order',
-#     )
-
-
-# @admin.register(PromptLibrary)
-# class PromptLibraryAdmin(admin.ModelAdmin):
-
-#     list_display = (
-#         'title',
-#         'category',
-#         'school_level',
-#         'subject',
-#         'usage_count',
-#         'is_featured',
-#         'is_active',
-#     )
-
-#     list_filter = (
-#         'category',
-#         'school_level',
-#         'is_featured',
-#         'is_active',
-#     )
-
-#     search_fields = (
-#         'title',
-#         'subject',
-#         'prompt_text',
-#     )
-
-#     list_editable = (
-#         'is_featured',
-#         'is_active',
-#     )
-
 
 from django.contrib import admin
 from django.utils.html import format_html
@@ -78,8 +14,22 @@ from .models import (
 # AI TOOL CATEGORY
 # =====================================================
 
+
+class ReadOnlyAdminMixin:
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+
 @admin.register(AIToolCategory)
-class AIToolCategoryAdmin(admin.ModelAdmin):
+class AIToolCategoryAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
 
     list_display = (
         'name',
@@ -107,7 +57,7 @@ class AIToolCategoryAdmin(admin.ModelAdmin):
 # =====================================================
 
 @admin.register(AITool)
-class AIToolAdmin(admin.ModelAdmin):
+class AIToolAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
 
     list_display = (
         'name',
@@ -199,7 +149,7 @@ class AIToolAdmin(admin.ModelAdmin):
 # =====================================================
 
 @admin.register(PromptCategory)
-class PromptCategoryAdmin(admin.ModelAdmin):
+class PromptCategoryAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
 
     list_display = (
         'name',
@@ -228,7 +178,7 @@ class PromptCategoryAdmin(admin.ModelAdmin):
 # =====================================================
 
 @admin.register(PromptLibrary)
-class PromptLibraryAdmin(admin.ModelAdmin):
+class PromptLibraryAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
 
     list_display = (
         'title',
