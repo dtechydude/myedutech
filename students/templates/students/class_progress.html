@@ -155,7 +155,7 @@
         {% if is_staff_view %}
             <a href="javascript:history.back()" class="back-link">&larr; Back to Student List</a>
             <h2 class="page-title">Class Progress: {{ student.get_full_name }}</h2>
-            <p class="page-subtitle">Admission No: {{ student.admission_number|default:"N/A" }}</p>
+            <p class="page-subtitle">Admission No: <span style="color:red">{{ student.USN|default:"N/A" }}</span></p>
         {% else %}
             <a href="/dashboard" class="back-link"> Back To Dashboard</a>
             <h2 class="page-title">My Class Progress</h2>

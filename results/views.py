@@ -40,46 +40,120 @@ from prep_reports.models import PrepReportCard
 
 
 # important PLEASE DONT DELETE
+#========================================================================
+# def get_student_class_rank(student, standard, term):
+#     """
+#     Calculates the overall rank for a single student based on class averages.
+#     Returns: (student_rank, total_students_in_class)
+#     """
+
+#     # 1. Fetch all students in the class
+#     students_in_class = Student.objects.filter(current_class=standard)
+#     total_students = students_in_class.count()
+#     overall_ranking_data = []
+
+#     # 2. Calculate average for EVERY student in the class
+#     for s in students_in_class:
+#         # We need Sum imported from django.db.models
+#         scores = Score.objects.filter(student=s, term=term, total_score__isnull=False)
+
+#         total_scores_sum = scores.aggregate(total=Sum('total_score'))['total'] or 0
+#         subjects_with_scores_count = scores.count()
+
+#         overall_average = total_scores_sum / subjects_with_scores_count if subjects_with_scores_count > 0 else 0
+
+#         overall_ranking_data.append({
+#             'student_id': s.id,
+#             'overall_average': overall_average,
+#         })
+
+#     # 3. Sort and assign ranks (Handling ties)
+#     overall_ranking_data.sort(key=lambda x: x['overall_average'], reverse=True)
+
+#     current_rank = 0
+#     last_average = -1
+
+#     for i, data in enumerate(overall_ranking_data):
+#         # Tie handling logic: If the average is different from the last, the rank increments
+#         if data['overall_average'] != last_average:
+#             current_rank = i + 1
+#         data['rank'] = current_rank
+#         last_average = data['overall_average']
+
+#         # 4. Find the rank of the specific student
+#         if data['student_id'] == student.id:
+#             return current_rank, total_students
+
+#     return 'N/A', total_students
+
+from django.db.models import Sum
+
+
 def get_student_class_rank(student, standard, term):
     """
-    Calculates the overall rank for a single student based on class averages.
-    Returns: (student_rank, total_students_in_class)
+    Calculates historical class ranking using Score.standard.
+
+    Returns:
+        (student_rank, total_students_in_class)
     """
 
-    # 1. Fetch all students in the class
-    students_in_class = Student.objects.filter(current_class=standard)
+    # Historical class members for this term
+    students_in_class = Student.objects.filter(
+        scores__term=term,
+        scores__standard=standard
+    ).distinct()
+
     total_students = students_in_class.count()
+
     overall_ranking_data = []
 
-    # 2. Calculate average for EVERY student in the class
     for s in students_in_class:
-        # We need Sum imported from django.db.models
-        scores = Score.objects.filter(student=s, term=term, total_score__isnull=False)
 
-        total_scores_sum = scores.aggregate(total=Sum('total_score'))['total'] or 0
+        scores = Score.objects.filter(
+            student=s,
+            term=term,
+            standard=standard,
+            total_score__isnull=False
+        )
+
+        total_scores_sum = (
+            scores.aggregate(
+                total=Sum('total_score')
+            )['total']
+            or 0
+        )
+
         subjects_with_scores_count = scores.count()
 
-        overall_average = total_scores_sum / subjects_with_scores_count if subjects_with_scores_count > 0 else 0
+        overall_average = (
+            total_scores_sum / subjects_with_scores_count
+            if subjects_with_scores_count > 0
+            else 0
+        )
 
         overall_ranking_data.append({
             'student_id': s.id,
-            'overall_average': overall_average,
+            'overall_average': float(overall_average),
         })
 
-    # 3. Sort and assign ranks (Handling ties)
-    overall_ranking_data.sort(key=lambda x: x['overall_average'], reverse=True)
+    # Sort descending
+    overall_ranking_data.sort(
+        key=lambda x: x['overall_average'],
+        reverse=True
+    )
 
+    # Handle ties correctly
     current_rank = 0
-    last_average = -1
+    last_average = None
 
     for i, data in enumerate(overall_ranking_data):
-        # Tie handling logic: If the average is different from the last, the rank increments
-        if data['overall_average'] != last_average:
+
+        if last_average is None or data['overall_average'] != last_average:
             current_rank = i + 1
+
         data['rank'] = current_rank
         last_average = data['overall_average']
 
-        # 4. Find the rank of the specific student
         if data['student_id'] == student.id:
             return current_rank, total_students
 
@@ -1018,13 +1092,14 @@ class StudentReportCardView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
 
         total_school_days = Attendance.objects.filter(
             student__current_class=standard,
+            # standard=standard,
             date__gte=term.start_date,
             date__lte=term.end_date
         ).values('date').distinct().count()
 
         next_term = Term.objects.filter(start_date__gt=term.end_date).order_by('start_date').first()
         next_term_start_date = next_term.start_date if next_term else None
-        total_students_in_class = Student.objects.filter(current_class=standard).count()
+        # total_students_in_class = Student.objects.filter(current_class=standard).count()
 
         # new logic to fetch the report card student class
         first_score = Score.objects.filter(student=student, term=term).select_related('standard').first()
@@ -1033,6 +1108,17 @@ class StudentReportCardView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
             first_score.standard
             if first_score and first_score.standard
             else student.current_class
+        )
+
+        # Historical class size at the time of this result
+        total_students_in_class = (
+            Score.objects.filter(
+                term=term,
+                standard=standard
+            )
+            .values('student')
+            .distinct()
+            .count()
         )
         
         # ---------------- SCORES ----------------
@@ -1054,7 +1140,8 @@ class StudentReportCardView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
                 class_scores = Score.objects.filter(
                     subject=score.subject,
                     term=term,
-                    student__current_class=standard,
+                    # student__current_class=standard,
+                    standard=standard,
                     total_score__isnull=False
                 )
 
@@ -1092,21 +1179,69 @@ class StudentReportCardView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
             overall_average = total_scores_sum / subjects_with_scores_count
             overall_remark = get_overall_remark(overall_average)
 
+        # # ---------------- CLASS AVERAGE STATS ----------------
+        # class_students = Student.objects.filter(current_class=standard)
+        # student_averages = []
+
+        # for stu in class_students:
+        #     stu_scores = Score.objects.filter(student=stu, term=term)
+        #     total = stu_scores.aggregate(total=Sum('total_score'))['total']
+        #     count = stu_scores.filter(total_score__isnull=False).count()
+        #     if total is not None and count > 0:
+        #         avg = total / count
+        #         student_averages.append(avg)
+
+        # class_avg = sum(student_averages) / len(student_averages) if student_averages else None
+        # class_max_avg = max(student_averages) if student_averages else None
+        # class_min_avg = min(student_averages) if student_averages else None
+
         # ---------------- CLASS AVERAGE STATS ----------------
-        class_students = Student.objects.filter(current_class=standard)
+
         student_averages = []
 
-        for stu in class_students:
-            stu_scores = Score.objects.filter(student=stu, term=term)
-            total = stu_scores.aggregate(total=Sum('total_score'))['total']
-            count = stu_scores.filter(total_score__isnull=False).count()
-            if total is not None and count > 0:
-                avg = total / count
-                student_averages.append(avg)
+        historical_students = Student.objects.filter(
+            scores__term=term,
+            scores__standard=standard
+        ).distinct()
 
-        class_avg = sum(student_averages) / len(student_averages) if student_averages else None
-        class_max_avg = max(student_averages) if student_averages else None
-        class_min_avg = min(student_averages) if student_averages else None
+        for stu in historical_students:
+
+            stu_scores = Score.objects.filter(
+                student=stu,
+                term=term,
+                standard=standard,
+                total_score__isnull=False
+            )
+
+            total = stu_scores.aggregate(
+                total=Sum('total_score')
+            )['total']
+
+            count = stu_scores.count()
+
+            if total is not None and count > 0:
+
+                avg = total / count
+
+                student_averages.append(float(avg))
+
+        class_avg = (
+            round(sum(student_averages) / len(student_averages), 2)
+            if student_averages
+            else None
+        )
+
+        class_max_avg = (
+            round(max(student_averages), 2)
+            if student_averages
+            else None
+        )
+
+        class_min_avg = (
+            round(min(student_averages), 2)
+            if student_averages
+            else None
+        )
 
         # ---------------- RANKING ----------------
         student_rank, total_students = get_student_class_rank(student, standard, term)
@@ -3107,12 +3242,18 @@ class ClassBroadsheetView(LoginRequiredMixin, UserPassesTestMixin, View):
         standard = get_object_or_404(Standard, id=class_id)
         term     = get_object_or_404(Term, id=term_id)
 
+        # students = Student.objects.filter(
+        #     current_class=standard
+        # ).order_by('last_name')
         students = Student.objects.filter(
-            current_class=standard
-        ).order_by('last_name')
+            scores__term=term,
+            scores__standard=standard
+        ).distinct().order_by('last_name')
 
         subject_ids = Score.objects.filter(
-            student__current_class=standard, term=term
+            # student__current_class=standard, term=term
+            standard=standard, term=term
+
         ).values_list('subject_id', flat=True).distinct()
 
         subjects = Subject.objects.filter(
@@ -3244,16 +3385,31 @@ class BulkReportCardPrintView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View
     def get(self, request, standard_id, term_id, *args, **kwargs):
         standard = get_object_or_404(Standard, id=standard_id)
         term = get_object_or_404(Term, id=term_id)
-        students = Student.objects.filter(current_class=standard).order_by('last_name')
+        # students = Student.objects.filter(current_class=standard).order_by('last_name')
+        students = Student.objects.filter(
+            scores__term=term,
+            scores__standard=standard
+        ).distinct().order_by('last_name')
 
         school_identity = SchoolIdentity.objects.first()
         next_term = Term.objects.filter(start_date__gt=term.end_date).order_by('start_date').first()
         next_term_start_date = next_term.start_date if next_term else None
         total_students_in_class = students.count()
 
-        # ── MOVED OUT OF LOOP: class-wide stat, computed once ──────────────
+        ## ── MOVED OUT OF LOOP: class-wide stat, computed once ──────────────
+        # total_school_days = Attendance.objects.filter(
+        #     student__current_class=standard,
+        #     date__gte=term.start_date,
+        #     date__lte=term.end_date
+        # ).values('date').distinct().count()
+
+        historical_student_ids = Student.objects.filter(
+            scores__term=term,
+            scores__standard=standard
+        ).values_list('id', flat=True)
+
         total_school_days = Attendance.objects.filter(
-            student__current_class=standard,
+            student_id__in=historical_student_ids,
             date__gte=term.start_date,
             date__lte=term.end_date
         ).values('date').distinct().count()
@@ -3302,7 +3458,8 @@ class BulkReportCardPrintView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View
                     total_ca = (score.ca1 or 0) + (score.ca2 or 0) + (score.ca3 or 0)
                     class_scores = Score.objects.filter(
                         subject=score.subject, term=term,
-                        student__current_class=standard,
+                        # student__current_class=standard,
+                        standard=standard,
                         total_score__isnull=False
                     )
                     stats = class_scores.aggregate(

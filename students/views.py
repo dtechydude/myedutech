@@ -34,6 +34,8 @@ from django.db import IntegrityError, transaction
 from datetime import date
 from django.views import View
 from django.contrib.admin.views.decorators import staff_member_required
+from django.core.exceptions import PermissionDenied
+
 
 
 
@@ -128,7 +130,6 @@ def student_boarder_list(request):
         return render(request, 'students/student_boarder_list.html', context)
     else:
         return render(request, 'pages/portal_home.html')
-
 
 
 
@@ -315,21 +316,6 @@ def readmit_student(request, student_id):
 
 #  End Graduated View Code
 #======================================================================================
-
-
-
- # Hostel List
-# @login_required
-# def hostel_list(request):
-#     hostel_list = Hostel.objects.all()
-#     room_list = Room.objects.all()
-#     # boarder_student = Student.objects.all().order_by('-date_admitted')
-
-#     context ={
-#         'hostel_list': hostel_list,
-#     }         
-    
-#     return render(request, 'students/hostel_list.html', context)
 
 @login_required
 def hostel_list(request):
@@ -1282,11 +1268,6 @@ def ajax_validate_csv_headers(request):
 
 
 # Student Class Progress
-# views.py
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404
-from django.core.exceptions import PermissionDenied
-
 @login_required
 def class_progress(request, student_id=None):
     user = request.user

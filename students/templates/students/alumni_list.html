@@ -129,6 +129,8 @@
                             {% else %}
                                 <img src="{% static 'pages/images/default-avatar.png' %}" class="photo-thumb">
                             {% endif %}
+                            <a href="{% url 'students:student_class_progress' student.id %}" class="btn btn-sm btn-warning ml-2"><i class="fa fa-user-graduate"></i>Progress</a>
+
                         </td>
 
                         <td class="fw-semibold">{{ student.get_full_name }}</td>

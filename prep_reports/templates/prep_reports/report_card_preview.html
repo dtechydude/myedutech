@@ -286,7 +286,7 @@ html, body {
   letter-spacing: 1px;
   text-transform: uppercase;
   padding: 4px 8px 4px 10px;
-  margin: 5px 0 0;
+  margin: 3px 0 0;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -806,7 +806,7 @@ html, body {
         </td>
         <td style="width:20%">
           <span class="bio-lbl">Class</span>
-          <span class="bio-val">{{ prep_class.standard }}</span>
+          <span class="bio-val"><small>{{ prep_class.standard }}</small></span>
         </td>
         <td style="width:11%">
           <span class="bio-lbl">Gender</span>
@@ -823,11 +823,11 @@ html, body {
            <span class="bio-val">{{ report_card.days_school_opened }}</span>
         </td>
         <td>
-          <span class="bio-val">Days Present</span>
+          <span class="bio-val"><small>Days Present</small></span>
           <span class="bio-val att-present">{{ report_card.days_present }}</span>
         </td>
         <td>
-          <span class="bio-val">Days Absent</span>
+          <span class="bio-val"><small>Days Absent</small></span>
           <span class="bio-val att-absent">{{ report_card.days_absent }}</span>
         </td>
         <td colspan="2">
@@ -969,7 +969,7 @@ html, body {
   {% endif %}
 
   {# ── 8. GRADING KEY ── #}
-  <div class="rc-grading">
+  {% comment %} <div class="rc-grading">
     <table class="grading-tbl">
       <thead>
         <tr>
@@ -984,18 +984,33 @@ html, body {
         </tr>
       </tbody>
     </table>
-  </div>
+  </div> {% endcomment %}
 
   {# ── 9. SIGNATURE / QR FOOTER ── #}
   <div class="rc-sig-footer">
     <div class="sig-block">
-      <div class="sig-line"></div>
-      <div class="sig-label">Class Teacher's Signature</div>
+       <table class="grading-tbl">
+      <thead>
+        <tr>
+          <th style="width:50%">Rating Scale Key</th>
+          <th style="width:50%">Domain Assessment — 5-Point Scale</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{% for col in columns %}<b>{{ col.label }}</b>{% if not forloop.last %} &nbsp;|&nbsp; {% endif %}{% endfor %}</td>
+          <td><b>5</b> – Excellent &nbsp; <b>4</b> – Good &nbsp; <b>3</b> – Fair &nbsp; <b>2</b> – Poor &nbsp; <b>1</b> – Very Poor</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+      {% comment %} <div class="sig-line"></div>
+      <div class="sig-label">Class Teacher's Signature</div> {% endcomment %}
     </div>
-    <div class="sig-block">
-      <div class="sig-line"></div>
-      <div class="sig-label">Head Teacher's Signature</div>
-    </div>
+    {% comment %} <div class="sig-block"> {% endcomment %}
+      {% comment %} <div class="sig-line"></div>
+      <div class="sig-label">Head Teacher's Signature</div> {% endcomment %}
+    {% comment %} </div> {% endcomment %}
     <div class="sig-qr">
       {% if school_info.signature %}
         <img src="{{ school_info.signature.url }}" alt="Authorised Signature">
@@ -1006,7 +1021,7 @@ html, body {
       <div class="auth-label">Authorised Signature</div>
       <div class="auth-school">{{ school_info.name|default:"KwikSchools" }}</div>
     </div>
-  </div>
+  {% comment %} </div> {% endcomment %}
 
   {# ── 10. CARD FOOTER STRIP ── #}
   <div class="rc-card-footer">

@@ -61,20 +61,159 @@ class SchoolYearSettings(models.Model):
      
 
 # New logic to ensure dynamic input into the score
+# class Score(models.Model):
+#     """Represents a student's score in a specific subject for a given term."""
+#     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='scores')
+#     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+#     term = models.ForeignKey(Term, on_delete=models.CASCADE)
+    
+#     # We use MinValueValidator(0) but remove hardcoded MaxValueValidators 
+#     # to allow the dynamic SchoolYearSettings to control the limits via clean()
+#     ca1 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
+#     ca2 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
+#     ca3 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
+#     exam_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
+#     total_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
+
+#     standard = models.ForeignKey(
+#         Standard,
+#         on_delete=models.PROTECT,
+#         null=True,
+#         blank=True,
+#         related_name='result_scores'
+#     )
+
+#     def save(self, *args, **kwargs):
+
+#         if not self.standard and self.student:
+#             self.standard = self.student.current_class
+
+#         super().save(*args, **kwargs)
+
+#     class Meta:
+#         unique_together = ('student', 'subject', 'term')
+#         ordering = ['student__last_name', 'student__first_name']
+#         verbose_name = 'Exams & CA Scores'
+#         verbose_name_plural = 'Exams & CA Scores'
+
+#     def __str__(self):
+#         return f"{self.student.first_name} - {self.subject.name} ({self.term.name})"
+
+#     def get_grading_configs(self):
+#         """Fetches dynamic totals from settings or falls back to defaults."""
+#         try:
+#             # Assumes SchoolYearSettings model exists as created in previous step
+#             from .models import SchoolYearSettings 
+#             config = SchoolYearSettings.objects.filter(is_active=True).first()
+#             if config:
+#                 return config.max_ca_total, config.max_exam_score
+#         except Exception:
+#             pass
+#         return 40, 60  # Default fallback if no config is found
+
+#     def clean(self):
+#         super().clean()
+#         max_ca, max_exam = self.get_grading_configs()
+        
+#         # Calculate totals for validation
+#         total_ca = (self.ca1 or 0) + (self.ca2 or 0) + (self.ca3 or 0)
+        
+#         # 1. Check total CA against dynamic limit
+#         if total_ca > max_ca:
+#             raise ValidationError(f'The total sum of CA scores (CA1, CA2, CA3) cannot exceed {max_ca}.')
+        
+#         # 2. Check Exam Score against dynamic limit
+#         if self.exam_score is not None and self.exam_score > max_exam:
+#             raise ValidationError(f'The exam score cannot exceed {max_exam}.')
+
+#     def save(self, *args, **kwargs):
+#         # This triggers the clean() method above
+#         self.full_clean()
+
+#         # Check if ALL score fields are empty/None
+#         has_ca_score = any(s is not None for s in [self.ca1, self.ca2, self.ca3])
+#         has_exam_score = self.exam_score is not None
+
+#         # If all fields are None/empty, delete the instance if it exists, and skip creation.
+#         if not has_ca_score and not has_exam_score:
+#             if self.pk:  
+#                 self.delete() 
+#             return 
+
+#         # Auto-calculate total_score
+#         total_ca = (self.ca1 or 0) + (self.ca2 or 0) + (self.ca3 or 0)
+        
+#         if self.exam_score is not None:
+#             self.total_score = total_ca + self.exam_score
+#         else:
+#             self.total_score = total_ca 
+
+#         super().save(*args, **kwargs)
+
+
 class Score(models.Model):
     """Represents a student's score in a specific subject for a given term."""
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='scores')
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-    term = models.ForeignKey(Term, on_delete=models.CASCADE)
-    
-    # We use MinValueValidator(0) but remove hardcoded MaxValueValidators 
-    # to allow the dynamic SchoolYearSettings to control the limits via clean()
-    ca1 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
-    ca2 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
-    ca3 = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
-    exam_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
-    total_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
 
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        related_name='scores'
+    )
+
+    subject = models.ForeignKey(
+        Subject,
+        on_delete=models.CASCADE
+    )
+
+    term = models.ForeignKey(
+        Term,
+        on_delete=models.CASCADE
+    )
+
+    ca1 = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0)]
+    )
+
+    ca2 = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0)]
+    )
+
+    ca3 = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0)]
+    )
+
+    exam_score = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0)]
+    )
+
+    total_score = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[
+            MinValueValidator(0),
+            MaxValueValidator(100)
+        ]
+    )
+
+    # Historical class snapshot
     standard = models.ForeignKey(
         Standard,
         on_delete=models.PROTECT,
@@ -82,13 +221,6 @@ class Score(models.Model):
         blank=True,
         related_name='result_scores'
     )
-
-    def save(self, *args, **kwargs):
-
-        if not self.standard and self.student:
-            self.standard = self.student.current_class
-
-        super().save(*args, **kwargs)
 
     class Meta:
         unique_together = ('student', 'subject', 'term')
@@ -100,53 +232,99 @@ class Score(models.Model):
         return f"{self.student.first_name} - {self.subject.name} ({self.term.name})"
 
     def get_grading_configs(self):
-        """Fetches dynamic totals from settings or falls back to defaults."""
+        """
+        Fetch dynamic CA and Exam limits from active settings.
+        """
+
         try:
-            # Assumes SchoolYearSettings model exists as created in previous step
-            from .models import SchoolYearSettings 
-            config = SchoolYearSettings.objects.filter(is_active=True).first()
+            from .models import SchoolYearSettings
+
+            config = SchoolYearSettings.objects.filter(
+                is_active=True
+            ).first()
+
             if config:
                 return config.max_ca_total, config.max_exam_score
+
         except Exception:
             pass
-        return 40, 60  # Default fallback if no config is found
+
+        return 40, 60
 
     def clean(self):
         super().clean()
+
         max_ca, max_exam = self.get_grading_configs()
-        
-        # Calculate totals for validation
-        total_ca = (self.ca1 or 0) + (self.ca2 or 0) + (self.ca3 or 0)
-        
-        # 1. Check total CA against dynamic limit
+
+        total_ca = (
+            (self.ca1 or 0)
+            + (self.ca2 or 0)
+            + (self.ca3 or 0)
+        )
+
+        # Validate CA Total
         if total_ca > max_ca:
-            raise ValidationError(f'The total sum of CA scores (CA1, CA2, CA3) cannot exceed {max_ca}.')
-        
-        # 2. Check Exam Score against dynamic limit
-        if self.exam_score is not None and self.exam_score > max_exam:
-            raise ValidationError(f'The exam score cannot exceed {max_exam}.')
+            raise ValidationError(
+                f'The total sum of CA scores '
+                f'(CA1, CA2, CA3) cannot exceed {max_ca}.'
+            )
+
+        # Validate Exam Score
+        if (
+            self.exam_score is not None
+            and self.exam_score > max_exam
+        ):
+            raise ValidationError(
+                f'The exam score cannot exceed {max_exam}.'
+            )
 
     def save(self, *args, **kwargs):
-        # This triggers the clean() method above
+        """
+        Automatically:
+        - Snapshot student's class on first save.
+        - Validate grading limits.
+        - Calculate total score.
+        - Remove empty score records.
+        """
+
+        # Snapshot historical class ONLY on creation
+        if not self.pk and not self.standard and self.student:
+            self.standard = self.student.current_class
+
         self.full_clean()
 
-        # Check if ALL score fields are empty/None
-        has_ca_score = any(s is not None for s in [self.ca1, self.ca2, self.ca3])
+        # Determine if any score exists
+        has_ca_score = any(
+            score is not None
+            for score in [
+                self.ca1,
+                self.ca2,
+                self.ca3
+            ]
+        )
+
         has_exam_score = self.exam_score is not None
 
-        # If all fields are None/empty, delete the instance if it exists, and skip creation.
+        # Remove completely empty score records
         if not has_ca_score and not has_exam_score:
-            if self.pk:  
-                self.delete() 
-            return 
 
-        # Auto-calculate total_score
-        total_ca = (self.ca1 or 0) + (self.ca2 or 0) + (self.ca3 or 0)
-        
+            if self.pk:
+                self.delete()
+
+            return
+
+        # Calculate Total CA
+        total_ca = (
+            (self.ca1 or 0)
+            + (self.ca2 or 0)
+            + (self.ca3 or 0)
+        )
+
+        # Calculate Overall Score
         if self.exam_score is not None:
             self.total_score = total_ca + self.exam_score
         else:
-            self.total_score = total_ca 
+            self.total_score = total_ca
 
         super().save(*args, **kwargs)
 
