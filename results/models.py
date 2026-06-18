@@ -494,20 +494,51 @@ class MidTermScore(models.Model):
     # ... your existing fields ...
     is_graded = models.BooleanField(default=False)
 
+    # def calculate_total_score(self):
+    #     return self.component_scores.aggregate(
+    #         total=models.Sum('score')
+    #     )['total'] or 0
     def calculate_total_score(self):
-        return self.component_scores.aggregate(
+
+        scores = self.component_scores.all()
+
+        if not scores.exists():
+            return None
+
+        return scores.aggregate(
             total=models.Sum('score')
-        )['total'] or 0
+        )['total']
+
+    # def save(self, *args, **kwargs):
+    #     super().save(*args, **kwargs)
+
+    #     total = self.calculate_total_score()
+
+    #     if self.exam_total_score != total:
+    #         self.exam_total_score = total
+
+    #         super().save(update_fields=['exam_total_score'])
 
     def save(self, *args, **kwargs):
+
         super().save(*args, **kwargs)
 
         total = self.calculate_total_score()
 
+        updates = []
+
         if self.exam_total_score != total:
             self.exam_total_score = total
+            updates.append('exam_total_score')
 
-            super().save(update_fields=['exam_total_score'])
+        graded = total is not None
+
+        if self.is_graded != graded:
+            self.is_graded = graded
+            updates.append('is_graded')
+
+        if updates:
+            super().save(update_fields=updates)
 
     def percentage(self):
         setting = ExamSetting.objects.get(

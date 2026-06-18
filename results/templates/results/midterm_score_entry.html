@@ -100,18 +100,90 @@
         &copy; 2026 {{ school_info.name }}. All rights reserved.
     </footer>
 
+{% comment %}    
     <script>
-        document.addEventListener("input", function(e){
-            if(!e.target.classList.contains("comp-input")) return;
-            let row = e.target.dataset.row;
-            let inputs = document.querySelectorAll(`[data-row="${row}"]`);
-            let total = 0;
-            inputs.forEach(i => {
-                let v = parseFloat(i.value);
-                if(!isNaN(v)) total += v;
-            });
-            document.getElementById("total_" + row).value = total;
+    function calcRowTotal(row) {
+        const inputs = document.querySelectorAll(`[data-row="${row}"]`);
+        let total = 0;
+        inputs.forEach(i => {
+            const v = parseFloat(i.value);
+            if (!isNaN(v)) total += v;
         });
-    </script>
+        const totalField = document.getElementById("total_" + row);
+        if (totalField) totalField.value = total || '';
+    }
+
+    // Recalculate all rows on page load so saved scores show their total immediately
+    document.addEventListener("DOMContentLoaded", function () {
+        const rows = new Set();
+        document.querySelectorAll(".comp-input").forEach(i => rows.add(i.dataset.row));
+        rows.forEach(row => calcRowTotal(row));
+    });
+
+    // Recalculate the affected row on any edit
+    document.addEventListener("input", function (e) {
+        if (!e.target.classList.contains("comp-input")) return;
+        calcRowTotal(e.target.dataset.row);
+    });
+</script> {% endcomment %}
+<script>
+    function calcRowTotal(row) {
+        const inputs = document.querySelectorAll(`[data-row="${row}"]`);
+
+        let total = 0;
+        let hasAnyValue = false;
+
+        inputs.forEach(input => {
+
+            const value = input.value.trim();
+
+            // Teacher entered something (including 0)
+            if (value !== '') {
+                hasAnyValue = true;
+
+                const numericValue = parseFloat(value);
+
+                if (!isNaN(numericValue)) {
+                    total += numericValue;
+                }
+            }
+        });
+
+        const totalField = document.getElementById(`total_${row}`);
+
+        if (!totalField) return;
+
+        // If nothing entered at all → blank
+        if (!hasAnyValue) {
+            totalField.value = '';
+        }
+        // If 0 was entered → show 0
+        else {
+            totalField.value = total;
+        }
+    }
+
+    // Load existing totals
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const rows = new Set();
+
+        document.querySelectorAll('.comp-input').forEach(input => {
+            rows.add(input.dataset.row);
+        });
+
+        rows.forEach(row => calcRowTotal(row));
+    });
+
+    // Recalculate live
+    document.addEventListener('input', function (e) {
+
+        if (!e.target.classList.contains('comp-input')) {
+            return;
+        }
+
+        calcRowTotal(e.target.dataset.row);
+    });
+</script>
 </body>
 </html>

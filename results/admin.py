@@ -497,6 +497,9 @@ class MidTermReportRemarkAdmin(admin.ModelAdmin):
         'teacher_remark',
         'head_teacher_remark',
     )
+    raw_id_fields = (
+            'student',
+        )
 
     readonly_fields = (
         'overall_average_display',

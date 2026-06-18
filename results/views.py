@@ -2258,10 +2258,17 @@ class MidTermScoreEntryView(TeacherRequiredMixin, LoginRequiredMixin, View):
                         total += value
                 
                 # Update the score object
+                # if has_any_score:
+                #     score.exam_total_score = total
+                #     score.is_graded = True # Mark as graded
+                #     score.save()
+
                 if has_any_score:
-                    score.exam_total_score = total
-                    score.is_graded = True # Mark as graded
-                    score.save()
+                    score.is_graded = True
+                else:
+                    score.is_graded = False
+
+                score.save()
             
                 # messages.success(request, "Scores saved successfully.")
                 # return redirect('results:midterm_score_success')

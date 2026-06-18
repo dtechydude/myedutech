@@ -426,39 +426,79 @@
               <tr style="border-style: hidden;">
                 <td style="border-style: hidden; padding-right: 15px; width: 50%;">
                   <strong style="font-size:13px; color:#990000; text-decoration:underline; letter-spacing:0.4px;">CLASS TEACHER:</strong><br>
+                                  
                   <span style="font-size:12px; font-style: italic; line-height:1.35; color:#333;">
+
+                {% if teacher_comment %}
+
+                    {{ teacher_comment }}
+
+                {% else %}
+
                     {% if overall_average is not None and overall_average > 75 %}
-                      <strong style="color:#006600;">Outstanding Performance</strong>, Your dedication and commitment to learning are clearly reflected in your results. Keep it up!
+                      <strong style="color:#006600;">Outstanding Performance</strong>,
+                      Your dedication and commitment to learning are clearly reflected in your results.
+                      Keep it up!
+
                     {% elif overall_average is not None and overall_average > 65 %}
-                      <strong style="color:#004085;">Very Good Effort</strong>, You have shown commendable progress. Work harder to reach the next level of excellence.
+                      <strong style="color:#004085;">Very Good Effort</strong>,
+                      You have shown commendable progress. Work harder to reach the next level of excellence.
+
                     {% elif overall_average is not None and overall_average > 55 %}
-                      <strong style="color:#856404;">Good Progress</strong>, Academic performance is satisfactory. Greater focus on weaker subjects is advised.
+                      <strong style="color:#856404;">Good Progress</strong>,
+                      Academic performance is satisfactory. Greater focus on weaker subjects is advised.
+
                     {% elif overall_average is not None and overall_average > 45 %}
-                      <strong style="color:#721c24;">Fair Performance</strong>, A significant increase in effort and consistency is required next term.
+                      <strong style="color:#721c24;">Fair Performance</strong>,
+                      A significant increase in effort and consistency is required next term.
+
                     {% elif overall_average is not None and overall_average >= 0 %}
-                      <strong style="color:#990000;">Below Average Performance</strong>, Immediate attention and sustained effort are necessary to improve results.
+                      <strong style="color:#990000;">Below Average Performance</strong>,
+                      Immediate attention and sustained effort are necessary to improve results.
+
                     {% else %}
-                      Performance data is unavailable. Please refer to subject scores.
+                      Performance data is unavailable.
                     {% endif %}
-                  </span>
+
+                {% endif %}
+                </span>
                 </td>
                 <td style="border-style: hidden; width: 50%;">
                   <strong style="font-size:13px; color:#990000; text-decoration:underline; letter-spacing:0.4px;">PRINCIPAL / HEAD TEACHER:</strong><br>
-                  <span style="font-size:12px; font-style: italic; line-height:1.35; color:#333;">
+                                 <span style="font-size:12px; font-style: italic; line-height:1.35; color:#333;">
+
+                {% if principal_comment %}
+
+                    {{ principal_comment }}
+
+                {% else %}
+
                     {% if overall_average is not None and overall_average > 75 %}
-                      <strong style="color:#006600;">Outstanding Term</strong>, Exceptional performance. Maintain this level of focus and excellence.
+                      <strong style="color:#006600;">Outstanding Term</strong>,
+                      Exceptional performance. Maintain this level of focus and excellence.
+
                     {% elif overall_average is not None and overall_average > 65 %}
-                      <strong style="color:#004085;">Very Good Result</strong>, A strong showing this term. Aim higher by embracing new challenges.
+                      <strong style="color:#004085;">Very Good Result</strong>,
+                      A strong showing this term. Aim higher by embracing new challenges.
+
                     {% elif overall_average is not None and overall_average > 55 %}
-                      <strong style="color:#856404;">Satisfactory Performance</strong>, Improvement is encouraged to achieve higher academic standards.
+                      <strong style="color:#856404;">Satisfactory Performance</strong>,
+                      Improvement is encouraged to achieve higher academic standards.
+
                     {% elif overall_average is not None and overall_average > 45 %}
-                      <strong style="color:#721c24;">Needs Improvement</strong>, Increased diligence and commitment will lead to better outcomes.
+                      <strong style="color:#721c24;">Needs Improvement</strong>,
+                      Increased diligence and commitment will lead to better outcomes.
+
                     {% elif overall_average is not None and overall_average >= 0 %}
-                      <strong style="color:#990000;">Academic Concern</strong>, A parent/guardian meeting is required to discuss necessary support.
+                      <strong style="color:#990000;">Academic Concern</strong>,
+                      A parent/guardian meeting is required to discuss necessary support.
+
                     {% else %}
                       General performance information is unavailable.
                     {% endif %}
-                  </span>
+
+                {% endif %}
+                </span>
                 </td>
               </tr>
             </tbody>
