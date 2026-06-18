@@ -86,7 +86,6 @@ from prep_reports.models import PrepReportCard
 
 #     return 'N/A', total_students
 
-from django.db.models import Sum
 
 
 def get_student_class_rank(student, standard, term):
@@ -168,409 +167,6 @@ class TeacherRequiredMixin(UserPassesTestMixin):
     def test_func(self):
         user = self.request.user
         return hasattr(user, 'teacher') or user.is_staff or user.is_superuser
-
-
-# class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
-#     template_name = 'results/score_entry.html'
-
-#     def get(self, request, *args, **kwargs):
-#         # If superuser or staff, they are treated as having access to all classes and subjects
-#         if request.user.is_superuser or request.user.is_staff:
-#             teacher = None  # No need to filter by teacher
-#             assigned_subjects = Subject.objects.all()
-#             assigned_standards = Standard.objects.all()
-#         else:
-#             teacher = request.user.teacher
-#             assigned_subjects = teacher.subjects_taught.all()
-#             assigned_standards = teacher.standards_assigned.all()
-
-#         current_term = Term.objects.filter(is_current=True).first()
-#         if not current_term:
-#             messages.error(request, 'No current term set. Please contact administration.')
-#             return render(request, self.template_name, {})
-
-#         selected_subject = None
-#         selected_standard = None
-
-#         selected_subject_id = request.GET.get('subject', assigned_subjects.first().id if assigned_subjects.exists() else None)
-#         selected_standard_id = request.GET.get('standard', assigned_standards.first().id if assigned_standards.exists() else None)
-
-#         students_in_standard = []
-#         ScoreFormSet = formset_factory(ScoreEntryForm, extra=0)
-#         formset = ScoreFormSet()
-
-#         if selected_subject_id and selected_standard_id:
-#             try:
-#                 selected_subject = Subject.objects.get(id=selected_subject_id)
-#                 selected_standard = Standard.objects.get(id=selected_standard_id)
-#             except (Subject.DoesNotExist, Standard.DoesNotExist):
-#                 messages.error(request, 'Invalid subject or standard selected.')
-
-#             if selected_subject and selected_standard:
-#                 students_in_standard = Student.objects.filter(current_class=selected_standard).order_by('last_name', 'first_name')
-
-#                 initial_data = []
-#                 for student in students_in_standard:
-#                     score_instance = Score.objects.filter(
-#                         student=student,
-#                         subject=selected_subject,
-#                         term=current_term
-#                     ).first()
-
-#                     initial_data.append({
-#                         'student_id': student.id,
-#                         'student_name': student.get_full_name(),
-#                         'score_id': score_instance.id if score_instance else None,
-#                         'ca1': score_instance.ca1 if score_instance else None,
-#                         'ca2': score_instance.ca2 if score_instance else None,
-#                         'ca3': score_instance.ca3 if score_instance else None,
-#                         'exam_score': score_instance.exam_score if score_instance else None,
-#                     })
-
-#                 ScoreFormSet = formset_factory(ScoreEntryForm, extra=0)
-#                 formset = ScoreFormSet(initial=initial_data)
-
-#         try:
-#             school_identity = SchoolIdentity.objects.first()
-#         except SchoolIdentity.DoesNotExist:
-#             school_identity = None
-
-#         context = {
-#             'current_term': current_term,
-#             'assigned_subjects': assigned_subjects,
-#             'assigned_standards': assigned_standards,
-#             'selected_subject_id': int(selected_subject_id) if selected_subject_id else None,
-#             'selected_standard_id': int(selected_standard_id) if selected_standard_id else None,
-#             'selected_subject': selected_subject,
-#             'selected_standard': selected_standard,
-#             'formset': formset,
-#             'students_in_standard': students_in_standard,
-#             'school_identity': school_identity,
-#         }
-#         return render(request, self.template_name, context)
-
-#     def post(self, request, *args, **kwargs):
-#         # Same as get: bypass teacher filtering for superuser/staff
-#         if request.user.is_superuser or request.user.is_staff:
-#             teacher = None
-#         else:
-#             teacher = request.user.teacher
-
-#         current_term = Term.objects.filter(is_current=True).first()
-#         if not current_term:
-#             messages.error(request, 'No current term set. Please contact administration.')
-#             return render(request, self.template_name, {})
-
-#         selected_subject_id = request.POST.get('selected_subject_id')
-#         selected_standard_id = request.POST.get('selected_standard_id')
-
-#         if not selected_subject_id or not selected_standard_id:
-#             messages.error(request, 'Subject or standard not selected. Please try again.')
-#             return redirect('score_entry')
-
-#         try:
-#             selected_subject = Subject.objects.get(id=selected_subject_id)
-#             selected_standard = Standard.objects.get(id=selected_standard_id)
-#         except (Subject.DoesNotExist, Standard.DoesNotExist):
-#             messages.error(request, 'Invalid subject or standard selected.')
-#             return redirect('score_entry')
-
-#         # Authorization check only for non-superuser/staff
-#         if teacher and (not teacher.subjects_taught.filter(id=selected_subject.id).exists() or
-#                         not teacher.standards_assigned.filter(id=selected_standard.id).exists()):
-#             messages.error(request, 'You are not authorized to enter scores for this subject or standard.')
-#             return redirect('score_entry')
-
-#         students_in_standard = Student.objects.filter(current_class=selected_standard).order_by('last_name', 'first_name')
-#         ScoreFormSet = formset_factory(ScoreEntryForm, extra=0)
-#         formset = ScoreFormSet(request.POST)
-
-#         if formset.is_valid():
-#             try:
-#                 with transaction.atomic():
-#                     for form in formset:
-#                         if form.cleaned_data.get('student_id') is None:
-#                             continue
-
-#                         student_id = form.cleaned_data['student_id']
-#                         score_id = form.cleaned_data['score_id']
-#                         ca1 = form.cleaned_data.get('ca1')
-#                         ca2 = form.cleaned_data.get('ca2')
-#                         ca3 = form.cleaned_data.get('ca3')
-#                         exam_score = form.cleaned_data.get('exam_score')
-#                         student = get_object_or_404(Student, id=student_id)
-
-#                         has_score_entry = any(s is not None for s in [ca1, ca2, ca3, exam_score])
-
-#                         if has_score_entry:
-#                             if score_id:
-#                                 score_instance = get_object_or_404(Score, id=score_id)
-#                                 score_instance.ca1 = ca1
-#                                 score_instance.ca2 = ca2
-#                                 score_instance.ca3 = ca3
-#                                 score_instance.exam_score = exam_score
-#                                 score_instance.save()
-#                             else:
-#                                 Score.objects.create(
-#                                     student=student,
-#                                     subject=selected_subject,
-#                                     term=current_term,
-#                                     ca1=ca1,
-#                                     ca2=ca2,
-#                                     ca3=ca3,
-#                                     exam_score=exam_score
-#                                 )
-#                         elif score_id:
-#                             score_instance = get_object_or_404(Score, id=score_id)
-#                             score_instance.ca1, score_instance.ca2, score_instance.ca3, score_instance.exam_score = None, None, None, None
-#                             score_instance.save()
-
-#                 messages.success(request, 'Scores saved successfully!')
-#                 return redirect('results:score_entry_success')
-#             except ValidationError as e:
-#                 for field, error_list in e.message_dict.items():
-#                     for error_msg in error_list:
-#                         messages.error(request, f"Validation Error: {error_msg}")
-
-#         messages.error(request, 'Please correct the errors below.')
-#         assigned_subjects = Subject.objects.all() if (request.user.is_superuser or request.user.is_staff) else teacher.subjects_taught.all()
-#         assigned_standards = Standard.objects.all() if (request.user.is_superuser or request.user.is_staff) else teacher.standards_assigned.all()
-
-#         try:
-#             school_identity = SchoolIdentity.objects.first()
-#         except SchoolIdentity.DoesNotExist:
-#             school_identity = None
-
-#         context = {
-#             'current_term': current_term,
-#             'assigned_subjects': assigned_subjects,
-#             'assigned_standards': assigned_standards,
-#             'selected_subject_id': int(selected_subject_id) if selected_subject_id else None,
-#             'selected_standard_id': int(selected_standard_id) if selected_standard_id else None,
-#             'selected_subject': selected_subject,
-#             'selected_standard': selected_standard,
-#             'formset': formset,
-#             'students_in_standard': students_in_standard,
-#             'school_identity': school_identity,
-#         }
-#         return render(request, self.template_name, context)
-
-# New logic for twiking the CA total and Exam Total
-# Ensure these models and forms are imported correctly based on your app structure
-# from .models import Score, Student, Subject, Standard, Term, SchoolIdentity, SchoolYearSettings
-# from .forms import ScoreEntryForm
-
-# class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
-#     template_name = 'results/score_entry.html'
-
-#     def get_grading_config(self):
-#         """Helper to fetch dynamic totals from settings or use 40/60 defaults."""
-#         config = SchoolYearSettings.objects.filter(is_active=True).first()
-#         if config:
-#             return config.max_ca_total, config.max_exam_score
-#         return 40, 60
-
-#     def get(self, request, *args, **kwargs):
-#         # Fetch dynamic configuration
-#         max_ca, max_exam = self.get_grading_config()
-
-#         # If superuser or staff, they are treated as having access to all classes and subjects
-#         if request.user.is_superuser or request.user.is_staff:
-#             teacher = None
-#             assigned_subjects = Subject.objects.all()
-#             assigned_standards = Standard.objects.all()
-#         else:
-#             teacher = request.user.teacher
-#             assigned_subjects = teacher.subjects_taught.all()
-#             assigned_standards = teacher.standards_assigned.all()
-
-#         current_term = Term.objects.filter(is_current=True).first()
-#         if not current_term:
-#             messages.error(request, 'No current term set. Please contact administration.')
-#             return render(request, self.template_name, {})
-
-#         selected_subject = None
-#         selected_standard = None
-
-#         selected_subject_id = request.GET.get('subject', assigned_subjects.first().id if assigned_subjects.exists() else None)
-#         selected_standard_id = request.GET.get('standard', assigned_standards.first().id if assigned_standards.exists() else None)
-
-#         students_in_standard = []
-#         ScoreFormSet = formset_factory(ScoreEntryForm, extra=0)
-#         formset = ScoreFormSet()
-
-#         if selected_subject_id and selected_standard_id:
-#             try:
-#                 selected_subject = Subject.objects.get(id=selected_subject_id)
-#                 selected_standard = Standard.objects.get(id=selected_standard_id)
-#             except (Subject.DoesNotExist, Standard.DoesNotExist):
-#                 messages.error(request, 'Invalid subject or standard selected.')
-
-#             if selected_subject and selected_standard:
-#                 students_in_standard = Student.objects.filter(current_class=selected_standard).order_by('last_name', 'first_name')
-
-#                 initial_data = []
-#                 for student in students_in_standard:
-#                     score_instance = Score.objects.filter(
-#                         student=student,
-#                         subject=selected_subject,
-#                         term=current_term
-#                     ).first()
-
-#                     initial_data.append({
-#                         'student_id': student.id,
-#                         'student_name': student.get_full_name(),
-#                         'score_id': score_instance.id if score_instance else None,
-#                         'ca1': score_instance.ca1 if score_instance else None,
-#                         'ca2': score_instance.ca2 if score_instance else None,
-#                         'ca3': score_instance.ca3 if score_instance else None,
-#                         'exam_score': score_instance.exam_score if score_instance else None,
-#                     })
-
-#                 formset = ScoreFormSet(initial=initial_data)
-
-#         try:
-#             school_identity = SchoolIdentity.objects.first()
-#         except SchoolIdentity.DoesNotExist:
-#             school_identity = None
-
-#         context = {
-#             'current_term': current_term,
-#             'assigned_subjects': assigned_subjects,
-#             'assigned_standards': assigned_standards,
-#             'selected_subject_id': int(selected_subject_id) if selected_subject_id else None,
-#             'selected_standard_id': int(selected_standard_id) if selected_standard_id else None,
-#             'selected_subject': selected_subject,
-#             'selected_standard': selected_standard,
-#             'formset': formset,
-#             'students_in_standard': students_in_standard,
-#             'school_identity': school_identity,
-#             'max_ca': max_ca,
-#             'max_exam': max_exam,
-#         }
-#         return render(request, self.template_name, context)
-
-#     def post(self, request, *args, **kwargs):
-#         # Fetch dynamic configuration
-#         max_ca, max_exam = self.get_grading_config()
-
-#         if request.user.is_superuser or request.user.is_staff:
-#             teacher = None
-#         else:
-#             teacher = request.user.teacher
-
-#         current_term = Term.objects.filter(is_current=True).first()
-#         if not current_term:
-#             messages.error(request, 'No current term set. Please contact administration.')
-#             return render(request, self.template_name, {})
-
-#         selected_subject_id = request.POST.get('selected_subject_id')
-#         selected_standard_id = request.POST.get('selected_standard_id')
-
-#         if not selected_subject_id or not selected_standard_id:
-#             messages.error(request, 'Subject or standard not selected. Please try again.')
-#             return redirect('score_entry')
-
-#         try:
-#             selected_subject = Subject.objects.get(id=selected_subject_id)
-#             selected_standard = Standard.objects.get(id=selected_standard_id)
-#         except (Subject.DoesNotExist, Standard.DoesNotExist):
-#             messages.error(request, 'Invalid subject or standard selected.')
-#             return redirect('score_entry')
-
-#         # Authorization check only for non-superuser/staff
-#         if teacher and (not teacher.subjects_taught.filter(id=selected_subject.id).exists() or
-#                         not teacher.standards_assigned.filter(id=selected_standard.id).exists()):
-#             messages.error(request, 'You are not authorized to enter scores for this subject or standard.')
-#             return redirect('score_entry')
-
-#         students_in_standard = Student.objects.filter(current_class=selected_standard).order_by('last_name', 'first_name')
-#         ScoreFormSet = formset_factory(ScoreEntryForm, extra=0)
-#         formset = ScoreFormSet(request.POST)
-
-#         if formset.is_valid():
-#             try:
-#                 with transaction.atomic():
-#                     for form in formset:
-#                         if form.cleaned_data.get('student_id') is None:
-#                             continue
-
-#                         student_id = form.cleaned_data['student_id']
-#                         score_id = form.cleaned_data['score_id']
-#                         ca1 = form.cleaned_data.get('ca1')
-#                         ca2 = form.cleaned_data.get('ca2')
-#                         ca3 = form.cleaned_data.get('ca3')
-#                         exam_score = form.cleaned_data.get('exam_score')
-#                         student = get_object_or_404(Student, id=student_id)
-
-#                         has_score_entry = any(s is not None for s in [ca1, ca2, ca3, exam_score])
-
-#                         if has_score_entry:
-#                             if score_id:
-#                                 score_instance = get_object_or_404(Score, id=score_id)
-#                                 score_instance.ca1 = ca1
-#                                 score_instance.ca2 = ca2
-#                                 score_instance.ca3 = ca3
-#                                 score_instance.exam_score = exam_score
-#                                 # Model.save() handles the dynamic CA/Exam validation logic
-#                                 score_instance.save()
-#                             else:
-#                                 Score.objects.create(
-#                                     student=student,
-#                                     subject=selected_subject,
-#                                     term=current_term,
-#                                     ca1=ca1,
-#                                     ca2=ca2,
-#                                     ca3=ca3,
-#                                     exam_score=exam_score
-#                                 )
-#                         elif score_id:
-#                             # If existing record is cleared, delete it
-#                             score_instance = get_object_or_404(Score, id=score_id)
-#                             score_instance.delete()
-
-#                 messages.success(request, 'Scores saved successfully!')
-#                 return redirect('results:score_entry_success')
-                
-#             except ValidationError as e:
-#                 if hasattr(e, 'message_dict'):
-#                     for field, error_list in e.message_dict.items():
-#                         for msg in error_list:
-#                             messages.error(request, f"Validation Error: {msg}")
-#                 else:
-#                     messages.error(request, f"Validation Error: {e.message}")
-
-#         # If we reach here, there were errors
-#         messages.error(request, 'Please correct the errors below.')
-        
-#         # Re-fetch assigned lists for context rebuild
-#         if request.user.is_superuser or request.user.is_staff:
-#             assigned_subjects = Subject.objects.all()
-#             assigned_standards = Standard.objects.all()
-#         else:
-#             assigned_subjects = teacher.subjects_taught.all()
-#             assigned_standards = teacher.standards_assigned.all()
-
-#         try:
-#             school_identity = SchoolIdentity.objects.first()
-#         except SchoolIdentity.DoesNotExist:
-#             school_identity = None
-
-#         context = {
-#             'current_term': current_term,
-#             'assigned_subjects': assigned_subjects,
-#             'assigned_standards': assigned_standards,
-#             'selected_subject_id': int(selected_subject_id) if selected_subject_id else None,
-#             'selected_standard_id': int(selected_standard_id) if selected_standard_id else None,
-#             'selected_subject': selected_subject,
-#             'selected_standard': selected_standard,
-#             'formset': formset,
-#             'students_in_standard': students_in_standard,
-#             'school_identity': school_identity,
-#             'max_ca': max_ca,
-#             'max_exam': max_exam,
-#         }
-#         return render(request, self.template_name, context)
 
 
 class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
@@ -923,141 +519,6 @@ class AdminTeacherOrOwnerMixin:
             return redirect('student_dashboard')
         return redirect('home')
 
-
-# # used until 20/03/2026
-# class StudentReportCardView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
-#     """
-#     Generates and displays a single student's report card for a specific term.
-#     Accessible by teachers/admins (for any student) and by the student themselves.
-#     """
-#     # TEMPLATE OPTTION 1
-#     template_name = 'results/test_student_report_card_detail.html'
-#     # TEMPLATE OPTTION 2
-#     # template_name = 'results/test_student_report_card_detail_VERTICAL.html'
-
-#     pdf_template_name = 'results/test_student_report_card_pdf.html' # Dedicated template for PDF layout
-
-#     def get(self, request, student_id, term_id, *args, **kwargs):
-#         # Assumes Student, Term, etc. models are imported
-#         student = get_object_or_404(Student, id=student_id)
-#         term = get_object_or_404(Term, id=term_id)
-#         standard = student.current_class # Get the standard for ranking
-
-#         # Authorization Check (No change)
-#         # if not hasattr(request.user, 'teacher'):
-#         #     if not (hasattr(request.user, 'student') and request.user.student == student):
-#         #         messages.error(request, "You are not authorized to view this report card.")
-#         #         return redirect('student_dashboard' if hasattr(request.user, 'student') else 'home')
-
-#         student = get_object_or_404(Student, id=student_id)
-#         term = get_object_or_404(Term, id=term_id)
-#         standard = student.current_class
-
-#         # Authorization Check (Clean & Reusable)
-#         if not self.has_permission(request, student):
-#             return self.handle_no_permission(request)
-
-
-#         # --- ATTENDANCE and NEXT TERM ---
-#         student_attendance = Attendance.objects.filter(student=student, date__gte=term.start_date, date__lte=term.end_date)
-
-#         days_present = student_attendance.filter(present=True).count()
-#         days_absent = student_attendance.filter(present=False).count()
-
-#         total_school_days = Attendance.objects.filter(
-#             student__current_class=student.current_class,
-#             date__gte=term.start_date,
-#             date__lte=term.end_date
-#         ).values('date').distinct().count()
-
-#         next_term = Term.objects.filter(start_date__gt=term.end_date).order_by('start_date').first()
-#         next_term_start_date = next_term.start_date if next_term else None
-
-#         total_students_in_class = Student.objects.filter(current_class=student.current_class).count()
-
-#         # Fetch scores for the student in the selected term
-#         scores = Score.objects.filter(student=student, term=term).select_related('subject').order_by('subject__name')
-
-#         report_data = []
-#         total_scores_sum = 0
-#         subjects_with_scores_count = 0
-
-#         for score in scores:
-#             current_total_score = score.total_score
-
-#             if current_total_score is not None:
-#                 # Assumes utility functions like get_grade, get_subject_remark are defined/imported
-#                 total_ca = (score.ca1 or 0) + (score.ca2 or 0) + (score.ca3 or 0)
-
-#                 report_data.append({
-#                     'subject': score.subject.name,
-#                     'ca1': score.ca1 if score.ca1 is not None else 'N/A',
-#                     'ca2': score.ca2 if score.ca2 is not None else 'N/A',
-#                     'ca3': score.ca3 if score.ca3 is not None else 'N/A',
-#                     'total_ca': total_ca,
-#                     'exam_score': score.exam_score if score.exam_score is not None else 'N/A',
-#                     'total_score': current_total_score,
-#                     'grade': get_grade(current_total_score),
-#                     'remark': get_subject_remark(current_total_score),
-#                 })
-
-#                 total_scores_sum += current_total_score
-#                 subjects_with_scores_count += 1
-
-#         # --- Calculate Overall Average ---
-#         overall_average = None
-#         overall_remark = "No scores recorded for this term."
-#         if subjects_with_scores_count > 0:
-#             overall_average = total_scores_sum / subjects_with_scores_count
-#             overall_remark = get_overall_remark(overall_average)
-
-#         # --- RANKING LOGIC INTEGRATION ---
-#         student_rank, total_students = get_student_class_rank(student, standard, term)
-
-#         student_position_display = 'N/A (Unranked)'
-#         if student_rank != 'N/A' and subjects_with_scores_count > 0:
-#             student_position_display = f"{student_rank} out of {total_students}"
-#         # --------------------------------
-
-#         motor_ability_score = MotorAbilityScore.objects.filter(student=student, term=term).first()
-
-#         try:
-#             school_identity = SchoolIdentity.objects.first()
-#         except SchoolIdentity.DoesNotExist:
-#             school_identity = None
-
-#         context = {
-#             'student': student,
-#             'term': term,
-#             'report_data': report_data,
-#             'overall_average': overall_average,
-#             'overall_remark': overall_remark,
-#             'student_position_display': student_position_display,
-#             'motor_ability_score': motor_ability_score,
-#             'school_identity': school_identity,
-#             'total_school_days': total_school_days,
-#             'days_present': days_present,
-#             'days_absent': days_absent,
-#             'next_term_start_date': next_term_start_date,
-#             'total_students_in_class': total_students_in_class,
-#         }
-
-#         # --- PDF GENERATION LOGIC ---
-#         if 'download' in request.GET and request.GET['download'] == 'pdf':
-#             # Assumes render_to_pdf_xhtml2pdf function and HttpResponse are imported
-#             filename = f"{student.first_name.replace(' ', '_')}_{term.name.replace(' ', '_')}_TermlyReportCard.pdf"
-#             pdf_response = render_to_pdf_xhtml2pdf(self.pdf_template_name, context)
-
-#             if pdf_response:
-#                 # Set the response content type and disposition for download
-#                 pdf_response['Content-Disposition'] = f'attachment; filename="{filename}"'
-#                 pdf_response['Content-Type'] = 'application/pdf' # Ensure correct content type for download
-#                 return pdf_response
-#             else:
-#                 return HttpResponse("Error generating PDF.", status=500)
-#         # ----------------------------
-
-#         return render(request, self.template_name, context)
 
 # new logic to capture new entries
 #Student Report Card View
@@ -3086,72 +2547,428 @@ class ParentSessionReportView(LoginRequiredMixin, View):
 
 # Parent Termly Report Access    
 class ParentTermlyReportView(LoginRequiredMixin, View):
-    """Independent view for parents to view full termly report cards."""
-    template_name = 'results/test_student_report_card_detail.html'
+
+    template_name = 'results/test_student_report_card_detail_extended.html'
 
     def get(self, request, student_id, term_id):
-        # 1. Get objects
-        student = get_object_or_404(Student, id=student_id)
-        term = get_object_or_404(Term, id=term_id)
-        
-        # 2. STRICT PARENT SECURITY CHECK
-        if not hasattr(request.user, 'parent'):
-            raise PermissionDenied("You do not have a parent profile.")
-        
-        if student not in request.user.parent.children.all():
-            raise PermissionDenied("This student is not linked to your account.")
 
-        # 3. DATA FETCHING (Same logic as student view but isolated)
-        standard = student.current_class
-        scores = Score.objects.filter(student=student, term=term).select_related('subject').order_by('subject__name')
+        # =====================================================
+        # SECURITY
+        # =====================================================
+
+        student = get_object_or_404(
+            Student,
+            id=student_id
+        )
+
+        term = get_object_or_404(
+            Term,
+            id=term_id
+        )
+
+        if not hasattr(request.user, 'parent'):
+            raise PermissionDenied(
+                "You do not have a parent profile."
+            )
+
+        if student not in request.user.parent.children.all():
+            raise PermissionDenied(
+                "This student is not linked to your account."
+            )
+
+        # =====================================================
+        # CLASS / HISTORICAL CLASS
+        # =====================================================
+
+        first_score = (
+            Score.objects
+            .filter(
+                student=student,
+                term=term
+            )
+            .select_related('standard')
+            .first()
+        )
+
+        standard = (
+            first_score.standard
+            if first_score and first_score.standard
+            else student.current_class
+        )
+
+        total_students_in_class = (
+            Score.objects.filter(
+                term=term,
+                standard=standard
+            )
+            .values('student')
+            .distinct()
+            .count()
+        )
+
+        # =====================================================
+        # ATTENDANCE
+        # =====================================================
+
+        student_attendance = Attendance.objects.filter(
+            student=student,
+            date__gte=term.start_date,
+            date__lte=term.end_date
+        )
+
+        days_present = student_attendance.filter(
+            present=True
+        ).count()
+
+        days_absent = student_attendance.filter(
+            present=False
+        ).count()
+
+        total_school_days = (
+            Attendance.objects.filter(
+                student__current_class=standard,
+                date__gte=term.start_date,
+                date__lte=term.end_date
+            )
+            .values('date')
+            .distinct()
+            .count()
+        )
+
+        next_term = (
+            Term.objects
+            .filter(
+                start_date__gt=term.end_date
+            )
+            .order_by('start_date')
+            .first()
+        )
+
+        next_term_start_date = (
+            next_term.start_date
+            if next_term
+            else None
+        )
+
+        # =====================================================
+        # SCORES
+        # =====================================================
+
+        scores = (
+            Score.objects.filter(
+                student=student,
+                term=term
+            )
+            .select_related('subject')
+            .order_by('subject__name')
+        )
 
         report_data = []
+
         total_scores_sum = 0
+        total_marks_obtained = 0
         subjects_with_scores_count = 0
 
         for score in scores:
-            if score.total_score is not None:
-                total_ca = (score.ca1 or 0) + (score.ca2 or 0) + (score.ca3 or 0)
-                report_data.append({
-                    'subject': score.subject.name,
-                    'ca1': score.ca1 if score.ca1 is not None else 'N/A',
-                    'ca2': score.ca2 if score.ca2 is not None else 'N/A',
-                    'ca3': score.ca3 if score.ca3 is not None else 'N/A',
-                    'total_ca': total_ca,
-                    'exam_score': score.exam_score if score.exam_score is not None else 'N/A',
-                    'total_score': score.total_score,
-                    'grade': get_grade(score.total_score),
-                    'remark': get_subject_remark(score.total_score),
-                })
-                total_scores_sum += score.total_score
-                subjects_with_scores_count += 1
 
-        # 4. AVERAGES & RANKING
-        overall_average = total_scores_sum / subjects_with_scores_count if subjects_with_scores_count > 0 else None
-        overall_remark = get_overall_remark(overall_average) if overall_average else "No scores recorded."
-        
-        student_rank, total_students = get_student_class_rank(student, standard, term)
-        student_position_display = f"{student_rank} out of {total_students}" if student_rank != 'N/A' else 'N/A'
+            current_total_score = score.total_score
 
-        # 5. ATTENDANCE
-        student_attendance = Attendance.objects.filter(student=student, date__gte=term.start_date, date__lte=term.end_date)
-        days_present = student_attendance.filter(present=True).count()
-        
-        school_identity = SchoolIdentity.objects.first()
+            if current_total_score is None:
+                continue
+
+            total_ca = (
+                (score.ca1 or 0)
+                + (score.ca2 or 0)
+                + (score.ca3 or 0)
+            )
+
+            class_scores = Score.objects.filter(
+                subject=score.subject,
+                term=term,
+                standard=standard,
+                total_score__isnull=False
+            )
+
+            subject_avg = class_scores.aggregate(
+                avg=Avg('total_score')
+            )['avg']
+
+            subject_min = class_scores.aggregate(
+                min=Min('total_score')
+            )['min']
+
+            subject_max = class_scores.aggregate(
+                max=Max('total_score')
+            )['max']
+
+            higher_scores_count = (
+                class_scores
+                .filter(
+                    total_score__gt=current_total_score
+                )
+                .count()
+            )
+
+            subject_position = higher_scores_count + 1
+
+            report_data.append({
+                'subject': score.subject.name,
+                'ca1': score.ca1,
+                'ca2': score.ca2,
+                'ca3': score.ca3,
+                'total_ca': total_ca,
+                'exam_score': score.exam_score,
+                'total_score': current_total_score,
+                'grade': get_grade(current_total_score),
+                'remark': get_subject_remark(current_total_score),
+
+                'subject_avg': subject_avg,
+                'subject_min': subject_min,
+                'subject_max': subject_max,
+                'subject_position': subject_position,
+            })
+
+            total_scores_sum += current_total_score
+            total_marks_obtained += current_total_score
+            subjects_with_scores_count += 1
+
+        # =====================================================
+        # OVERALL AVERAGE
+        # =====================================================
+
+        overall_average = None
+        overall_remark = "No scores recorded for this term."
+
+        if subjects_with_scores_count > 0:
+
+            overall_average = (
+                total_scores_sum /
+                subjects_with_scores_count
+            )
+
+            overall_remark = get_overall_remark(
+                overall_average
+            )
+
+        # =====================================================
+        # CLASS AVERAGES
+        # =====================================================
+
+        student_averages = []
+
+        historical_students = (
+            Student.objects.filter(
+                scores__term=term,
+                scores__standard=standard
+            )
+            .distinct()
+        )
+
+        for stu in historical_students:
+
+            stu_scores = Score.objects.filter(
+                student=stu,
+                term=term,
+                standard=standard,
+                total_score__isnull=False
+            )
+
+            total = stu_scores.aggregate(
+                total=Sum('total_score')
+            )['total']
+
+            count = stu_scores.count()
+
+            if total is not None and count > 0:
+
+                avg = total / count
+
+                student_averages.append(
+                    float(avg)
+                )
+
+        class_avg = (
+            round(
+                sum(student_averages) /
+                len(student_averages),
+                2
+            )
+            if student_averages else None
+        )
+
+        class_max_avg = (
+            round(max(student_averages), 2)
+            if student_averages else None
+        )
+
+        class_min_avg = (
+            round(min(student_averages), 2)
+            if student_averages else None
+        )
+
+        # =====================================================
+        # RANKING
+        # =====================================================
+
+        student_rank, total_students = (
+            get_student_class_rank(
+                student,
+                standard,
+                term
+            )
+        )
+
+        student_position_display = (
+            'N/A (Unranked)'
+        )
+
+        if (
+            student_rank != 'N/A'
+            and subjects_with_scores_count > 0
+        ):
+            student_position_display = (
+                f"{student_rank} out of {total_students}"
+            )
+
+        # =====================================================
+        # POSITION SETTINGS
+        # =====================================================
+
+        try:
+
+            position_setting = (
+                ClassPositionSetting.objects.get(
+                    standard=standard,
+                    term=term,
+                    session=term.session
+                )
+            )
+
+            show_class_position = (
+                position_setting.show_class_position
+            )
+
+        except ClassPositionSetting.DoesNotExist:
+
+            show_class_position = True
+
+        # =====================================================
+        # CUSTOM COMMENTS
+        # =====================================================
+
+        teacher_comment = None
+        principal_comment = None
+
+        try:
+
+            report_comments = (
+                ReportComments.objects.get(
+                    student=student,
+                    standard=standard,
+                    term=term,
+                    session=term.session
+                )
+            )
+
+            teacher_comment = (
+                report_comments.teacher_comment
+            )
+
+            principal_comment = (
+                report_comments.principal_comment
+            )
+
+        except ReportComments.DoesNotExist:
+            pass
+
+        # =====================================================
+        # MOTOR ABILITY
+        # =====================================================
+
+        motor_ability_score = (
+            MotorAbilityScore.objects.filter(
+                student=student,
+                term=term
+            ).first()
+        )
+
+        school_identity = (
+            SchoolIdentity.objects.first()
+        )
+
+        # =====================================================
+        # CONTEXT
+        # =====================================================
 
         context = {
+
+            'result_class': standard,
+
             'student': student,
             'term': term,
+
             'report_data': report_data,
+
             'overall_average': overall_average,
             'overall_remark': overall_remark,
-            'student_position_display': student_position_display,
-            'school_identity': school_identity,
-            'days_present': days_present,
-            'report_type': 'Full Termly Report',
+
+            'student_position_display':
+                student_position_display,
+
+            'show_class_position':
+                show_class_position,
+
+            'teacher_comment':
+                teacher_comment,
+
+            'principal_comment':
+                principal_comment,
+
+            'total_marks_obtained':
+                total_marks_obtained,
+
+            'subjects_with_scores_count':
+                subjects_with_scores_count,
+
+            'class_avg':
+                class_avg,
+
+            'class_max_avg':
+                class_max_avg,
+
+            'class_min_avg':
+                class_min_avg,
+
+            'motor_ability_score':
+                motor_ability_score,
+
+            'school_identity':
+                school_identity,
+
+            'total_school_days':
+                total_school_days,
+
+            'days_present':
+                days_present,
+
+            'days_absent':
+                days_absent,
+
+            'next_term_start_date':
+                next_term_start_date,
+
+            'total_students_in_class':
+                total_students_in_class,
+
+            'report_type':
+                'Full Termly Report',
         }
-        
-        return render(request, self.template_name, context)
+
+        return render(
+            request,
+            self.template_name,
+            context
+        )
 
 
 

@@ -800,9 +800,12 @@ def assign_classgroup_to_students_view(request):
 
 
 # PARENT DASHBOARD
+from prep_reports.models import PrepReportCard
+
 @login_required
 def parent_dashboard(request):
-    from .models import Parent, Student
+
+    from results.models import  ResultPublication, SessionResultStatus
     from curriculum.models import Session, Term
     from payments.models import StudentFeeAssignment, Payment
     from django.db.models import Sum
@@ -813,58 +816,138 @@ def parent_dashboard(request):
         children = Student.objects.filter(parent=parent).prefetch_related('scores__term')
     except Parent.DoesNotExist:
         children = []
-    
+
     children_with_reports = []
-    all_terms = Term.objects.all().order_by('id') 
+
+    all_terms = Term.objects.all().order_by('id')
     all_sessions = Session.objects.all().order_by('id')
-    
+
     current_session = Session.objects.filter(is_current=True).order_by('-name').first()
     current_term = Term.objects.filter(session=current_session, is_current=True).order_by('-start_date').first()
 
     for child in children:
-        # Fetch individual invoices and receipts for this child
+
         invoices = StudentFeeAssignment.objects.filter(student=child).order_by('-id')
-        # receipts = Payment.objects.filter(student=child).order_by('-date_paid')
         receipts = Payment.objects.filter(student=child).order_by('-payment_date')
 
         child_data = {
             'child': child,
             'termly_reports': [],
             'session_reports': [],
-            'invoices': invoices, # Added
-            'receipts': receipts, # Added
-            'grand_payment_summary': {}, 
+            'invoices': invoices,
+            'receipts': receipts,
+            'grand_payment_summary': {},
             'current_term': current_term,
             'current_session': current_session,
         }
-        
-        for term in all_terms:
-            if child.scores.filter(term=term).exists():
-                child_data['termly_reports'].append(term)
-        
-        for session in all_sessions:
-            if child.scores.filter(term__session=session).exists():
-                child_data['session_reports'].append(session)
-        
-        # Financial aggregation
-        total_due_agg = StudentFeeAssignment.objects.filter(student=child).aggregate(total_due=Sum('amount_due'))
-        total_due = total_due_agg.get('total_due') or Decimal('0.00')
 
-        total_paid_agg = Payment.objects.filter(student=child).aggregate(total_paid=Sum('amount_received'))
-        total_paid = total_paid_agg.get('total_paid') or Decimal('0.00')
+        # =====================================================
+        # PREP REPORTS (UNCHANGED - already correct)
+        # =====================================================
+        published_prep_cards = (
+            PrepReportCard.objects.filter(
+                student=child,
+                status='published'
+            )
+            .select_related('period', 'period__term', 'period__session')
+        )
+
+        prep_term_ids = set()
+
+        for card in published_prep_cards:
+            if card.period and card.period.term:
+                prep_term_ids.add(card.period.term.id)
+
+                child_data['termly_reports'].append({
+                    'is_prep': True,
+                    'prep_card': card,
+                    'term': card.period.term,
+                })
+
+        # =====================================================
+        # TERM PUBLICATION (FIXED - IMPORTANT PART)
+        # =====================================================
+
+        published_term_ids = set(
+            ResultPublication.objects.filter(
+                student=child,
+                is_published=True
+            ).values_list('term_id', flat=True)
+        )
+
+        for term in all_terms:
+
+            # skip prep-covered terms
+            if term.id in prep_term_ids:
+                continue
+
+            # enforce publication gate
+            if term.id not in published_term_ids:
+                continue
+
+            # ensure scores exist
+            if child.scores.filter(term=term).exists():
+                child_data['termly_reports'].append({
+                    'is_prep': False,
+                    'term': term,
+                })
+
+        # =====================================================
+        # SESSION REPORTS (UNCHANGED - already correct)
+        # =====================================================
+
+        published_session_ids = set(
+            SessionResultStatus.objects.filter(
+                student=child,
+                is_published=True
+            ).values_list('session_id', flat=True)
+        )
+
+        for session in all_sessions:
+            if (
+                session.id in published_session_ids and
+                child.scores.filter(term__session=session).exists()
+            ):
+                child_data['session_reports'].append(session)
+
+        # =====================================================
+        # FINANCIAL SUMMARY (UNCHANGED)
+        # =====================================================
+
+        total_due = StudentFeeAssignment.objects.filter(student=child).aggregate(
+            total_due=Sum('amount_due')
+        ).get('total_due') or Decimal('0.00')
+
+        total_paid = Payment.objects.filter(student=child).aggregate(
+            total_paid=Sum('amount_received')
+        ).get('total_paid') or Decimal('0.00')
 
         total_balance = total_due - total_paid
 
         child_data['grand_payment_summary'] = {
             'total_due': total_due,
-            'total_paid': total_paid, 
+            'total_paid': total_paid,
             'total_balance': total_balance,
             'is_paid': total_balance <= 0
         }
-        
+
+        # =====================================================
+        # SORT REPORTS (SAFE)
+        # =====================================================
+
+        child_data['termly_reports'].sort(
+            key=lambda x: (
+                x['term'].start_date if x.get('term') else None
+            ),
+            reverse=True
+        )
+
         children_with_reports.append(child_data)
-        
-    context = {'children_with_reports': children_with_reports}
+
+    context = {
+        'children_with_reports': children_with_reports
+    }
+
     return render(request, 'students/parent_dashboard.html', context)
 
 

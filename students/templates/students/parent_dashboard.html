@@ -93,38 +93,90 @@
                     <div class="tab-content pt-4">
                         <div class="tab-pane fade show active" id="res-{{ child_data.child.id }}">
                             <div class="row">
-                                <div class="col-md-4">
+                                 <div class="col-md-4">
                                     <h6 class="font-weight-bold text-muted">MID-TERM SCORES</h6>
+                                  
                                     <div class="list-group list-group-flush mb-4">
-                                        {% for term in child_data.termly_reports %}
-                                            <a href="{% url 'results:parent_mid_term_report' student_id=child_data.child.id term_id=term.id %}" class="list-group-item list-group-item-action d-flex justify-content-between small">
-                                                {{ term.name }} <i class="fas fa-eye text-primary"></i>
+
+                                    {% for report in child_data.termly_reports %}
+
+                                        {% if report.term %}
+
+                                            <a href="{% url 'results:parent_mid_term_report' student_id=child_data.child.id term_id=report.term.id %}"
+                                            class="list-group-item list-group-item-action d-flex justify-content-between small">
+
+                                                {{ report.term }}
+                                                <i class="fas fa-eye text-primary"></i>
+
                                             </a>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                               <div class="col-md-4">
-                                <h6 class="font-weight-bold text-muted">FULL TERMLY REPORTS</h6>
-                                <div class="list-group list-group-flush mb-4">
-                                    {% for term in child_data.termly_reports %}
-                                        <a href="{% url 'results:parent_termly_report' student_id=child_data.child.id term_id=term.id %}" 
-                                        class="list-group-item list-group-item-action d-flex justify-content-between small">
-                                            {{ term.name }} Card <i class="fas fa-file-invoice text-success"></i>
-                                        </a>
+
+                                        {% endif %}
+
                                     {% endfor %}
+
+                                </div>
+                                </div>
+                            
+                            <div class="col-md-4">
+                    <h6 class="font-weight-bold text-muted">FULL TERMLY REPORTS</h6>
+
+                    <div class="list-group list-group-flush mb-4">
+
+                        {% for report in child_data.termly_reports %}
+
+                    {% if report.is_prep %}
+
+                {% comment %} <a href="{% url 'results:parent_prep_report' student_id=child_data.child.id prep_id=report.prep_card.id %}" {% endcomment %}
+                <a href="{% url 'prep_reports:report_card_preview' report_card_id=report.prep_card.id %}"
+                class="list-group-item list-group-item-action d-flex justify-content-between small">
+
+                    {{ report.term }}
+                    <span class="badge badge-success">Prep</span>
+
+                </a>
+                {% endif %}
+
+            {% comment %} {% else %} {% endcomment %}
+                {% if report.term %}
+                <a href="{% url 'results:parent_termly_report' student_id=child_data.child.id term_id=report.term.id %}"
+                   class="list-group-item list-group-item-action d-flex justify-content-between small">
+
+                     {{ report.term }}
+                    <i class="fas fa-file-invoice text-success"></i>
+
+                </a>
+
+            {% endif %}
+
+        {% empty %}
+            <div class="list-group-item text-muted small">
+                No published term reports available.
+            </div>
+        {% endfor %}
+
+    </div>
+</div>
+
+                            <div class="col-md-4">
+                                <h6 class="font-weight-bold text-muted">ANNUAL (SESSION)</h6>
+
+                                <div class="list-group list-group-flush">
+
+                                    {% for session in child_data.session_reports %}
+                                        <a href="{% url 'results:parent_session_report' student_id=child_data.child.id session_id=session.id %}"
+                                        class="list-group-item list-group-item-action d-flex justify-content-between small">
+                                            {{ session.name }}
+                                            <span class="badge badge-info">View</span>
+                                        </a>
+                                    {% empty %}
+                                        <div class="list-group-item text-muted small">
+                                            No published session reports available.
+                                        </div>
+                                    {% endfor %}
+
                                 </div>
                             </div>
-                                <div class="col-md-4">
-                                    <h6 class="font-weight-bold text-muted">ANNUAL (SESSION)</h6>
-                                    <div class="list-group list-group-flush">
-                                        {% for session in child_data.session_reports %}
-                                            <a href="{% url 'results:parent_session_report' student_id=child_data.child.id session_id=session.id %}" class="list-group-item list-group-item-action d-flex justify-content-between small">
-                                                {{ session.name }} <span class="badge badge-info">View</span>
-                                            </a>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
+                                                        </div>
                         </div>
 
                         <div class="tab-pane fade" id="inv-{{ child_data.child.id }}">

@@ -159,6 +159,7 @@ class PrepReportCardAdmin(admin.ModelAdmin):
         'skill_entry_count', 'days_present', 'days_absent',
         'promoted_to', 'created_at',
     ]
+    raw_id_fields = ['student']
     list_filter = ['status', 'prep_class', 'period']
     search_fields = [
         'student__user__last_name',
