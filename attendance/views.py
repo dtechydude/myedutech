@@ -16,6 +16,7 @@ from django.http import HttpResponseForbidden, Http404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import logging
+from attendance.services import get_student_attendance
 
 
 
@@ -304,24 +305,37 @@ def student_attendance_summary(request, student_id):
         current_term = Term.objects.get(is_current=True) 
         
         # 3. Filter Attendance Records using the date range of the current Term
-        attendance_records = Attendance.objects.filter(
+        # attendance_records = Attendance.objects.filter(
+        #     student=current_student,
+        #     date__gte=current_term.start_date, 
+        #     date__lte=current_term.end_date 
+        # )
+        
+        # # 4. Calculate Summary (relies on 'present' boolean field in Attendance model)
+        # days_present = attendance_records.filter(present=True).count()
+        # days_absent = attendance_records.filter(present=False).count()
+        # total_days = days_present + days_absent
+        
+        # # 5. Calculate Attendance Percentage
+        # percent_present = 0.0
+        # if total_days > 0:
+        #     percent_present = round((days_present / total_days) * 100, 1)
+
+        attendance_info = get_student_attendance(
             student=current_student,
-            date__gte=current_term.start_date, 
-            date__lte=current_term.end_date 
+            session=current_session,
+            term=current_term
         )
-        
-        # 4. Calculate Summary (relies on 'present' boolean field in Attendance model)
-        days_present = attendance_records.filter(present=True).count()
-        days_absent = attendance_records.filter(present=False).count()
-        total_days = days_present + days_absent
-        
-        # 5. Calculate Attendance Percentage
-        percent_present = 0.0
-        if total_days > 0:
-            percent_present = round((days_present / total_days) * 100, 1)
+
+        days_present = attendance_info['days_present']
+        days_absent = attendance_info['days_absent']
+        total_days = attendance_info['total_days']
+        percent_present = attendance_info['attendance_percentage']
+        attendance_source = attendance_info['source']
 
         # 6. Build Context
         context.update({
+            'attendance_source': attendance_source, # new logic
             'student': current_student,
             'days_present': days_present,
             'days_absent': days_absent,
@@ -417,24 +431,37 @@ def self_attendance_summary(request):
         current_term = Term.objects.get(is_current=True) 
         
         # 2. Filter Attendance Records using the date range of the current Term
-        attendance_records = Attendance.objects.filter(
+        # attendance_records = Attendance.objects.filter(
+        #     student=current_student,
+        #     date__gte=current_term.start_date, 
+        #     date__lte=current_term.end_date 
+        # )
+        
+        # # 3. Calculate Summary (relies on 'present' boolean field in Attendance model)
+        # days_present = attendance_records.filter(present=True).count()
+        # days_absent = attendance_records.filter(present=False).count()
+        # total_days = days_present + days_absent
+        
+        # # 4. Calculate Attendance Percentage
+        # percent_present = 0.0
+        # if total_days > 0:
+        #     percent_present = round((days_present / total_days) * 100, 1)
+
+        attendance_info = get_student_attendance(
             student=current_student,
-            date__gte=current_term.start_date, 
-            date__lte=current_term.end_date 
+            session=current_session,
+            term=current_term
         )
-        
-        # 3. Calculate Summary (relies on 'present' boolean field in Attendance model)
-        days_present = attendance_records.filter(present=True).count()
-        days_absent = attendance_records.filter(present=False).count()
-        total_days = days_present + days_absent
-        
-        # 4. Calculate Attendance Percentage
-        percent_present = 0.0
-        if total_days > 0:
-            percent_present = round((days_present / total_days) * 100, 1)
+
+        days_present = attendance_info['days_present']
+        days_absent = attendance_info['days_absent']
+        total_days = attendance_info['total_days']
+        percent_present = attendance_info['attendance_percentage']
+        attendance_source = attendance_info['source']
 
         # 5. Build Context
         context.update({
+            'attendance_source': attendance_source, #new logic
             'student': current_student,
             'days_present': days_present,
             'days_absent': days_absent,

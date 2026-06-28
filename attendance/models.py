@@ -5,6 +5,7 @@ from datetime import timedelta
 from students.models import Student
 from datetime import date
 from django.utils import timezone
+from curriculum.models import Session, Term
 
 
 
@@ -21,3 +22,131 @@ class Attendance(models.Model):
 
     def __str__(self):
         return f"{self.student.first_name} - {self.date} - {'Present' if self.present else 'Absent'}"
+
+
+
+
+
+# Attendance Configuration
+class AttendanceConfiguration(models.Model):
+    """
+    Stores attendance settings for a session/term.
+    Applies to all students.
+    """
+
+    session = models.ForeignKey(
+        Session,
+        on_delete=models.CASCADE
+    )
+
+    term = models.ForeignKey(
+        Term,
+        on_delete=models.CASCADE
+    )
+
+    total_school_days = models.PositiveIntegerField(
+        default=0
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        unique_together = (
+            'session',
+            'term'
+        )
+
+    def __str__(self):
+        return (
+            f"{self.session} - "
+            f"{self.term} "
+            f"({self.total_school_days} Days)"
+        )
+
+# Manual Attendance taking
+class AttendanceSummary(models.Model):
+
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        related_name='attendance_summaries'
+    )
+
+    session = models.ForeignKey(
+        Session,
+        on_delete=models.CASCADE
+    )
+
+    term = models.ForeignKey(
+        Term,
+        on_delete=models.CASCADE
+    )
+
+    days_present = models.PositiveIntegerField(
+        default=0
+    )
+
+    days_absent = models.PositiveIntegerField(
+        default=0
+    )
+
+    remarks = models.TextField(
+        blank=True,
+        null=True
+    )
+
+    entered_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+        unique_together = (
+            'student',
+            'session',
+            'term'
+        )
+
+    @property
+    def total_school_days(self):
+
+        config = AttendanceConfiguration.objects.filter(
+            session=self.session,
+            term=self.term
+        ).first()
+
+        return config.total_school_days if config else 0
+
+    @property
+    def attendance_percentage(self):
+
+        if self.total_school_days > 0:
+
+            return round(
+                (
+                    self.days_present /
+                    self.total_school_days
+                ) * 100,
+                2
+            )
+
+        return 0
+
+    def __str__(self):
+
+        return (
+            f"{self.student} - "
+            f"{self.term}"
+        )
