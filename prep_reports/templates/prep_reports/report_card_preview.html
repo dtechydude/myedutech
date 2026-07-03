@@ -889,7 +889,7 @@ html, body {
   {# ── 5. MOTOR ABILITY & PSYCHOMOTOR ASSESSMENT ── #}
   <div class="rc-section-heading" style="justify-content:space-between;padding-right:8px">
     <span>Motor Ability &amp; Psychomotor Assessment</span>
-    {% if request.user.is_superuser or request.user.is_staff %}
+    {% if request.user.is_superuser or request.user.is_staff or user.teacher %}
       <a href="{% url 'results:motor_ability_score_create_update' report_card.student.pk report_card.period.term.pk %}" class="motor-edit-btn" style="margin-left:auto">
         ✏ Edit Scores
       </a>
