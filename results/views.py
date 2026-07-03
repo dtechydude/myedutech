@@ -1313,12 +1313,24 @@ class MotorAbilityScoreCreateUpdateView(LoginRequiredMixin, TeacherRequiredMixin
         else:
             form = MotorAbilityScoreForm(request.POST)
 
+        # if form.is_valid():
+        #     new_score = form.save(commit=False)
+        #     new_score.student = student
+        #     new_score.term = term
+        #     new_score.save()
+        #     messages.success(request, f"Motor Ability scores for {student.first_name} ({term.name}) saved successfully!")
+        #     return redirect(reverse('results:student_report_card_detail', args=[student.id, term.id]))
+
         if form.is_valid():
             new_score = form.save(commit=False)
             new_score.student = student
             new_score.term = term
             new_score.save()
             messages.success(request, f"Motor Ability scores for {student.first_name} ({term.name}) saved successfully!")
+
+            prep_report = PrepReportCard.objects.filter(student=student, period__term=term).first()
+            if prep_report:
+                return redirect(reverse('prep_reports:report_card_preview', args=[prep_report.id]))
             return redirect(reverse('results:student_report_card_detail', args=[student.id, term.id]))
         else:
             messages.error(request, "Please correct the errors in the form.")
