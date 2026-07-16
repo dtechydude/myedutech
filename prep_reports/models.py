@@ -340,10 +340,20 @@ class PrepReportCard(models.Model):
     def days_school_opened(self):
         return self.period.days_school_opened
 
+    # @property
+    # def student_full_name(self):
+    #     u = self.student.user
+    #     return f"{u.last_name} {u.first_name} {u.student.middle_name}".strip().upper()
+
     @property
     def student_full_name(self):
         u = self.student.user
-        return f"{u.last_name} {u.first_name} {u.student.middle_name}".strip().upper()
+        names = (
+            (u.last_name or "").strip(),
+            (u.first_name or "").strip(),
+            (u.student.middle_name or "").strip(),
+        )
+        return " ".join(name for name in names if name).upper()
 
 
 # ---------------------------------------------------------------------------
