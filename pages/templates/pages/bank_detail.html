@@ -1,68 +1,108 @@
-{% extends 'pages/portal_home.html'%}
+{% extends 'pages/portal_home.html' %}
 {% load static %}
-{% block title %}<title>KwikSchools - Bank Details </title>{% endblock title %}
+
+{% block title %}
+<title>{{ school_info.name }} - Bank Details</title>
+{% endblock title %}
 
 {% block content_body %}
- <div class="content-body">
-            <div class="container-fluid">
-				<div class="row page-titles">
-					<ol class="breadcrumb">
-						<li class="breadcrumb-item active"><a href="javascript:void(0)">BANK</a></li>
-						<li class="breadcrumb-item"><a href="javascript:void(0)">Information</a></li>
-					</ol>
-                </div>
-                <!-- row -->
-                <div class="row">
-					<div class="col-xl-4 col-xxl-6 col-lg-6">
-                        <div class="card">
-                            <div class="card-header border-0 pb-0">
-                                <h4 class="card-title">Payment Instruction</h4>
-                            </div>
-                            <div class="card-body">
-                                <div id="DZ_W_TimeLine" class="widget-timeline dlab-scroll height270">
-                                    <ul class="timeline">
-                                        <li>
-                                            <div class="timeline-badge primary"></div>
-                                            <a class="timeline-panel text-muted" href="#">
-                                                <span>Payment Instruction:</span>
-                                                <h6 class="mb-0">Your payment submission is subject to verification by the admin.
-                                                    You can contact the admin by mail or phone if you have queries about payments <strong class="text-primary">-</strong>.</h6>
-                                            </a>
-                                        </li>                               
-                                    </ul>
-                                </div>
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">BANK</a></li>
+                <li class="breadcrumb-item"><a href="javascript:void(0)">Information</a></li>
+            </ol>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-xl-8 col-lg-10">
+                <div class="card shadow-sm">
+                    <div class="card-header border-0 pb-0">
+                        <h4 class="card-title mb-0"><i class="fas fa-building-columns text-primary me-2"></i>School Bank Details</h4>
+                    </div>
+                    <div class="card-body">
+
+                        <div class="alert alert-info d-flex align-items-start shadow-sm mb-4">
+                            <i class="fas fa-circle-info fa-lg me-3 mt-1"></i>
+                            <div>
+                                <strong>Payment Instruction:</strong> Always pay into one of the official
+                                accounts listed below, and keep your teller/receipt as proof.
+                                Your payment is subject to verification by the admin — contact the
+                                school by mail or phone if you have any questions about a payment.
                             </div>
                         </div>
-					</div>
-					<div class="col-xl-4 col-xxl-6 col-lg-6">
-                        <div class="card">
-                            <div class="card-header border-0 pb-0">
-                                <h4 class="card-title">Bank Details</h4>
-                            </div>
-                            <div class="card-body">
-                                <div id="DZ_W_TimeLine11" class="widget-timeline dlab-scroll style-1 height270">
-                                    <ul class="timeline">
-                                        <li> {% for b in bank_detail %}
-                                            <div class="timeline-badge primary"></div>
-                                            <a class="timeline-panel text-muted" href="#">
-                                                <span>Account Information</span>
-                                                <h6 class="mb-0">Acc. Name: {{b.acc_name }} <br> Bank Name: {{b.bank_name}} <br><strong class="text-primary"> ACC. Number: {{b.acc_number}}</strong>.</h6>
-                                            </a>
-                                            {% endfor %}
-                                        </li>                                    
-                                                                           
-                                        
-                                    </ul>
-                                </div>
-                            </div>
+
+                        {% if bank_detail %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Bank</th>
+                                        <th>Account Name</th>
+                                        <th>Account Number</th>
+                                        <th>Purpose</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for b in bank_detail %}
+                                    <tr>
+                                        <td class="fw-bold">{{ b.bank_name }}</td>
+                                        <td>{{ b.acc_name }}</td>
+                                        <td>
+                                            <span class="fw-bold text-primary me-2" id="acc-number-{{ b.id }}">{{ b.acc_number }}</span>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary copy-btn"
+                                                    data-target="acc-number-{{ b.id }}"
+                                                    title="Copy account number">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </td>
+                                        <td class="text-muted">{{ b.description }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
-					</div>
-                            </div>
+                        {% else %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="fas fa-building-columns fa-2x mb-3 d-block"></i>
+                            No bank account details have been published yet. Please check back later
+                            or contact the school administration.
                         </div>
+                        {% endif %}
+
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.copy-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var target = document.getElementById(btn.dataset.target);
+            var text = target.textContent.trim();
+
+            navigator.clipboard.writeText(text).then(function () {
+                var icon = btn.querySelector('i');
+                icon.classList.remove('fa-copy');
+                icon.classList.add('fa-check');
+                btn.classList.remove('btn-outline-secondary');
+                btn.classList.add('btn-success');
+
+                setTimeout(function () {
+                    icon.classList.remove('fa-check');
+                    icon.classList.add('fa-copy');
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-outline-secondary');
+                }, 1500);
+            });
+        });
+    });
+});
+</script>
 {% endblock content_body %}

@@ -164,15 +164,21 @@ def payment_chart(request):
     return render(request, 'pages/payment_chart.html')
 
 
-
-# birthday list
+# Bank Details
 @login_required
 def bank_detail(request):
-    bank_detail = BankDetail.objects.all()   
-    context = {        
-        'bank_detail': bank_detail,
-    }
-    return render(request, 'pages/bank_detail.html', context)
+    """
+    Read-only display of the school's official bank accounts, visible to
+    students and other logged-in users, so payments (tuition, hostel,
+    etc.) always go to a verified account rather than word-of-mouth or
+    outdated details.
+    """
+    bank_details = BankDetail.objects.all()
+
+    return render(request, 'pages/bank_detail.html', {
+        'bank_detail': bank_details,
+    })
+
 
 # students phone list
 @login_required
