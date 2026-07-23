@@ -1,0 +1,250 @@
+{% extends 'cbt/base.html' %}
+
+{% block title %}My Result History{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1">📊 My CBT Result History</h2>
+            <p class="text-muted mb-0">
+                {% if show_all %}
+                    Showing your full CBT history across every term and session.
+                {% else %}
+                    Showing your results for <b>{{ selected_term|default:"the current term" }}</b>
+                    {% if current_session_id %}&middot; <b>
+                        {% for id, name in session_choices %}{% if id|stringformat:"s" == selected_session %}{{ name }}{% endif %}{% endfor %}
+                    </b>{% endif %}.
+                {% endif %}
+            </p>
+        </div>
+        <a href="{% url 'cbt:main-view' %}" class="btn btn-outline-secondary">
+            &larr; Back to Exams
+        </a>
+    </div>
+</div>
+
+{% if not has_results %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <div style="font-size: 3rem;">🗒️</div>
+            <h4 class="fw-bold mt-3">No Examinations Taken Yet</h4>
+            <p class="text-muted">
+                Once you complete a CBT examination, your scores will appear here.
+            </p>
+            <a href="{% url 'cbt:main-view' %}" class="btn btn-primary mt-2">
+                View Available Exams
+            </a>
+        </div>
+    </div>
+
+{% else %}
+
+    <!-- Summary Stat Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-muted small fw-bold text-uppercase">Exams Taken</div>
+                    <div class="fs-2 fw-bold text-primary">{{ total_taken }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-muted small fw-bold text-uppercase">Average Score</div>
+                    <div class="fs-2 fw-bold text-info">{{ average_score }}%</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-muted small fw-bold text-uppercase">Passed</div>
+                    <div class="fs-2 fw-bold text-success">{{ total_passed }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-muted small fw-bold text-uppercase">Failed</div>
+                    <div class="fs-2 fw-bold text-danger">{{ total_failed }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if best_result or worst_result %}
+    <div class="row g-3 mb-4">
+        {% if best_result %}
+        <div class="col-md-6">
+            <div class="alert bg-success-subtle border-success-subtle mb-0 d-flex align-items-center gap-2">
+                <span class="fs-4">🏆</span>
+                <div>
+                    <div class="fw-bold">Best Performance</div>
+                    <div class="small text-muted">
+                        {{ best_result.quiz.subject_name }} — {{ best_result.score|floatformat:1 }}%
+                        ({{ best_result.quiz.exam_name }})
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% if worst_result %}
+        <div class="col-md-6">
+            <div class="alert bg-warning-subtle border-warning-subtle mb-0 d-flex align-items-center gap-2">
+                <span class="fs-4">📌</span>
+                <div>
+                    <div class="fw-bold">Needs Attention</div>
+                    <div class="small text-muted">
+                        {{ worst_result.quiz.subject_name }} — {{ worst_result.score|floatformat:1 }}%
+                        ({{ worst_result.quiz.exam_name }})
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Filter Card -->
+    <div class="card p-3 mb-4 shadow-sm border-0 bg-light">
+        <form method="GET" class="row g-3 align-items-end">
+
+            <div class="col-md-3">
+                <label class="form-label fw-bold small">Session</label>
+                <select name="session" class="form-select" {% if show_all %}disabled{% endif %}>
+                    {% for id, name in session_choices %}
+                        <option value="{{ id }}" {% if id|stringformat:"s" == selected_session %}selected{% endif %}>
+                            {{ name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-bold small">Term</label>
+                <select name="term" class="form-select" {% if show_all %}disabled{% endif %}>
+                    {% for term in term_choices %}
+                        <option value="{{ term }}" {% if term == selected_term %}selected{% endif %}>
+                            {{ term }} Term
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-bold small">Subject</label>
+                <select name="subject" class="form-select">
+                    <option value="">All Subjects</option>
+                    {% for id, name in subject_choices %}
+                        <option value="{{ id }}" {% if id|stringformat:"s" == selected_subject %}selected{% endif %}>
+                            {{ name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-dark w-100">
+                    Apply
+                </button>
+            </div>
+        </form>
+
+        <div class="mt-3 border-top pt-3">
+            {% if show_all %}
+                <a href="{% url 'cbt:student-results-view' %}" class="btn btn-sm btn-outline-primary">
+                    ⏱️ Back to Current Term/Session
+                </a>
+            {% else %}
+                <a href="{% url 'cbt:student-results-view' %}?all=1" class="btn btn-sm btn-outline-secondary">
+                    📜 View My Full History (All Terms/Sessions)
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Results Table -->
+    <div class="table-responsive">
+        <table class="table table-hover align-middle bg-white shadow-sm rounded">
+            <thead class="table-dark">
+                <tr>
+                    <th class="ps-3">Subject</th>
+                    <th>Examination</th>
+                    <th>Term</th>
+                    <th>Session</th>
+                    <th>Score</th>
+                    <th>Status</th>
+                    <th>Attempt</th>
+                    <th>Date Taken</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for res in results %}
+                <tr>
+                    <td class="ps-3 fw-bold text-dark">{{ res.quiz.subject_name }}</td>
+                    <td>{{ res.quiz.exam_name }}</td>
+                    <td>{{ res.quiz.term }}</td>
+                    <td>{{ res.quiz.session|default:"—" }}</td>
+                    <td>
+                        <span class="fw-bold">{{ res.score|floatformat:1 }}%</span>
+                    </td>
+                    <td>
+                        {% if res.passed %}
+                            <span class="badge bg-success">✔ Passed</span>
+                        {% else %}
+                            <span class="badge bg-danger">✘ Failed</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if res.is_retake %}
+                            <span class="badge bg-warning text-dark">Attempt {{ res.attempt_number }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">1st Attempt</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-muted small">{{ res.timestamp|date:"M d, Y | H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-5 text-muted">
+                        No results found for the selected filters.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="mt-3">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if selected_session %}session={{ selected_session }}&{% endif %}{% if selected_term %}term={{ selected_term }}&{% endif %}{% if selected_subject %}subject={{ selected_subject }}&{% endif %}{% if show_all %}all=1&{% endif %}page={{ page_obj.previous_page_number }}">
+                        Previous
+                    </a>
+                </li>
+            {% endif %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if selected_session %}session={{ selected_session }}&{% endif %}{% if selected_term %}term={{ selected_term }}&{% endif %}{% if selected_subject %}subject={{ selected_subject }}&{% endif %}{% if show_all %}all=1&{% endif %}page={{ page_obj.next_page_number }}">
+                        Next
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+{% endif %}
+{% endblock content %}

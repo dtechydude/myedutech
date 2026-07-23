@@ -1189,3 +1189,151 @@ def teacher_bulk_upload_questions(request, quiz_id):
         'preview_rows': preview_rows,
         'success_count': success_count,
     })
+
+
+# =====================================================================
+# ✅ NEW — STUDENT-FACING CBT RESULT HISTORY (ADDITIVE ONLY)
+# ---------------------------------------------------------------------
+# Nothing above this line was modified. This view only READS existing
+# QuizResult / Quiz records — it does not create, alter, or delete
+# anything, and it does not change any existing URL, view, template,
+# or model. It is 100% safe to deploy on a live school without any
+# risk to already-running CBT logic (exam taking, grading, teacher
+# results, admin, exports, etc. are all untouched).
+# =====================================================================
+
+@login_required
+def student_cbt_results_view(request):
+    """
+    Lets a logged-in student view their own CBT result history.
+
+    - Defaults to the student's most recent term/session (their
+      "current" term/session, inferred from their latest attempt —
+      no assumptions are made about unseen Session model fields).
+    - Supports filtering by session, term, and subject.
+    - Supports an explicit "view full history" mode across all
+      terms/sessions the student has ever sat an exam in.
+    - Only ever touches QuizResult rows belonging to request.user —
+      a student can never see another student's results here.
+    """
+    user = request.user
+
+    # Restrict this page to students only. Staff/teachers already have
+    # their own dedicated results views (teacher_results_view) and are
+    # redirected there instead of erroring out.
+    if not hasattr(user, 'student'):
+        if user.is_staff or user.is_superuser or hasattr(user, 'teacher'):
+            return redirect('cbt:teacher-results-view')
+        messages.error(request, "This page is only available to students.")
+        return redirect('cbt:main-view')
+
+    student_profile = user.student
+
+    # Every valid (non-cancelled) result for THIS student only.
+    base_results = QuizResult.objects.filter(
+        user=user,
+        cancelled=False
+    ).select_related(
+        'quiz',
+        'quiz__subject',
+        'quiz__examination',
+        'quiz__session',
+        'quiz__standard',
+    ).order_by('-timestamp')
+
+    if not base_results.exists():
+        return render(request, 'cbt/student_result_history.html', {
+            'has_results': False,
+            'student_profile': student_profile,
+        })
+
+    # Build filter dropdown choices strictly from results this student
+    # actually has (so a student never sees an irrelevant filter option).
+    session_choices = list(
+        base_results.exclude(quiz__session__isnull=True)
+        .values_list('quiz__session_id', 'quiz__session__name')
+        .distinct()
+        .order_by('-quiz__session_id')
+    )
+    term_choices = list(
+        base_results.values_list('quiz__term', flat=True).distinct()
+    )
+    subject_choices = list(
+        base_results.exclude(quiz__subject__isnull=True)
+        .values_list('quiz__subject_id', 'quiz__subject__name')
+        .distinct()
+        .order_by('quiz__subject__name')
+    )
+
+    # "Current" term/session = term/session tied to the student's most
+    # recent attempt. This avoids guessing at Session model fields that
+    # aren't visible from the cbt app (e.g. an is_current flag) while
+    # still giving a sensible default "current term" view.
+    latest_result = base_results.first()
+    current_session_id = latest_result.quiz.session_id if latest_result.quiz else None
+    current_term = latest_result.quiz.term if latest_result.quiz else None
+
+    show_all = request.GET.get('all') == '1'
+
+    selected_session = request.GET.get(
+        'session', str(current_session_id) if (current_session_id and not show_all) else ''
+    )
+    selected_term = request.GET.get('term', current_term if not show_all else '')
+    selected_subject = request.GET.get('subject', '')
+
+    results_qs = base_results
+    if not show_all:
+        if selected_session:
+            results_qs = results_qs.filter(quiz__session_id=selected_session)
+        if selected_term:
+            results_qs = results_qs.filter(quiz__term=selected_term)
+    if selected_subject:
+        results_qs = results_qs.filter(quiz__subject_id=selected_subject)
+
+    results = list(results_qs)
+
+    # Attempt numbering / retake detection, scoped to this student only
+    # (mirrors the existing pattern used in teacher_results_view).
+    for res in results:
+        attempt_ids = list(
+            QuizResult.objects.filter(user=user, quiz=res.quiz)
+            .order_by('timestamp')
+            .values_list('id', flat=True)
+        )
+        res.attempt_number = (attempt_ids.index(res.id) + 1) if res.id in attempt_ids else 1
+        res.is_retake = len(attempt_ids) > 1
+
+    # Summary statistics for the currently filtered result set.
+    total_taken = len(results)
+    total_passed = sum(1 for r in results if r.passed)
+    total_failed = total_taken - total_passed
+    average_score = round(sum(r.score for r in results) / total_taken, 1) if total_taken else 0
+    best_result = max(results, key=lambda r: r.score) if results else None
+    worst_result = min(results, key=lambda r: r.score) if results else None
+
+    # Pagination so long histories (multiple sessions/years) stay fast.
+    paginator = Paginator(results, 10)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    context = {
+        'has_results': True,
+        'student_profile': student_profile,
+        'page_obj': page_obj,
+        'results': page_obj.object_list,
+        'session_choices': session_choices,
+        'term_choices': term_choices,
+        'subject_choices': subject_choices,
+        'selected_session': selected_session,
+        'selected_term': selected_term,
+        'selected_subject': selected_subject,
+        'current_session_id': current_session_id,
+        'current_term': current_term,
+        'show_all': show_all,
+        'total_taken': total_taken,
+        'total_passed': total_passed,
+        'total_failed': total_failed,
+        'average_score': average_score,
+        'best_result': best_result,
+        'worst_result': worst_result,
+    }
+    return render(request, 'cbt/student_result_history.html', context)

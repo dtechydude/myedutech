@@ -16,6 +16,13 @@
             <i class="fas fa-plus"></i> Setup New Quiz
         </a>
         {% endif %}
+
+        {# ✅ NEW — additive only, visible to students, does not touch existing logic #}
+        {% if user.student %}
+        <a href="{% url 'cbt:student-results-view' %}" class="btn btn-outline-primary">
+            📊 My Result History
+        </a>
+        {% endif %}
     </div>
 </div>
 
