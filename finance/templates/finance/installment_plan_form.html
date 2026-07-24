@@ -1,0 +1,102 @@
+{% extends base_template %}
+{% load finance_extras %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <div class="table-card mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ invoice.invoice_number }}</strong> — {{ invoice.student.get_full_name }}
+                    <div class="text-muted small">Invoice total: {{ invoice.total_amount|currency }}</div>
+                </div>
+                <a href="{% url 'finance:invoice_detail' invoice.pk %}" class="btn btn-sm btn-outline-secondary">Back to Invoice</a>
+            </div>
+        </div>
+
+        {% if not plan %}
+        <div class="table-card">
+            <p class="text-muted">No installment plan yet — this invoice is currently a single lump-sum balance.
+                Generate an equal-split schedule to start, then fine-tune amounts and due dates afterward.</p>
+            <form method="post" class="row g-2 align-items-end">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="quick_generate">
+                <div class="col-md-4">
+                    <label class="form-label">{{ quick_form.count.label }}</label>
+                    {{ quick_form.count }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">{{ quick_form.first_due_date.label }}</label>
+                    {{ quick_form.first_due_date }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">{{ quick_form.interval_days.label }}</label>
+                    {{ quick_form.interval_days }}
+                </div>
+                <div class="col-12 mt-3">
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-list-ol me-1"></i> Generate Equal Installments</button>
+                </div>
+            </form>
+        </div>
+        {% else %}
+
+        {% if breakdown %}
+        <div class="table-card mb-3">
+            <h6 class="mb-3">Current Status</h6>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead><tr><th>#</th><th>Label</th><th>Due Date</th><th class="text-end">Amount Due</th><th class="text-end">Paid</th><th class="text-end">Balance</th><th>Status</th></tr></thead>
+                    <tbody>
+                    {% for row in breakdown %}
+                        <tr>
+                            <td>{{ row.installment.sequence }}</td>
+                            <td>{{ row.installment.label }}</td>
+                            <td>{{ row.due_date|default:"—" }}</td>
+                            <td class="text-end">{{ row.amount_due|currency }}</td>
+                            <td class="text-end">{{ row.amount_paid|currency }}</td>
+                            <td class="text-end">{{ row.balance|currency }}</td>
+                            <td><span class="badge {{ row.status|status_badge_class }}">{{ row.status|capfirst }}</span></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="table-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">Edit Schedule</h6>
+                <a href="{% url 'finance:delete_installment_plan' invoice.pk %}" class="btn btn-sm btn-outline-danger"
+                   onclick="return confirm('Remove this installment plan? The invoice reverts to a single balance.');">
+                    <i class="fa-solid fa-trash me-1"></i> Remove Plan
+                </a>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="save_schedule">
+                {{ formset.management_form }}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead><tr><th>Label</th><th>Amount Due</th><th>Due Date</th><th>Remove</th></tr></thead>
+                        <tbody>
+                        {% for f in formset %}
+                            <tr>
+                                {{ f.id }}
+                                <td>{{ f.label }}</td>
+                                <td>{{ f.amount_due }}</td>
+                                <td>{{ f.due_date }}</td>
+                                <td>{% if f.instance.pk %}{{ f.DELETE }}{% endif %}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="alert alert-secondary small">Amounts must add up to the invoice total ({{ invoice.total_amount|currency }}) before this can be saved.</div>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-1"></i> Save Schedule</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

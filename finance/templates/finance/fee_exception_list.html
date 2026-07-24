@@ -1,0 +1,51 @@
+{% extends base_template %}
+{% block content %}
+<div class="table-card">
+    <div class="d-flex justify-content-between mb-3 flex-wrap gap-2">
+        <form method="get" class="d-flex gap-2">
+            <input type="text" name="q" value="{{ request.GET.q }}" class="form-control form-control-sm" placeholder="Search student or reason">
+            <button class="btn btn-outline-primary btn-sm" type="submit">Search</button>
+        </form>
+        <a href="{% url 'finance:fee_exception_add' %}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Add Exception</a>
+    </div>
+
+    <div class="alert alert-secondary small">
+        Use <strong>Exclude</strong> to switch off a normally-mandatory class fee for one student
+        (e.g. a returning student skipping the JSS1 registration fee that new intakes pay).<br>
+        Use <strong>Include</strong> to switch on an optional fee for just one student
+        (e.g. a mid-term uniform request — only that student's invoice is affected).<br>
+        Changes take effect immediately on that student's existing invoice for the matching term/session.
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead><tr><th>Student</th><th>Fee</th><th>Class / Term / Session</th><th>Action</th><th>Reason</th><th></th></tr></thead>
+            <tbody>
+            {% for e in exceptions %}
+                <tr>
+                    <td>{{ e.student.get_full_name }}</td>
+                    <td>{{ e.fee_structure.fee_category.name }}{% if e.fee_structure.label %} ({{ e.fee_structure.label }}){% endif %}</td>
+                    <td>{{ e.fee_structure.student_class.name|default:"All Classes" }} — {{ e.fee_structure.term }} / {{ e.fee_structure.session }}</td>
+                    <td>
+                        {% if e.action == 'exclude' %}<span class="badge bg-danger">Excluded</span>
+                        {% else %}<span class="badge bg-success">Included</span>{% endif %}
+                    </td>
+                    <td>{{ e.reason }}</td>
+                    <td><a href="{% url 'finance:fee_exception_delete' e.pk %}" class="btn btn-sm btn-outline-danger">Remove</a></td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No fee exceptions yet. By default, every student in a class is billed exactly what the Fee Structure says.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+    <nav><ul class="pagination">
+        {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+    </ul></nav>
+    {% endif %}
+</div>
+{% endblock %}

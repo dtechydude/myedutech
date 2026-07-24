@@ -1,0 +1,27 @@
+{% extends base_template %}
+{% block content %}
+<div class="table-card">
+    <div class="d-flex justify-content-between mb-3">
+        <span class="text-muted">Suppliers &amp; service providers the school pays</span>
+        <a href="{% url 'finance:vendor_add' %}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Add Vendor</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead><tr><th>Name</th><th>Contact Person</th><th>Phone</th><th>Email</th><th>Active</th></tr></thead>
+            <tbody>
+            {% for v in vendors %}
+                <tr>
+                    <td>{{ v.name }}</td>
+                    <td>{{ v.contact_person|default:"—" }}</td>
+                    <td>{{ v.phone|default:"—" }}</td>
+                    <td>{{ v.email|default:"—" }}</td>
+                    <td>{% if v.is_active %}<i class="fa-solid fa-circle-check text-success"></i>{% else %}<i class="fa-solid fa-circle-xmark text-muted"></i>{% endif %}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5" class="text-center text-muted py-4">No vendors added yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

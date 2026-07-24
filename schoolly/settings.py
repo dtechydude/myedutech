@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'events.apps.EventsConfig',
     'prep_reports.apps.PrepReportsConfig',
     'ai_center.apps.AiCenterConfig',
+    'finance.apps.FinanceConfig',
 
 
     # Installed Apps

@@ -1,8 +1,29 @@
 from django.urls import path
 from . import views
+# from .views import (
+#     ScoreEntryView, ScoreEntrySuccessView, MidTermScoreEntryView, MidTermReportCardView, StudentMidTermListView, MidTermScoreSelectionView, MidTermScoreSuccessView, BroadsheetSelectionView, SessionPublicationControlView,
+#     ReportCardListView, StudentReportCardView, StudentDashboardView, SessionReportCardListView, StudentSessionReportCardView, ClassRankingView, StandardsAndTermsListView, ResultPermissionGatekeeperView, SessionCommentClassView# Import new views
+# )
 from .views import (
-    ScoreEntryView, ScoreEntrySuccessView, MidTermScoreEntryView, MidTermReportCardView, StudentMidTermListView, MidTermScoreSelectionView, MidTermScoreSuccessView, BroadsheetSelectionView, SessionPublicationControlView,
-    ReportCardListView, StudentReportCardView, StudentDashboardView, SessionReportCardListView, StudentSessionReportCardView, ClassRankingView, StandardsAndTermsListView, ResultPermissionGatekeeperView # Import new views
+    BroadsheetSelectionView,
+    ClassRankingView,
+    MidTermReportCardView,
+    MidTermScoreEntryView,
+    MidTermScoreSelectionView,
+    MidTermScoreSuccessView,
+    ReportCardListView,
+    ResultPermissionGatekeeperView,
+    ScoreEntrySuccessView,
+    ScoreEntryView,
+    SessionCommentClassView,
+    SessionPublicationControlView,
+    SessionReportCardListView,
+    StandardsAndTermsListView,
+    StudentDashboardView,
+    StudentMidTermListView,
+    StudentReportCardView,
+    StudentSessionReportCardView,
+    SessionReportCommentUpdateView,
 )
 
 from django.views.generic import TemplateView # For a simple placeholder home page
@@ -12,18 +33,6 @@ app_name ='results'
 
 urlpatterns = [
    
-    # Path for students to see a list of all terms they have results for
-    # path('my_results/terms/', views.my_term_results_view, name='my_terms_list'),
-
-    # Path for students to see detailed results for a specific term
-    # This might be the one you previously called 'my_term_results_view' or similar
-    # path('my_results/term/<int:term_id>/', views.my_term_results_view, name='my_term_results'),
-
-    # Path for the consolidated report card for a specific term
-    # path('my_results/term/<int:term_id>/report_card/', views.student_term_report_card_view, name='student_term_report_card'),
-    # path('student/<int:student_id>/session/<int:session_id>/report/', views.student_session_report_view, name='student_session_report'),
-
-    #working well 001
     path('score-entry/', ScoreEntryView.as_view(), name='score_entry'),
     path('score-entry/success/', ScoreEntrySuccessView.as_view(), name='score_entry_success'),
 
@@ -55,14 +64,21 @@ urlpatterns = [
      views.ParentSessionReportView.as_view(), name='parent_session_report'),
 
 
-    # # Placeholder for a home page (create templates/home.html)
-    # path('', TemplateView.as_view(template_name='home.html'), name='home'), 
-    # # This 'home' URL name is used in report_card_detail.html and StudentDashboardView fallback
-    # path('dashboard/', TemplateView.as_view(template_name='dashboard.html'), name='some_general_dashboard_or_home_page'), # Fallback for unlinked users
-
     # Annual (Session) Report Card URLs (Teacher/Admin access)
     path('annual-report-cards/', SessionReportCardListView.as_view(), name='session_report_card_list'),
     path('annual-report-cards/<int:student_id>/<int:session_id>/', StudentSessionReportCardView.as_view(), name='student_session_report_card_detail'),
+    # Session Report Comment
+
+    path(
+        'session-report-card/<int:student_id>/<int:session_id>/comment/',
+        SessionReportCommentUpdateView.as_view(),
+        name='session_report_comment_update'
+    ),
+    path(
+        'session-comments/<int:session_id>/',
+        SessionCommentClassView.as_view(),
+        name='session_comment_class_list'
+    ),
 
     # URL for entering/editing motor ability scores
     # path('enter-motor-ability/<int:student_id>/<int:term_id>/', views.MotorAbilityScoreCreateUpdateView.as_view(), name='enter_motor_ability_score'),

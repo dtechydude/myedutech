@@ -1,0 +1,25 @@
+{% extends base_template %}
+{% block content %}
+<div class="table-card">
+    <div class="d-flex justify-content-between mb-3">
+        <span class="text-muted">{{ categories|length }} categor{{ categories|length|pluralize:"y,ies" }}</span>
+        <a href="{% url 'finance:expense_category_add' %}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Add Category</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead><tr><th>Name</th><th>Type</th><th>Active</th></tr></thead>
+            <tbody>
+            {% for c in categories %}
+                <tr>
+                    <td>{{ c.name }}</td>
+                    <td><span class="badge bg-light text-dark border">{{ c.get_category_type_display }}</span></td>
+                    <td>{% if c.is_active %}<i class="fa-solid fa-circle-check text-success"></i>{% else %}<i class="fa-solid fa-circle-xmark text-muted"></i>{% endif %}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="3" class="text-center text-muted py-4">No expense categories yet (e.g. Salaries, Utilities, Maintenance).</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

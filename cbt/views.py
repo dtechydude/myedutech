@@ -11,7 +11,7 @@ from django.template.loader import render_to_string
 from django.conf import settings
 from django.http import JsonResponse
 from .models import Quiz, Question, Answer, QuizResult, QuizAttempt
-from results.models import Examination
+from .models import Examination
 from .forms import AdminQuizForm, QuestionForm, BulkQuestionUploadForm
 from staff.models import Teacher
 from django.core.exceptions import PermissionDenied
@@ -1337,3 +1337,250 @@ def student_cbt_results_view(request):
         'worst_result': worst_result,
     }
     return render(request, 'cbt/student_result_history.html', context)
+
+
+# =====================================================================
+# ✅ NEW — QUESTION BANK / PAST QUESTIONS DOWNLOAD (ADDITIVE ONLY)
+# ---------------------------------------------------------------------
+# Nothing above this line was modified. Lets staff/teachers browse every
+# past Quiz that already has questions attached, filter it by Class
+# (Standard), Session, Term and Subject, and download either a single
+# quiz's questions or every matching quiz's questions in one combined
+# file — for reference/reuse when setting future exams.
+#
+# No new packages are used: CSV export uses Python's built-in `csv`
+# module and PDF export reuses `reportlab`, which is already imported
+# and already used by the existing `export_questions` view above.
+# =====================================================================
+
+@login_required
+def question_bank_view(request):
+    """
+    Browse past CBT question sets (read-only) filtered by Class, Session,
+    Term, Subject, and Examination. Staff/superuser see every quiz with
+    questions; teachers only see quizzes for their assigned classes and
+    subjects (same access rule already used elsewhere in this file).
+    """
+    user = request.user
+    teacher = None
+
+    # Only quizzes that actually have questions are worth listing here.
+    quizzes_qs = Quiz.objects.select_related(
+        'examination', 'subject', 'standard', 'session'
+    ).filter(number_of_questions__gt=0)
+
+    if user.is_staff or user.is_superuser:
+        standards = Standard.objects.all()
+        subjects = Subject.objects.all()
+        examinations = Examination.objects.all()
+    else:
+        try:
+            teacher = Teacher.objects.get(user=user)
+        except Teacher.DoesNotExist:
+            messages.error(request, "Access Denied: Only staff and teachers can access the Question Bank.")
+            return redirect('cbt:main-view')
+
+        quizzes_qs = quizzes_qs.filter(
+            standard__in=teacher.standards_assigned.all(),
+            subject__in=teacher.subjects_taught.all(),
+        )
+        standards = teacher.standards_assigned.all()
+        subjects = teacher.subjects_taught.all()
+        examinations = Examination.objects.filter(standard__in=standards).distinct()
+
+    # Session/Term choices derived straight from what's actually available
+    # to this user, so the dropdowns never show an option with 0 results.
+    session_choices = list(
+        quizzes_qs.exclude(session__isnull=True)
+        .values_list('session_id', 'session__name')
+        .distinct()
+        .order_by('-session_id')
+    )
+    term_choices = list(
+        quizzes_qs.values_list('term', flat=True).distinct()
+    )
+
+    # ── Apply filters ───────────────────────────────────────────────
+    selected_standard = request.GET.get('standard', '')
+    selected_session = request.GET.get('session', '')
+    selected_term = request.GET.get('term', '')
+    selected_subject = request.GET.get('subject', '')
+    selected_examination = request.GET.get('examination', '')
+
+    quizzes = quizzes_qs
+    if selected_standard:
+        quizzes = quizzes.filter(standard_id=selected_standard)
+    if selected_session:
+        quizzes = quizzes.filter(session_id=selected_session)
+    if selected_term:
+        quizzes = quizzes.filter(term=selected_term)
+    if selected_subject:
+        quizzes = quizzes.filter(subject_id=selected_subject)
+    if selected_examination:
+        quizzes = quizzes.filter(examination_id=selected_examination)
+
+    quizzes = quizzes.order_by('standard__name', 'subject__name', 'term', '-session_id')
+
+    return render(request, 'cbt/question_bank.html', {
+        'quizzes': quizzes,
+        'standards': standards,
+        'subjects': subjects,
+        'examinations': examinations,
+        'session_choices': session_choices,
+        'term_choices': term_choices,
+        'selected_standard': selected_standard,
+        'selected_session': selected_session,
+        'selected_term': selected_term,
+        'selected_subject': selected_subject,
+        'selected_examination': selected_examination,
+        'teacher_profile': teacher,
+    })
+
+
+@login_required
+def export_question_bank(request, export_type):
+    """
+    Bulk-downloads EVERY question from EVERY quiz matching the current
+    Question Bank filters (class/session/term/subject/examination) as a
+    single CSV or PDF file. Mirrors the access rules and file-generation
+    style of the existing single-quiz `export_questions` view above —
+    just applied across a filtered set of quizzes instead of one.
+    """
+    user = request.user
+
+    quizzes = Quiz.objects.select_related(
+        'examination', 'subject', 'standard', 'session'
+    ).filter(number_of_questions__gt=0)
+
+    if not (user.is_staff or user.is_superuser):
+        try:
+            teacher = Teacher.objects.get(user=user)
+        except Teacher.DoesNotExist:
+            messages.error(request, "Access Denied: Only staff and teachers can access the Question Bank.")
+            return redirect('cbt:main-view')
+
+        quizzes = quizzes.filter(
+            standard__in=teacher.standards_assigned.all(),
+            subject__in=teacher.subjects_taught.all(),
+        )
+
+    # Same filters as question_bank_view, read from the querystring so the
+    # "Download All (Filtered)" button can pass through whatever the user
+    # currently has selected on the page.
+    standard_id = request.GET.get('standard')
+    session_id = request.GET.get('session')
+    term = request.GET.get('term')
+    subject_id = request.GET.get('subject')
+    examination_id = request.GET.get('examination')
+
+    if standard_id:
+        quizzes = quizzes.filter(standard_id=standard_id)
+    if session_id:
+        quizzes = quizzes.filter(session_id=session_id)
+    if term:
+        quizzes = quizzes.filter(term=term)
+    if subject_id:
+        quizzes = quizzes.filter(subject_id=subject_id)
+    if examination_id:
+        quizzes = quizzes.filter(examination_id=examination_id)
+
+    questions = Question.objects.filter(
+        quiz__in=quizzes
+    ).select_related(
+        'quiz', 'quiz__subject', 'quiz__standard', 'quiz__examination', 'quiz__session'
+    ).order_by('quiz__standard__name', 'quiz__subject__name', 'quiz__term', 'quiz_id', 'id')
+
+    # ================= CSV EXPORT =================
+    if export_type == "csv":
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="question_bank.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow([
+            "Class", "Subject", "Examination", "Term", "Session",
+            "Question", "Question Type",
+            "Option A", "Option B", "Option C", "Option D",
+            "Correct Answer",
+        ])
+
+        for q in questions:
+            writer.writerow([
+                q.quiz.standard.name if q.quiz.standard else '',
+                q.quiz.subject_name,
+                q.quiz.exam_name,
+                q.quiz.term,
+                q.quiz.session.name if q.quiz.session else '',
+                q.content,
+                q.question_type,
+                q.option_a,
+                q.option_b,
+                q.option_c,
+                q.option_d,
+                q.correct_answer,
+            ])
+
+        return response
+
+    # ================= PDF EXPORT =================
+    elif export_type == "pdf":
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="question_bank.pdf"'
+
+        doc = SimpleDocTemplate(response, pagesize=A4)
+        elements = []
+        styles = getSampleStyleSheet()
+
+        elements.append(Paragraph("<b>Question Bank — Past Questions</b>", styles['Heading1']))
+        elements.append(Spacer(1, 0.2 * inch))
+
+        if not questions:
+            elements.append(Paragraph(
+                "No questions matched the selected filters.", styles['Normal']
+            ))
+
+        current_group = None
+        question_number = 0
+
+        for q in questions:
+            group_key = (
+                q.quiz.standard_id, q.quiz.subject_id,
+                q.quiz.term, q.quiz.session_id, q.quiz.examination_id,
+            )
+
+            if group_key != current_group:
+                current_group = group_key
+                question_number = 0
+                elements.append(Spacer(1, 0.25 * inch))
+
+                header_text = (
+                    f"{q.quiz.standard.name if q.quiz.standard else 'N/A'} — "
+                    f"{q.quiz.subject_name} — {q.quiz.exam_name} "
+                    f"({q.quiz.term} Term, "
+                    f"{q.quiz.session.name if q.quiz.session else 'N/A'})"
+                )
+                elements.append(Paragraph(header_text, styles['Heading3']))
+                elements.append(HRFlowable(width="100%", color=colors.grey))
+                elements.append(Spacer(1, 0.1 * inch))
+
+            question_number += 1
+            elements.append(
+                Paragraph(f"<b>Q{question_number}:</b> {q.content}", styles['Normal'])
+            )
+
+            if q.question_type == "MCQ":
+                elements.append(Paragraph(
+                    f"A. {q.option_a}&nbsp;&nbsp;&nbsp; B. {q.option_b}", styles['Normal']
+                ))
+                elements.append(Paragraph(
+                    f"C. {q.option_c}&nbsp;&nbsp;&nbsp; D. {q.option_d}", styles['Normal']
+                ))
+
+            elements.append(
+                Paragraph(f"<b>Correct Answer:</b> {q.correct_answer}", styles['Normal'])
+            )
+            elements.append(Spacer(1, 0.15 * inch))
+
+        doc.build(elements)
+        return response
+
+    return redirect('cbt:question-bank-view')

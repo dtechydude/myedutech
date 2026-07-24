@@ -11,6 +11,27 @@ from django.utils.html import format_html
 from django.utils.text import Truncator
 from django.utils.html import strip_tags
 from django.utils import timezone
+from django.urls import reverse
+from .models import Examination
+
+
+
+
+
+
+
+
+@admin.register(Examination)
+class ExaminationAdmin(admin.ModelAdmin):
+    list_display = ['name', 'session', 'standard', 'term', 'view_quizzes_link']
+
+    def view_quizzes_link(self, obj):
+        # This creates a URL to the Quiz Admin filtered by this specific Examination ID
+        # Replace 'cbt' with the actual name of your app if it differs
+        url = reverse('admin:cbt_quiz_changelist') + f'?examination__id__exact={obj.id}'
+        return format_html('<a class="button" style="background-color: #2c3e50; color: white; padding: 5px 10px;" href="{}">Manage CBT</a>', url)
+
+    view_quizzes_link.short_description = "CBT Control"
 
 
 

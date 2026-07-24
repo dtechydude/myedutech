@@ -1,6 +1,6 @@
 from django import forms
 from .models import Quiz, Question
-from results.models import Examination
+from .models import Examination
 from curriculum.models import Standard # Assuming this is where Standard lives
 from django_ckeditor_5.widgets import CKEditor5Widget
 

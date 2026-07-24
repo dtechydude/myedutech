@@ -1,0 +1,51 @@
+{% extends base_template %}
+{% load finance_extras %}
+{% block content %}
+<div class="table-card">
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-md-3">{{ filter_form.student_class }}</div>
+        <div class="col-md-3">{{ filter_form.term }}</div>
+        <div class="col-md-3">{{ filter_form.session }}</div>
+        <div class="col-md-2">
+            <button class="btn btn-outline-primary w-100" type="submit"><i class="fa-solid fa-filter me-1"></i> Filter</button>
+        </div>
+        <div class="col-md-1">
+            <a href="{% url 'finance:fee_structure_add' %}" class="btn btn-primary w-100"><i class="fa-solid fa-plus"></i></a>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead><tr><th>Class</th><th>Fee Category</th><th>Term / Session</th><th>Amount</th><th>Mandatory</th><th>Due Date</th><th></th></tr></thead>
+            <tbody>
+            {% for fs in fee_structures %}
+                <tr>
+                    <td>{{ fs.student_class.name|default:"All Classes" }}</td>
+                    <td>{{ fs.fee_category.name }}{% if fs.label %} <span class="text-muted small">({{ fs.label }})</span>{% endif %}</td>
+                    <td>{{ fs.term }} — {{ fs.session }}</td>
+                    <td>{{ fs.amount|currency }}</td>
+                    <td>{% if fs.is_mandatory %}<span class="badge bg-primary">Mandatory</span>{% else %}<span class="badge bg-secondary">Optional</span>{% endif %}</td>
+                    <td>{{ fs.due_date|default:"—" }}</td>
+                    <td>
+                        <a href="{% url 'finance:fee_structure_edit' fs.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        <a href="{% url 'finance:fee_structure_delete' fs.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7" class="text-center text-muted py-4">No fee structure items yet. Set up how much each class pays per category, term and session.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+    <nav><ul class="pagination">
+        {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+    </ul></nav>
+    {% endif %}
+
+    <a href="{% url 'finance:fee_table' %}" class="small"><i class="fa-solid fa-print me-1"></i> View printable fee table &rarr;</a>
+</div>
+{% endblock %}

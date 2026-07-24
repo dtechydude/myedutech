@@ -1,0 +1,38 @@
+{% extends base_template %}
+{% load finance_extras %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="table-card">
+            <h6>Notification Details</h6>
+            <table class="table table-sm">
+                <tr><td class="text-muted">Student</td><td>{{ notification.student.get_full_name }}</td></tr>
+                <tr><td class="text-muted">Amount Paid</td><td>{{ notification.amount_paid|currency }}</td></tr>
+                <tr><td class="text-muted">Method</td><td>{{ notification.get_payment_method_display }}</td></tr>
+                <tr><td class="text-muted">Bank Account</td><td>{{ notification.bank_account }}</td></tr>
+                <tr><td class="text-muted">Transaction Ref.</td><td>{{ notification.transaction_id|default:"—" }}</td></tr>
+                <tr><td class="text-muted">Payment Date</td><td>{{ notification.payment_date }}</td></tr>
+                <tr><td class="text-muted">Notes</td><td>{{ notification.notes|default:"—" }}</td></tr>
+                <tr><td class="text-muted">Proof</td><td>{% if notification.proof_of_payment %}<a href="{{ notification.proof_of_payment.url }}" target="_blank">View Uploaded File</a>{% else %}Not provided{% endif %}</td></tr>
+            </table>
+
+            <form method="post" class="row g-2">
+                {% csrf_token %}
+                <div class="col-12">
+                    <label class="form-label">Link to Invoice (optional — settles the invoice balance)</label>
+                    <select name="invoice" class="form-select">
+                        <option value="">--- No invoice / standalone payment ---</option>
+                        {% for inv in invoices %}
+                            <option value="{{ inv.pk }}">{{ inv.invoice_number }} — Balance: {{ inv.balance|currency }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 mt-3">
+                    <button type="submit" name="action" value="approve" class="btn btn-success"><i class="fa-solid fa-check me-1"></i> Approve &amp; Record Payment</button>
+                    <button type="submit" name="action" value="reject" class="btn btn-outline-danger"><i class="fa-solid fa-xmark me-1"></i> Reject</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

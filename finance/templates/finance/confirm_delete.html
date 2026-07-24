@@ -1,0 +1,17 @@
+{% extends base_template %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="table-card text-center">
+            <i class="fa-solid fa-triangle-exclamation text-warning fs-1 mb-3"></i>
+            <h5>Delete "{{ object }}"?</h5>
+            <p class="text-muted">This action cannot be undone.</p>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash me-1"></i> Yes, Delete</button>
+                <a href="javascript:history.back()" class="btn btn-outline-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

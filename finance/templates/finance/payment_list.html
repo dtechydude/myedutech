@@ -1,0 +1,54 @@
+{% extends base_template %}
+{% load finance_extras %}
+{% block content %}
+<div class="table-card">
+    <form method="get" class="row g-2 mb-3">
+        {% if is_finance_staff %}
+        <div class="col-md-3"><input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Search student / ref"></div>
+        {% endif %}
+        <div class="col-md-3">
+            <select name="term" class="form-select">
+                <option value="">All Terms</option>
+                {% for t in terms %}<option value="{{ t.pk }}" {% if request.GET.term == t.pk|stringformat:"s" %}selected{% endif %}>{{ t }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="session" class="form-select">
+                <option value="">All Sessions</option>
+                {% for s in sessions %}<option value="{{ s.pk }}" {% if request.GET.session == s.pk|stringformat:"s" %}selected{% endif %}>{{ s }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-outline-primary w-100" type="submit"><i class="fa-solid fa-filter me-1"></i> Filter</button>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead><tr><th>Student</th><th>Category</th><th>Amount</th><th>Method</th><th>Date</th><th>Receipt</th></tr></thead>
+            <tbody>
+            {% for p in payments %}
+                <tr>
+                    <td>{{ p.student.get_full_name }}</td>
+                    <td>{{ p.fee_category.name }}</td>
+                    <td>{{ p.amount_received|currency }}</td>
+                    <td>{{ p.get_payment_method_display }}</td>
+                    <td>{{ p.payment_date }}</td>
+                    <td>{% if p.receipt %}<a href="{% url 'finance:receipt_detail' p.receipt.pk %}" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-receipt"></i> {{ p.receipt.receipt_number }}</a>{% endif %}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No payments found.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+    <nav><ul class="pagination">
+        {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+    </ul></nav>
+    {% endif %}
+</div>
+{% endblock %}

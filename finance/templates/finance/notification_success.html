@@ -1,0 +1,13 @@
+{% extends base_template %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="table-card text-center">
+            <i class="fa-solid fa-circle-check text-success fs-1 mb-3"></i>
+            <h5>Notification submitted!</h5>
+            <p class="text-muted">Our finance team will review your payment proof and confirm it shortly.</p>
+            <a href="{% url 'finance:my_notifications' %}" class="btn btn-outline-primary">View My Submissions</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

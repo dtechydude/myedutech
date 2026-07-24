@@ -1,11 +1,34 @@
 from django.db import models
 from django.contrib.auth.models import User
 # Assuming your curriculum app exists for Standard/Session
-from curriculum.models import Standard, Session, Subject
-from results.models import Examination
+from curriculum.models import Standard, Session, Subject, Term
+# from results.models import Examination
 from django.utils import timezone
 from datetime import timedelta
 import re
+
+
+
+
+
+class Examination(models.Model):
+    name = models.CharField(max_length=150, blank=True)
+    standard = models.ForeignKey(Standard, on_delete=models.CASCADE, blank=True, null=True)
+    term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name='exams') # Link to Term  
+    session = models.ForeignKey(Session, on_delete=models.CASCADE) 
+  
+    date = models.DateField(null=True) 
+    description = models.CharField(max_length=150, blank=True)  
+
+    def __str__ (self):
+        return f'{self.name} - {self.standard.name} - {self.term}'
+    
+    class Meta:
+        verbose_name = 'Examinations'
+        verbose_name_plural = 'Examinations'
+        unique_together = ('name', 'term', 'date')
+        ordering = ['term__start_date', 'date', 'name']
+    
 
 
 

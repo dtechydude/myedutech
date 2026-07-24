@@ -1,0 +1,55 @@
+{% extends base_template %}
+{% load finance_extras %}
+{% block content %}
+<div class="table-card">
+    <div class="d-flex justify-content-between mb-3 flex-wrap gap-2">
+        <form method="get" class="d-flex gap-2">
+            <input type="text" name="q" value="{{ request.GET.q }}" class="form-control form-control-sm" placeholder="Search student or reason">
+            <button class="btn btn-outline-primary btn-sm" type="submit">Search</button>
+        </form>
+        <a href="{% url 'finance:discount_add' %}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Grant Discount</a>
+    </div>
+
+    <div class="alert alert-secondary small">
+        A discount applies automatically the next time an invoice is generated/refreshed for that student.
+        Leaving "Fee Category", "Term" or "Session" blank when granting a discount widens its scope
+        (e.g. blank category = applies to every fee on the invoice; blank term &amp; session = a standing waiver).
+        If a student qualifies for more than one matching discount, only the single largest one is applied.
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead><tr><th>Student</th><th>Scope</th><th>Type</th><th>Value</th><th>Reason</th><th>Active</th><th></th></tr></thead>
+            <tbody>
+            {% for d in discounts %}
+                <tr>
+                    <td>{{ d.student.get_full_name }}</td>
+                    <td>
+                        {{ d.fee_category.name|default:"All Categories" }}
+                        <span class="text-muted small">— {{ d.term|default:"Every Term" }} / {{ d.session|default:"Every Session" }}</span>
+                    </td>
+                    <td>{{ d.get_discount_type_display }}</td>
+                    <td>{% if d.discount_type == 'percentage' %}{{ d.value }}%{% else %}{{ d.value|currency }}{% endif %}</td>
+                    <td>{{ d.reason }}</td>
+                    <td>{% if d.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td>
+                    <td>
+                        <a href="{% url 'finance:discount_edit' d.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        {% if d.is_active %}<a href="{% url 'finance:discount_deactivate' d.pk %}" class="btn btn-sm btn-outline-danger">Deactivate</a>{% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7" class="text-center text-muted py-4">No discounts granted yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+    <nav><ul class="pagination">
+        {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+    </ul></nav>
+    {% endif %}
+</div>
+{% endblock %}

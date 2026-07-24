@@ -1,0 +1,53 @@
+{% extends base_template %}
+{% load finance_extras %}
+{% block content %}
+<div class="table-card">
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-md-2">{{ form.start_date }}</div>
+        <div class="col-md-2">{{ form.end_date }}</div>
+        <div class="col-md-2">{{ form.term }}</div>
+        <div class="col-md-2">{{ form.session }}</div>
+        <div class="col-md-2"><button class="btn btn-outline-primary w-100" type="submit">Filter</button></div>
+        <div class="col-md-2"><a href="?{{ request.GET.urlencode }}&format=csv" class="btn btn-outline-secondary w-100"><i class="fa-solid fa-file-csv me-1"></i> CSV</a></div>
+    </form>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="card-metric p-3 border">
+                <div class="text-muted small">Total Received</div>
+                <div class="fs-4 fw-bold text-success">{{ total|currency }}</div>
+            </div>
+        </div>
+    </div>
+
+    <h6>Breakdown by Category</h6>
+    <table class="table table-sm mb-4">
+        <thead><tr><th>Category</th><th>Total</th></tr></thead>
+        <tbody>
+        {% for row in breakdown %}
+            <tr><td>{{ row.fee_category__name }}</td><td>{{ row.total|currency }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <h6>Recent Payments</h6>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover">
+            <thead><tr><th>Student</th><th>Category</th><th>Amount</th><th>Term/Session</th><th>Date</th></tr></thead>
+            <tbody>
+            {% for p in payments %}
+                <tr>
+                    <td>{{ p.student.get_full_name }}</td>
+                    <td>{{ p.fee_category.name }}</td>
+                    <td>{{ p.amount_received|currency }}</td>
+                    <td>{{ p.term }} / {{ p.session }}</td>
+                    <td>{{ p.payment_date }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5" class="text-center text-muted py-4">No payments found for this period.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

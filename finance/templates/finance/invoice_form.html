@@ -1,0 +1,46 @@
+{% extends base_template %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="table-card">
+            <form method="post">
+                {% csrf_token %}
+                <h6 class="mb-3">Invoice Details</h6>
+                <div class="row">
+                {% for field in form %}
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                {% endfor %}
+                </div>
+
+                <hr>
+                <h6 class="mb-3">Line Items</h6>
+                {{ formset.management_form }}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead><tr><th>Fee Category</th><th>Description</th><th>Qty</th><th>Amount</th><th></th></tr></thead>
+                        <tbody>
+                        {% for item_form in formset %}
+                            <tr>
+                                {{ item_form.id }}
+                                <td>{{ item_form.fee_category }}</td>
+                                <td>{{ item_form.description }}</td>
+                                <td>{{ item_form.quantity }}</td>
+                                <td>{{ item_form.amount }}</td>
+                                <td>{% if item_form.instance.pk %}{{ item_form.DELETE }} Remove{% endif %}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-1"></i> Save Invoice</button>
+                <a href="{% url 'finance:invoice_list' %}" class="btn btn-outline-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

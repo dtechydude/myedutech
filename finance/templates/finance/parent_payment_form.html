@@ -1,0 +1,49 @@
+{% extends base_template %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="table-card">
+            <p class="text-muted">Select your child and the outstanding invoice you'd like to pay towards.</p>
+            <form method="post">
+                {% csrf_token %}
+                {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-credit-card me-1"></i> Submit Payment</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const studentSelect = document.getElementById('id_student');
+    const invoiceSelect = document.getElementById('id_invoice');
+
+    function loadInvoices(studentId) {
+        invoiceSelect.innerHTML = '<option value="">--- Select an invoice ---</option>';
+        if (!studentId) return;
+        fetch(`{% url 'finance:student_invoices_ajax' 0 %}`.replace('0', studentId))
+            .then(r => r.json())
+            .then(data => {
+                data.results.forEach(inv => {
+                    const opt = document.createElement('option');
+                    opt.value = inv.id;
+                    opt.textContent = inv.text;
+                    invoiceSelect.appendChild(opt);
+                });
+            });
+    }
+
+    if (studentSelect) {
+        studentSelect.addEventListener('change', () => loadInvoices(studentSelect.value));
+        if (studentSelect.value) loadInvoices(studentSelect.value);
+    }
+});
+</script>
+{% endblock %}

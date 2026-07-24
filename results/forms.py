@@ -6,61 +6,6 @@ from django.forms import ValidationError
 
 
 
-
-# # Score Entry For CA 40 & Exams 60
-# class ScoreEntryForm(forms.Form):
-#     """
-#     Form for a single student's score entry, aligned with Score model constraints:
-#     CA fields max 40, Exam field max 60.
-#     """
-#     student_id = forms.IntegerField(widget=forms.HiddenInput())
-#     # Note: Using TextInput(attrs={'readonly': 'readonly'}) is fine for display
-#     student_name = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'readonly': 'readonly'})) 
-#     score_id = forms.IntegerField(widget=forms.HiddenInput(), required=False) 
-
-#     # CA fields should have a MAX of 40 (based on your model definition)
-#     ca1 = forms.DecimalField(
-#         max_digits=5, decimal_places=2, required=False,
-#         widget=forms.NumberInput(attrs={'placeholder': 'CA1 (Max 40)', 'min': 0, 'max': 40}),
-#         # Use explicit validators for robust form-level checking
-#         validators=[MinValueValidator(0), MaxValueValidator(40)] 
-#     )
-#     ca2 = forms.DecimalField(
-#         max_digits=5, decimal_places=2, required=False,
-#         widget=forms.NumberInput(attrs={'placeholder': 'CA2 (Max 40)', 'min': 0, 'max': 40}),
-#         validators=[MinValueValidator(0), MaxValueValidator(40)] 
-#     )
-#     ca3 = forms.DecimalField(
-#         max_digits=5, decimal_places=2, required=False,
-#         widget=forms.NumberInput(attrs={'placeholder': 'CA3 (Max 40)', 'min': 0, 'max': 40}),
-#         validators=[MinValueValidator(0), MaxValueValidator(40)] 
-#     )
-    
-#     # Exam score should have a MAX of 60 (based on your model definition)
-#     exam_score = forms.DecimalField(
-#         max_digits=5, decimal_places=2, required=False,
-#         widget=forms.NumberInput(attrs={'placeholder': 'Exam (Max 60)', 'min': 0, 'max': 60}),
-#         validators=[MinValueValidator(0), MaxValueValidator(60)] 
-#     )
-
-#     def clean(self):
-#         cleaned_data = super().clean()
-#         ca1 = cleaned_data.get('ca1')
-#         ca2 = cleaned_data.get('ca2')
-#         ca3 = cleaned_data.get('ca3')
-#         # exam_score = cleaned_data.get('exam_score') # Not needed for total CA check
-
-#         # --- CRITICAL: Total CA Validation (Max 40) ---
-#         # This mirrors the logic from your Score model's clean method to catch errors early.
-#         total_ca = (ca1 or 0) + (ca2 or 0) + (ca3 or 0)
-        
-#         if total_ca > 40:
-#             # Adding a general form error to capture the combined validation failure
-#             # This will display at the top of the formset.
-#             raise ValidationError('The combined total of CA scores (CA1 + CA2 + CA3) cannot exceed 40 for any student.')
-            
-#         return cleaned_data
-
 # New logics for twiking the scores
 class ScoreEntryForm(forms.Form):
     """
@@ -314,3 +259,28 @@ class MidTermScoreForm(forms.ModelForm):
     class Meta:
         model = MidTermComponentScore
         fields = []
+
+
+# Session Report Card Comment
+from django import forms
+from .models import SessionReportComments
+
+
+class SessionReportCommentForm(forms.ModelForm):
+    """
+    Used by both class teacher and principal — the view restricts which
+    field(s) a given role is allowed to submit.
+    """
+    class Meta:
+        model = SessionReportComments
+        fields = ['teacher_comment', 'principal_comment']
+        widgets = {
+            'teacher_comment': forms.Textarea(attrs={
+                'class': 'form-control', 'rows': 3,
+                'placeholder': "Class teacher's remark for the session..."
+            }),
+            'principal_comment': forms.Textarea(attrs={
+                'class': 'form-control', 'rows': 3,
+                'placeholder': "Principal's/Head teacher's remark for the session..."
+            }),
+        }

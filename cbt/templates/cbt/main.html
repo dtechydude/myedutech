@@ -87,4 +87,12 @@
     📊 View Student Scores
 </a>
 {% endif %}
+
+{# ✅ NEW — additive only, visible to staff & teachers, does not touch existing logic #}
+{% if user.is_staff or user.teacher %}
+<a href="{% url 'cbt:question-bank-view' %}"
+   class="btn btn-outline-dark mt-3">
+    📚 Question Bank (Download Past Questions)
+</a>
+{% endif %}
 {% endblock content %}

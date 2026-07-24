@@ -1,0 +1,95 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title|default:"Finance" }} | KwikSchools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --kw-primary: #0f3d5c;
+            --kw-accent: #b8860b;
+            --kw-bg: #f2f4f7;
+        }
+        body { background-color: var(--kw-bg); font-family: 'Segoe UI', Roboto, Arial, sans-serif; }
+        .kw-sidebar {
+            min-height: 100vh; background: var(--kw-primary); color: #fff; width: 250px; position: fixed;
+            top: 0; left: 0; padding-top: 1rem; overflow-y: auto;
+        }
+        .kw-sidebar .brand { font-weight: 700; font-size: 1.15rem; padding: .5rem 1.25rem 1.25rem; }
+        .kw-sidebar a { color: #cfe0ec; text-decoration: none; display: block; padding: .55rem 1.25rem; border-left: 3px solid transparent; }
+        .kw-sidebar a:hover, .kw-sidebar a.active { background: rgba(255,255,255,.08); color: #fff; border-left-color: var(--kw-accent); }
+        .kw-sidebar .section-title { text-transform: uppercase; font-size: .7rem; letter-spacing: .06em; color: #7fa2ba; padding: 1rem 1.25rem .25rem; }
+        .kw-main { margin-left: 250px; padding: 1.75rem; }
+        .kw-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+        .card-metric { border: none; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
+        .table-card { background: #fff; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); padding: 1.25rem; }
+        @media (max-width: 991px) {
+            .kw-sidebar { width: 210px; }
+            .kw-main { margin-left: 210px; padding: 1rem; }
+        }
+        @media (max-width: 767px) {
+            .kw-sidebar { position: static; width: 100%; min-height: auto; }
+            .kw-main { margin-left: 0; }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<nav class="kw-sidebar">
+    <div class="brand"><i class="fa-solid fa-coins"></i>&nbsp; KwikSchools Finance</div>
+    <div class="section-title">Overview</div>
+    <a href="{% url 'finance:dashboard' %}"><i class="fa-solid fa-gauge-high me-2"></i> Dashboard</a>
+
+    <div class="section-title">Fees & Invoicing</div>
+    <a href="{% url 'finance:fee_category_list' %}"><i class="fa-solid fa-tags me-2"></i> Fee Categories</a>
+    <a href="{% url 'finance:fee_structure_list' %}"><i class="fa-solid fa-layer-group me-2"></i> Fee Structure</a>
+    <a href="{% url 'finance:fee_table' %}"><i class="fa-solid fa-table-list me-2"></i> Printable Fee Table</a>
+    <a href="{% url 'finance:invoice_list' %}"><i class="fa-solid fa-file-invoice me-2"></i> Invoices</a>
+    <a href="{% url 'finance:discount_list' %}"><i class="fa-solid fa-percent me-2"></i> Discounts &amp; Concessions</a>
+    <a href="{% url 'finance:fee_exception_list' %}"><i class="fa-solid fa-shuffle me-2"></i> Fee Exceptions</a>
+
+    <div class="section-title">Payments</div>
+    <a href="{% url 'finance:payment_list' %}"><i class="fa-solid fa-clock-rotate-left me-2"></i> Payment History</a>
+    <a href="{% url 'finance:make_payment' %}"><i class="fa-solid fa-cash-register me-2"></i> Record Payment</a>
+    <a href="{% url 'finance:notification_list' %}"><i class="fa-solid fa-bell me-2"></i> Payment Notifications</a>
+    <a href="{% url 'finance:bank_account_list' %}"><i class="fa-solid fa-building-columns me-2"></i> Bank Accounts</a>
+
+    <div class="section-title">Expenses</div>
+    <a href="{% url 'finance:expense_list' %}"><i class="fa-solid fa-receipt me-2"></i> Expenses</a>
+    <a href="{% url 'finance:expense_category_list' %}"><i class="fa-solid fa-folder-tree me-2"></i> Expense Categories</a>
+    <a href="{% url 'finance:vendor_list' %}"><i class="fa-solid fa-truck-field me-2"></i> Vendors / Payees</a>
+
+    <div class="section-title">Reports</div>
+    <a href="{% url 'finance:debtors_report' %}"><i class="fa-solid fa-user-clock me-2"></i> Debtors Report</a>
+    <a href="{% url 'finance:total_payments_report' %}"><i class="fa-solid fa-sack-dollar me-2"></i> Income Report</a>
+    <a href="{% url 'finance:profit_loss_report' %}"><i class="fa-solid fa-chart-line me-2"></i> Profit &amp; Loss</a>
+</nav>
+
+<main class="kw-main">
+    <div class="kw-topbar">
+        <h4 class="mb-0">{{ title|default:"Finance" }}</h4>
+        <a href="{% url 'pages:portal-home' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fa-solid fa-arrow-left-long me-1"></i> Back to Portal
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

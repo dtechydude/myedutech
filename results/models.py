@@ -14,23 +14,23 @@ from django.core.exceptions import ValidationError
 
 
 
-class Examination(models.Model):
-    name = models.CharField(max_length=150, blank=True)
-    standard = models.ForeignKey(Standard, on_delete=models.CASCADE, blank=True, null=True)
-    term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name='exams') # Link to Term  
-    session = models.ForeignKey(Session, on_delete=models.CASCADE) 
+# class Examination(models.Model):
+#     name = models.CharField(max_length=150, blank=True)
+#     standard = models.ForeignKey(Standard, on_delete=models.CASCADE, blank=True, null=True)
+#     term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name='exams') # Link to Term  
+#     session = models.ForeignKey(Session, on_delete=models.CASCADE) 
   
-    date = models.DateField(null=True) 
-    description = models.CharField(max_length=150, blank=True)  
+#     date = models.DateField(null=True) 
+#     description = models.CharField(max_length=150, blank=True)  
 
-    def __str__ (self):
-        return f'{self.name} - {self.standard.name} - {self.term}'
+#     def __str__ (self):
+#         return f'{self.name} - {self.standard.name} - {self.term}'
     
-    class Meta:
-        verbose_name = 'Examinations'
-        verbose_name_plural = 'Examinations'
-        unique_together = ('name', 'term', 'date')
-        ordering = ['term__start_date', 'date', 'name']
+#     class Meta:
+#         verbose_name = 'Examinations'
+#         verbose_name_plural = 'Examinations'
+#         unique_together = ('name', 'term', 'date')
+#         ordering = ['term__start_date', 'date', 'name']
     
 
 
@@ -722,3 +722,47 @@ class ReportComments(models.Model):
 
     def __str__(self):
         return f"Comments for {self.student.get_full_name()} - {self.term.name} - {self.session.name}"
+
+
+# Session Report Card comment
+class SessionReportComments(models.Model):
+    """
+    Stores class teacher and principal/head teacher comments for a student's
+    END-OF-SESSION (cumulative/annual) report card. Manual entry, one record
+    per student per standard per session — mirrors ReportComments but scoped
+    to the whole session instead of a single term.
+    """
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        related_name='session_report_comments'
+    )
+    standard = models.ForeignKey(
+        Standard,
+        on_delete=models.CASCADE,
+        related_name='session_report_comments'
+    )
+    session = models.ForeignKey(
+        Session,
+        on_delete=models.CASCADE,
+        related_name='session_report_comments'
+    )
+    teacher_comment = models.TextField(blank=True, null=True)
+    principal_comment = models.TextField(blank=True, null=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_session_report_comments'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('student', 'standard', 'session')
+        verbose_name = "Session Report Comment"
+        verbose_name_plural = "Session Report Comments"
+
+    def __str__(self):
+        return f"Session Comments for {self.student.get_full_name()} - {self.session.name}"

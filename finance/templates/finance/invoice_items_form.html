@@ -1,0 +1,33 @@
+{% extends base_template %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="table-card">
+            <p class="text-muted">Editing items for <strong>{{ invoice.invoice_number }}</strong> — {{ invoice.student.get_full_name }}</p>
+            <form method="post">
+                {% csrf_token %}
+                {{ formset.management_form }}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead><tr><th>Fee Category</th><th>Description</th><th>Qty</th><th>Amount</th><th>Remove</th></tr></thead>
+                        <tbody>
+                        {% for item_form in formset %}
+                            <tr>
+                                {{ item_form.id }}
+                                <td>{{ item_form.fee_category }}</td>
+                                <td>{{ item_form.description }}</td>
+                                <td>{{ item_form.quantity }}</td>
+                                <td>{{ item_form.amount }}</td>
+                                <td>{% if item_form.instance.pk %}{{ item_form.DELETE }}{% endif %}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-1"></i> Save Items</button>
+                <a href="{% url 'finance:invoice_detail' invoice.pk %}" class="btn btn-outline-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

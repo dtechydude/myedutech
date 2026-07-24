@@ -1,0 +1,121 @@
+{% extends base_template %}
+{% load finance_extras %}
+{% block content %}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card card-metric p-3">
+            <div class="text-muted small">Total Income ({{ current_term }} {{ current_session }})</div>
+            <div class="fs-4 fw-bold text-success">{{ summary.total_income|currency }}</div>
+            <div class="small text-muted">{{ summary.payment_count }} payment(s)</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-metric p-3">
+            <div class="text-muted small">Total Expenses</div>
+            <div class="fs-4 fw-bold text-danger">{{ summary.total_expense|currency }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-metric p-3">
+            <div class="text-muted small">Net Profit</div>
+            <div class="fs-4 fw-bold {% if summary.net_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                {{ summary.net_profit|currency }}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-metric p-3">
+            <div class="text-muted small">Outstanding Balance</div>
+            <div class="fs-4 fw-bold text-warning">{{ summary.outstanding_balance|currency }}</div>
+            <div class="small text-muted">{{ summary.debtor_count }} debtor(s)</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <a href="{% url 'finance:make_payment' %}" class="btn btn-primary w-100 py-3"><i class="fa-solid fa-cash-register me-2"></i>Record a Payment</a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'finance:generate_invoices' %}" class="btn btn-outline-primary w-100 py-3"><i class="fa-solid fa-file-invoice me-2"></i>Generate Class Invoices</a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'finance:expense_add' %}" class="btn btn-outline-danger w-100 py-3"><i class="fa-solid fa-receipt me-2"></i>Record an Expense</a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="table-card">
+            <h6 class="mb-3">Recent Payments</h6>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead><tr><th>Student</th><th>Category</th><th>Amount</th><th>Date</th></tr></thead>
+                    <tbody>
+                    {% for p in recent_payments %}
+                        <tr>
+                            <td><a href="{% url 'finance:receipt_detail' p.receipt.pk %}">{{ p.student.get_full_name }}</a></td>
+                            <td>{{ p.fee_category.name }}</td>
+                            <td>{{ p.amount_received|currency }}</td>
+                            <td>{{ p.payment_date }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4" class="text-muted text-center py-3">No payments recorded yet.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <a href="{% url 'finance:payment_list' %}" class="small">View all payments &rarr;</a>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="table-card">
+            <h6 class="mb-3">Top Debtors</h6>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead><tr><th>Student</th><th>Balance</th></tr></thead>
+                    <tbody>
+                    {% for d in top_debtors %}
+                        <tr>
+                            <td>{{ d.student.get_full_name }}</td>
+                            <td class="text-danger fw-semibold">{{ d.balance|currency }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="2" class="text-muted text-center py-3">No outstanding debtors 🎉</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <a href="{% url 'finance:debtors_report' %}" class="small">View full debtors report &rarr;</a>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="table-card">
+            <h6 class="mb-3">Recent Expenses</h6>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead><tr><th>Title</th><th>Category</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead>
+                    <tbody>
+                    {% for e in recent_expenses %}
+                        <tr>
+                            <td>{{ e.title }}</td>
+                            <td>{{ e.category.name }}</td>
+                            <td>{{ e.amount|currency }}</td>
+                            <td>{{ e.expense_date }}</td>
+                            <td><span class="badge {{ e.status|status_badge_class }}">{{ e.get_status_display }}</span></td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="text-muted text-center py-3">No expenses recorded yet.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <a href="{% url 'finance:expense_list' %}" class="small">View all expenses &rarr;</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

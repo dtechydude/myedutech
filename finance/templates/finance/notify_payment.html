@@ -1,0 +1,23 @@
+{% extends base_template %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="table-card">
+            <p class="text-muted">Already paid via bank transfer or POS? Let us know so we can verify and record it.
+                {% if student_for_display %}Submitting for <strong>{{ student_for_display.get_full_name }}</strong>.{% endif %}</p>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-paper-plane me-1"></i> Submit Notification</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
