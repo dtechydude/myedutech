@@ -16,11 +16,6 @@ from .models import Examination
 
 
 
-
-
-
-
-
 @admin.register(Examination)
 class ExaminationAdmin(admin.ModelAdmin):
     list_display = ['name', 'session', 'standard', 'term', 'view_quizzes_link']

@@ -198,22 +198,109 @@
         .trait-label { color: #28a745; font-weight: 600; }
         .trait-val { color: #990000; font-weight: bold; }
 
-        /* REMARK SECTION */
-        .remark-box {
-            border: 1px solid #999;
-            padding: 8px;
-            font-size: 11px;
-            height: 90px;
+        /* REMARK SECTION — redesigned */
+        .remark-card {
+            border: 1px solid #d8dde3;
+            border-radius: 6px;
             background-color: #ffffff;
+            overflow: hidden;
+            height: 100%;
         }
-        .remark-title {
-            font-size: 12px; color: #990000; text-decoration: underline; font-weight: bold; display: block; margin-bottom: 4px;
+      
+         .remark-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f4f6f9;
+            border-bottom: 1px solid #e2e6ea;
+            padding: 6px 10px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .remark-card-header .remark-title {
+            margin: 0;
+            font-size: 12px;
+            color: #333366;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .remark-badge {
+            font-size: 9px;
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+        }
+        .remark-badge.auto { background: #eef1f5; color: #6c757d; }
+        .remark-badge.custom { background: #e6f4ea; color: #1e7e34; }
+
+        .remark-card-body {
+            padding: 10px;
+            font-size: 11.5px;
+            line-height: 1.45;
+            min-height: 70px;
+        }
+
+        .remark-edit-toggle {
+            font-size: 11px;
+            color: #0056b3;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-top: 1px dashed #e2e6ea;
+            background: #fbfbfc;
+            display: block;
+        }
+        .remark-edit-toggle:hover { background: #f0f2f5; }
+        .remark-edit-toggle::-webkit-details-marker { display: none; }
+
+        .remark-editor {
+            padding: 10px;
+            background: #fbfbfc;
+            border-top: 1px solid #e2e6ea;
+        }
+        .remark-editor textarea {
+            font-size: 12px;
+            resize: vertical;
+        }
+        .remark-editor .btn {
+            margin-top: 6px;
+            font-size: 12px;
+            padding: 4px 16px;
+        }
+
+        @media print {
+            .remark-edit-toggle, .remark-editor { display: none !important; }
+            .remark-card { border: 1px solid #999; }
+            {% comment %} .remark-card-header { background: none !important; } {% endcomment %}
         }
 
         /* FOOTER */
-        .footer-section { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 15px; }
-        .qr-verify-box { text-align: center; font-size: 9px; color: #555; }
-        .qr-code-small { width: 80px; height: 80px; margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto; }
+            .footer-section {
+                display: flex;
+                justify-content: center;
+                align-items: flex-end;
+                gap: 20px;
+                margin-top: 15px;
+            }
+            .qr-verify-box {
+                text-align: center;
+                font-size: 9px;
+                color: #555;
+            }
+            .qr-code-small {
+                width: 60px;
+                height: auto;
+                margin-bottom: 5px;
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .signature-box {
+                text-align: center;
+                min-width: 220px;
+            }
 
         @media print {
             body { background: none; }
@@ -299,7 +386,7 @@
                 </tr>
             </table>
         </div>
-
+        <div> REPORT CARD </div>
         <div class="table-responsive">
             <table class="subject-table table-bordered w-100 mb-3 text-center">
                 <thead>
@@ -363,176 +450,123 @@
                 </div>
             </div>
         </div>
-
-        {% comment %} <div class="row no-gutters mb-3">
-            <div class="col-6 pr-1">
-                <div class="remark-box">
-                    <span class="remark-title">Class Teacher's Remark:</span>
-                    {% with avg=overall_session_average|floatformat:0|add:0 %}
-                        {% if avg >= 80 %}
-                            Excellent performance! You have demonstrated outstanding academic ability, diligence, and commitment throughout the session. Keep striving for excellence and maintain this impressive standard.
-                        {% elif avg >= 75 %}
-                            Very good performance. You have worked hard and achieved commendable results. Continue to put in consistent effort and aim even higher next session.
-                        {% elif avg >= 70 %}
-                            Good performance. You have shown a solid understanding of your subjects. With a little more dedication and attention to weaker areas, you can achieve excellent results.
-                        {% elif avg >= 65 %}
-                            Fairly good performance. Your efforts are appreciated, but there is still room for improvement. Be more focused, complete your assignments diligently, and participate actively in class.
-                        {% elif avg >= 60 %}
-                            Satisfactory performance. You have the potential to do much better. Greater commitment to your studies and regular revision will lead to improved results.
-                        {% elif avg >= 55 %}
-                            Average performance. You need to be more consistent and put in extra effort, especially in your weaker subjects. Hard work and determination will greatly improve your performance.
-                        {% elif avg >= 50 %}
-                            Below average performance. You need to take your studies more seriously. Pay closer attention in class, complete all assignments, and seek help where necessary.
-                        {% elif avg >= 45 %}
-                            Weak performance. Significant improvement is required. Develop better study habits, attend classes regularly, and dedicate more time to reading and practice.
-                        {% elif avg >= 40 %}
-                            Poor performance. Your academic progress is below expectation. Immediate commitment, discipline, and consistent hard work are necessary to achieve better results.
-                        {% else %}
-                            Very poor performance. This result is not satisfactory. You must develop a positive attitude towards your studies, work much harder, and seek guidance from your teachers and parents to improve significantly.
-                        {% endif %}
-                    {% endwith %}
-                </div>
-            </div>
-            <div class="col-6 pl-1">
-           
-                <div class="remark-box">
-                    <span class="remark-title">Principal's/Head Teacher's Remark:</span>
-                    {% with avg=overall_session_average|floatformat:0|add:0 %}
-                        {% if avg >= 80 %}
-                            Outstanding achievement! Your excellent academic performance is highly commendable. Continue to uphold this standard of excellence, remain disciplined, and strive for even greater success in the coming session.
-                        {% elif avg >= 75 %}
-                            Very commendable performance. Your hard work and determination have yielded impressive results. Remain focused, consistent, and aim for excellence in all your academic pursuits.
-                        {% elif avg >= 70 %}
-                            Good performance. You have demonstrated commendable ability and commitment. With greater determination and consistency, you can attain an even higher level of academic excellence.
-                        {% elif avg >= 65 %}
-                            Fairly good performance. You have made appreciable progress during the session. Continue to work diligently, pay more attention to areas of weakness, and strive for better results.
-                        {% elif avg >= 60 %}
-                            Satisfactory performance. You have met the basic academic expectations. However, with increased commitment, regular study habits, and greater determination, you can achieve much better results.
-                        {% elif avg >= 55 %}
-                            Average performance. There is clear potential for improvement. Be more dedicated to your studies, manage your time effectively, and make every effort to improve your academic standing.
-                        {% elif avg >= 50 %}
-                            Below average performance. Greater seriousness and commitment are required to improve your academic performance. Make effective use of your teachers' guidance and devote more time to your studies.
-                        {% elif avg >= 45 %}
-                            Weak performance. You need to develop better study habits and demonstrate greater commitment to your academic responsibilities. Success is attainable through consistent hard work and determination.
-                        {% elif avg >= 40 %}
-                            Poor performance. Your results are below the expected standard. Immediate improvement in attitude, discipline, and study habits is essential to achieve better outcomes in the next session.
-                        {% else %}
-                            Unsatisfactory performance. Your academic achievement falls far below expectations. You are strongly encouraged to adopt a more positive attitude towards learning, seek academic support where necessary, and work diligently to achieve significant improvement.
-                        {% endif %}
-                    {% endwith %}
-                </div>
-            </div>
-        </div> {% endcomment %}
-
         <div class="row no-gutters mb-3">
-    <div class="col-6 pr-1">
-        <div class="remark-box">
-            <span class="remark-title">Class Teacher's Remark:</span>
+            <div class="col-6 pr-1">
+                <div class="remark-card">
+                    <div class="remark-card-header">
+                <span class="remark-title">Class Teacher's Remark</span>
+                {% if session_comment.teacher_comment %}
+                    <span class="remark-badge custom no-print">Custom</span>
+                {% else %}
+                    <span class="remark-badge auto no-print">Auto-generated</span>
+                {% endif %}
+            </div>
 
-            {% if session_comment.teacher_comment %}
-                <p class="mb-0">{{ session_comment.teacher_comment }}</p>
-            {% else %}
-                {% with avg=overall_session_average|floatformat:0|add:0 %}
-                    {% if avg >= 80 %}
-                        <p class="mb-0">Excellent performance! You have demonstrated outstanding academic ability, diligence, and commitment throughout the session. Keep striving for excellence and maintain this impressive standard.</p>
-                    {% elif avg >= 75 %}
-                        <p class="mb-0">Very good performance. You have worked hard and achieved commendable results. Continue to put in consistent effort and aim even higher next session.</p>
-                    {% elif avg >= 70 %}
-                        <p class="mb-0">Good performance. You have shown a solid understanding of your subjects. With a little more dedication and attention to weaker areas, you can achieve excellent results.</p>
-                    {% elif avg >= 65 %}
-                        <p class="mb-0">Fairly good performance. Your efforts are appreciated, but there is still room for improvement. Be more focused, complete your assignments diligently, and participate actively in class.</p>
-                    {% elif avg >= 60 %}
-                        <p class="mb-0">Satisfactory performance. You have the potential to do much better. Greater commitment to your studies and regular revision will lead to improved results.</p>
-                    {% elif avg >= 55 %}
-                        <p class="mb-0">Average performance. You need to be more consistent and put in extra effort, especially in your weaker subjects. Hard work and determination will greatly improve your performance.</p>
-                    {% elif avg >= 50 %}
-                        <p class="mb-0">Below average performance. You need to take your studies more seriously. Pay closer attention in class, complete all assignments, and seek help where necessary.</p>
-                    {% elif avg >= 45 %}
-                        <p class="mb-0">Weak performance. Significant improvement is required. Develop better study habits, attend classes regularly, and dedicate more time to reading and practice.</p>
-                    {% elif avg >= 40 %}
-                        <p class="mb-0">Poor performance. Your academic progress is below expectation. Immediate commitment, discipline, and consistent hard work are necessary to achieve better results.</p>
-                    {% else %}
-                        <p class="mb-0">Very poor performance. This result is not satisfactory. You must develop a positive attitude towards your studies, work much harder, and seek guidance from your teachers and parents to improve significantly.</p>
-                    {% endif %}
-                {% endwith %}
-            {% endif %}
+            <div class="remark-card-body">
+                {% if session_comment.teacher_comment %}
+                    {{ session_comment.teacher_comment }}
+                {% else %}
+                    {% with avg=overall_session_average|floatformat:0|add:0 %}
+                        {% if avg >= 80 %}Excellent performance! You have demonstrated outstanding academic ability, diligence, and commitment throughout the session. Keep striving for excellence and maintain this impressive standard.
+                        {% elif avg >= 75 %}Very good performance. You have worked hard and achieved commendable results. Continue to put in consistent effort and aim even higher next session.
+                        {% elif avg >= 70 %}Good performance. You have shown a solid understanding of your subjects. With a little more dedication and attention to weaker areas, you can achieve excellent results.
+                        {% elif avg >= 65 %}Fairly good performance. Your efforts are appreciated, but there is still room for improvement. Be more focused, complete your assignments diligently, and participate actively in class.
+                        {% elif avg >= 60 %}Satisfactory performance. You have the potential to do much better. Greater commitment to your studies and regular revision will lead to improved results.
+                        {% elif avg >= 55 %}Average performance. You need to be more consistent and put in extra effort, especially in your weaker subjects. Hard work and determination will greatly improve your performance.
+                        {% elif avg >= 50 %}Below average performance. You need to take your studies more seriously. Pay closer attention in class, complete all assignments, and seek help where necessary.
+                        {% elif avg >= 45 %}Weak performance. Significant improvement is required. Develop better study habits, attend classes regularly, and dedicate more time to reading and practice.
+                        {% elif avg >= 40 %}Poor performance. Your academic progress is below expectation. Immediate commitment, discipline, and consistent hard work are necessary to achieve better results.
+                        {% else %}Very poor performance. This result is not satisfactory. You must develop a positive attitude towards your studies, work much harder, and seek guidance from your teachers and parents to improve significantly.
+                        {% endif %}
+                    {% endwith %}
+                {% endif %}
+            </div>
 
             {% if can_edit_teacher_comment %}
-            <form method="post" action="{% url 'session_report_comment_update' student.id session.id %}" class="no-print mt-2">
-                {% csrf_token %}
-                <textarea name="teacher_comment" class="form-control form-control-sm" rows="3"
-                          placeholder="Enter/override class teacher's remark...">{{ session_comment.teacher_comment|default:'' }}</textarea>
-                <button type="submit" class="btn btn-sm btn-primary mt-1">Save</button>
-            </form>
+            <details class="no-print">
+                <summary class="remark-edit-toggle">✎ Edit remark</summary>
+                <div class="remark-editor">
+                    <form method="post" action="{% url 'results:session_report_comment_update' student.id session.id %}">
+                        {% csrf_token %}
+                        <textarea name="teacher_comment" class="form-control form-control-sm" rows="3"
+                                  placeholder="Enter/override class teacher's remark...">{{ session_comment.teacher_comment|default:'' }}</textarea>
+                        <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                    </form>
+                </div>
+            </details>
             {% endif %}
         </div>
     </div>
 
     <div class="col-6 pl-1">
-        <div class="remark-box">
-            <span class="remark-title">Principal's/Head Teacher's Remark:</span>
+        <div class="remark-card">
+            <div class="remark-card-header">
+                <span class="remark-title">Principal's/Head Teacher's Remark</span>
+                {% if session_comment.principal_comment %}
+                    <span class="remark-badge custom no-print">Custom</span>
+                {% else %}
+                    <span class="remark-badge auto no-print">Auto-generated</span>
+                {% endif %}
+            </div>
 
-            {% if session_comment.principal_comment %}
-                <p class="mb-0">{{ session_comment.principal_comment }}</p>
-            {% else %}
-                {% with avg=overall_session_average|floatformat:0|add:0 %}
-                    {% if avg >= 80 %}
-                        <p class="mb-0">Outstanding achievement! Your excellent academic performance is highly commendable. Continue to uphold this standard of excellence, remain disciplined, and strive for even greater success in the coming session.</p>
-                    {% elif avg >= 75 %}
-                        <p class="mb-0">Very commendable performance. Your hard work and determination have yielded impressive results. Remain focused, consistent, and aim for excellence in all your academic pursuits.</p>
-                    {% elif avg >= 70 %}
-                        <p class="mb-0">Good performance. You have demonstrated commendable ability and commitment. With greater determination and consistency, you can attain an even higher level of academic excellence.</p>
-                    {% elif avg >= 65 %}
-                        <p class="mb-0">Fairly good performance. You have made appreciable progress during the session. Continue to work diligently, pay more attention to areas of weakness, and strive for better results.</p>
-                    {% elif avg >= 60 %}
-                        <p class="mb-0">Satisfactory performance. You have met the basic academic expectations. However, with increased commitment, regular study habits, and greater determination, you can achieve much better results.</p>
-                    {% elif avg >= 55 %}
-                        <p class="mb-0">Average performance. There is clear potential for improvement. Be more dedicated to your studies, manage your time effectively, and make every effort to improve your academic standing.</p>
-                    {% elif avg >= 50 %}
-                        <p class="mb-0">Below average performance. Greater seriousness and commitment are required to improve your academic performance. Make effective use of your teachers' guidance and devote more time to your studies.</p>
-                    {% elif avg >= 45 %}
-                        <p class="mb-0">Weak performance. You need to develop better study habits and demonstrate greater commitment to your academic responsibilities. Success is attainable through consistent hard work and determination.</p>
-                    {% elif avg >= 40 %}
-                        <p class="mb-0">Poor performance. Your results are below the expected standard. Immediate improvement in attitude, discipline, and study habits is essential to achieve better outcomes in the next session.</p>
-                    {% else %}
-                        <p class="mb-0">Unsatisfactory performance. Your academic achievement falls far below expectations. You are strongly encouraged to adopt a more positive attitude towards learning, seek academic support where necessary, and work diligently to achieve significant improvement.</p>
-                    {% endif %}
-                {% endwith %}
-            {% endif %}
+            <div class="remark-card-body">
+                {% if session_comment.principal_comment %}
+                    {{ session_comment.principal_comment }}
+                {% else %}
+                    {% with avg=overall_session_average|floatformat:0|add:0 %}
+                        {% if avg >= 80 %}Outstanding achievement! Your excellent academic performance is highly commendable. Continue to uphold this standard of excellence, remain disciplined, and strive for even greater success in the coming session.
+                        {% elif avg >= 75 %}Very commendable performance. Your hard work and determination have yielded impressive results. Remain focused, consistent, and aim for excellence in all your academic pursuits.
+                        {% elif avg >= 70 %}Good performance. You have demonstrated commendable ability and commitment. With greater determination and consistency, you can attain an even higher level of academic excellence.
+                        {% elif avg >= 65 %}Fairly good performance. You have made appreciable progress during the session. Continue to work diligently, pay more attention to areas of weakness, and strive for better results.
+                        {% elif avg >= 60 %}Satisfactory performance. You have met the basic academic expectations. However, with increased commitment, regular study habits, and greater determination, you can achieve much better results.
+                        {% elif avg >= 55 %}Average performance. There is clear potential for improvement. Be more dedicated to your studies, manage your time effectively, and make every effort to improve your academic standing.
+                        {% elif avg >= 50 %}Below average performance. Greater seriousness and commitment are required to improve your academic performance. Make effective use of your teachers' guidance and devote more time to your studies.
+                        {% elif avg >= 45 %}Weak performance. You need to develop better study habits and demonstrate greater commitment to your academic responsibilities. Success is attainable through consistent hard work and determination.
+                        {% elif avg >= 40 %}Poor performance. Your results are below the expected standard. Immediate improvement in attitude, discipline, and study habits is essential to achieve better outcomes in the next session.
+                        {% else %}Unsatisfactory performance. Your academic achievement falls far below expectations. You are strongly encouraged to adopt a more positive attitude towards learning, seek academic support where necessary, and work diligently to achieve significant improvement.
+                        {% endif %}
+                    {% endwith %}
+                {% endif %}
+            </div>
 
             {% if can_edit_principal_comment %}
-            <form method="post" action="{% url 'session_report_comment_update' student.id session.id %}" class="no-print mt-2">
-                {% csrf_token %}
-                <textarea name="principal_comment" class="form-control form-control-sm" rows="3"
-                          placeholder="Enter/override principal's/head teacher's remark...">{{ session_comment.principal_comment|default:'' }}</textarea>
-                <button type="submit" class="btn btn-sm btn-primary mt-1">Save</button>
-            </form>
+            <details class="no-print">
+                <summary class="remark-edit-toggle">✎ Edit remark</summary>
+                <div class="remark-editor">
+                    <form method="post" action="{% url 'results:session_report_comment_update' student.id session.id %}">
+                        {% csrf_token %}
+                        <textarea name="principal_comment" class="form-control form-control-sm" rows="3"
+                                  placeholder="Enter/override principal's/head teacher's remark...">{{ session_comment.principal_comment|default:'' }}</textarea>
+                        <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                    </form>
+                </div>
+            </details>
             {% endif %}
         </div>
     </div>
 </div>
 
-        <div class="footer-section">
-            <div class="qr-verify-box">
-                <img src="https://bwipjs-api.metafloor.com/?bcid=qrcode&text=VERIFIED Result:{{ student.USN }}- {{ student.last_name }} {{ student.first_name }}-{{ term }}-{{school_data.name}}&scale=2" class="qr-code-small" alt="QR Verification">
-                <strong>SCAN TO VERIFY RESULT</strong>
-            </div>
+    <div class="footer-section">
+    <div class="qr-verify-box">
+        <img src="https://bwipjs-api.metafloor.com/?bcid=qrcode&text=VERIFIED Result:{{ student.USN }}- {{ student.last_name }} {{ student.first_name }}-{{ term }}-{{school_data.name}}&scale=2" class="qr-code-small" alt="QR Verification">
+        <strong>SCAN TO VERIFY RESULT</strong>
+    </div>
 
-            <div class="text-center" style="min-width: 250px;">
-                <div style="height: 50px;">
-                    {% if school_info.signature %}
-                        <img src="{{ school_info.signature.url }}" style="max-height: 50px;">
-                    {% else %}
-                        <img src="{% static 'pages/images/sign.jpg' %}" alt="Authorized Signature" style="max-height: 50px;">
-                    {% endif %}
-                </div>
-                <div>
-                    <strong style="text-transform: uppercase; font-size: 13px;">Authorized Signature</strong><br>
-                    <span class="text-muted small">{{school_info.name}}</span>
-                </div>
-            </div>
+    <div class="signature-box">
+        <div style="height: 50px;">
+            {% if school_info.signature %}
+                <img src="{{ school_info.signature.url }}" style="max-height: 50px;">
+            {% else %}
+                <img src="{% static 'pages/images/sign.jpg' %}" alt="Authorized Signature" style="max-height: 50px;">
+            {% endif %}
+        </div>
+        <div>
+            <strong style="text-transform: uppercase; font-size: 13px;">Authorized Signature</strong><br>
+            <span class="text-muted small">{{ school_info.name }}</span>
         </div>
     </div>
+</div>
+</div>
 
     <div class="no-print text-center my-4">
         {% if user.is_superuser or user.is_staff or user.teacher%}

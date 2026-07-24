@@ -37,6 +37,7 @@ from django.template.loader import get_template
 # from results.models import Term, Session, SessionResultStatus
 from prep_reports.models import PrepReportCard
 from .permissions import get_session_comment_permissions
+from .services import get_student_standard_for_session, get_or_create_session_comment, build_session_report_context
 
 
 
@@ -949,16 +950,6 @@ class StudentSessionReportCardView(LoginRequiredMixin, View):
 
         processed_motor = {k: (round(min(v, 5)) if v is not None else 0) for k, v in agg_motor.items()}
 
-        # # 6. Attendance Logic
-        # attendance_records = Attendance.objects.filter(
-        #     student=student,
-        #     date__gte=session.start_date,
-        #     date__lte=session.end_date
-        # )
-        # total_school_days = attendance_records.count()
-        # days_present = attendance_records.filter(present=True).count()
-        # days_absent = attendance_records.filter(present=False).count()
-
         # 6. Attendance Logic
         attendance_records = Attendance.objects.filter(
             student=student,
@@ -969,34 +960,18 @@ class StudentSessionReportCardView(LoginRequiredMixin, View):
         days_present = attendance_records.filter(present=True).count()
         days_absent = attendance_records.filter(present=False).count()
 
-        # 6b. Determine the student's Standard for this session.
-        student_standard = None
-        last_term_comment = ReportComments.objects.filter(
-            student=student, term__in=terms_in_session
-        ).order_by('-term__start_date').first()
-        if last_term_comment:
-            student_standard = last_term_comment.standard
-        else:
-            student_standard = getattr(student, 'standard', None)
+        # 6b. Determine the student's Standard for THIS session (historical,
+        # not necessarily their current class if they've since been promoted).
+        student_standard = get_student_standard_for_session(student, terms_in_session)
 
-        # 6c. Fetch or create the manual session-level comment record,
-        # and work out who is allowed to edit which column.
-        session_comment = None
-        can_edit_teacher_comment = False
-        can_edit_principal_comment = False
-
-        if student_standard is not None:
-            session_comment, _ = SessionReportComments.objects.get_or_create(
-                student=student,
-                standard=student_standard,
-                session=session,
-                defaults={
-                    'created_by': request.user if request.user.is_authenticated else None
-                }
-            )
-            can_edit_teacher_comment, can_edit_principal_comment = get_session_comment_permissions(
-                request.user, student_standard
-            )
+        # 6c. Fetch/create the session comment and compute edit permissions.
+        # No longer gated behind student_standard resolving — a missing
+        # standard just means the form-teacher check can't match, but
+        # superuser/staff/principal access still works either way.
+        session_comment = get_or_create_session_comment(student, session, student_standard, request.user)
+        can_edit_teacher_comment, can_edit_principal_comment = get_session_comment_permissions(
+            request.user, student
+        )
 
 
         # 7. Next Session / School Info
@@ -1006,21 +981,6 @@ class StudentSessionReportCardView(LoginRequiredMixin, View):
             school_identity = SchoolIdentity.objects.first()
         except:
             school_identity = None
-
-        # context = {
-        #     'student': student,
-        #     'session': session,
-        #     'terms_in_session': terms_in_session,
-        #     'report_data': report_data,
-        #     'overall_session_average': f"{overall_session_average:.2f}" if overall_session_average is not None else 'N/A',
-        #     'overall_remark': overall_remark,
-        #     'aggregated_motor_abilities': processed_motor,
-        #     'school_identity': school_identity,
-        #     'total_school_days': total_school_days,
-        #     'days_present': days_present,
-        #     'days_absent': days_absent,
-        #     'next_session_start_date': next_session.start_date if next_session else None,
-        # }
 
         context = {
             'student': student,
@@ -1125,51 +1085,7 @@ class SessionPublicationControlView(LoginRequiredMixin, UserPassesTestMixin, Vie
         return redirect(f"{request.path}?class_id={class_id}&session_id={session_id}")
 
 
-
-# class StudentDashboardView(LoginRequiredMixin, View):
-#     template_name = 'results/student_dashboard.html'
-
-#     def get(self, request, *args, **kwargs):
-#         if hasattr(request.user, 'student'):
-#             student = request.user.student
-
-#             # 1. RESTORE ORIGINAL TERMLY LOGIC
-#             # This allows your existing termly publication logic to handle things.
-#             # (If your previous termly logic was just "if they have scores", this brings it back)
-#             terms_with_scores = Term.objects.filter(
-#                 score__student=student
-#             ).distinct().order_by('-start_date')
-
-#             # 2. APPLY NEW SESSION (ANNUAL) LOGIC SEPARATELY
-#             # We only filter the sessions based on the new SessionResultStatus table.
-#             published_session_ids = SessionResultStatus.objects.filter(
-#                 student=student, 
-#                 is_published=True
-#             ).values_list('session_id', flat=True)
-
-#             sessions_with_scores = Session.objects.filter(
-#                 id__in=published_session_ids, # Only published ones
-#                 terms__score__student=student # That have scores
-#             ).distinct().order_by('-start_date')
-
-#             # --- Debugging ---
-#             print(f"\n--- Dashboard Logic Sync ---")
-#             print(f"Terms Visible: {terms_with_scores.count()}")
-#             print(f"Sessions (Annual) Published: {sessions_with_scores.count()}")
-#             print("-----------------------------\n")
-
-#             context = {
-#                 'student': student,
-#                 'terms': terms_with_scores,    # Termly links (Restored)
-#                 'sessions': sessions_with_scores, # Annual links (Controlled)
-#             }
-#             return render(request, self.template_name, context)
-#         else:
-#             messages.error(request, "Your account is not linked to a student profile.")
-#             return redirect('portal-home')
-
-
-
+# STUDENT DASHBOARD VIEW
 class StudentDashboardView(LoginRequiredMixin, View):
     template_name = 'results/student_dashboard.html'
 
@@ -3453,18 +3369,14 @@ class SessionCommentClassView(LoginRequiredMixin, View):
         standard_id = request.GET.get('standard') or available_standards.first().id
         standard = get_object_or_404(available_standards, id=standard_id)
 
-        can_edit_teacher, can_edit_principal = get_session_comment_permissions(request.user, standard)
+        students = Student.objects.filter(current_class=standard).order_by('last_name', 'first_name')
 
-        students = Student.objects.filter(standard=standard).order_by('last_name', 'first_name')
-
-        # Ensure a comment record exists for every student before rendering,
-        # so the template can bind straight to session_comment fields.
         rows = []
         for student in students:
-            comment_obj, _ = SessionReportComments.objects.get_or_create(
-                student=student, standard=standard, session=session,
-                defaults={'created_by': request.user}
-            )
+            comment_obj = get_or_create_session_comment(student, session, standard, request.user)
+            can_edit_teacher, can_edit_principal = get_session_comment_permissions(request.user, student)
+            comment_obj.can_edit_teacher = can_edit_teacher       # attach for template use per-row
+            comment_obj.can_edit_principal = can_edit_principal
             rows.append(comment_obj)
 
         context = {
@@ -3472,42 +3384,33 @@ class SessionCommentClassView(LoginRequiredMixin, View):
             'standard': standard,
             'available_standards': available_standards,
             'rows': rows,
-            'can_edit_teacher': can_edit_teacher,
-            'can_edit_principal': can_edit_principal,
         }
         return render(request, self.template_name, context)
 
     def post(self, request, session_id, *args, **kwargs):
         session = get_object_or_404(Session, id=session_id)
         standard = get_object_or_404(Standard, id=request.POST.get('standard_id'))
-
-        can_edit_teacher, can_edit_principal = get_session_comment_permissions(request.user, standard)
-
-        if not (can_edit_teacher or can_edit_principal):
-            messages.error(request, "You are not authorized to edit comments for this class.")
-            return redirect(f"{request.path}?standard={standard.id}")
-
         student_ids = request.POST.getlist('student_id')
         updated_count = 0
 
         for student_id in student_ids:
-            comment_obj = SessionReportComments.objects.filter(
-                student_id=student_id, standard=standard, session=session
-            ).first()
-            if not comment_obj:
+            student = Student.objects.filter(id=student_id).first()
+            if not student:
                 continue
 
-            changed = False
+            can_edit_teacher, can_edit_principal = get_session_comment_permissions(request.user, student)
+            if not can_edit_teacher and not can_edit_principal:
+                continue
+
+            comment_obj = get_or_create_session_comment(student, session, standard, request.user)
+
             if can_edit_teacher:
                 comment_obj.teacher_comment = request.POST.get(f'teacher_comment_{student_id}', '').strip()
-                changed = True
             if can_edit_principal:
                 comment_obj.principal_comment = request.POST.get(f'principal_comment_{student_id}', '').strip()
-                changed = True
 
-            if changed:
-                comment_obj.save()
-                updated_count += 1
+            comment_obj.save()
+            updated_count += 1
 
         messages.success(request, f"Saved comments for {updated_count} student(s).")
         return redirect(f"{request.path}?standard={standard.id}")
@@ -3515,51 +3418,167 @@ class SessionCommentClassView(LoginRequiredMixin, View):
 
 # Session Report Update
 class SessionReportCommentUpdateView(LoginRequiredMixin, View):
-    """
-    POST-only endpoint. Saves a single student's session comment(s) from
-    the inline forms on session_report_card_detail.html, then redirects
-    back to that report card.
-    """
-
     def post(self, request, student_id, session_id, *args, **kwargs):
         student = get_object_or_404(Student, id=student_id)
         session = get_object_or_404(Session, id=session_id)
+        terms_in_session = session.terms.all()
 
-        last_term_comment = ReportComments.objects.filter(
-            student=student, term__session=session
-        ).order_by('-term__start_date').first()
-        student_standard = last_term_comment.standard if last_term_comment else getattr(student, 'standard', None)
+        student_standard = get_student_standard_for_session(student, terms_in_session)
+        comment_obj = get_or_create_session_comment(student, session, student_standard, request.user)
 
-        if student_standard is None:
-            messages.error(request, "Could not determine the student's standard for this session.")
-            return redirect('session_report_card_detail', student_id=student.id, session_id=session.id)
-
-        comment_obj, _ = SessionReportComments.objects.get_or_create(
-            student=student, standard=student_standard, session=session,
-            defaults={'created_by': request.user}
-        )
-
-        can_edit_teacher, can_edit_principal = get_session_comment_permissions(request.user, student_standard)
+        can_edit_teacher, can_edit_principal = get_session_comment_permissions(request.user, student)
 
         if not can_edit_teacher and not can_edit_principal:
             messages.error(request, "You are not authorized to edit this comment.")
             return redirect('session_report_card_detail', student_id=student.id, session_id=session.id)
 
-        # Bind the form, but only to the field(s) this user is allowed to touch —
-        # this stops a form teacher from sneaking a principal_comment through
-        # by tampering with the POST body.
-        form = SessionReportCommentForm(request.POST, instance=comment_obj)
-        if form.is_valid():
-            updated_comment = form.save(commit=False)
+        # Only touch a field if it was BOTH submitted in this particular
+        # request AND the user is allowed to edit it. A field missing from
+        # POST (e.g. the principal form submitting only principal_comment)
+        # must never overwrite the other field's saved value.
+        if 'teacher_comment' in request.POST and can_edit_teacher:
+            comment_obj.teacher_comment = request.POST.get('teacher_comment', '').strip()
 
-            if not can_edit_teacher:
-                updated_comment.teacher_comment = comment_obj.teacher_comment  # keep old value
-            if not can_edit_principal:
-                updated_comment.principal_comment = comment_obj.principal_comment  # keep old value
+        if 'principal_comment' in request.POST and can_edit_principal:
+            comment_obj.principal_comment = request.POST.get('principal_comment', '').strip()
 
-            updated_comment.save()
-            messages.success(request, "Comment saved successfully.")
-        else:
-            messages.error(request, "Please correct the errors and try again.")
+        comment_obj.save()
+        messages.success(request, "Comment saved successfully.")
+        return redirect('results:student_session_report_card_detail', student_id=student.id, session_id=session.id)
 
-        return redirect('session_report_card_detail', student_id=student.id, session_id=session.id)
+
+
+# Bulk Pring Session Report
+class BulkSessionReportCardSelectView(LoginRequiredMixin, View):
+    """
+    Selection page: pick a Session + Standard (class) to bulk print/download.
+    Superuser/staff only. Fully independent of StudentSessionReportCardView.
+    """
+    template_name = 'results/session_report_card_bulk_select.html'
+
+    def get(self, request, *args, **kwargs):
+        if not (request.user.is_superuser or request.user.is_staff):
+            messages.error(request, "You are not authorized to access bulk report printing.")
+            return redirect('home')
+
+        context = {
+            'sessions': Session.objects.all().order_by('-start_date'),
+            'standards': Standard.objects.all().order_by('name'),
+        }
+        return render(request, self.template_name, context)
+
+
+# class BulkSessionReportCardView(LoginRequiredMixin, View):
+#     """
+#     Bulk print/download of session report cards for every active student in
+#     a given Standard, for a given Session. Superuser/staff only.
+
+#     Does NOT call or modify StudentSessionReportCardView — it uses only the
+#     independent build_session_report_context() helper, so the existing
+#     single-student view and its behavior are completely unaffected.
+#     """
+#     template_name = 'results/session_report_card_bulk.html'
+#     pdf_template_name = 'results/session_report_card_bulk_pdf.html'
+
+#     def get(self, request, session_id, standard_id, *args, **kwargs):
+#         if not (request.user.is_superuser or request.user.is_staff):
+#             messages.error(request, "You are not authorized to access bulk report printing.")
+#             return redirect('home')
+
+#         session = get_object_or_404(Session, id=session_id)
+#         standard = get_object_or_404(Standard, id=standard_id)
+
+#         students = Student.objects.filter(
+#             current_class=standard, student_status=Student.active
+#         ).order_by('last_name', 'first_name')
+
+#         if not students.exists():
+#             messages.warning(request, f"No active students found in {standard.name}.")
+#             return redirect(request.META.get('HTTP_REFERER', 'session_report_card_bulk_select'))
+
+#         student_reports = []
+#         skipped_names = []
+#         for student in students:
+#             report_context = build_session_report_context(student, session, user=request.user)
+#             if report_context is None:
+#                 skipped_names.append(student.get_full_name())
+#                 continue
+#             student_reports.append(report_context)
+
+#         if skipped_names:
+#             messages.info(
+#                 request,
+#                 f"Skipped {len(skipped_names)} student(s) with no terms defined for this session: "
+#                 + ", ".join(skipped_names)
+#             )
+
+#         context = {
+#             'session': session,
+#             'standard': standard,
+#             'student_reports': student_reports,
+#         }
+
+#         if request.GET.get('download') == 'pdf':
+#             filename = f"{standard.name}_{session.name}_Bulk_AnnualReports.pdf"
+#             pdf_response = render_to_pdf_xhtml2pdf(self.pdf_template_name, context)
+#             if pdf_response:
+#                 pdf_response['Content-Disposition'] = f'attachment; filename="{filename}"'
+#                 return pdf_response
+#             return HttpResponse("Error generating bulk PDF.", status=500)
+
+#         return render(request, self.template_name, context)
+
+class BulkSessionReportCardView(LoginRequiredMixin, View):
+    template_name = 'results/session_report_card_bulk.html'
+    pdf_template_name = 'results/session_report_card_bulk_pdf.html'
+
+    def get(self, request, session_id, standard_id, *args, **kwargs):
+        if not (request.user.is_superuser or request.user.is_staff):
+            messages.error(request, "You are not authorized to access bulk report printing.")
+            return redirect('home')
+
+        session = get_object_or_404(Session, id=session_id)
+        standard = get_object_or_404(Standard, id=standard_id)
+
+        students = Student.objects.filter(
+            current_class=standard, student_status=Student.active
+        ).order_by('last_name', 'first_name')
+
+        if not students.exists():
+            messages.warning(request, f"No active students found in {standard.name}.")
+            return redirect(request.META.get('HTTP_REFERER', 'session_report_card_bulk_select'))
+
+        student_reports = []
+        skipped_names = []
+        for student in students:
+            report_context = build_session_report_context(student, session, user=request.user)
+            if report_context is None:
+                skipped_names.append(student.get_full_name())
+                continue
+            student_reports.append(report_context)
+
+        if skipped_names:
+            messages.info(
+                request,
+                f"Skipped {len(skipped_names)} student(s) with no terms defined for this session: "
+                + ", ".join(skipped_names)
+            )
+
+        context = {
+            'session': session,
+            'standard': standard,
+            'student_reports': student_reports,
+            # New: for the on-page filter bar only. Does not affect PDF output.
+            'all_sessions': Session.objects.all().order_by('-start_date'),
+            'all_standards': Standard.objects.all().order_by('name'),
+        }
+
+        if request.GET.get('download') == 'pdf':
+            filename = f"{standard.name}_{session.name}_Bulk_AnnualReports.pdf"
+            pdf_response = render_to_pdf_xhtml2pdf(self.pdf_template_name, context)
+            if pdf_response:
+                pdf_response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                return pdf_response
+            return HttpResponse("Error generating bulk PDF.", status=500)
+
+        return render(request, self.template_name, context)

@@ -10,7 +10,6 @@ import re
 
 
 
-
 class Examination(models.Model):
     name = models.CharField(max_length=150, blank=True)
     standard = models.ForeignKey(Standard, on_delete=models.CASCADE, blank=True, null=True)
@@ -24,8 +23,8 @@ class Examination(models.Model):
         return f'{self.name} - {self.standard.name} - {self.term}'
     
     class Meta:
-        verbose_name = 'Examinations'
-        verbose_name_plural = 'Examinations'
+        verbose_name = 'Examination Settings'
+        verbose_name_plural = 'Examination Settings'
         unique_together = ('name', 'term', 'date')
         ordering = ['term__start_date', 'date', 'name']
     

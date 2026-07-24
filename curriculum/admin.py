@@ -23,7 +23,6 @@ class ClassFeeTemplateForm(forms.Form):
     )
 
 
-
 class StandardIdentityInline(admin.TabularInline):
     model = StandardIdentity
     extra = 1  # Number of empty rows to show for mapping classes

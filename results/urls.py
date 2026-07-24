@@ -24,6 +24,9 @@ from .views import (
     StudentReportCardView,
     StudentSessionReportCardView,
     SessionReportCommentUpdateView,
+    BulkSessionReportCardSelectView,
+    BulkSessionReportCardView,
+    
 )
 
 from django.views.generic import TemplateView # For a simple placeholder home page
@@ -78,6 +81,17 @@ urlpatterns = [
         'session-comments/<int:session_id>/',
         SessionCommentClassView.as_view(),
         name='session_comment_class_list'
+    ),
+
+    path(
+        'session-report-card/bulk/',
+        BulkSessionReportCardSelectView.as_view(),
+        name='session_report_card_bulk_select'
+    ),
+    path(
+        'session-report-card/bulk/<int:session_id>/<int:standard_id>/',
+        BulkSessionReportCardView.as_view(),
+        name='session_report_card_bulk'
     ),
 
     # URL for entering/editing motor ability scores

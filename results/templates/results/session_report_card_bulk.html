@@ -1,0 +1,343 @@
+{% load results_extras %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bulk Session Report Cards - {{ standard.name }} - {{ session.name }}</title>
+       <!-- FAVICONS ICON -->	
+    {% if school_info and school_info.logo %}
+		<link rel="icon" href="{{ school_info.logo.url }}" type="image/png">
+	{% else %}
+		<link rel="icon" href="{% static 'pages/images/school_logo.jpg' %}" type="image/png">
+	{% endif %}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        @page { size: A4; margin: 5mm; }
+        body {
+            background-color: #006699;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #333;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        .report-card-wrapper {
+            width: 210mm;
+            min-height: 290mm;
+            margin: 10px auto;
+            background-color: white;
+            padding: 15px 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+            page-break-after: always;
+        }
+        .report-card-wrapper:last-child { page-break-after: auto; }
+
+        .header-container { display: flex; align-items: center; justify-content: center; gap: 50px; padding-bottom: 5px; margin-bottom: 5px; }
+        .header-logo img { max-height: 80px; width: auto; }
+        .header-details { text-align: center; padding: 0 5px; }
+        .header-details h1 { font-size: 20px; font-weight: bold; color: #333366; margin: 0; }
+        .header-details p { font-size: 11px; margin: 0; line-height: 1.2; }
+        .student-photo-box { width: 80px; height: 80px; border: 1px solid #333366; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f8f9fa; }
+
+        .report-heading {
+            background: #333366 !important; color: white !important; text-align: center;
+            font-weight: bold; padding: 6px; font-size: 16px; margin-bottom: 10px;
+            border-radius: 2px; -webkit-print-color-adjust: exact;
+        }
+        .info-table td { border: 1px solid #999; padding: 5px 10px; font-size: 12px; background-color: #fcfcfc; white-space: nowrap; }
+        .subject-table th { background: #e9ecef !important; font-size: 11px; border: 1px solid #666; padding: 5px; -webkit-print-color-adjust: exact; }
+        .subject-table td { border: 1px solid #666; padding: 4px; font-size: 12px; line-height: 1.1; }
+        .subj-name { text-align: left; font-weight: bold; padding-left: 8px !important; min-width: 180px; }
+
+        .traits-container { display: flex; flex-wrap: wrap; gap: 4px; padding: 10px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; }
+        .trait-pill { font-size: 11px; padding: 3px 8px; background: #fff; border: 1px solid #eee; flex: 0 1 calc(16.6% - 4px); min-width: 115px; display: flex; justify-content: space-between; }
+        .trait-label { color: #28a745; font-weight: 600; }
+        .trait-val { color: #990000; font-weight: bold; }
+
+        {% comment %} .remark-box { border: 1px solid #999; padding: 8px; font-size: 11px; min-height: 70px; background-color: #ffffff; }
+        .remark-title { font-size: 12px; color: #990000; text-decoration: underline; font-weight: bold; display: block; margin-bottom: 4px; } {% endcomment %}
+        .remark-card {
+            border: 1px solid #999;
+            border-radius: 4px;
+            background-color: #ffffff;
+            overflow: hidden;
+            height: 100%;
+        }
+        .remark-card-header {
+            background: #f4f6f9;
+            border-bottom: 1px solid #e2e6ea;
+            padding: 6px 10px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .remark-card-header .remark-title {
+            font-size: 12px;
+            color: #990000;
+            text-decoration: underline;
+            font-weight: bold;
+            margin: 0;
+        }
+        .remark-card-body {
+            padding: 8px 10px;
+            font-size: 11px;
+            line-height: 1.45;
+            min-height: 60px;
+        }
+
+
+        .filter-bar {
+            max-width: 210mm;
+            margin: 0 auto 15px auto;
+            background: #fff;
+            border-radius: 6px;
+            padding: 14px 18px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .filter-bar .form-group { margin-bottom: 0; }
+        .filter-bar label { font-size: 11px; font-weight: bold; color: #333366; margin-bottom: 3px; }
+        .filter-bar select { font-size: 13px; min-width: 180px; }
+        .filter-bar .result-count { font-size: 12px; color: #555; margin-left: auto; align-self: center; }
+
+
+
+        .footer-section { display: flex; justify-content: center; align-items: flex-end; gap: 30px; margin-top: 15px; }
+        .qr-verify-box { text-align: center; font-size: 9px; color: #555; }
+        .qr-code-small { width: 50px; height: auto; margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto; }
+        .signature-box { text-align: center; min-width: 220px; }
+
+        @media print {
+            body { background: none; }
+            .report-card-wrapper { margin: 0; box-shadow: none; width: 100%; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print text-center py-3">
+        {% comment %} <a href="?download=pdf" class="btn btn-success btn-lg font-weight-bold mr-2">DOWNLOAD ALL AS PDF</a> {% endcomment %}
+        <button onclick="window.print()" class="btn btn-warning btn-lg font-weight-bold">PRINT ALL (A4)</button>
+    <div class="no-print filter-bar">
+        <form method="get" action="" id="bulk-filter-form" class="d-flex align-items-end flex-wrap" style="gap: 12px;">
+            <div class="form-group">
+                <label>Session</label>
+                <select id="filter-session" class="form-control form-control-sm">
+                    {% for s in all_sessions %}
+                    <option value="{{ s.id }}" {% if s.id == session.id %}selected{% endif %}>{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Class</label>
+                <select id="filter-standard" class="form-control form-control-sm">
+                    {% for st in all_standards %}
+                    <option value="{{ st.id }}" {% if st.id == standard.id %}selected{% endif %}>{{ st.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="button" id="apply-filter" class="btn btn-sm btn-primary">Apply</button>
+        </form>
+        <span class="result-count">{{ student_reports|length }} student(s) — {{ standard.name }}, {{ session.name }}</span>
+    </div>
+
+    
+    </div>
+
+    {% for report in student_reports %}
+    <div class="report-card-wrapper">
+        <div class="header-container">
+            <div class="header-logo">
+                {% if school_info.logo %}
+                    <img src="{{ school_info.logo.url }}" alt="Logo">
+                {% else %}
+                    <img src="{% static 'images/kwikschool_logo.png' %}" alt="Logo">
+                {% endif %}
+            </div>
+            <div class="header-details">
+                <h1>{{ school_info.name|default:"Kwikschools"|upper }}</h1>
+                <p>{{ school_info.address_line_1 }} <br> {{ school_info.address_line_2 }}</p>
+                <p>Tel: {{ school_info.phone1 }} | Email: {{ school_info.email }}</p>
+            </div>
+            <div class="student-photo-box">
+                {% if report.student.user.profile.image %}
+                    <img src="{{ report.student.user.profile.image_url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                    <span style="font-size: 10px; color: #999;">NO PHOTO</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="report-heading">ANNUAL ACADEMIC PROGRESS REPORT: {{ report.session.name }}</div>
+
+        {% comment %} <table class="info-table w-100 mb-3">
+            <tr>
+                <td width="50%"><strong>NAME:</strong> {{ report.student.last_name|upper }} {{ report.student.first_name|upper }}</td>
+                <td width="25%"><strong>USN:</strong> {{ report.student.USN|default:"N/A" }}</td>
+                <td width="25%"><strong>CLASS:</strong> {{ standard.name|default:"N/A" }}</td>
+            </tr>
+            <tr>
+                <td><strong>SESSION AVERAGE:</strong> {{ report.overall_session_average }}%</td>
+                <td><strong>ATTENDANCE:</strong> {{ report.days_present }} / {{ report.total_school_days }}</td>
+                <td><strong>SESSION ENDS:</strong> {% now "M d, Y" %}</td>
+            </tr>
+        </table> {% endcomment %}
+        <table class="info-table w-100 mb-3">
+    <tr>
+        <td width="50%"><strong>NAME:</strong> {{ report.student.last_name|upper }} {{ report.student.first_name|upper }}</td>
+        <td width="25%"><strong>USN:</strong> {{ report.student.USN|default:"N/A" }}</td>
+        <td width="25%"><strong>CLASS:</strong> {{ standard.name|default:"N/A" }}</td>
+    </tr>
+    <tr>
+        <td>
+            <strong>SESSION AVERAGE:</strong>
+            <span style="color: #0056b3; font-weight: bold; font-size: 16px;">{{ report.overall_session_average }}% - </span>
+            {% with avg=report.overall_session_average|floatformat:0|add:0 %}
+                {% if avg > 49 %}
+                    <span class="badge badge-success" style="font-weight: bold; font-size: 12px;">PROMOTED!</span>
+                {% elif avg > 39 %}
+                    <span class="badge badge-warning" style="font-weight: bold; font-size: 12px;">Promoted On Trial</span>
+                {% else %}
+                    <span class="badge badge-danger" style="font-weight: bold; font-size: 12px;">Not Promoted</span>
+                {% endif %}
+            {% endwith %}
+        </td>
+        <td><strong>ATTENDANCE:</strong> {{ report.days_present }} / {{ report.total_school_days }}</td>
+        <td><strong>SESSION ENDS:</strong> {% now "M d, Y" %}</td>
+    </tr>
+</table>
+
+        <table class="subject-table table-bordered w-100 mb-3 text-center">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width:35px;">S/N</th>
+                    <th rowspan="2" class="text-left">SUBJECTS</th>
+                    <th colspan="{{ report.terms_in_session|length }}">TERMLY SCORES (100)</th>
+                    <th rowspan="2">CUM.</th>
+                    <th rowspan="2">AVG %</th>
+                    <th rowspan="2">GRADE</th>
+                    <th rowspan="2" style="width: 25%;">SUBJECT REMARK</th>
+                </tr>
+                <tr>
+                    {% for term in report.terms_in_session %}
+                    <th>{{ term.name|slice:":6" }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in report.report_data %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td class="subj-name">{{ data.subject }}</td>
+                    {% for term_obj in report.terms_in_session %}
+                    <td>{{ data.term_scores|get_item:term_obj.name|default:"-" }}</td>
+                    {% endfor %}
+                    <td><strong>{{ data.cumulative_total_score|default:"-" }}</strong></td>
+                    <td class="font-weight-bold">{{ data.effective_subject_average }}</td>
+                    <td class="font-weight-bold">{{ data.grade }}</td>
+                    <td class="text-left" style="font-size: 11px;">{{ data.remark }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="mb-3">
+            <h6 style="font-size:11px; font-weight:bold; color:#333366; text-transform: uppercase;">Behavioral Traits & Motor Skills Ratings</h6>
+            <div class="traits-container">
+                {% with a=report.aggregated_motor_abilities %}
+                <div class="trait-pill"><span class="trait-label">Honesty</span><span class="trait-val">{{ a.avg_honesty|floatformat:1 }}</span></div>
+                    <div class="trait-pill"><span class="trait-label">Politeness</span><span class="trait-val">{{ a.avg_politeness|floatformat:1 }}</span></div>
+                    <div class="trait-pill"><span class="trait-label">Neatness</span><span class="trait-val">{{ a.avg_neatness|floatformat:1 }}</span></div>
+                    <div class="trait-pill"><span class="trait-label">Cooperation</span><span class="trait-val">{{ a.avg_cooperation|floatformat:1 }}</span></div>
+                    <div class="trait-pill"><span class="trait-label">Obedience</span><span class="trait-val">{{ a.avg_obedience|floatformat:1 }}</span></div>
+                    <div class="trait-pill"><span class="trait-label">Punctuality</span><span class="trait-val">{{ a.avg_punctuality|floatformat:1 }}</span></div>
+                    <div class="trait-pill"><span class="trait-label">Attentive</span><span class="trait-val">{{ a.avg_attentiveness|floatformat:1 }}</span></div>
+                    <div class="trait-pill"><span class="trait-label">Persevere</span><span class="trait-val">{{ a.avg_perseverance|floatformat:1 }}</span></div>
+                    <div class="trait-pill"><span class="trait-label">Stability</span><span class="trait-val">{{ a.avg_emotional_stability|floatformat:1 }}</span></div>
+                    <div class="trait-pill"><span class="trait-label">Attitude</span><span class="trait-val">{{ a.avg_attitude|floatformat:1 }}</span></div>
+                    <div class="trait-pill"><span class="trait-label">Leadership</span><span class="trait-val">{{ a.avg_leadership|floatformat:1 }}</span></div>
+                    <div class="trait-pill"><span class="trait-label">Phys. Ed.</span><span class="trait-val">{{ a.avg_physical_education|floatformat:1 }}</span></div>
+                    <div class="trait-pill"><span class="trait-label">Games</span><span class="trait-val">{{ a.avg_games|floatformat:1 }}</span></div>
+                    <div class="trait-pill"><span class="trait-label">Musical</span><span class="trait-val">{{ a.avg_musical|floatformat:1 }}</span></div>
+                    <div class="trait-pill"><span class="trait-label">Writing</span><span class="trait-val">{{ a.avg_handwriting|floatformat:1 }}</span></div>
+                    <div class="trait-pill"><span class="trait-label">Reading</span><span class="trait-val">{{ a.avg_reading|floatformat:1 }}</span></div>
+                    <div class="trait-pill"><span class="trait-label">Fluency</span><span class="trait-val">{{ a.avg_verbal_fluency|floatformat:1 }}</span></div>
+                    <div class="trait-pill"><span class="trait-label">Tools</span><span class="trait-val">{{ a.avg_handling_tools|floatformat:1 }}</span></div>
+            {% endwith %}
+                </div>
+        </div>
+
+        {% comment %} <div class="row no-gutters mb-3">
+            <div class="col-6 pr-1">
+                <div class="remark-box">
+                    <span class="remark-title">Class Teacher's Remark:</span>
+                    <p class="mb-0">{{ report.session_comment.teacher_comment|default:report.overall_remark }}</p>
+                </div>
+            </div>
+            <div class="col-6 pl-1">
+                <div class="remark-box">
+                    <span class="remark-title">Principal's/Head Teacher's Remark:</span>
+                    <p class="mb-0">{{ report.session_comment.principal_comment|default:report.overall_remark }}</p>
+                </div>
+            </div>
+        </div> {% endcomment %}
+
+        <div class="row no-gutters mb-3">
+    <div class="col-6 pr-1">
+        <div class="remark-card">
+            <div class="remark-card-header">
+                <span class="remark-title">Class Teacher's Remark:</span>
+            </div>
+            <div class="remark-card-body">
+                {{ report.session_comment.teacher_comment|default:report.overall_remark }}
+            </div>
+        </div>
+    </div>
+    <div class="col-6 pl-1">
+        <div class="remark-card">
+            <div class="remark-card-header">
+                <span class="remark-title">Principal's/Head Teacher's Remark:</span>
+            </div>
+            <div class="remark-card-body">
+                {{ report.session_comment.principal_comment|default:report.overall_remark }}
+            </div>
+        </div>
+    </div>
+</div>
+
+        <div class="footer-section">
+            <div class="qr-verify-box">
+                <img src="https://bwipjs-api.metafloor.com/?bcid=qrcode&text=VERIFIED Result:{{ report.student.USN }}-{{ report.student.last_name }} {{ report.student.first_name }}-{{ report.session.name }}&scale=2" class="qr-code-small" alt="QR Verification">
+                <strong>SCAN TO VERIFY RESULT</strong>
+            </div>
+            <div class="signature-box">
+                <div style="height: 50px;">
+                    {% if school_info.signature %}
+                        <img src="{{ school_info.signature.url }}" style="max-height: 50px;">
+                    {% else %}
+                        <img src="{% static 'pages/images/sign.jpg' %}" alt="Authorized Signature" style="max-height: 50px;">
+                    {% endif %}
+                </div>
+                <div>
+                    <strong style="text-transform: uppercase; font-size: 13px;">Authorized Signature</strong><br>
+                    <span class="text-muted small">{{ school_info.name }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    <script>
+        document.getElementById('apply-filter').addEventListener('click', function () {
+            const sessionId = document.getElementById('filter-session').value;
+            const standardId = document.getElementById('filter-standard').value;
+            window.location.href = `/results/session-report-card/bulk/${sessionId}/${standardId}/`;
+        });
+    </script>
+
+</body>
+</html>

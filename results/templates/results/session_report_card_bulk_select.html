@@ -1,0 +1,86 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Print Session Report Cards</title>
+       <!-- FAVICONS ICON -->	
+    {% if school_info and school_info.logo %}
+		<link rel="icon" href="{{ school_info.logo.url }}" type="image/png">
+	{% else %}
+		<link rel="icon" href="{% static 'pages/images/school_logo.jpg' %}" type="image/png">
+	{% endif %}
+    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .select-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 450px;
+        }
+        .select-card h4 {
+            color: #333366;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="select-card">
+        <h4>Bulk Print Session Report Cards</h4>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="get" id="bulk-select-form">
+            <div class="form-group">
+                <label>Session</label>
+                <select name="session" class="form-control" required>
+                    <option value="" disabled selected>-- Select Session --</option>
+                    {% for s in sessions %}
+                    <option value="{{ s.id }}">{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Class</label>
+                <select name="standard" class="form-control" required>
+                    <option value="" disabled selected>-- Select Class --</option>
+                    {% for st in standards %}
+                    <option value="{{ st.id }}">{{ st.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Continue</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('bulk-select-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const sessionId = this.session.value;
+            const standardId = this.standard.value;
+            if (sessionId && standardId) {
+                window.location.href = `/results/session-report-card/bulk/${sessionId}/${standardId}/`;
+            }
+        });
+    </script>
+
+</body>
+</html>
