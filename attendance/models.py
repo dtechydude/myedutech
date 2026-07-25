@@ -74,80 +74,37 @@ class AttendanceSummary(models.Model):
         related_name='attendance_summaries'
     )
 
-    session = models.ForeignKey(
-        Session,
-        on_delete=models.CASCADE
-    )
+    session = models.ForeignKey(Session, on_delete=models.CASCADE)
+    term = models.ForeignKey(Term, on_delete=models.CASCADE)
 
-    term = models.ForeignKey(
-        Term,
-        on_delete=models.CASCADE
-    )
+    days_present = models.PositiveIntegerField(default=0)
 
-    days_present = models.PositiveIntegerField(
-        default=0
-    )
-
-    days_absent = models.PositiveIntegerField(
-        default=0
-    )
-
-    remarks = models.TextField(
-        blank=True,
-        null=True
-    )
-
-    entered_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
-
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
-
-    updated_at = models.DateTimeField(
-        auto_now=True
-    )
+    remarks = models.TextField(blank=True, null=True)
+    entered_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = (
-            'student',
-            'session',
-            'term'
-        )
+        unique_together = ('student', 'session', 'term')
 
     @property
     def total_school_days(self):
-
         config = AttendanceConfiguration.objects.filter(
-            session=self.session,
-            term=self.term
+            session=self.session, term=self.term
         ).first()
-
         return config.total_school_days if config else 0
 
     @property
+    def days_absent(self):
+        # Always derived from days_present + the configured total —
+        # can never go stale or be set incorrectly by anything else.
+        return max(self.total_school_days - self.days_present, 0)
+
+    @property
     def attendance_percentage(self):
-
         if self.total_school_days > 0:
-
-            return round(
-                (
-                    self.days_present /
-                    self.total_school_days
-                ) * 100,
-                2
-            )
-
+            return round((self.days_present / self.total_school_days) * 100, 2)
         return 0
 
     def __str__(self):
-
-        return (
-            f"{self.student} - "
-            f"{self.term}"
-        )
-
+        return f"{self.student} - {self.term}"

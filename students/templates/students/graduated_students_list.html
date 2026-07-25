@@ -11,8 +11,15 @@
 	{% endblock title %}
 	
 	<!-- FAVICONS ICON -->
-    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
 
+    <!-- FAVICONS ICON -->	
+    {% if school_info and school_info.logo %}
+		<link rel="icon" href="{{ school_info.logo.url }}" type="image/png">
+	{% else %}
+		<link rel="icon" href="{% static 'pages/images/school_logo.jpg' %}" type="image/png">
+	{% endif %}
+
+    
     {% block favicon %}
     <!-- Datatable -->
     <link href="{% static 'pages/vendor/datatables/css/jquery.dataTables.min.css' %}" rel="stylesheet">

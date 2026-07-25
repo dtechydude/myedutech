@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manual Attendance Entry - Class</title>
-    
+
    	   <!-- FAVICONS ICON -->	
     {% if school_info and school_info.logo %}
 		<link rel="icon" href="{{ school_info.logo.url }}" type="image/png">
@@ -24,9 +24,10 @@
             max-width: 1100px; margin: 0 auto; background: #fff;
             border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); overflow: hidden;
         }
-        .page-card-header { background: #333366; color: #fff; padding: 18px 24px; }
+        .page-card-header { background: #333366; color: #fff; padding: 18px 24px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
         .page-card-header h4 { margin: 0; font-weight: 700; }
         .page-card-header p { margin: 4px 0 0; font-size: 13px; opacity: .85; }
+        .page-card-header .dashboard-btn { flex-shrink: 0; white-space: nowrap; }
         .page-card-body { padding: 24px; }
         .filter-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 18px; }
         .filter-row .form-group { min-width: 180px; margin-bottom: 0; }
@@ -46,8 +47,15 @@
 
     <div class="page-card">
         <div class="page-card-header">
-            <h4><i class="fa fa-user-check"></i> Manual Attendance Entry</h4>
-            <p>Enter days present per student to override the daily-attendance-derived total for a term. Days absent is calculated automatically from the configured total school days — it cannot be entered directly. Leave "Days Present" blank to keep using daily records for that student.</p>
+            <div>
+                <h6>{{ school_info.name }} </h6>
+
+                <h5><i class="fa fa-user-check"></i> Manual Attendance Entry</h5>
+                <p>Enter days present per student to override the daily-attendance-derived total for a term. Days absent is calculated automatically from the configured total school days — it cannot be entered directly. Leave "Days Present" blank to keep using daily records for that student.</p>
+            </div>
+            <a href="/dashboard" class="btn btn-light btn-sm dashboard-btn">
+                <i class="fa fa-arrow-left"></i> Dashboard
+            </a>
         </div>
         <div class="page-card-body">
 

@@ -739,7 +739,6 @@ def attendance_summary_class_bulk(request):
                     defaults={'entered_by': user}
                 )
                 summary.days_present = days_present
-                summary.days_absent = days_absent
                 summary.remarks = remarks_val
                 summary.entered_by = user
                 summary.save()
