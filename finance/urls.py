@@ -69,6 +69,7 @@ urlpatterns = [
 
     # --- Reports ---
     path('reports/debtors/', views.debtors_report, name='debtors_report'),
+    path('ledgers/resync/', views.resync_ledgers, name='resync_ledgers'),
     path('reports/total-payments/', views.total_payments_report, name='total_payments_report'),
     path('reports/profit-and-loss/', views.profit_loss_report, name='profit_loss_report'),
 

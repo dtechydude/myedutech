@@ -142,6 +142,27 @@ class StudentAccountLedgerAdmin(BaseModelAdmin):
     list_filter = ('term', 'session')
     search_fields = ('student__first_name', 'student__last_name', 'student__USN')
     readonly_fields = ('total_invoiced', 'total_paid', 'balance', 'last_updated')
+    actions = ['recalculate_selected']
+
+    def has_add_permission(self, request):
+        # A ledger is a computed cache of Invoice/Payment data, not something
+        # with a meaningful value on its own — creating one manually here
+        # (via the Add button) would only ever produce a row stuck at
+        # total_invoiced=0/total_paid=0/balance=0, since nothing recomputes
+        # those fields on a bare admin-created object. Generate an invoice
+        # for the student instead (Finance -> Invoices -> Generate) and the
+        # ledger appears automatically with the real numbers. If one already
+        # exists but looks stale, select it below and use "Recalculate".
+        return False
+
+    def recalculate_selected(self, request, queryset):
+        from . import services
+        count = 0
+        for ledger in queryset:
+            services.sync_student_ledger(ledger.student, ledger.term, ledger.session)
+            count += 1
+        self.message_user(request, f"Recalculated {count} ledger(s) from their underlying invoices/payments.")
+    recalculate_selected.short_description = "Recalculate balance from invoices/payments"
 
 
 @admin.register(StudentLedgerEntry)

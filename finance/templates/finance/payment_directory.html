@@ -4,7 +4,7 @@
 <div class="table-card">
     <div class="alert alert-secondary small mb-3">
         Find a student below instead of scrolling a long dropdown — filter by class or search a name,
-        then use the action buttons to record a payment or view their invoices.
+        then use the action buttons to record a payment, view their invoices, grant a discount, or add a fee exception.
     </div>
 
     <form method="get" class="row g-2 mb-3">
@@ -52,6 +52,15 @@
                         <a href="{% url 'finance:invoice_list' %}?student={{ row.student.pk }}" class="btn btn-sm btn-outline-secondary">
                             <i class="fa-solid fa-file-invoice me-1"></i> Invoices
                         </a>
+                        <div class="dropdown d-inline-block">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                More
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'finance:discount_add' %}?student={{ row.student.pk }}"><i class="fa-solid fa-percent me-2"></i>Grant Discount</a></li>
+                                <li><a class="dropdown-item" href="{% url 'finance:fee_exception_add' %}?student={{ row.student.pk }}"><i class="fa-solid fa-shuffle me-2"></i>Add Fee Exception</a></li>
+                            </ul>
+                        </div>
                     </td>
                 </tr>
             {% empty %}

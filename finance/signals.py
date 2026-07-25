@@ -4,6 +4,10 @@ Keeps derived/denormalized state in sync automatically, so that any code
 path that creates a Payment or Invoice (web form, admin, API, shell,
 management command) behaves consistently without remembering to call
 housekeeping functions manually.
+
+Note: invoice_number/receipt_number assignment does NOT live here — it's
+in Invoice.save()/Receipt.save() directly (see models.py), specifically so
+numbering doesn't depend on this signals module being imported correctly.
 """
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
@@ -12,23 +16,12 @@ from .models import Invoice, Payment, Receipt, InvoiceItem
 from . import services
 
 
-@receiver(post_save, sender=Invoice)
-def assign_invoice_number(sender, instance, created, **kwargs):
-    if created and not instance.invoice_number:
-        instance.invoice_number = services.next_invoice_number(instance)
-        instance.save(update_fields=['invoice_number'])
-
-
 @receiver(post_save, sender=Payment)
 def on_payment_saved(sender, instance, created, **kwargs):
-    # Create the receipt as soon as a payment is completed.
+    # Create the receipt as soon as a payment is completed. Receipt.save()
+    # assigns its own receipt_number — nothing extra needed here.
     if instance.status == Payment.Status.COMPLETED:
-        receipt, receipt_created = Receipt.objects.get_or_create(
-            payment=instance, defaults={'generated_by': instance.recorded_by}
-        )
-        if receipt_created and not receipt.receipt_number:
-            receipt.receipt_number = services.next_receipt_number(receipt)
-            receipt.save(update_fields=['receipt_number'])
+        Receipt.objects.get_or_create(payment=instance, defaults={'generated_by': instance.recorded_by})
 
         if instance.invoice_id:
             services.sync_invoice_status(instance.invoice)

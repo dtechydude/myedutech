@@ -81,7 +81,7 @@ def _staff_dashboard(request):
     term, session = _current_term_session()
     summary = services.get_dashboard_summary(term=term, session=session)
     recent_payments = Payment.objects.filter(status=Payment.Status.COMPLETED).select_related(
-        'student', 'fee_category').order_by('-date_recorded')[:8]
+        'student', 'fee_category', 'receipt').order_by('-date_recorded')[:8]
     top_debtors = services.get_debtors(term=term, session=session)[:8]
     recent_expenses = Expense.objects.select_related('category').order_by('-expense_date')[:8]
 
@@ -254,6 +254,13 @@ class StudentDiscountCreateView(LoginRequiredMixin, FinanceStaffRequiredMixin, C
     template_name = 'finance/simple_form.html'
     success_url = reverse_lazy('finance:discount_list')
 
+    def get_initial(self):
+        initial = super().get_initial()
+        student_id = self.request.GET.get('student')
+        if student_id:
+            initial['student'] = get_object_or_404(Student, pk=student_id)
+        return initial
+
     def form_valid(self, form):
         form.instance.approved_by = self.request.user
         response = super().form_valid(form)
@@ -353,6 +360,13 @@ class StudentFeeExceptionCreateView(LoginRequiredMixin, FinanceStaffRequiredMixi
     template_name = 'finance/simple_form.html'
     success_url = reverse_lazy('finance:fee_exception_list')
 
+    def get_initial(self):
+        initial = super().get_initial()
+        student_id = self.request.GET.get('student')
+        if student_id:
+            initial['student'] = get_object_or_404(Student, pk=student_id)
+        return initial
+
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         response = super().form_valid(form)
@@ -434,7 +448,8 @@ class InvoiceListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
-        qs = Invoice.objects.select_related('student', 'term', 'session').order_by('-issue_date')
+        qs = Invoice.objects.select_related('student', 'term', 'session').prefetch_related(
+            'payments__receipt').order_by('-issue_date')
         if not is_finance_staff(user):
             if is_parent(user):
                 qs = qs.filter(student__parent=user.parent)
@@ -685,8 +700,11 @@ def make_payment(request):
                 transaction_id=form.cleaned_data.get('transaction_id'),
                 notes=form.cleaned_data.get('notes', ''),
             )
-            messages.success(request, f"Payment recorded. Receipt #{payment.receipt.receipt_number}.")
-            return redirect('finance:receipt_detail', pk=payment.receipt.pk)
+            if hasattr(payment, 'receipt'):
+                messages.success(request, f"Payment recorded. Receipt #{payment.receipt.receipt_number}.")
+                return redirect('finance:receipt_detail', pk=payment.receipt.pk)
+            messages.success(request, "Payment recorded.")
+            return redirect('finance:payment_list')
     else:
         initial = {}
         preselected_id = request.GET.get('student')
@@ -764,8 +782,11 @@ def make_parent_payment(request):
                 transaction_id=form.cleaned_data.get('transaction_id'),
                 notes=form.cleaned_data.get('notes', ''),
             )
-            messages.success(request, f"Payment recorded. Receipt #{payment.receipt.receipt_number}.")
-            return redirect('finance:receipt_detail', pk=payment.receipt.pk)
+            if hasattr(payment, 'receipt'):
+                messages.success(request, f"Payment recorded. Receipt #{payment.receipt.receipt_number}.")
+                return redirect('finance:receipt_detail', pk=payment.receipt.pk)
+            messages.success(request, "Payment recorded.")
+            return redirect('finance:payment_list')
     else:
         form = ParentPaymentForm(parent=parent)
     context = _common_context(form=form, title='Make a Payment', base_template='finance/base_finance_portal.html')
@@ -1046,6 +1067,28 @@ def fee_table_pdf(request):
 # ---------------------------------------------------------------------------
 # Debtors report
 # ---------------------------------------------------------------------------
+@login_required
+@finance_staff_required
+def resync_ledgers(request):
+    """
+    Self-service "fix stale balances" button for staff — recomputes every
+    student's cached ledger from their actual invoices/payments, without
+    needing shell/admin access. Same underlying logic as the
+    `sync_finance_ledgers` management command and the admin's
+    "Recalculate" action.
+    """
+    invoices = Invoice.objects.select_related('student', 'term', 'session')
+    seen = set()
+    for invoice in invoices:
+        services.sync_invoice_status(invoice)
+        key = (invoice.student_id, invoice.term_id, invoice.session_id)
+        if key not in seen:
+            services.sync_student_ledger(invoice.student, invoice.term, invoice.session)
+            seen.add(key)
+    messages.success(request, f"Recalculated {len(seen)} student ledger(s) from their invoices and payments.")
+    return redirect(request.META.get('HTTP_REFERER') or reverse('finance:debtors_report'))
+
+
 @login_required
 @finance_staff_required
 def debtors_report(request):

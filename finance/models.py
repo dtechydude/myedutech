@@ -301,6 +301,24 @@ class Invoice(models.Model):
     def __str__(self):
         return f"{self.invoice_number or 'DRAFT'} - {self.student.get_full_name()} ({self.term} {self.session})"
 
+    def save(self, *args, **kwargs):
+        """
+        Assigns invoice_number here, directly in the model, instead of via a
+        post_save signal. A signal only fires if finance/signals.py actually
+        got imported (via AppConfig.ready()) — if that registration doesn't
+        happen for any reason (autoreload timing, an app-loading quirk in a
+        particular project setup, etc.), the number silently never gets set
+        and the invoice is left blank. Doing it here guarantees it runs on
+        every single code path that creates an Invoice — direct .save(),
+        get_or_create(), the admin, the API, anything — with no dependency
+        on signal wiring at all.
+        """
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new and not self.invoice_number:
+            self.invoice_number = f"INV-{self.issue_date.strftime('%Y%m')}-{self.pk:06d}"
+            super().save(update_fields=['invoice_number'])
+
     def get_absolute_url(self):
         return reverse('finance:invoice_detail', args=[self.pk])
 
@@ -329,6 +347,18 @@ class Invoice(models.Model):
     @property
     def is_overdue(self):
         return bool(self.due_date) and self.balance > 0 and timezone.localdate() > self.due_date
+
+    @property
+    def latest_receipt(self):
+        """The receipt for this invoice's most recent completed payment, if any — used by the
+        invoice list's Receipt column so staff/parents can jump straight to it without hunting
+        through Payment History. Filters in Python (not .filter()) so that callers who
+        prefetch_related('payments__receipt') actually avoid the N+1 this would otherwise cause."""
+        completed = [p for p in self.payments.all() if p.status == 'completed']
+        if not completed:
+            return None
+        completed.sort(key=lambda p: (p.payment_date, p.pk), reverse=True)
+        return getattr(completed[0], 'receipt', None)
 
 
 class InvoiceItem(models.Model):
@@ -493,6 +523,16 @@ class Receipt(models.Model):
 
     def __str__(self):
         return f"Receipt #{self.receipt_number} for {self.payment.student}"
+
+    def save(self, *args, **kwargs):
+        """See Invoice.save() — same reasoning: number assignment lives here,
+        not in a signal, so it can never be skipped regardless of signal wiring."""
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new and not self.receipt_number:
+            when = self.issue_date or timezone.localdate()
+            self.receipt_number = f"RCT-{when.strftime('%Y%m')}-{self.pk:06d}"
+            super().save(update_fields=['receipt_number'])
 
     def get_absolute_url(self):
         return reverse('finance:receipt_detail', args=[self.pk])

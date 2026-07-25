@@ -60,31 +60,12 @@ def get_best_discount(student, fee_category, term, session, original_amount):
 # ---------------------------------------------------------------------------
 # Document numbering
 # ---------------------------------------------------------------------------
-def generate_document_number(model_cls, field_name, prefix, when=None):
-    """
-    Generates a sequential, human-readable number like ``INV-202607-000123``
-    or ``RCT-202607-000045``, unique per calendar month, for any model that
-    has a unique CharField (e.g. invoice_number, receipt_number).
-
-    Using the row's own auto-increment pk keeps this collision-free even
-    under concurrent requests without needing a separate counter table.
-    """
-    when = when or timezone.localdate()
-    period = when.strftime('%Y%m')
-
-    def _make(pk):
-        return f"{prefix}-{period}-{pk:06d}"
-
-    return _make
-
-
-def next_invoice_number(invoice):
-    return f"INV-{invoice.issue_date.strftime('%Y%m')}-{invoice.pk:06d}"
-
-
-def next_receipt_number(receipt):
-    issue_date = receipt.issue_date or timezone.localdate()
-    return f"RCT-{issue_date.strftime('%Y%m')}-{receipt.pk:06d}"
+# invoice_number/receipt_number are assigned directly inside Invoice.save()
+# and Receipt.save() (see models.py) rather than here — that keeps
+# numbering from depending on finance/signals.py being imported correctly,
+# which is what caused invoices to occasionally be created with a blank
+# number. If you need the exact format elsewhere, it's:
+#   INV-{issue_date:%Y%m}-{pk:06d}   and   RCT-{issue_date:%Y%m}-{pk:06d}
 
 
 # ---------------------------------------------------------------------------
@@ -192,6 +173,14 @@ def generate_invoice_for_student(student, term, session, user=None, extra_items=
 
     invoice.save()
     sync_invoice_status(invoice)
+    # Explicit call, not just relying on the InvoiceItem post_save signal to
+    # trigger this as a side-effect — if a student's fee structure produces
+    # zero line items (e.g. nothing configured for their class yet), the
+    # signal never fires at all and their ledger would otherwise never get
+    # created. Calling it directly here guarantees a ledger row always
+    # exists the moment an invoice is generated, regardless of how many
+    # items ended up on it.
+    sync_student_ledger(student, term, session)
     return invoice
 
 

@@ -222,7 +222,61 @@ bare search-by-name form (`finance:make_payment`) still exists as a
 fallback/direct link, and now also accepts `?student=<id>` to arrive
 pre-selected — that's what the directory's buttons use.
 
-## 7c. Mobile navigation & branding
+## 7c. Bug fixes worth knowing about
+
+**Blank invoice numbers.** Numbering used to be assigned by a `post_save`
+signal in `signals.py`, registered via `AppConfig.ready()`. If that
+registration doesn't fire for any reason in a given project setup
+(autoreload timing, an app-loading quirk), the number is silently never
+set. Numbering now happens directly inside `Invoice.save()` /
+`Receipt.save()` — it runs on every single code path that creates one
+(a direct `.save()`, `get_or_create()`, the admin, the API), with no
+dependency on signal wiring at all. `signals.py` no longer does any
+numbering; it only handles receipt auto-creation, invoice status sync,
+and ledger sync.
+
+**Missing Receipt column/link on the invoice list.** Added
+`Invoice.latest_receipt` (the receipt for that invoice's most recent
+completed payment, if any) and a Receipt column in `invoice_list.html`
+linking straight to it. `InvoiceListView` prefetches
+`payments__receipt` so this doesn't cost an extra query per row.
+
+**Ledgers not appearing / showing a 0 balance.** Two issues, now both
+fixed: (1) `generate_invoice_for_student` now explicitly calls
+`sync_student_ledger()` at the end instead of relying purely on the
+`InvoiceItem` signal cascade — a student with zero matching fee-structure
+rows would otherwise never get a ledger row at all. (2) The Django admin
+let staff manually "Add" a `StudentAccountLedger` with just
+student/term/session — since nothing recomputes `total_invoiced`/
+`total_paid`/`balance` on a bare admin-created row, this always produced
+a stuck 0-balance row. Manual creation is now disabled entirely
+(`has_add_permission` returns `False`); staff instead select existing
+rows and use the **Recalculate balance from invoices/payments** admin
+action, or click **Resync Ledgers** on the Debtors Report page for a
+one-click, no-shell-access fix.
+
+**Grant Student Discount (and similar) forms showing an empty student
+dropdown.** Root cause: `StudentClassFilterMixin` swapped in a new
+`StudentClassAwareSelect` widget *after* the field's `queryset` had
+already been set. Django only copies `field.choices` onto
+`field.widget.choices` at the moment `queryset` is assigned — replacing
+the widget afterward leaves it with zero options, regardless of whether
+a class filter was applied. Fixed by explicitly re-syncing
+`widget.choices = field.choices` right after the swap. This affected
+every form using the mixin (Record Payment, Create Invoice, Grant
+Discount, Add Fee Exception, staff-submitted Payment Notifications) —
+all fixed at once since they share the same mixin.
+
+**Grant Discount / Add Fee Exception now reachable from the Student
+Directory.** The same class-filterable student list built for Record
+Payment (see below) now also has **Grant Discount** and **Add Fee
+Exception** actions per row (under a "More" dropdown), landing on the
+respective form with that student already selected via `?student=<id>`
+— no more picking from a dropdown for the common case. The sidebar link
+is now labeled "Student Directory" since it's the general hub for
+per-student actions, not just payments.
+
+## 7d. Mobile navigation & branding
 
 The sidebar is a proper off-canvas drawer on tablet/mobile (≤991px) —
 collapsed by default, opened with a hamburger button in the top bar,

@@ -67,7 +67,13 @@
                     <tbody>
                     {% for p in recent_payments %}
                         <tr>
-                            <td><a href="{% url 'finance:receipt_detail' p.receipt.pk %}">{{ p.student.get_full_name }}</a></td>
+                            <td>
+                                {% if p.receipt %}
+                                    <a href="{% url 'finance:receipt_detail' p.receipt.pk %}">{{ p.student.get_full_name }}</a>
+                                {% else %}
+                                    {{ p.student.get_full_name }}
+                                {% endif %}
+                            </td>
                             <td>{{ p.fee_category.name }}</td>
                             <td>{{ p.amount_received|currency }}</td>
                             <td>{{ p.payment_date }}</td>

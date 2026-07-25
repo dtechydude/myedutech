@@ -62,9 +62,18 @@ class StudentClassFilterMixin:
         queryset = queryset if queryset is not None else Student.objects.all().order_by('last_name', 'first_name')
         class_lookup = {str(pk): class_id for pk, class_id in queryset.values_list('pk', 'current_class_id')
                          if class_id}
-        self.fields['student'].widget = StudentClassAwareSelect(
+        student_field = self.fields['student']
+        student_field.widget = StudentClassAwareSelect(
             attrs={'class': 'form-select'}, class_lookup=class_lookup,
         )
+        # Django only copies field.choices onto field.widget.choices at the
+        # moment `field.queryset = ...` is assigned (see ModelChoiceField's
+        # queryset setter). Swapping in a brand-new widget *after* that point
+        # leaves it with the default empty choice list — the dropdown renders
+        # with zero <option> tags, with or without a class selected, because
+        # the widget itself never received the student list. Re-syncing here
+        # is what actually populates it.
+        student_field.widget.choices = student_field.choices
         self.classes = Standard.objects.all().order_by('name')
 
 
