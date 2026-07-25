@@ -6,6 +6,16 @@
             <form method="post">
                 {% csrf_token %}
                 {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+                {% if form.classes %}
+                <div class="mb-3">
+                    <label class="form-label">Filter by Class</label>
+                    <select id="student_class_filter" class="form-select">
+                        <option value="">-- All Classes --</option>
+                        {% for c in form.classes %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}
+                    </select>
+                    <div class="form-text">Narrows the student list below — doesn't affect what gets saved.</div>
+                </div>
+                {% endif %}
                 <div class="row">
                 {% for field in form %}
                     <div class="col-md-6 mb-3">
@@ -27,6 +37,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const studentSelect = document.getElementById('id_student');
     const invoiceSelect = document.getElementById('id_invoice');
+    const classFilter = document.getElementById('student_class_filter');
     const hint = document.getElementById('balance-hint');
 
     function loadInvoices(studentId) {
@@ -47,6 +58,21 @@ document.addEventListener('DOMContentLoaded', function () {
     if (studentSelect) {
         studentSelect.addEventListener('change', () => loadInvoices(studentSelect.value));
         if (studentSelect.value) loadInvoices(studentSelect.value);
+    }
+
+    if (classFilter && studentSelect) {
+        const options = Array.prototype.slice.call(studentSelect.options);
+        classFilter.addEventListener('change', function () {
+            const classId = this.value;
+            options.forEach(function (opt) {
+                if (!opt.value) return;
+                opt.hidden = !!classId && opt.dataset.classId !== classId;
+            });
+            if (studentSelect.selectedOptions[0] && studentSelect.selectedOptions[0].hidden) {
+                studentSelect.value = '';
+                loadInvoices('');
+            }
+        });
     }
 });
 </script>

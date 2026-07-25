@@ -16,6 +16,8 @@ class BankDetail(models.Model):
     acc_name = models.CharField(max_length=50, blank=False)
     acc_number = models.CharField(max_length=10, blank=False)
     bank_name = models.CharField(max_length=50, blank=False, verbose_name='Bank Name')
+    description = models.CharField(max_length=50, blank=False, verbose_name='Description')
+
 
     def __str__(self):
         return f'{self.acc_number} - {self.bank_name}'

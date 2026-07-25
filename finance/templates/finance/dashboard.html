@@ -4,38 +4,50 @@
 
 <div class="row g-3 mb-4">
     <div class="col-md-3">
-        <div class="card card-metric p-3">
-            <div class="text-muted small">Total Income ({{ current_term }} {{ current_session }})</div>
-            <div class="fs-4 fw-bold text-success">{{ summary.total_income|currency }}</div>
-            <div class="small text-muted">{{ summary.payment_count }} payment(s)</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card card-metric p-3">
-            <div class="text-muted small">Total Expenses</div>
-            <div class="fs-4 fw-bold text-danger">{{ summary.total_expense|currency }}</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card card-metric p-3">
-            <div class="text-muted small">Net Profit</div>
-            <div class="fs-4 fw-bold {% if summary.net_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
-                {{ summary.net_profit|currency }}
+        <div class="card card-metric p-3 d-flex flex-row align-items-center gap-3">
+            <div class="icon-chip"><i class="fa-solid fa-sack-dollar"></i></div>
+            <div>
+                <div class="text-muted small">Total Income ({{ current_term }} {{ current_session }})</div>
+                <div class="fs-4 fw-bold text-success">{{ summary.total_income|currency }}</div>
+                <div class="small text-muted">{{ summary.payment_count }} payment(s)</div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card card-metric p-3">
-            <div class="text-muted small">Outstanding Balance</div>
-            <div class="fs-4 fw-bold text-warning">{{ summary.outstanding_balance|currency }}</div>
-            <div class="small text-muted">{{ summary.debtor_count }} debtor(s)</div>
+        <div class="card card-metric p-3 d-flex flex-row align-items-center gap-3">
+            <div class="icon-chip"><i class="fa-solid fa-receipt"></i></div>
+            <div>
+                <div class="text-muted small">Total Expenses</div>
+                <div class="fs-4 fw-bold text-danger">{{ summary.total_expense|currency }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-metric p-3 d-flex flex-row align-items-center gap-3">
+            <div class="icon-chip"><i class="fa-solid fa-chart-line"></i></div>
+            <div>
+                <div class="text-muted small">Net Profit</div>
+                <div class="fs-4 fw-bold {% if summary.net_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    {{ summary.net_profit|currency }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-metric p-3 d-flex flex-row align-items-center gap-3">
+            <div class="icon-chip"><i class="fa-solid fa-user-clock"></i></div>
+            <div>
+                <div class="text-muted small">Outstanding Balance</div>
+                <div class="fs-4 fw-bold text-warning">{{ summary.outstanding_balance|currency }}</div>
+                <div class="small text-muted">{{ summary.debtor_count }} debtor(s)</div>
+            </div>
         </div>
     </div>
 </div>
 
 <div class="row g-3 mb-4">
     <div class="col-md-4">
-        <a href="{% url 'finance:make_payment' %}" class="btn btn-primary w-100 py-3"><i class="fa-solid fa-cash-register me-2"></i>Record a Payment</a>
+        <a href="{% url 'finance:payment_directory' %}" class="btn btn-primary w-100 py-3"><i class="fa-solid fa-cash-register me-2"></i>Record a Payment</a>
     </div>
     <div class="col-md-4">
         <a href="{% url 'finance:generate_invoices' %}" class="btn btn-outline-primary w-100 py-3"><i class="fa-solid fa-file-invoice me-2"></i>Generate Class Invoices</a>

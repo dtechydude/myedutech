@@ -8,8 +8,14 @@
 {% endblock title %}
 
 {% block favicon %}
-<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
-<link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+  
+    <!-- FAVICONS ICON -->	
+    {% if school_info and school_info.logo %}
+		<link rel="icon" href="{{ school_info.logo.url }}" type="image/png">
+	{% else %}
+		<link rel="icon" href="{% static 'pages/images/school_logo.jpg' %}" type="image/png">
+	{% endif %}    
+    <link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
 {% endblock favicon %}
 
 {% block content_body %}

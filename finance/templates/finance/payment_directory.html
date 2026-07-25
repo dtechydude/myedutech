@@ -1,0 +1,74 @@
+{% extends base_template %}
+{% load finance_extras %}
+{% block content %}
+<div class="table-card">
+    <div class="alert alert-secondary small mb-3">
+        Find a student below instead of scrolling a long dropdown — filter by class or search a name,
+        then use the action buttons to record a payment or view their invoices.
+    </div>
+
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-md-4">
+            {{ filter_form.student_class }}
+        </div>
+        <div class="col-md-5">
+            {{ filter_form.q }}
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-outline-primary w-100" type="submit"><i class="fa-solid fa-filter me-1"></i> Filter</button>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Class</th>
+                    <th class="text-end">{{ current_term|default:"Current Term" }} Balance</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+                <tr>
+                    <td>{{ row.student.get_full_name }}</td>
+                    <td>{{ row.student.current_class.name|default:"—" }}</td>
+                    <td class="text-end">
+                        {% if row.ledger %}
+                            {% if row.ledger.balance > 0 %}
+                                <span class="text-danger fw-semibold">{{ row.ledger.balance|currency }}</span>
+                            {% else %}
+                                <span class="text-success">Settled</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-muted">No invoice yet</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'finance:make_payment' %}?student={{ row.student.pk }}" class="btn btn-sm btn-primary">
+                            <i class="fa-solid fa-cash-register me-1"></i> Record Payment
+                        </a>
+                        <a href="{% url 'finance:invoice_list' %}?student={{ row.student.pk }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fa-solid fa-file-invoice me-1"></i> Invoices
+                        </a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="4" class="text-center text-muted py-4">No students match your filters.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+    <nav><ul class="pagination">
+        {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?{{ request.GET.urlencode }}&page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?{{ request.GET.urlencode }}&page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+    </ul></nav>
+    {% endif %}
+
+    <a href="{% url 'finance:make_payment' %}" class="small"><i class="fa-solid fa-magnifying-glass me-1"></i> Or search for a student by name directly &rarr;</a>
+</div>
+{% endblock %}

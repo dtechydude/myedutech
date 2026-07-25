@@ -31,6 +31,43 @@ class BootstrapFormMixin:
                 widget.attrs['class'] = (css + ' form-control').strip()
 
 
+class StudentClassAwareSelect(forms.Select):
+    """
+    A <select> widget that stamps each student <option> with a
+    `data-class-id` attribute, so a small bit of front-end JS can filter a
+    long student list down to one class instantly — no page reload, no
+    extra AJAX round-trip needed just to narrow the list. Used anywhere a
+    staff member has to pick a student out of the whole school.
+    """
+    def __init__(self, *args, class_lookup=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.class_lookup = class_lookup or {}
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex, attrs)
+        raw_value = value.value if hasattr(value, 'value') else value
+        class_id = self.class_lookup.get(str(raw_value)) if raw_value not in (None, '') else None
+        if class_id:
+            option['attrs']['data-class-id'] = str(class_id)
+        return option
+
+
+class StudentClassFilterMixin:
+    """
+    Mixin for any ModelForm with a `student` field: swaps in
+    StudentClassAwareSelect and exposes `self.classes` for the template to
+    render a "Filter by Class" dropdown next to the student picker.
+    """
+    def _enable_student_class_filter(self, queryset=None):
+        queryset = queryset if queryset is not None else Student.objects.all().order_by('last_name', 'first_name')
+        class_lookup = {str(pk): class_id for pk, class_id in queryset.values_list('pk', 'current_class_id')
+                         if class_id}
+        self.fields['student'].widget = StudentClassAwareSelect(
+            attrs={'class': 'form-select'}, class_lookup=class_lookup,
+        )
+        self.classes = Standard.objects.all().order_by('name')
+
+
 # ---------------------------------------------------------------------------
 # Fee structure / setup
 # ---------------------------------------------------------------------------
@@ -58,7 +95,7 @@ class FeeStructureForm(BootstrapFormMixin, forms.ModelForm):
         self.fields['student_class'].empty_label = "-- All Classes --"
 
 
-class StudentDiscountForm(BootstrapFormMixin, forms.ModelForm):
+class StudentDiscountForm(StudentClassFilterMixin, BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = StudentDiscount
         fields = ['student', 'fee_category', 'term', 'session', 'discount_type', 'value', 'reason', 'is_active']
@@ -67,6 +104,7 @@ class StudentDiscountForm(BootstrapFormMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         self._apply_bootstrap()
         self.fields['student'].queryset = Student.objects.all().order_by('last_name', 'first_name')
+        self._enable_student_class_filter()
         self.fields['fee_category'].required = False
         self.fields['fee_category'].empty_label = "-- All Categories --"
         self.fields['term'].required = False
@@ -83,7 +121,7 @@ class StudentDiscountForm(BootstrapFormMixin, forms.ModelForm):
         return value
 
 
-class StudentFeeExceptionForm(BootstrapFormMixin, forms.ModelForm):
+class StudentFeeExceptionForm(StudentClassFilterMixin, BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = StudentFeeException
         fields = ['student', 'fee_structure', 'action', 'reason']
@@ -92,6 +130,7 @@ class StudentFeeExceptionForm(BootstrapFormMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         self._apply_bootstrap()
         self.fields['student'].queryset = Student.objects.all().order_by('last_name', 'first_name')
+        self._enable_student_class_filter()
         self.fields['fee_structure'].queryset = FeeStructure.objects.select_related(
             'fee_category', 'student_class', 'term', 'session'
         ).order_by('term__name', 'fee_category__name')
@@ -145,7 +184,7 @@ class BankAccountForm(BootstrapFormMixin, forms.ModelForm):
 # ---------------------------------------------------------------------------
 # Invoicing
 # ---------------------------------------------------------------------------
-class InvoiceForm(BootstrapFormMixin, forms.ModelForm):
+class InvoiceForm(StudentClassFilterMixin, BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = Invoice
         fields = ['student', 'term', 'session', 'due_date', 'status', 'notes']
@@ -155,6 +194,7 @@ class InvoiceForm(BootstrapFormMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         self._apply_bootstrap()
         self.fields['student'].queryset = Student.objects.all().order_by('last_name', 'first_name')
+        self._enable_student_class_filter()
 
 
 InvoiceItemFormSet = forms.inlineformset_factory(
@@ -194,7 +234,7 @@ InstallmentFormSet = forms.inlineformset_factory(
 # ---------------------------------------------------------------------------
 # Payments
 # ---------------------------------------------------------------------------
-class StaffPaymentForm(forms.Form):
+class StaffPaymentForm(StudentClassFilterMixin, forms.Form):
     """Staff-facing "record a payment" form, settling an invoice balance."""
     student = forms.ModelChoiceField(queryset=Student.objects.all().order_by('last_name'),
                                       widget=forms.Select(attrs={'class': 'form-select', 'id': 'id_student'}))
@@ -213,8 +253,10 @@ class StaffPaymentForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        student_id = self.data.get('student') or (self.initial.get('student').pk
-                                                    if self.initial.get('student') else None)
+        self._enable_student_class_filter()
+        initial_student = self.initial.get('student')
+        initial_student_id = initial_student.pk if isinstance(initial_student, Student) else initial_student
+        student_id = self.data.get('student') or initial_student_id
         if student_id:
             self.fields['invoice'].queryset = Invoice.objects.filter(
                 student_id=student_id).exclude(status=Invoice.Status.CANCELLED)
@@ -266,7 +308,7 @@ class ParentPaymentForm(forms.Form):
         return cleaned
 
 
-class PaymentNotificationForm(BootstrapFormMixin, forms.ModelForm):
+class PaymentNotificationForm(StudentClassFilterMixin, BootstrapFormMixin, forms.ModelForm):
     """Parents/students declare an offline payment for staff to verify."""
     class Meta:
         model = PaymentNotification
@@ -293,6 +335,7 @@ class PaymentNotificationForm(BootstrapFormMixin, forms.ModelForm):
             self.fields['student'].widget = forms.HiddenInput()
         elif user and user.is_staff:
             self.fields['student'].queryset = Student.objects.all().order_by('last_name')
+            self._enable_student_class_filter()
         else:
             self.fields['student'].queryset = Student.objects.none()
 
@@ -360,3 +403,15 @@ class FeeTableFilterForm(forms.Form):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs['class'] = 'form-select'
+
+
+class StudentPaymentDirectoryFilterForm(forms.Form):
+    """Filters the 'pick a student to record a payment for' directory — class + free-text search."""
+    student_class = forms.ModelChoiceField(queryset=Standard.objects.all(), required=False, label="Class")
+    q = forms.CharField(required=False, label="Search", widget=forms.TextInput(
+        attrs={'placeholder': 'Search by name or admission no.'}))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['student_class'].widget.attrs['class'] = 'form-select'
+        self.fields['q'].widget.attrs['class'] = 'form-control'

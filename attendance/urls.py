@@ -9,10 +9,8 @@ app_name ='attendance'
 urlpatterns = [
     path('take-attendance/', views.take_daily_attendance, name='take_daily_attendance'),
     path('attendance-report/', views.attendance_report, name='attendance_report'),
-
-    # path('student-attendance-report/', views.student_attendance_summary, name='self_attendance_report'),
-    # # NEW URL for calendar detail
-    # path('student-attendance-calendar/', views.student_attendance_detail, name='student-attendance-detail'),
+    
+    path('summary/class/bulk/', views.attendance_summary_class_bulk, name='attendance_summary_class_bulk'),
 
       # This is the new, simple entry point for teachers/staff to see their roster.
     path('attendance/list/', views.student_list_view, name='attendance-student-list'),

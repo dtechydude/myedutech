@@ -527,6 +527,7 @@ class AdminTeacherOrOwnerMixin:
 # ======================================================================================================
 # New logic to allow class position toggle
 from results.models import ClassPositionSetting, ReportComments
+from attendance.services import get_student_attendance
 
 class StudentReportCardView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
 
@@ -544,21 +545,31 @@ class StudentReportCardView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
             return self.handle_no_permission(request)
 
         # ---------------- ATTENDANCE ----------------
-        student_attendance = Attendance.objects.filter(
-            student=student,
-            date__gte=term.start_date,
-            date__lte=term.end_date
-        )
+        # student_attendance = Attendance.objects.filter(
+        #     student=student,
+        #     date__gte=term.start_date,
+        #     date__lte=term.end_date
+        # )
 
-        days_present = student_attendance.filter(present=True).count()
-        days_absent = student_attendance.filter(present=False).count()
+        # days_present = student_attendance.filter(present=True).count()
+        # days_absent = student_attendance.filter(present=False).count()
 
-        total_school_days = Attendance.objects.filter(
-            student__current_class=standard,
-            # standard=standard,
-            date__gte=term.start_date,
-            date__lte=term.end_date
-        ).values('date').distinct().count()
+        # total_school_days = Attendance.objects.filter(
+        #     student__current_class=standard,
+        #     # standard=standard,
+        #     date__gte=term.start_date,
+        #     date__lte=term.end_date
+        # ).values('date').distinct().count()
+
+        # ---------------- ATTENDANCE ----------------
+        # Now sourced from attendance.services — total_school_days is the
+        # uniform configured/calendar-computed figure, days_present/absent
+        # respect a manual per-student override if entered. Every other
+        # variable, computation, and template below is unchanged.
+        attendance_info = get_student_attendance(student, term.session, term)
+        days_present = attendance_info['days_present']
+        days_absent = attendance_info['days_absent']
+        total_school_days = attendance_info['total_days']
 
         next_term = Term.objects.filter(start_date__gt=term.end_date).order_by('start_date').first()
         next_term_start_date = next_term.start_date if next_term else None

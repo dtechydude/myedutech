@@ -1,6 +1,6 @@
 # attendance/forms.py
 from django import forms
-from .models import Attendance, Student # Assuming Student and Attendance models are correctly imported
+from .models import Attendance, Student, AttendanceConfiguration # Assuming Student and Attendance models are correctly imported
 from django.utils import timezone # For initial date values
 from staff.models import Teacher # Make sure Teacher is imported if form_teacher links to it
 from curriculum.models import Standard
@@ -117,3 +117,34 @@ class AttendanceReportForm(forms.Form):
         if start_date and end_date and start_date > end_date:
             self.add_error('end_date', "End date cannot be before start date.")
         return cleaned_data
+
+
+class AttendanceConfigurationForm(forms.ModelForm):
+    """
+    Sets the uniform 'total school days opened' figure for a session+term.
+    This replaces the old per-student, count-of-records-taken total on
+    every report card that references it, once a value is entered here.
+    """
+    class Meta:
+        model = AttendanceConfiguration
+        fields = ['session', 'term', 'total_school_days']
+        widgets = {
+            'session': forms.Select(attrs={'class': 'form-control'}),
+            'term': forms.Select(attrs={'class': 'form-control'}),
+            'total_school_days': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+        }
+
+
+
+class SimpleAttendanceEntryForm(forms.Form):
+    """
+    Non-model form — deliberately NOT a ModelForm, so building the formset
+    for display never requires an Attendance row to already exist. Rows
+    are only created/updated in the database when the form is submitted.
+    """
+    student = forms.IntegerField(widget=forms.HiddenInput())
+    student_full_name = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control-plaintext'})
+    )
+    present = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))

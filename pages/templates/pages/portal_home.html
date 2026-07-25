@@ -23,7 +23,15 @@
 	
 	<!-- FAVICONS ICON -->
 	
-	<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+	{% comment %} <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" /> {% endcomment %}
+	   <!-- FAVICONS ICON -->	
+    {% if school_info and school_info.logo %}
+		<link rel="icon" href="{{ school_info.logo.url }}" type="image/png">
+	{% else %}
+		<link rel="icon" href="{% static 'pages/images/school_logo.jpg' %}" type="image/png">
+	{% endif %}
+
+	
 	{% block favicon %}
 	<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
 	<link href="{% static 'pages/vendor/owl-carousel/owl.carousel.css' %}" rel="stylesheet">
@@ -437,14 +445,10 @@
 						<ul aria-expanded="false">
 							{% if user.is_superuser or user.is_staff %}
 							<li><a href="{% url 'enroll_student' %}">Enroll Student</a></li>
-							{% comment %} <li><a href="{% url 'students:bulk-upload' %}">BULK UPLOAD (Enroll Student)</a></li> {% endcomment %}
-
 							<li><a href="{% url 'students:student-list' %}">All CURRENT Students</a></li>
 							<li><a href="{% url 'students:boarder-list' %}">All Boarders</a></li>
 							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>	
 							<li><a href="{% url 'students:student-in-class' %}">Class Distribution</a></li>
-							{% comment %} <li><a href="{% url 'students:bulk_student_id_cards' %}">Print Bulk Students ID</a></li> {% endcomment %}
-							{% comment %} <li><a href="{% url 'students:assign_classgroup_to_students' %}">Assign Students To ClassGroup</a></li> {% endcomment %}
 							<li><a href="{% url 'students:parent_list' %}">PARENTS LIST</a></li>	
 							<li><a href="{% url 'students:parent-dashboard' %}">PARENTS DASHBOARD</a></li>
 							<li><a href="{% url 'students:graduate_students' %}">Move Students To Alumni</a></li>
@@ -481,8 +485,9 @@
 						<ul aria-expanded="false">
 							{% if user.is_superuser or user.is_staff %}
 							<li><a href="/admin/attendance/attendance/" target="_blank">Take Attendance-MANUAL</a></li>
-							<li><a href="{% url 'attendance:attendance_scanner' %}"><i class="fas fa-qrcode"></i><span>Take Attendance-SCANNING</span></a>
-							</li>
+							<li><a href="{% url 'attendance:attendance_scanner' %}"><i class="fas fa-qrcode"></i><span>Take Attendance-SCANNING</span></a></li>
+							<li><a href="{% url 'attendance:attendance_summary_class_bulk' %}"><i class="fas fa-book"></i><span>Custom Attendance Entry</span></a></li>
+
 							{% elif user.teacher %}
 							<li><a href="{% url 'attendance:take_daily_attendance' %}">Mark STUDENT Attendance</a></li>
 							<li><a href="{% url 'staff:teacher_self_attendance' %}">MY ATTENDANCE</a></li>
@@ -735,7 +740,7 @@
 							</a>
 							<ul aria-expanded="false">
 								<li><a href="{% url 'pages:video-guides' %}">Video Guide</a></li>
-								<li><a href="{% url 'pages:help-center' %}">FAQ</a></li>
+								<li><a href="{% url 'pages:help-center' %}">Frequently Asked Questions</a></li>
 								<li><a href="{% url 'pages:support_info' %}">Support Center</a></li>
 							</ul>
 					</li>		

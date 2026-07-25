@@ -52,6 +52,7 @@ urlpatterns = [
 
     # --- Payments ---
     path('payments/', views.PaymentListView.as_view(), name='payment_list'),
+    path('payments/directory/', views.student_payment_directory, name='payment_directory'),
     path('payments/make/', views.make_payment, name='make_payment'),
     path('payments/parent/make/', views.make_parent_payment, name='make_parent_payment'),
 

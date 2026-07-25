@@ -210,6 +210,74 @@ the `finance.approve_expense` permission.
 `finance.view_profit_loss`). Filter by date range or term/session; export
 to PDF for board/proprietor reports.
 
+## 7b. Staff vs. parent/student experience
+
+**Recording a payment no longer means scrolling a giant student dropdown.**
+*Finance → Record Payment* now opens a class-filterable, searchable
+student directory (`finance:payment_directory`) with each student's
+current-term balance and two action buttons per row: **Record Payment**
+(jumps into the payment form with that student already selected and their
+invoices pre-loaded) and **Invoices** (jumps to their invoice list). The
+bare search-by-name form (`finance:make_payment`) still exists as a
+fallback/direct link, and now also accepts `?student=<id>` to arrive
+pre-selected — that's what the directory's buttons use.
+
+## 7c. Mobile navigation & branding
+
+The sidebar is a proper off-canvas drawer on tablet/mobile (≤991px) —
+collapsed by default, opened with a hamburger button in the top bar,
+closed by tapping the backdrop, the × button, or any nav link. It no
+longer dumps the entire menu inline above the page content on small
+screens. On desktop it stays as a fixed sidebar, unchanged.
+
+Colors are driven by CSS variables at the top of `base_finance.html` /
+`base_finance_portal.html`:
+
+```css
+--kw-primary: #13233f;      /* sidebar background */
+--kw-accent: #e8483d;       /* buttons, active nav item, badges, focus rings */
+--kw-accent-soft: #fdeceb;  /* icon chip backgrounds on dashboard cards */
+```
+
+Adjust these three values to re-theme the whole app — they cascade into
+Bootstrap's `.btn-primary`, `.btn-outline-primary`, pagination, badges,
+and form focus states automatically, so you won't find scattered hard-coded
+hex values elsewhere in the templates.
+
+`/finance/` is a single URL that shows a different thing depending on who's
+logged in — there's no shared "one dashboard for everyone" screen:
+
+- **Staff** (`is_staff` or superuser) get the full admin dashboard
+  (`finance/dashboard.html`) with the complete sidebar
+  (`base_finance.html`): fee setup, invoicing, expenses, reports, everything.
+- **Parents/students** get a personal "My Finance" summary
+  (`finance/student_dashboard.html`) via a separate, minimal sidebar
+  (`base_finance_portal.html`) — only their own invoices, payment
+  history/receipts, the current term's fee table, and a way to pay or
+  submit proof of payment. They never see fee-structure setup, bank
+  account details, expenses, or other students' records — those views are
+  now gated by `FinanceStaffRequiredMixin` (see below).
+- **The printable fee table is locked for non-staff** — parents/students
+  always see the current term/session only, with no filter controls;
+  staff retain full filtering by class/term/session.
+
+If you add new staff-only views to this app, apply
+`finance.permissions.FinanceStaffRequiredMixin` (class-based views) or
+the `@finance_staff_required` decorator (function views) — don't rely on
+`LoginRequiredMixin`/`@login_required` alone, since those only check that
+*someone* is logged in, not *who*.
+
+**Class filter for staff student-pickers** — anywhere staff have to pick
+a student out of the whole school (Record Payment, Create Invoice, Grant
+Discount, Add Fee Exception, staff-submitted Payment Notification), a
+"Filter by Class" dropdown narrows the list instantly with no page reload
+— see `finance.forms.StudentClassFilterMixin` / `StudentClassAwareSelect`.
+To add this to a new form with a `student` field, mix in
+`StudentClassFilterMixin` and call `self._enable_student_class_filter()`
+in `__init__`; the corresponding template just needs
+`{% if form.classes %}` around a small filter `<select>` (copy the block
+from `payment_form.html`).
+
 ## 8. Wiring in your real base template
 
 Every "in-app" page (dashboard, lists, forms) extends

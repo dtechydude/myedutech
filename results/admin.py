@@ -78,17 +78,17 @@ class MotorAbilityScoreInline(admin.TabularInline): # Use TabularInline for a co
 
 # IMPORTANT: If your 'Term' model is already registered in 'curriculum/admin.py'
 # and you want to manage it here, you should unregister it first:
-try:
-    admin.site.unregister(Term)
-except admin.sites.NotRegistered:
-    pass # Term was not registered, so no need to unregister
+# try:
+#     admin.site.unregister(Term)
+# except admin.sites.NotRegistered:
+#     pass # Term was not registered, so no need to unregister
 
 
-@admin.register(Term)
-class TermAdmin(ImportExportModelAdmin):
-    list_display = ('name', 'session', 'start_date', 'end_date', 'is_current')
-    list_filter = ('session', 'name')
-    search_fields = ('name', 'session__name')
+# @admin.register(Term)
+# class TermAdmin(ImportExportModelAdmin):
+#     list_display = ('name', 'session', 'start_date', 'end_date', 'is_current')
+#     list_filter = ('session', 'name')
+#     search_fields = ('name', 'session__name')
     # Add the MotorAbilityScoreInline here
     # inlines = [MotorAbilityScoreInline]
 

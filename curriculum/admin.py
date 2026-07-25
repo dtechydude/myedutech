@@ -13,8 +13,26 @@ from results.models import SessionResultStatus
 # New Admin For Standard or School Identity
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
-from .models import SchoolIdentity, StandardIdentity
+from .models import SchoolIdentity, StandardIdentity, PublicHoliday
 
+# from .models import PublicHoliday
+
+
+
+
+class PublicHolidayInline(admin.TabularInline):
+    model = PublicHoliday
+    extra = 1
+
+
+@admin.register(Term)
+class TermAdmin(admin.ModelAdmin):
+    list_display = ('name', 'start_date', 'end_date', 'is_current')
+    raw_id_fields = ('session',)
+    # ADDED: This also needs search_fields for autocomplete
+    search_fields = ['name', 'session__name']
+
+    inlines = [PublicHolidayInline]
 
 class ClassFeeTemplateForm(forms.Form):
     fee_template = forms.ModelChoiceField(
@@ -27,6 +45,8 @@ class StandardIdentityInline(admin.TabularInline):
     model = StandardIdentity
     extra = 1  # Number of empty rows to show for mapping classes
     autocomplete_fields = ['standard'] # Optional: if your Standard model has search_fields
+
+
 
 @admin.register(SchoolIdentity)
 class SchoolIdentityAdmin(admin.ModelAdmin):
@@ -67,11 +87,6 @@ class SessionAdmin(admin.ModelAdmin):
     search_fields = ['name',]
 
 
-# class SessionAdmin(ImportExportModelAdmin):
-#     list_display = ('name', 'start_date', 'end_date', 'is_current')
-#     exclude = ['slug']
-#     # ADDED: This fixes the autocomplete error.
-#     search_fields = ['name',]
 
 @admin.register(Standard)
 class StandardAdmin(ImportExportModelAdmin):
@@ -119,23 +134,29 @@ class StandardAdmin(ImportExportModelAdmin):
     
     apply_class_fee_template.short_description = "Apply a class fee template to selected classes"
 
+
+
+@admin.register(ClassGroup)
 class ClassGroupAdmin(ImportExportModelAdmin):
     list_display = ('name', 'standard', 'form_teacher')
     list_filter = ['standard__name']
     search_fields = ('standard__name', 'name')
     autocomplete_fields = ['form_teacher']
 
+@admin.register(Subject)
 class SubjectAdmin(ImportExportModelAdmin):
     list_display = ('subject_id', 'name', 'description')
     search_fields = ('subject_id', 'name')
     exclude = ['slug']
 
+@admin.register(ELearningSubject)
 class ELearningSubjectAdmin(ImportExportModelAdmin):
     list_display = ('subject_id', 'name', 'standard', 'description')
     list_filter = ['standard__name']
     search_fields = ('standard__name', 'subject_id')
     exclude = ['slug']
 
+@admin.register(Lesson)
 class LessonAdmin(ImportExportModelAdmin):
     list_display = ('standard', 'subject', 'lesson_id', 'name')
     list_filter = ['standard',]
@@ -143,12 +164,8 @@ class LessonAdmin(ImportExportModelAdmin):
     raw_id_fields = ['created_by',]
     exclude = ['slug']
 
-@admin.register(Term)
-class TermAdmin(ImportExportModelAdmin):
-    list_display = ('name', 'start_date', 'end_date', 'is_current')
-    raw_id_fields = ('session',)
-    # ADDED: This also needs search_fields for autocomplete
-    search_fields = ['name', 'session__name']
+
+   
 
 @admin.register(ClassFeeTemplate)
 class ClassFeeTemplateAdmin(ImportExportModelAdmin):
@@ -159,24 +176,4 @@ class ClassFeeTemplateAdmin(ImportExportModelAdmin):
     actions = ['delete_selected']
 
 
-#GRADING ADMIN
-# @admin.register(GradingComponent)
-# class GradingComponentAdmin(admin.ModelAdmin):
-#     list_display = ('school', 'name', 'weight', 'is_active')
-#     list_filter = ('school', 'is_active')
 
-
-
-
-# admin.site.register(Session, SessionAdmin)
-admin.site.register(ClassGroup, ClassGroupAdmin)
-admin.site.register(Subject, SubjectAdmin)
-admin.site.register(ELearningSubject, ELearningSubjectAdmin)
-admin.site.register(Lesson, LessonAdmin)
-# admin.site.register(SchoolIdentity, SchoolIdentityAdmin)
-# The decorator @admin.register(ClassFeeTemplate) already handles this registration
-# admin.site.register(ClassFeeTemplate, ClassFeeTemplateAdmin)
-
-# This class is not being used or registered, so it can be safely removed.
-# class MyModelAdmin(AdminVideoMixin, admin.ModelAdmin):
-#     pass

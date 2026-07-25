@@ -110,22 +110,18 @@ class Session(models.Model):
         super().save(*args, **kwargs)
 
 
+
+
 class Term(models.Model):
-    name = models.CharField(max_length=50) # e.g., "First Term", "Second Term", "Third Term"
+    name = models.CharField(max_length=50)
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='terms')
     start_date = models.DateField()
     end_date = models.DateField()
     is_current = models.BooleanField(default=False, help_text='check the box if the term is current term in the current session')
 
     class Meta:
-        # Ensures that "First Term" doesn't appear twice within the same session
         unique_together = ('name', 'session')
         ordering = ['session', 'start_date']
-
-    def __str__(self):
-        return f"{self.name} ({self.session.name})"    
-    
-    class Meta:
         constraints = [
             models.UniqueConstraint(
                 fields=['is_current'],
@@ -133,6 +129,28 @@ class Term(models.Model):
                 name='only_one_current_term_can_be_active'
             )
         ]
+
+    def __str__(self):
+        return f"{self.name} ({self.session.name})"
+
+
+class PublicHoliday(models.Model):
+    """
+    A non-schooling day within a specific term (in addition to Saturdays
+    and Sundays, which are always excluded automatically). Used to compute
+    the actual number of school days open, and to block attendance from
+    being taken on that date.
+    """
+    term = models.ForeignKey(Term, on_delete=models.CASCADE, related_name='public_holidays')
+    date = models.DateField()
+    description = models.CharField(max_length=150, blank=True)
+
+    class Meta:
+        unique_together = ('term', 'date')
+        ordering = ['date']
+
+    def __str__(self):
+        return f"{self.date} - {self.description or 'Public Holiday'} ({self.term.name})"
 
 
 
@@ -143,6 +161,7 @@ def save_subject_image(instance, filename):
     if instance.user.username:
         filename = 'Subject_Pictures/{}.{}'.format(instance.subject_id, ext)
     return os.path.join(upload_to, filename)
+
 
 class Standard(models.Model):   
     name = models.CharField(max_length=100, unique=True)

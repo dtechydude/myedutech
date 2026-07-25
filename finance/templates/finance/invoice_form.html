@@ -6,6 +6,15 @@
             <form method="post">
                 {% csrf_token %}
                 <h6 class="mb-3">Invoice Details</h6>
+                {% if form.classes %}
+                <div class="mb-3">
+                    <label class="form-label">Filter by Class</label>
+                    <select id="student_class_filter" class="form-select">
+                        <option value="">-- All Classes --</option>
+                        {% for c in form.classes %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}
+                    </select>
+                </div>
+                {% endif %}
                 <div class="row">
                 {% for field in form %}
                     <div class="col-md-6 mb-3">
@@ -43,4 +52,25 @@
         </div>
     </div>
 </div>
+
+{% if form.classes %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var classFilter = document.getElementById('student_class_filter');
+    var studentSelect = document.getElementById('id_student');
+    if (!classFilter || !studentSelect) return;
+    var options = Array.prototype.slice.call(studentSelect.options);
+    classFilter.addEventListener('change', function () {
+        var classId = this.value;
+        options.forEach(function (opt) {
+            if (!opt.value) return;
+            opt.hidden = !!classId && opt.dataset.classId !== classId;
+        });
+        if (studentSelect.selectedOptions[0] && studentSelect.selectedOptions[0].hidden) {
+            studentSelect.value = '';
+        }
+    });
+});
+</script>
+{% endif %}
 {% endblock %}

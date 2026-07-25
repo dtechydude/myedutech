@@ -150,3 +150,4 @@ class AttendanceSummary(models.Model):
             f"{self.student} - "
             f"{self.term}"
         )
+

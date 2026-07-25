@@ -60,6 +60,30 @@ def finance_admin_required(view_func):
     return _wrapped
 
 
+class FinanceStaffRequiredMixin:
+    """
+    Class-based-view mixin: restricts a view to finance/bursary staff (or
+    superusers). Use this on EVERY staff-only CBV in this app instead of a
+    one-off dispatch() override — a view that forgets this mixin is
+    reachable by any logged-in parent/student, since LoginRequiredMixin
+    alone only checks that *someone* is logged in, not *who*.
+    """
+    def dispatch(self, request, *args, **kwargs):
+        if not is_finance_staff(request.user):
+            messages.error(request, "You do not have permission to access this page.")
+            return redirect('pages:portal-home')
+        return super().dispatch(request, *args, **kwargs)
+
+
+class FinanceAdminRequiredMixin:
+    """Class-based-view mixin: restricts a view to elevated finance admins (e.g. P&L)."""
+    def dispatch(self, request, *args, **kwargs):
+        if not is_finance_admin(request.user):
+            messages.error(request, "You need Finance Admin access to view this page.")
+            return redirect('finance:dashboard')
+        return super().dispatch(request, *args, **kwargs)
+
+
 class CustomPermissions:
     """
     Custom, non-CRUD permissions referenced by the Meta.permissions of

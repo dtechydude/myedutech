@@ -276,7 +276,7 @@ class Invoice(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='fin_invoices')
     term = models.ForeignKey(Term, on_delete=models.PROTECT, related_name='fin_invoices')
     session = models.ForeignKey(Session, on_delete=models.PROTECT, related_name='fin_invoices')
-    invoice_number = models.CharField(max_length=30, unique=True, blank=True, editable=False)
+    invoice_number = models.CharField(max_length=30, unique=True, null=True, blank=True, editable=False)
     issue_date = models.DateField(default=timezone.localdate)
     due_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=15, choices=Status.choices, default=Status.ISSUED)
@@ -481,7 +481,7 @@ class Payment(models.Model):
 class Receipt(models.Model):
     """Auto-generated printable receipt for a completed payment."""
     payment = models.OneToOneField(Payment, on_delete=models.CASCADE, related_name='receipt')
-    receipt_number = models.CharField(max_length=30, unique=True, blank=True, editable=False)
+    receipt_number = models.CharField(max_length=30, unique=True, null=True, blank=True, editable=False)
     issue_date = models.DateTimeField(auto_now_add=True)
     generated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                       related_name='fin_receipts_generated')

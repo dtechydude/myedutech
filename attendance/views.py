@@ -8,7 +8,7 @@ from .models import Attendance
 from students.models import Student
 from datetime import date, timedelta # Make sure to import these!
 from staff.models import Teacher
-from curriculum.models import Session, Term
+from curriculum.models import Session, Term, Standard
 from decimal import Decimal
 from .forms import AttendanceDateForm, AttendanceForm, AttendanceReportForm # Import new forms
 import json
@@ -17,81 +17,112 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import logging
 from attendance.services import get_student_attendance
+from .models import AttendanceConfiguration, AttendanceSummary
+from .forms import AttendanceConfigurationForm
+from django.forms import formset_factory
+from .forms import SimpleAttendanceEntryForm
 
 
 
-# Helper to get teacher profile, handles not found case
+
+# ======================================================
+# ATTENDANCE AUTHORIZATION HELPERS
+# ======================================================
+
+def _is_staff_or_superuser(user):
+    """
+    Returns True for any Admin or Staff user.
+    """
+    return user.is_authenticated and (
+        user.is_staff or user.is_superuser
+    )
+
+
 def get_teacher_profile(user):
+    """
+    Returns the Teacher profile for a logged-in user.
+    """
     try:
-        return user.teacher
+        return Teacher.objects.get(user=user)
     except Teacher.DoesNotExist:
         return None
+
+# Helper to get teacher profile, handles not found case
+# def get_teacher_profile(user):
+#     try:
+#         return user.teacher
+#     except Teacher.DoesNotExist:
+#         return None
+
+
 
 @login_required
 def take_daily_attendance(request):
     teacher = get_teacher_profile(request.user)
     if not teacher:
         messages.error(request, "You are not authorized to view this page as a teacher.")
-        return redirect('/dashboard/') # Redirect to a safe page or login
+        return redirect('/dashboard/')
 
-    # Initialize the date form
     date_form = AttendanceDateForm(request.GET or None)
-    selected_date = timezone.localdate() # Default to today
+    selected_date = timezone.localdate()
     if date_form.is_valid():
         selected_date = date_form.cleaned_data['date']
 
-    students = Student.objects.filter(form_teacher=teacher).order_by('first_name', 'last_name')
+    # Weekend/holiday block (unchanged from earlier)
+    from curriculum.models import Term
+    from curriculum.services import is_non_schooling_day
 
-    initial_data = []
-    for student in students:
-        attendance_record, created = Attendance.objects.get_or_create(
-            student=student,
-            date=selected_date, # Use the selected_date
-            defaults={'present': False}
-        )
-        initial_data.append({
-            'id': attendance_record.id,
-            'student': student.USN,
-            'present': attendance_record.present,
-            'student_full_name': student.get_full_name(),
+    matching_term = Term.objects.filter(start_date__lte=selected_date, end_date__gte=selected_date).first()
+    if matching_term and is_non_schooling_day(matching_term, selected_date):
+        reason = "a weekend" if selected_date.weekday() >= 5 else "a public holiday"
+        messages.error(request, f"{selected_date.strftime('%A, %B %d, %Y')} is {reason}. Attendance cannot be taken for this date.")
+        empty_formset = formset_factory(SimpleAttendanceEntryForm, extra=0)(initial=[])
+        return render(request, 'attendance/test2_take_attendance.html', {
+            'date_form': date_form, 'formset': empty_formset,
+            'selected_date': selected_date, 'teacher': teacher,
         })
 
-    AttendanceFormSet = modelformset_factory(
-        Attendance,
-        form=AttendanceForm,
-        extra=0,
-        can_delete=False
-    )
+    students = Student.objects.filter(form_teacher=teacher).order_by('first_name', 'last_name')
+
+    # READ existing records for display only — never writes.
+    existing = {
+        a.student_id: a.present
+        for a in Attendance.objects.filter(student__in=students, date=selected_date)
+    }
+
+    AttendanceFormSet = formset_factory(SimpleAttendanceEntryForm, extra=0)
 
     if request.method == 'POST':
-        # Re-initialize date_form for POST context if needed, though usually not directly used here
-        date_form = AttendanceDateForm(request.POST) # Just for validation if needed, not to change selected date for formset
-        formset = AttendanceFormSet(request.POST, queryset=Attendance.objects.filter(pk__in=[d['id'] for d in initial_data]))
-
-        # We should also ensure the date form is valid if it's part of the submission
-        # In this setup, date is passed via GET for initial load, and only POST for attendance
-        # If date could be changed on POST, you'd add: `if date_form.is_valid() and formset.is_valid():`
+        formset = AttendanceFormSet(request.POST)
         if formset.is_valid():
             with transaction.atomic():
                 for form in formset:
-                    if form.cleaned_data:
-                        form.save()
+                    student_id = form.cleaned_data['student']
+                    present = form.cleaned_data['present']
+                    Attendance.objects.update_or_create(
+                        student_id=student_id,
+                        date=selected_date,
+                        defaults={'present': present}
+                    )
             messages.success(request, f"Attendance for {selected_date.strftime('%Y-%m-%d')} saved successfully!")
-            # Redirect to the same page with the selected date to show updated status
-            return redirect('attendance:take_daily_attendance')
+            return redirect(f"{request.path}?date={selected_date}")
         else:
             messages.error(request, "There were errors saving attendance. Please check the form.")
-            print(formset.errors)
-            print(formset.non_form_errors())
     else:
-        formset = AttendanceFormSet(queryset=Attendance.objects.filter(pk__in=[d['id'] for d in initial_data]))
-        for i, form in enumerate(formset):
-            form.initial['student_full_name'] = initial_data[i]['student_full_name']
+        initial_data = [
+            {
+                'student': student.id,
+                'student_full_name': student.get_full_name(),
+                'present': existing.get(student.id, False),
+            }
+            for student in students
+        ]
+        formset = AttendanceFormSet(initial=initial_data)
 
     context = {
-        'date_form': date_form, # Pass the date form to the template
+        'date_form': date_form,
         'formset': formset,
-        'selected_date': selected_date, # Pass the selected date for display
+        'selected_date': selected_date,
         'teacher': teacher,
     }
     return render(request, 'attendance/test2_take_attendance.html', context)
@@ -560,6 +591,20 @@ def scan_attendance_ajax(request, usn):
         student = Student.objects.get(USN__iexact=usn.strip())
         today = timezone.now().date()
 
+        #new----------------------
+        from curriculum.models import Term
+        from curriculum.services import is_non_schooling_day
+
+        matching_term = Term.objects.filter(start_date__lte=today, end_date__gte=today).first()
+        if matching_term and is_non_schooling_day(matching_term, today):
+            reason = "a weekend" if today.weekday() >= 5 else "a public holiday"
+            return JsonResponse({
+                'status': 'error',
+                'message': f"Today is {reason}. Attendance scanning is disabled."
+            }, status=200)
+
+        #--------------------------------------
+
         attendance, created = Attendance.objects.get_or_create(
             student=student,
             date=today,
@@ -585,3 +630,134 @@ def scan_attendance_ajax(request, usn):
             'status': 'error', 
             'message': f'ID "{clean_usn}" not found in database.'
         }, status=200) # Use 200 so our JS handles the error message nicely
+
+
+
+
+@login_required
+def attendance_summary_class_bulk(request):
+    """
+    Bulk manual attendance entry for a whole class, per session+term.
+    days_present is the only value a teacher enters — days_absent is
+    ALWAYS derived (config.total_school_days - days_present), never
+    entered directly, so it can never conflict with the configured
+    total school days for the term.
+
+    Access: staff/superuser (any class), or the class's form teacher
+    (own class only).
+    """
+      
+    user = request.user
+
+    # ======================================================
+    # ADMIN / STAFF USERS
+    # ======================================================
+
+    if user.is_staff or user.is_superuser:
+
+        available_standards = (
+            Standard.objects
+            .all()
+            .order_by("name")
+        )
+
+    # ======================================================
+    # FORM TEACHERS
+    # ======================================================
+
+    else:
+
+        teacher = get_teacher_profile(user)
+
+        if teacher is None:
+            messages.error(
+                request,
+                "You are not authorized to manage attendance."
+            )
+            return redirect("/dashboard/")
+
+        available_standards = (
+            Standard.objects.filter(
+                students__form_teacher=teacher
+            )
+            .distinct()
+            .order_by("name")
+        )
+
+    # ======================================================
+    # NO CLASS ASSIGNED
+    # ======================================================
+
+    if not available_standards.exists():
+
+        messages.warning(
+            request,
+            "No class has been assigned to you."
+        )
+
+        return redirect("/dashboard/")
+
+    sessions = Session.objects.all().order_by('-start_date')
+
+    session_id = request.GET.get('session') or request.POST.get('session_id')
+    standard_id = request.GET.get('standard') or request.POST.get('standard_id')
+    term_id = request.GET.get('term') or request.POST.get('term_id')
+
+    session = get_object_or_404(sessions, id=session_id) if session_id else sessions.first()
+    standard = get_object_or_404(available_standards, id=standard_id) if standard_id else available_standards.first()
+    terms_in_session = Term.objects.filter(session=session).order_by('start_date') if session else Term.objects.none()
+    term = get_object_or_404(terms_in_session, id=term_id) if term_id else terms_in_session.first()
+
+    config = AttendanceConfiguration.objects.filter(session=session, term=term).first() if session and term else None
+
+    rows = []
+    if session and term and standard:
+        students = Student.objects.filter(current_class=standard).order_by('last_name', 'first_name')
+
+        if request.method == 'POST':
+            if not config:
+                messages.error(
+                    request,
+                    "Set the total school days for this session/term in Attendance Configuration "
+                    "before entering manual attendance."
+                )
+                return redirect(f"{request.path}?session={session.id}&term={term.id}&standard={standard.id}")
+
+            updated_count = 0
+            for student in students:
+                present_val = request.POST.get(f'days_present_{student.id}', '').strip()
+                remarks_val = request.POST.get(f'remarks_{student.id}', '').strip()
+
+                if present_val == '':
+                    continue  # blank — keep using daily records for this student
+
+                days_present = min(int(present_val) if present_val.isdigit() else 0, config.total_school_days)
+                days_absent = max(config.total_school_days - days_present, 0)  # always derived
+
+                summary, _ = AttendanceSummary.objects.get_or_create(
+                    student=student, session=session, term=term,
+                    defaults={'entered_by': user}
+                )
+                summary.days_present = days_present
+                summary.days_absent = days_absent
+                summary.remarks = remarks_val
+                summary.entered_by = user
+                summary.save()
+                updated_count += 1
+
+            messages.success(request, f"Saved manual attendance for {updated_count} student(s).")
+            return redirect(f"{request.path}?session={session.id}&term={term.id}&standard={standard.id}")
+
+        existing = {
+            s.student_id: s for s in AttendanceSummary.objects.filter(
+                student__in=students, session=session, term=term
+            )
+        }
+        rows = [{'student': s, 'summary': existing.get(s.id)} for s in students]
+
+    context = {
+        'sessions': sessions, 'available_standards': available_standards,
+        'terms_in_session': terms_in_session, 'session': session,
+        'standard': standard, 'term': term, 'config': config, 'rows': rows,
+    }
+    return render(request, 'attendance/attendance_summary_class_bulk.html', context)

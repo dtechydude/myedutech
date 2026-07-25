@@ -24,7 +24,7 @@ from .forms import (
     InvoiceForm, InvoiceItemFormSet, StaffPaymentForm, ParentPaymentForm,
     PaymentNotificationForm, ExpenseCategoryForm, VendorForm, ExpenseForm,
     ReportFilterForm, FeeTableFilterForm, StudentDiscountForm, StudentFeeExceptionForm,
-    InstallmentPlanQuickForm, InstallmentFormSet,
+    InstallmentPlanQuickForm, InstallmentFormSet, StudentPaymentDirectoryFilterForm,
 )
 from .models import (
     BankAccount, FeeCategory, FeeStructure, Invoice, InvoiceItem, Payment, Receipt,
@@ -33,6 +33,7 @@ from .models import (
 )
 from .permissions import (
     finance_staff_required, finance_admin_required, is_finance_staff, is_parent, is_student_user,
+    FinanceStaffRequiredMixin, FinanceAdminRequiredMixin,
 )
 
 BASE_TEMPLATE = 'finance/base_finance.html'
@@ -42,6 +43,11 @@ def _common_context(**extra):
     ctx = {'base_template': BASE_TEMPLATE}
     ctx.update(extra)
     return ctx
+
+
+def _base_template_for(user):
+    """Staff get the full admin sidebar; parents/students get the minimal 'My Finance' shell."""
+    return BASE_TEMPLATE if is_finance_staff(user) else 'finance/base_finance_portal.html'
 
 
 def _current_term_session():
@@ -54,8 +60,24 @@ def _current_term_session():
 # Dashboard
 # ---------------------------------------------------------------------------
 @login_required
-@finance_staff_required
 def dashboard(request):
+    """
+    Single entry point for /finance/ — routes to the right dashboard for
+    whoever's logged in, rather than showing the school-wide admin view to
+    everyone (staff get the full financial overview; parents/students get
+    a personal summary of their own account only).
+    """
+    user = request.user
+    if is_finance_staff(user):
+        return _staff_dashboard(request)
+    if is_parent(user) or is_student_user(user):
+        return _student_dashboard(request)
+    messages.error(request, "Your account isn't linked to a student or staff finance role yet. "
+                             "Please contact the school office.")
+    return redirect('pages:portal-home')
+
+
+def _staff_dashboard(request):
     term, session = _current_term_session()
     summary = services.get_dashboard_summary(term=term, session=session)
     recent_payments = Payment.objects.filter(status=Payment.Status.COMPLETED).select_related(
@@ -71,10 +93,40 @@ def dashboard(request):
     return render(request, 'finance/dashboard.html', context)
 
 
+def _student_dashboard(request):
+    """A parent/student's own "My Finance" summary — no school-wide data, no admin links."""
+    user = request.user
+    if is_parent(user):
+        children = Student.objects.filter(parent=user.parent).order_by('last_name')
+    else:
+        children = Student.objects.filter(pk=user.student.pk)
+
+    term, session = _current_term_session()
+    child_summaries = []
+    for child in children:
+        invoices = Invoice.objects.filter(student=child).exclude(status=Invoice.Status.CANCELLED)
+        current_invoice = invoices.filter(term=term, session=session).first() if term and session else None
+        outstanding = sum((inv.balance for inv in invoices if inv.balance > 0), Decimal('0.00'))
+        recent_payments = Payment.objects.filter(
+            student=child, status=Payment.Status.COMPLETED
+        ).select_related('fee_category', 'receipt').order_by('-payment_date')[:5]
+        child_summaries.append({
+            'student': child, 'current_invoice': current_invoice, 'outstanding': outstanding,
+            'recent_payments': recent_payments,
+        })
+
+    context = _common_context(
+        child_summaries=child_summaries, current_term=term, current_session=session,
+        is_parent_view=is_parent(user), title='My Finance',
+        base_template='finance/base_finance_portal.html',
+    )
+    return render(request, 'finance/student_dashboard.html', context)
+
+
 # ---------------------------------------------------------------------------
 # Fee Categories / Fee Structure / Bank Accounts (setup)
 # ---------------------------------------------------------------------------
-class FeeCategoryListView(LoginRequiredMixin, ListView):
+class FeeCategoryListView(LoginRequiredMixin, FinanceStaffRequiredMixin, ListView):
     model = FeeCategory
     template_name = 'finance/fee_category_list.html'
     context_object_name = 'categories'
@@ -87,7 +139,7 @@ class FeeCategoryListView(LoginRequiredMixin, ListView):
         return ctx
 
 
-class FeeCategoryCreateView(LoginRequiredMixin, CreateView):
+class FeeCategoryCreateView(LoginRequiredMixin, FinanceStaffRequiredMixin, CreateView):
     model = FeeCategory
     form_class = FeeCategoryForm
     template_name = 'finance/simple_form.html'
@@ -99,7 +151,7 @@ class FeeCategoryCreateView(LoginRequiredMixin, CreateView):
         return ctx
 
 
-class FeeCategoryUpdateView(LoginRequiredMixin, UpdateView):
+class FeeCategoryUpdateView(LoginRequiredMixin, FinanceStaffRequiredMixin, UpdateView):
     model = FeeCategory
     form_class = FeeCategoryForm
     template_name = 'finance/simple_form.html'
@@ -111,7 +163,7 @@ class FeeCategoryUpdateView(LoginRequiredMixin, UpdateView):
         return ctx
 
 
-class FeeStructureListView(LoginRequiredMixin, ListView):
+class FeeStructureListView(LoginRequiredMixin, FinanceStaffRequiredMixin, ListView):
     model = FeeStructure
     template_name = 'finance/fee_structure_list.html'
     context_object_name = 'fee_structures'
@@ -138,7 +190,7 @@ class FeeStructureListView(LoginRequiredMixin, ListView):
         return ctx
 
 
-class FeeStructureCreateView(LoginRequiredMixin, CreateView):
+class FeeStructureCreateView(LoginRequiredMixin, FinanceStaffRequiredMixin, CreateView):
     model = FeeStructure
     form_class = FeeStructureForm
     template_name = 'finance/simple_form.html'
@@ -150,7 +202,7 @@ class FeeStructureCreateView(LoginRequiredMixin, CreateView):
         return ctx
 
 
-class FeeStructureUpdateView(LoginRequiredMixin, UpdateView):
+class FeeStructureUpdateView(LoginRequiredMixin, FinanceStaffRequiredMixin, UpdateView):
     model = FeeStructure
     form_class = FeeStructureForm
     template_name = 'finance/simple_form.html'
@@ -162,7 +214,7 @@ class FeeStructureUpdateView(LoginRequiredMixin, UpdateView):
         return ctx
 
 
-class FeeStructureDeleteView(LoginRequiredMixin, DeleteView):
+class FeeStructureDeleteView(LoginRequiredMixin, FinanceStaffRequiredMixin, DeleteView):
     model = FeeStructure
     template_name = 'finance/confirm_delete.html'
     success_url = reverse_lazy('finance:fee_structure_list')
@@ -176,17 +228,11 @@ class FeeStructureDeleteView(LoginRequiredMixin, DeleteView):
 # ---------------------------------------------------------------------------
 # Student Discounts / Concessions
 # ---------------------------------------------------------------------------
-class StudentDiscountListView(LoginRequiredMixin, ListView):
+class StudentDiscountListView(LoginRequiredMixin, FinanceStaffRequiredMixin, ListView):
     model = StudentDiscount
     template_name = 'finance/discount_list.html'
     context_object_name = 'discounts'
     paginate_by = 30
-
-    def dispatch(self, request, *args, **kwargs):
-        if not is_finance_staff(request.user):
-            messages.error(request, "You do not have permission to access this page.")
-            return redirect('pages:portal-home')
-        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         qs = StudentDiscount.objects.select_related('student', 'fee_category', 'term', 'session')
@@ -202,17 +248,11 @@ class StudentDiscountListView(LoginRequiredMixin, ListView):
         return ctx
 
 
-class StudentDiscountCreateView(LoginRequiredMixin, CreateView):
+class StudentDiscountCreateView(LoginRequiredMixin, FinanceStaffRequiredMixin, CreateView):
     model = StudentDiscount
     form_class = StudentDiscountForm
     template_name = 'finance/simple_form.html'
     success_url = reverse_lazy('finance:discount_list')
-
-    def dispatch(self, request, *args, **kwargs):
-        if not is_finance_staff(request.user):
-            messages.error(request, "You do not have permission to access this page.")
-            return redirect('pages:portal-home')
-        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         form.instance.approved_by = self.request.user
@@ -236,17 +276,11 @@ class StudentDiscountCreateView(LoginRequiredMixin, CreateView):
         return ctx
 
 
-class StudentDiscountUpdateView(LoginRequiredMixin, UpdateView):
+class StudentDiscountUpdateView(LoginRequiredMixin, FinanceStaffRequiredMixin, UpdateView):
     model = StudentDiscount
     form_class = StudentDiscountForm
     template_name = 'finance/simple_form.html'
     success_url = reverse_lazy('finance:discount_list')
-
-    def dispatch(self, request, *args, **kwargs):
-        if not is_finance_staff(request.user):
-            messages.error(request, "You do not have permission to access this page.")
-            return redirect('pages:portal-home')
-        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -291,17 +325,11 @@ def _refresh_invoice_for_exception(exception, user):
     return False
 
 
-class StudentFeeExceptionListView(LoginRequiredMixin, ListView):
+class StudentFeeExceptionListView(LoginRequiredMixin, FinanceStaffRequiredMixin, ListView):
     model = StudentFeeException
     template_name = 'finance/fee_exception_list.html'
     context_object_name = 'exceptions'
     paginate_by = 30
-
-    def dispatch(self, request, *args, **kwargs):
-        if not is_finance_staff(request.user):
-            messages.error(request, "You do not have permission to access this page.")
-            return redirect('pages:portal-home')
-        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         qs = StudentFeeException.objects.select_related(
@@ -319,17 +347,11 @@ class StudentFeeExceptionListView(LoginRequiredMixin, ListView):
         return ctx
 
 
-class StudentFeeExceptionCreateView(LoginRequiredMixin, CreateView):
+class StudentFeeExceptionCreateView(LoginRequiredMixin, FinanceStaffRequiredMixin, CreateView):
     model = StudentFeeException
     form_class = StudentFeeExceptionForm
     template_name = 'finance/simple_form.html'
     success_url = reverse_lazy('finance:fee_exception_list')
-
-    def dispatch(self, request, *args, **kwargs):
-        if not is_finance_staff(request.user):
-            messages.error(request, "You do not have permission to access this page.")
-            return redirect('pages:portal-home')
-        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
@@ -366,7 +388,7 @@ def delete_fee_exception(request, pk):
     return redirect('finance:fee_exception_list')
 
 
-class BankAccountListView(LoginRequiredMixin, ListView):
+class BankAccountListView(LoginRequiredMixin, FinanceStaffRequiredMixin, ListView):
     model = BankAccount
     template_name = 'finance/bank_account_list.html'
     context_object_name = 'accounts'
@@ -377,7 +399,7 @@ class BankAccountListView(LoginRequiredMixin, ListView):
         return ctx
 
 
-class BankAccountCreateView(LoginRequiredMixin, CreateView):
+class BankAccountCreateView(LoginRequiredMixin, FinanceStaffRequiredMixin, CreateView):
     model = BankAccount
     form_class = BankAccountForm
     template_name = 'finance/simple_form.html'
@@ -389,7 +411,7 @@ class BankAccountCreateView(LoginRequiredMixin, CreateView):
         return ctx
 
 
-class BankAccountUpdateView(LoginRequiredMixin, UpdateView):
+class BankAccountUpdateView(LoginRequiredMixin, FinanceStaffRequiredMixin, UpdateView):
     model = BankAccount
     form_class = BankAccountForm
     template_name = 'finance/simple_form.html'
@@ -420,6 +442,10 @@ class InvoiceListView(LoginRequiredMixin, ListView):
                 qs = qs.filter(student=user.student)
             else:
                 qs = qs.none()
+        else:
+            student_id = self.request.GET.get('student')
+            if student_id:
+                qs = qs.filter(student_id=student_id)
 
         q = self.request.GET.get('q')
         status = self.request.GET.get('status')
@@ -432,7 +458,8 @@ class InvoiceListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx.update(base_template=BASE_TEMPLATE, title='Invoices', status_choices=Invoice.Status.choices)
+        ctx.update(base_template=_base_template_for(self.request.user), title='Invoices',
+                    status_choices=Invoice.Status.choices, is_finance_staff=is_finance_staff(self.request.user))
         return ctx
 
 
@@ -661,9 +688,60 @@ def make_payment(request):
             messages.success(request, f"Payment recorded. Receipt #{payment.receipt.receipt_number}.")
             return redirect('finance:receipt_detail', pk=payment.receipt.pk)
     else:
-        form = StaffPaymentForm()
+        initial = {}
+        preselected_id = request.GET.get('student')
+        if preselected_id:
+            initial['student'] = get_object_or_404(Student, pk=preselected_id)
+        form = StaffPaymentForm(initial=initial)
     context = _common_context(form=form, title='Record a Payment')
     return render(request, 'finance/payment_form.html', context)
+
+
+@login_required
+@finance_staff_required
+def student_payment_directory(request):
+    """
+    Class-filterable, searchable list of students for staff to pick from when
+    recording a payment — replaces the old "scroll through every student in
+    a giant dropdown" flow. Each row links straight into the payment form
+    with that student already selected.
+    """
+    filter_form = StudentPaymentDirectoryFilterForm(request.GET or None)
+    students = Student.objects.select_related('current_class').order_by('last_name', 'first_name')
+
+    student_class = q = None
+    if filter_form.is_valid():
+        student_class = filter_form.cleaned_data.get('student_class')
+        q = filter_form.cleaned_data.get('q')
+        if student_class:
+            students = students.filter(current_class=student_class)
+        if q:
+            students = students.filter(
+                Q(first_name__icontains=q) | Q(last_name__icontains=q) | Q(USN__icontains=q)
+            )
+
+    term, session = _current_term_session()
+    paginator = Paginator(students, 30)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    # Current-term balance for just the students on this page (cheap — 30 rows, not the whole school).
+    ledgers = {}
+    if term and session:
+        student_ids = [s.pk for s in page_obj]
+        ledgers = {
+            ledger.student_id: ledger
+            for ledger in StudentAccountLedger.objects.filter(
+                student_id__in=student_ids, term=term, session=session)
+        }
+
+    rows = [{'student': s, 'ledger': ledgers.get(s.pk)} for s in page_obj]
+
+    context = _common_context(
+        filter_form=filter_form, rows=rows, page_obj=page_obj, is_paginated=page_obj.has_other_pages(),
+        classes=Standard.objects.all().order_by('name'), current_term=term, current_session=session,
+        title='Record a Payment',
+    )
+    return render(request, 'finance/payment_directory.html', context)
 
 
 @login_required
@@ -690,7 +768,7 @@ def make_parent_payment(request):
             return redirect('finance:receipt_detail', pk=payment.receipt.pk)
     else:
         form = ParentPaymentForm(parent=parent)
-    context = _common_context(form=form, title='Make a Payment')
+    context = _common_context(form=form, title='Make a Payment', base_template='finance/base_finance_portal.html')
     return render(request, 'finance/parent_payment_form.html', context)
 
 
@@ -730,7 +808,7 @@ class PaymentListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx.update(base_template=BASE_TEMPLATE, title='Payment History',
+        ctx.update(base_template=_base_template_for(self.request.user), title='Payment History',
                     terms=Term.objects.all(), sessions=Session.objects.all(),
                     categories=FeeCategory.objects.all(), is_finance_staff=is_finance_staff(self.request.user))
         return ctx
@@ -790,26 +868,22 @@ def notify_payment(request):
     else:
         form = PaymentNotificationForm(user=user, parent=parent_obj)
 
-    context = _common_context(form=form, student_for_display=student_for_display, title='Submit Proof of Payment')
+    context = _common_context(form=form, student_for_display=student_for_display, title='Submit Proof of Payment',
+                               base_template=_base_template_for(user))
     return render(request, 'finance/notify_payment.html', context)
 
 
 @login_required
 def payment_notification_success(request):
-    return render(request, 'finance/notification_success.html', _common_context(title='Submitted'))
+    context = _common_context(title='Submitted', base_template=_base_template_for(request.user))
+    return render(request, 'finance/notification_success.html', context)
 
 
-class PaymentNotificationListView(LoginRequiredMixin, ListView):
+class PaymentNotificationListView(LoginRequiredMixin, FinanceStaffRequiredMixin, ListView):
     model = PaymentNotification
     template_name = 'finance/notification_list.html'
     context_object_name = 'notifications'
     paginate_by = 20
-
-    def dispatch(self, request, *args, **kwargs):
-        if not is_finance_staff(request.user):
-            messages.error(request, "You do not have permission to access this page.")
-            return redirect('pages:portal-home')
-        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         return PaymentNotification.objects.filter(status='PENDING').select_related('student', 'bank_account')
@@ -837,7 +911,7 @@ class UserPaymentNotificationListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx.update(base_template=BASE_TEMPLATE, title='My Payment Submissions')
+        ctx.update(base_template=_base_template_for(self.request.user), title='My Payment Submissions')
         return ctx
 
 
@@ -883,20 +957,28 @@ def process_notification(request, pk):
 # ---------------------------------------------------------------------------
 @login_required
 def fee_table(request):
-    form = FeeTableFilterForm(request.GET or None)
+    staff_view = is_finance_staff(request.user)
+    form = FeeTableFilterForm(request.GET or None) if staff_view else None
     qs = FeeStructure.objects.select_related('student_class', 'fee_category', 'term', 'session')
 
-    term = session = student_class = None
-    if form.is_valid():
-        term = form.cleaned_data.get('term')
-        session = form.cleaned_data.get('session')
-        student_class = form.cleaned_data.get('student_class')
-        if term:
-            qs = qs.filter(term=term)
-        if session:
-            qs = qs.filter(session=session)
-        if student_class:
-            qs = qs.filter(Q(student_class=student_class) | Q(student_class__isnull=True))
+    if staff_view:
+        term = session = student_class = None
+        if form.is_valid():
+            term = form.cleaned_data.get('term')
+            session = form.cleaned_data.get('session')
+            student_class = form.cleaned_data.get('student_class')
+    else:
+        # Parents/students always see the current term's published schedule only —
+        # no browsing other terms/sessions, and no filter form to do it with.
+        term, session = _current_term_session()
+        student_class = None
+
+    if term:
+        qs = qs.filter(term=term)
+    if session:
+        qs = qs.filter(session=session)
+    if student_class:
+        qs = qs.filter(Q(student_class=student_class) | Q(student_class__isnull=True))
 
     qs = qs.order_by('student_class__name', 'fee_category__name')
 
@@ -912,26 +994,34 @@ def fee_table(request):
         'form': form, 'grouped': grouped, 'class_totals': class_totals,
         'term': term, 'session': session, 'student_class': student_class,
         'school': _get_school_identity(), 'today': timezone.localdate(),
-        'base_template': BASE_TEMPLATE,
+        'base_template': BASE_TEMPLATE if staff_view else 'finance/base_finance_portal.html',
+        'staff_view': staff_view,
     }
     return render(request, 'finance/fee_table.html', context)
 
 
 @login_required
 def fee_table_pdf(request):
-    form = FeeTableFilterForm(request.GET or None)
+    staff_view = is_finance_staff(request.user)
+    form = FeeTableFilterForm(request.GET or None) if staff_view else None
     qs = FeeStructure.objects.select_related('student_class', 'fee_category', 'term', 'session')
-    term = session = student_class = None
-    if form.is_valid():
-        term = form.cleaned_data.get('term')
-        session = form.cleaned_data.get('session')
-        student_class = form.cleaned_data.get('student_class')
-        if term:
-            qs = qs.filter(term=term)
-        if session:
-            qs = qs.filter(session=session)
-        if student_class:
-            qs = qs.filter(Q(student_class=student_class) | Q(student_class__isnull=True))
+
+    if staff_view:
+        term = session = student_class = None
+        if form.is_valid():
+            term = form.cleaned_data.get('term')
+            session = form.cleaned_data.get('session')
+            student_class = form.cleaned_data.get('student_class')
+    else:
+        term, session = _current_term_session()
+        student_class = None
+
+    if term:
+        qs = qs.filter(term=term)
+    if session:
+        qs = qs.filter(session=session)
+    if student_class:
+        qs = qs.filter(Q(student_class=student_class) | Q(student_class__isnull=True))
     qs = qs.order_by('student_class__name', 'fee_category__name')
 
     grouped = {}
@@ -944,6 +1034,7 @@ def fee_table_pdf(request):
         'form': form, 'grouped': grouped, 'class_totals': class_totals,
         'term': term, 'session': session, 'student_class': student_class,
         'school': _get_school_identity(), 'today': timezone.localdate(), 'is_pdf': True,
+        'staff_view': staff_view,
     }
     response = services.render_to_pdf('finance/fee_table.html', context, filename='fee_table.pdf')
     if not response:
@@ -1008,17 +1099,11 @@ def _debtors_csv(debtors, term, session):
 # ---------------------------------------------------------------------------
 # Expenses
 # ---------------------------------------------------------------------------
-class ExpenseListView(LoginRequiredMixin, ListView):
+class ExpenseListView(LoginRequiredMixin, FinanceStaffRequiredMixin, ListView):
     model = Expense
     template_name = 'finance/expense_list.html'
     context_object_name = 'expenses'
     paginate_by = 25
-
-    def dispatch(self, request, *args, **kwargs):
-        if not is_finance_staff(request.user):
-            messages.error(request, "You do not have permission to access this page.")
-            return redirect('pages:portal-home')
-        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         qs = Expense.objects.select_related('category', 'vendor').order_by('-expense_date')
@@ -1080,17 +1165,11 @@ class ExpenseListView(LoginRequiredMixin, ListView):
         return ctx
 
 
-class ExpenseCreateView(LoginRequiredMixin, CreateView):
+class ExpenseCreateView(LoginRequiredMixin, FinanceStaffRequiredMixin, CreateView):
     model = Expense
     form_class = ExpenseForm
     template_name = 'finance/simple_form.html'
     success_url = reverse_lazy('finance:expense_list')
-
-    def dispatch(self, request, *args, **kwargs):
-        if not is_finance_staff(request.user):
-            messages.error(request, "You do not have permission to access this page.")
-            return redirect('pages:portal-home')
-        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         form.instance.recorded_by = self.request.user
@@ -1103,17 +1182,11 @@ class ExpenseCreateView(LoginRequiredMixin, CreateView):
         return ctx
 
 
-class ExpenseUpdateView(LoginRequiredMixin, UpdateView):
+class ExpenseUpdateView(LoginRequiredMixin, FinanceStaffRequiredMixin, UpdateView):
     model = Expense
     form_class = ExpenseForm
     template_name = 'finance/simple_form.html'
     success_url = reverse_lazy('finance:expense_list')
-
-    def dispatch(self, request, *args, **kwargs):
-        if not is_finance_staff(request.user):
-            messages.error(request, "You do not have permission to access this page.")
-            return redirect('pages:portal-home')
-        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -1121,16 +1194,10 @@ class ExpenseUpdateView(LoginRequiredMixin, UpdateView):
         return ctx
 
 
-class ExpenseDeleteView(LoginRequiredMixin, DeleteView):
+class ExpenseDeleteView(LoginRequiredMixin, FinanceStaffRequiredMixin, DeleteView):
     model = Expense
     template_name = 'finance/confirm_delete.html'
     success_url = reverse_lazy('finance:expense_list')
-
-    def dispatch(self, request, *args, **kwargs):
-        if not is_finance_staff(request.user):
-            messages.error(request, "You do not have permission to access this page.")
-            return redirect('pages:portal-home')
-        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -1149,7 +1216,7 @@ def approve_expense(request, pk):
     return redirect('finance:expense_list')
 
 
-class ExpenseCategoryListView(LoginRequiredMixin, ListView):
+class ExpenseCategoryListView(LoginRequiredMixin, FinanceStaffRequiredMixin, ListView):
     model = ExpenseCategory
     template_name = 'finance/expense_category_list.html'
     context_object_name = 'categories'
@@ -1160,7 +1227,7 @@ class ExpenseCategoryListView(LoginRequiredMixin, ListView):
         return ctx
 
 
-class ExpenseCategoryCreateView(LoginRequiredMixin, CreateView):
+class ExpenseCategoryCreateView(LoginRequiredMixin, FinanceStaffRequiredMixin, CreateView):
     model = ExpenseCategory
     form_class = ExpenseCategoryForm
     template_name = 'finance/simple_form.html'
@@ -1172,7 +1239,7 @@ class ExpenseCategoryCreateView(LoginRequiredMixin, CreateView):
         return ctx
 
 
-class VendorListView(LoginRequiredMixin, ListView):
+class VendorListView(LoginRequiredMixin, FinanceStaffRequiredMixin, ListView):
     model = Vendor
     template_name = 'finance/vendor_list.html'
     context_object_name = 'vendors'
@@ -1183,7 +1250,7 @@ class VendorListView(LoginRequiredMixin, ListView):
         return ctx
 
 
-class VendorCreateView(LoginRequiredMixin, CreateView):
+class VendorCreateView(LoginRequiredMixin, FinanceStaffRequiredMixin, CreateView):
     model = Vendor
     form_class = VendorForm
     template_name = 'finance/simple_form.html'

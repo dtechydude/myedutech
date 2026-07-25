@@ -23,7 +23,14 @@
 
 	{% block favicon %}
 	<!-- FAVICONS ICON -->
-	<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+     <!-- FAVICONS ICON -->	
+    {% if school_info and school_info.logo %}
+		<link rel="icon" href="{{ school_info.logo.url }}" type="image/png">
+	{% else %}
+		<link rel="icon" href="{% static 'images/school_logo.jpg' %}" type="image/png">
+	{% endif %}
+
+    
     <!-- Chartist -->
     <link rel="stylesheet" href="{% static 'pages/vendor/chartist/css/chartist.min.css' %}">
 
@@ -93,69 +100,132 @@
             <div class="container-fluid">
 				<div class="row page-titles">
 					<ol class="breadcrumb">
-						<li class="breadcrumb-item active"><a href="javascript:void(0)">Contact Support </a></li>
-						<!-- <li class="breadcrumb-item"><a href="javascript:void(0)">Statistics</a></li> -->
+						<li class="breadcrumb-item active"><a href="javascript:void(0)">Contact Support</a></li>
 					</ol>
                 </div>
+
                 <!-- row -->
-                <div class="row">
-					<div class="col-xl-4 col-xxl-6 col-lg-6">
+                <div class="row justify-content-center">
+
+					{% if is_student %}
+					<!-- Student: Registry / Student Affairs -->
+					<div class="col-xl-8 col-lg-10">
                         <div class="card">
                             <div class="card-header border-0 pb-0">
-                                <h4 class="card-title">The School Support Contact</h4>
+                                <h4 class="card-title">Contact Registry / Student Affairs</h4>
+                                <p class="m-0 subtitle">For registration, results, ID card, and other student matters</p>
                             </div>
                             <div class="card-body">
                                 <div id="DZ_W_TimeLine" class="widget-timeline dlab-scroll height570">
-                                    {% for s in school_contact %}
                                     <ul class="timeline">
-
                                         <li>
                                            <div class="timeline-badge primary"></div>
                                             <a class="timeline-panel text-muted" href="#">
-                                                <span>School Full Name</span>
-                                                <h6 class="mb-0">{{ s.name }} <strong class="text-primary">#</strong>.</h6>
-                                                <p class="mb-0"> School's Name
-                                                </p>
+                                                <span>Institution</span>
+                                                <h6 class="mb-0">{{ school_info.name }}</h6>
                                             </a>
                                         </li>
                                         <li>
-                                            <div class="timeline-badge info">
-                                            </div>
+                                            <div class="timeline-badge info"></div>
                                             <a class="timeline-panel text-muted" href="#">
-                                                <span>School's Phones</span>
-                                                <h6 class="mb-0">Phone 1: (+234) {{ s.phone1 }} <strong class="text-info"><br> Phone 2: (+234) {{s.phone2}}</strong></h6>
-
+                                                <span>Registry / Student Affairs Phone</span>
+                                                <h6 class="mb-0">{{ school_info.registrar_phone|default:school_info.phone1 }}</h6>
                                             </a>
                                         </li>
                                         <li>
-                                            <div class="timeline-badge danger">
-                                            </div>
+                                            <div class="timeline-badge danger"></div>
                                             <a class="timeline-panel text-muted" href="#">
-                                                <span>School's EMAIL</span>
-                                                <h6 class="mb-0">{{ s.email }} <strong class="text-warning"></strong></h6>
+                                                <span>Registry / Student Affairs Email</span>
+                                                <h6 class="mb-0">{{ school_info.registrar_email|default:school_info.email }}</h6>
                                             </a>
                                         </li>
                                         <li>
-                                            <div class="timeline-badge success">
-                                            </div>
+                                            <div class="timeline-badge warning"></div>
                                             <a class="timeline-panel text-muted" href="#">
-                                                <span>School's Physical Address</span>
-                                                <h6 class="mb-0">{{ s.address_line_1 }}
-                                                <br> {{ s.address_line_2 }}</h6>
+                                                <span>Portal / ICT Support</span>
+                                                <h6 class="mb-0">
+                                                    {{ school_info.support_phone|default:school_info.phone2 }}
+                                                    {% if school_info.support_email %}<br><small>{{ school_info.support_email }}</small>{% endif %}
+                                                </h6>
                                             </a>
                                         </li>
-
-
+                                        <li>
+                                            <div class="timeline-badge success"></div>
+                                            <a class="timeline-panel text-muted" href="#">
+                                                <span>Campus Address</span>
+                                                <h6 class="mb-0">{{ school_info.address_line_1 }}{% if school_info.address_line_2 %}, {{ school_info.address_line_2 }}{% endif %}</h6>
+                                            </a>
+                                        </li>
                                     </ul>
-                                    {% endfor %}
                                 </div>
                             </div>
                         </div>
 					</div>
-					<div class="col-xl-4 col-xxl-6 col-lg-6">
+					{% endif %}
+
+					{% if is_teacher %}
+					<!-- Lecturer/Academic Staff: HR / Staff Affairs -->
+					<div class="col-xl-8 col-lg-10">
+                        <div class="card">
+                            <div class="card-header border-0 pb-0">
+                                <h4 class="card-title">Contact HR / Staff Affairs</h4>
+                                <p class="m-0 subtitle">For course assignment, payroll, and other staff matters</p>
+                            </div>
+                            <div class="card-body">
+                                <div id="DZ_W_TimeLine_Staff" class="widget-timeline dlab-scroll height570">
+                                    <ul class="timeline">
+                                        <li>
+                                           <div class="timeline-badge primary"></div>
+                                            <a class="timeline-panel text-muted" href="#">
+                                                <span>Institution</span>
+                                                <h6 class="mb-0">{{ school_info.name }}</h6>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <div class="timeline-badge info"></div>
+                                            <a class="timeline-panel text-muted" href="#">
+                                                <span>HR / Staff Affairs Phone</span>
+                                                <h6 class="mb-0">{{ school_info.hr_phone|default:school_info.phone1 }}</h6>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <div class="timeline-badge danger"></div>
+                                            <a class="timeline-panel text-muted" href="#">
+                                                <span>HR / Staff Affairs Email</span>
+                                                <h6 class="mb-0">{{ school_info.hr_email|default:school_info.email }}</h6>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <div class="timeline-badge warning"></div>
+                                            <a class="timeline-panel text-muted" href="#">
+                                                <span>Portal / ICT Support</span>
+                                                <h6 class="mb-0">
+                                                    {{ school_info.support_phone|default:school_info.phone2 }}
+                                                    {% if school_info.support_email %}<br><small>{{ school_info.support_email }}</small>{% endif %}
+                                                </h6>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <div class="timeline-badge success"></div>
+                                            <a class="timeline-panel text-muted" href="#">
+                                                <span>Campus Address</span>
+                                                <h6 class="mb-0">{{ school_info.address_line_1 }}{% if school_info.address_line_2 %}, {{ school_info.address_line_2 }}{% endif %}</h6>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+					</div>
+					{% endif %}
+
+					{% if is_staff_or_admin %}
+					<!-- Superuser/Admin: platform vendor support -->
+					<div class="col-xl-8 col-lg-10">
                         <div class="card">
                             <div class="card-header border-0 pb-0">
                                 <h4 class="card-title">KwikSchools Support Center</h4>
+                                <p class="m-0 subtitle">Platform/vendor support — portal software issues, upgrades, and billing</p>
                             </div>
                             <div class="card-body">
                                 <div id="DZ_W_TimeLine11" class="widget-timeline dlab-scroll style-1 height570">
@@ -168,8 +238,7 @@
                                             </a>
                                         </li>
                                         <li>
-                                            <div class="timeline-badge info">
-                                            </div>
+                                            <div class="timeline-badge info"></div>
                                             <a class="timeline-panel text-muted" href="#">
                                                 <span>Contact via Phone/WhatsApp</span>
                                                 <h6 class="mb-0">+234 8050757634 <strong class="text-info">Work Hours.</strong></h6>
@@ -177,28 +246,33 @@
                                             </a>
                                         </li>
                                         <li>
-                                            <div class="timeline-badge danger">
-                                            </div>
+                                            <div class="timeline-badge danger"></div>
                                             <a class="timeline-panel text-muted" href="#">
                                                 <span>Social Media Connect</span>
-                                                <h6 class="mb-0">FACEBOOK, INSTAGRAM, X, YOUTUBE, TIKTOK <br>
-                                                <strong class="text-warning">@kwikschools</strong></h6>
+                                                <h6 class="mb-0">FACEBOOK, INSTAGRAM, X, YOUTUBE, TIKTOK <strong class="text-warning">@kwikschools, or @kwikschools</strong></h6>
                                             </a>
                                         </li>
                                         <li>
-                                            <div class="timeline-badge success">
-                                            </div>
+                                            <div class="timeline-badge success"></div>
                                             <a class="timeline-panel text-muted" href="#">
                                                 <span>Visit our website</span>
                                                 <h6 class="mb-0">https://kwikschools.com </h6>
                                             </a>
                                         </li>
-
                                     </ul>
                                 </div>
                             </div>
                         </div>
 					</div>
+					{% endif %}
+
+					{% if not is_student and not is_teacher and not is_staff_or_admin %}
+					<div class="col-xl-8 col-lg-10">
+						<div class="alert alert-warning border-0 shadow-sm text-center">
+							No support contact found for your account type. Please contact the admin office for assistance.
+						</div>
+					</div>
+					{% endif %}
 
                 </div>
             </div>

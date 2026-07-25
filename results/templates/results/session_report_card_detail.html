@@ -363,7 +363,7 @@
         <div class="table-responsive">
             <table class="info-table w-100 mb-3">
                 <tr>
-                    <td width="50%"><strong>NAME:</strong> {{ student.last_name|upper }} {{ student.first_name|upper }} {% if student.middle_name %} {{ student.middle_name|upper|default:"" }} {% endif %}</td>
+                    <td width="50%"><strong>NAME: {{ student.last_name|upper }} {{ student.first_name|upper }} {% if student.middle_name %} {{ student.middle_name|upper|default:"" }} {% endif %}</strong> <span style="color:green;"> <small> - (GENDER: {{ student.gender|upper|default:"" }} )</small> </span></td>
                     <td width="25%"><strong>USN:</strong> {{ student.USN|default:"N/A" }}</td>
                     <td width="25%"><strong>CLASS:</strong> {{ student.current_class.name|default:"N/A" }}</td>
                 </tr>
@@ -386,7 +386,6 @@
                 </tr>
             </table>
         </div>
-        <div> REPORT CARD </div>
         <div class="table-responsive">
             <table class="subject-table table-bordered w-100 mb-3 text-center">
                 <thead>
