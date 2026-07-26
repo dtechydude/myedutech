@@ -21,6 +21,7 @@ from . import services
 from .models import (
     FeeCategory, FeeStructure, Invoice, Payment, Receipt, StudentAccountLedger,
     ExpenseCategory, Expense, StudentDiscount, StudentFeeException, InstallmentPlan, Installment,
+    BankAccount, PaymentNotification,
 )
 
 User = get_user_model()
@@ -698,5 +699,91 @@ class FinanceParentDashboardTests(FinanceTestCaseBase):
         response = self.client.get(reverse('finance:make_parent_payment'), {'student': self.student.pk})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['form'].initial.get('student').pk, self.student.pk)
+
+
+class StandalonePaymentRegressionTests(FinanceTestCaseBase):
+    """
+    Locks in the fix for: 'NOT NULL constraint failed: finance_payment.
+    fee_category_id' when recording a payment with no invoice. The old
+    record_payment() only ever defaulted term/session/fee_category when an
+    invoice was supplied — a standalone payment (no invoice) always hit
+    the database with all three still None.
+    """
+
+    def test_standalone_payment_with_explicit_fee_category_succeeds(self):
+        payment = services.record_payment(
+            user=self.staff_user, student=self.student, invoice=None,
+            fee_category=self.tuition, term=self.term, session=self.session,
+            amount_received=Decimal('1000.00'), payment_method='cash',
+        )
+        self.assertEqual(payment.fee_category, self.tuition)
+        self.assertEqual(payment.term, self.term)
+        self.assertEqual(payment.session, self.session)
+
+    def test_standalone_payment_falls_back_to_current_term_session(self):
+        # term/session deliberately omitted - should resolve from is_current
+        # flags rather than crash.
+        payment = services.record_payment(
+            user=self.staff_user, student=self.student, invoice=None,
+            fee_category=self.tuition,
+            amount_received=Decimal('1000.00'), payment_method='cash',
+        )
+        self.assertEqual(payment.term, self.term)
+        self.assertEqual(payment.session, self.session)
+
+    def test_standalone_payment_without_fee_category_raises_clear_error_not_integrity_error(self):
+        with self.assertRaises(ValueError) as ctx:
+            services.record_payment(
+                user=self.staff_user, student=self.student, invoice=None,
+                amount_received=Decimal('1000.00'), payment_method='cash',
+            )
+        self.assertIn('fee_category', str(ctx.exception))
+
+
+class ProcessNotificationStandaloneApprovalTests(FinanceTestCaseBase):
+    """Locks in the actual view/template fix: approving a notification
+    with no invoice now asks for (and correctly uses) a fee category."""
+
+    def setUp(self):
+        super().setUp()
+        self.client.login(username='bursar', password='pass1234')
+        self.bank_account = BankAccount.objects.create(
+            account_name='School', account_number='0000000000', bank_name='Test Bank',
+        )
+        self.notification = PaymentNotification.objects.create(
+            student=self.student, amount_paid=Decimal('5000.00'), bank_account=self.bank_account,
+            term=self.term, session=self.session,
+        )
+
+    def test_approving_without_invoice_or_fee_category_shows_friendly_error_not_a_crash(self):
+        response = self.client.post(
+            reverse('finance:process_notification', args=[self.notification.pk]),
+            {'action': 'approve', 'invoice': ''}, follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.notification.refresh_from_db()
+        self.assertEqual(self.notification.status, PaymentNotification.Status.PENDING)
+
+    def test_approving_without_invoice_but_with_fee_category_succeeds(self):
+        response = self.client.post(
+            reverse('finance:process_notification', args=[self.notification.pk]),
+            {'action': 'approve', 'invoice': '', 'fee_category': self.tuition.pk}, follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.notification.refresh_from_db()
+        self.assertEqual(self.notification.status, PaymentNotification.Status.PROCESSED)
+        self.assertIsNotNone(self.notification.resulting_payment)
+        self.assertEqual(self.notification.resulting_payment.fee_category, self.tuition)
+        self.assertEqual(self.notification.resulting_payment.term, self.term)
+        self.assertEqual(self.notification.resulting_payment.session, self.session)
+
+    def test_approving_with_an_invoice_still_works_without_fee_category(self):
+        invoice = services.generate_invoice_for_student(self.student, self.term, self.session)
+        response = self.client.post(
+            reverse('finance:process_notification', args=[self.notification.pk]),
+            {'action': 'approve', 'invoice': invoice.pk}, follow=True,
+        )
+        self.notification.refresh_from_db()
+        self.assertEqual(self.notification.status, PaymentNotification.Status.PROCESSED)
 
 

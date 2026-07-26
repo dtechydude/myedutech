@@ -276,6 +276,24 @@ respective form with that student already selected via `?student=<id>`
 is now labeled "Student Directory" since it's the general hub for
 per-student actions, not just payments.
 
+**`NOT NULL constraint failed: finance_payment.fee_category_id` when
+approving a payment notification with no invoice linked.**
+`services.record_payment()` only ever defaulted `term`/`session`/
+`fee_category` from the *invoice* — a standalone payment (no invoice,
+e.g. approving an offline bank-transfer notification without linking it
+to one) hit the database with all three still `None`. Fixed two ways:
+(1) `record_payment()` now falls back to the currently-marked term/
+session when there's no invoice to infer them from, and raises a clear
+`ValueError` naming exactly what's missing instead of a cryptic
+`IntegrityError` if a fee category still can't be determined — it never
+guesses the category, since that's meaningful information a human should
+provide. (2) The notification-review screen now asks for a **Fee
+Category** whenever no invoice is selected (hidden/not required when an
+invoice is chosen), so approving a standalone notification actually
+works end-to-end instead of crashing. This also silently fixed an
+identical latent bug in the staff Record Payment form's "no invoice"
+path, which had the same gap.
+
 ## 7d. Mobile navigation & branding
 
 The sidebar is a proper off-canvas drawer on tablet/mobile (≤991px) —

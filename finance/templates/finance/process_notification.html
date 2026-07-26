@@ -20,12 +20,22 @@
                 {% csrf_token %}
                 <div class="col-12">
                     <label class="form-label">Link to Invoice (optional — settles the invoice balance)</label>
-                    <select name="invoice" class="form-select">
+                    <select name="invoice" id="id_notification_invoice" class="form-select">
                         <option value="">--- No invoice / standalone payment ---</option>
                         {% for inv in invoices %}
                             <option value="{{ inv.pk }}">{{ inv.invoice_number }} — Balance: {{ inv.balance|currency }}</option>
                         {% endfor %}
                     </select>
+                </div>
+                <div class="col-12" id="fee-category-wrapper">
+                    <label class="form-label">Fee Category <span class="text-danger">*</span></label>
+                    <select name="fee_category" id="id_notification_fee_category" class="form-select">
+                        <option value="">--- Select what this payment is for ---</option>
+                        {% for cat in fee_categories %}
+                            <option value="{{ cat.pk }}">{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">Only needed when no invoice is linked above — required in that case.</div>
                 </div>
                 <div class="col-12 mt-3">
                     <button type="submit" name="action" value="approve" class="btn btn-success"><i class="fa-solid fa-check me-1"></i> Approve &amp; Record Payment</button>
@@ -35,4 +45,20 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var invoiceSelect = document.getElementById('id_notification_invoice');
+    var wrapper = document.getElementById('fee-category-wrapper');
+    var categorySelect = document.getElementById('id_notification_fee_category');
+
+    function syncVisibility() {
+        var hasInvoice = !!invoiceSelect.value;
+        wrapper.style.display = hasInvoice ? 'none' : 'block';
+        categorySelect.required = !hasInvoice;
+    }
+    invoiceSelect.addEventListener('change', syncVisibility);
+    syncVisibility();
+});
+</script>
 {% endblock %}

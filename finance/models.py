@@ -56,7 +56,7 @@ class BankAccount(models.Model):
     account_name = models.CharField(max_length=100)
     account_number = models.CharField(max_length=20)
     bank_name = models.CharField(max_length=100, verbose_name='Bank Name')
-    branch = models.CharField(max_length=100, blank=True)
+    branch = models.CharField(max_length=100, blank=True, verbose_name='description')
     is_primary = models.BooleanField(default=False, help_text="Show this account first on invoices/receipts.")
     is_active = models.BooleanField(default=True)
 

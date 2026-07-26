@@ -47,6 +47,10 @@ urlpatterns = [
     path('bank-accounts/add/', views.BankAccountCreateView.as_view(), name='bank_account_add'),
     path('bank-accounts/<int:pk>/edit/', views.BankAccountUpdateView.as_view(), name='bank_account_edit'),
 
+    # Bank Account For Others
+    path('bank-detail/', views.school_bank_detail, name='school_bank-detail'),
+
+
     # --- Invoices ---
     path('invoices/', views.InvoiceListView.as_view(), name='invoice_list'),
     path('invoices/add/', views.invoice_create, name='invoice_create'),

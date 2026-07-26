@@ -956,12 +956,28 @@ def process_notification(request, pk):
     if request.method == 'POST' and action == 'approve':
         invoice_id = request.POST.get('invoice')
         invoice = Invoice.objects.filter(pk=invoice_id, student=notification.student).first() if invoice_id else None
-        payment = services.record_payment(
-            user=request.user, student=notification.student, invoice=invoice,
-            amount_received=notification.amount_paid, payment_method='bank_transfer',
-            payment_date=notification.payment_date, transaction_id=notification.transaction_id,
-            notes=f"Verified from payment notification #{notification.pk}.",
-        )
+
+        fee_category = None
+        if invoice is None:
+            fee_category_id = request.POST.get('fee_category')
+            if not fee_category_id:
+                messages.error(request, "Since no invoice was selected, choose what this payment is "
+                                         "for (Fee Category) before approving.")
+                return redirect('finance:process_notification', pk=notification.pk)
+            fee_category = get_object_or_404(FeeCategory, pk=fee_category_id)
+
+        try:
+            payment = services.record_payment(
+                user=request.user, student=notification.student, invoice=invoice, fee_category=fee_category,
+                term=notification.term, session=notification.session,
+                amount_received=notification.amount_paid, payment_method='bank_transfer',
+                payment_date=notification.payment_date, transaction_id=notification.transaction_id,
+                notes=f"Verified from payment notification #{notification.pk}.",
+            )
+        except ValueError as exc:
+            messages.error(request, str(exc))
+            return redirect('finance:process_notification', pk=notification.pk)
+
         notification.status = PaymentNotification.Status.PROCESSED
         notification.processed_by = request.user
         notification.processed_at = timezone.now()
@@ -979,7 +995,9 @@ def process_notification(request, pk):
         return redirect('finance:notification_list')
 
     invoices = Invoice.objects.filter(student=notification.student).exclude(status=Invoice.Status.CANCELLED)
-    context = _common_context(notification=notification, invoices=invoices, title='Review Notification')
+    fee_categories = FeeCategory.objects.filter(is_active=True).order_by('name')
+    context = _common_context(notification=notification, invoices=invoices, fee_categories=fee_categories,
+                               title='Review Notification')
     return render(request, 'finance/process_notification.html', context)
 
 
@@ -1379,3 +1397,19 @@ def _get_school_identity():
         return SchoolIdentity.objects.first()
     except Exception:
         return None
+
+
+# Bank Details
+@login_required
+def school_bank_detail(request):
+    """
+    Read-only display of the school's official bank accounts, visible to
+    students and other logged-in users, so payments (tuition, hostel,
+    etc.) always go to a verified account rather than word-of-mouth or
+    outdated details.
+    """
+    bank_details = BankAccount.objects.all()
+
+    return render(request, 'finance/school_bank_detail.html', {
+        'bank_detail': bank_details,
+    })

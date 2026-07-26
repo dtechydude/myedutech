@@ -32,6 +32,14 @@ from .models import (
 ZERO = Decimal('0.00')
 
 
+def get_current_term_session():
+    """The school's currently-marked Term/Session, or (None, None) if neither is set yet."""
+    from curriculum.models import Term, Session
+    term = Term.objects.filter(is_current=True).first()
+    session = Session.objects.filter(is_current=True).first()
+    return term, session
+
+
 def get_best_discount(student, fee_category, term, session, original_amount):
     """
     Finds every active StudentDiscount that matches this student/line scope
@@ -363,8 +371,28 @@ def record_payment(*, user, student, amount_received, payment_method, payment_da
         session = session or invoice.session
         if fee_category is None:
             first_item = invoice.items.first()
-            fee_category = first_item.fee_category if first_item else FeeCategory.objects.filter(
-                category_type=FeeCategory.CategoryType.OTHER).first()
+            fee_category = first_item.fee_category if first_item else None
+
+    # A payment that isn't tied to an invoice (a standalone/miscellaneous
+    # payment, or an approved offline notification where staff didn't pick
+    # an invoice) still needs a term/session to be filed under. Fall back
+    # to whatever's currently marked as the active term/session rather
+    # than leaving these blank — but never *guess* a fee category; that's
+    # meaningful information a human should supply, not something safe to
+    # invent silently.
+    if term is None or session is None:
+        current_term, current_session = get_current_term_session()
+        term = term or current_term
+        session = session or current_session
+
+    missing = [name for name, value in
+               [('fee_category', fee_category), ('term', term), ('session', session)] if value is None]
+    if missing:
+        raise ValueError(
+            "Cannot record this payment - could not determine: " + ", ".join(missing) + ". "
+            "Link it to an invoice (which supplies these automatically), pass them explicitly, "
+            "or mark a current term/session under Curriculum settings."
+        )
 
     if not transaction_id or not transaction_id.strip():
         transaction_id = f"MANUAL-{user.pk if user else 0}-{timezone.now().strftime('%Y%m%d%H%M%S%f')}"
