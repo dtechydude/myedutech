@@ -450,15 +450,18 @@ class InvoiceListView(LoginRequiredMixin, ListView):
         user = self.request.user
         qs = Invoice.objects.select_related('student', 'term', 'session').prefetch_related(
             'payments__receipt').order_by('-issue_date')
+        student_id = self.request.GET.get('student')
         if not is_finance_staff(user):
             if is_parent(user):
                 qs = qs.filter(student__parent=user.parent)
+                if student_id:
+                    # Safe to narrow further — still constrained to their own children above.
+                    qs = qs.filter(student_id=student_id)
             elif is_student_user(user):
                 qs = qs.filter(student=user.student)
             else:
                 qs = qs.none()
         else:
-            student_id = self.request.GET.get('student')
             if student_id:
                 qs = qs.filter(student_id=student_id)
 
@@ -788,7 +791,14 @@ def make_parent_payment(request):
             messages.success(request, "Payment recorded.")
             return redirect('finance:payment_list')
     else:
-        form = ParentPaymentForm(parent=parent)
+        initial = {}
+        preselected_student_id = request.GET.get('student')
+        if preselected_student_id:
+            initial['student'] = get_object_or_404(Student, pk=preselected_student_id, parent=parent)
+        preselected_invoice_id = request.GET.get('invoice')
+        if preselected_invoice_id:
+            initial['invoice'] = get_object_or_404(Invoice, pk=preselected_invoice_id, student__parent=parent)
+        form = ParentPaymentForm(parent=parent, initial=initial)
     context = _common_context(form=form, title='Make a Payment', base_template='finance/base_finance_portal.html')
     return render(request, 'finance/parent_payment_form.html', context)
 

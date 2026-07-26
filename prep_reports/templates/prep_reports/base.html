@@ -6,7 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="KwikSchools — School Management Portal">
   <title>{% block title %}KwikSchools Portal{% endblock %} | {{ school_info.name|default:"KwikSchools" }}</title>
-  <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+<!-- FAVICONS ICON -->	
+    {% if school_info and school_info.logo %}
+		<link rel="icon" href="{{ school_info.logo.url }}" type="image/png">
+	{% else %}
+		<link rel="icon" href="{% static 'pages/images/school_logo.jpg' %}" type="image/png">
+	{% endif %}
 
 
   {# ── Google Fonts ── #}

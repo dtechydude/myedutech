@@ -24,8 +24,12 @@
 document.addEventListener('DOMContentLoaded', function () {
     const studentSelect = document.getElementById('id_student');
     const invoiceSelect = document.getElementById('id_invoice');
+    // Whatever Django initially rendered as "selected" (e.g. from a ?invoice=
+    // pre-selection) — remembered here because the AJAX refresh below rebuilds
+    // the <option> list from scratch and would otherwise silently drop it.
+    const preselectedInvoiceId = invoiceSelect ? invoiceSelect.value : '';
 
-    function loadInvoices(studentId) {
+    function loadInvoices(studentId, keepSelectedId) {
         invoiceSelect.innerHTML = '<option value="">--- Select an invoice ---</option>';
         if (!studentId) return;
         fetch(`{% url 'finance:student_invoices_ajax' 0 %}`.replace('0', studentId))
@@ -35,6 +39,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     const opt = document.createElement('option');
                     opt.value = inv.id;
                     opt.textContent = inv.text;
+                    if (keepSelectedId && String(inv.id) === String(keepSelectedId)) {
+                        opt.selected = true;
+                    }
                     invoiceSelect.appendChild(opt);
                 });
             });
@@ -42,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (studentSelect) {
         studentSelect.addEventListener('change', () => loadInvoices(studentSelect.value));
-        if (studentSelect.value) loadInvoices(studentSelect.value);
+        if (studentSelect.value) loadInvoices(studentSelect.value, preselectedInvoiceId);
     }
 });
 </script>

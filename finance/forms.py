@@ -302,7 +302,9 @@ class ParentPaymentForm(forms.Form):
         if parent is not None:
             children = Student.objects.filter(parent=parent).order_by('last_name')
             self.fields['student'].queryset = children
-            student_id = self.data.get('student')
+            initial_student = self.initial.get('student')
+            initial_student_id = initial_student.pk if isinstance(initial_student, Student) else initial_student
+            student_id = self.data.get('student') or initial_student_id
             if student_id:
                 self.fields['invoice'].queryset = Invoice.objects.filter(
                     student_id=student_id, student__in=children).exclude(status=Invoice.Status.CANCELLED)

@@ -1,12 +1,20 @@
 # finance/urls.py
 from django.urls import path
 from . import views
+from . import views_parent_dashboard
 
 app_name = 'finance'
 
 urlpatterns = [
     # --- Dashboard ---
     path('', views.dashboard, name='dashboard'),
+
+    # --- Optional independent parent dashboard (finance-app-sourced financial
+    # data, academic sections identical to the payments-app version). Wire
+    # this into your nav wherever a given school should use it instead of
+    # the existing students.views.parent_dashboard. See
+    # finance/views_parent_dashboard.py for details. ---
+    path('parent-dashboard/', views_parent_dashboard.parent_dashboard, name='parent_dashboard'),
 
     # --- Fee Categories ---
     path('fee-categories/', views.FeeCategoryListView.as_view(), name='fee_category_list'),

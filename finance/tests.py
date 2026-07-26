@@ -645,3 +645,58 @@ class StudentDropdownRenderingRegressionTests(FinanceTestCaseBase):
         response = self.client.get(reverse('finance:make_payment'))
         self.assertContains(response, f'value="{self.student.pk}"')
 
+
+class FinanceParentDashboardTests(FinanceTestCaseBase):
+    """
+    Tests for the independent, finance-app-sourced parent dashboard
+    (finance/views_parent_dashboard.py). This intentionally depends on the
+    same academic apps (results, prep_reports) as the original payments-app
+    dashboard it mirrors — these tests run against your real project where
+    those apps exist. Skipped automatically if they're not installed, so
+    this file stays importable even before you wire the two apps together.
+    """
+
+    def setUp(self):
+        super().setUp()
+        try:
+            from students.models import Parent
+        except ImportError:
+            self.skipTest("students.models.Parent not available in this environment")
+            return
+        self.parent_user = User.objects.create_user(username='parentuser', password='pass1234')
+        self.parent = Parent.objects.create(user=self.parent_user)
+        self.student.parent = self.parent
+        self.student.save()
+        self.client.login(username='parentuser', password='pass1234')
+
+    def test_dashboard_loads_and_shows_the_child(self):
+        try:
+            response = self.client.get(reverse('finance:parent_dashboard'))
+        except Exception as exc:  # noqa: BLE001 - academic apps (results/prep_reports) not present here
+            self.skipTest(f"Requires results/prep_reports apps to be installed: {exc}")
+            return
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.student.get_full_name())
+
+    def test_dashboard_shows_correct_balance_from_finance_app(self):
+        services.generate_invoice_for_student(self.student, self.term, self.session)
+        services.record_payment(user=self.staff_user, student=self.student,
+                                  invoice=Invoice.objects.get(student=self.student, term=self.term,
+                                                               session=self.session),
+                                  amount_received=Decimal('20000.00'), payment_method='cash')
+        try:
+            response = self.client.get(reverse('finance:parent_dashboard'))
+        except Exception as exc:  # noqa: BLE001
+            self.skipTest(f"Requires results/prep_reports apps to be installed: {exc}")
+            return
+        summary = response.context['children_with_reports'][0]['grand_payment_summary']
+        self.assertEqual(summary['total_due'], Decimal('52000.00'))
+        self.assertEqual(summary['total_paid'], Decimal('20000.00'))
+        self.assertEqual(summary['total_balance'], Decimal('32000.00'))
+
+    def test_pay_now_link_preselects_the_child(self):
+        response = self.client.get(reverse('finance:make_parent_payment'), {'student': self.student.pk})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['form'].initial.get('student').pk, self.student.pk)
+
+

@@ -24,7 +24,7 @@
 	<!-- FAVICONS ICON -->
 	
 	{% comment %} <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" /> {% endcomment %}
-	   <!-- FAVICONS ICON -->	
+	<!-- FAVICONS ICON -->	
     {% if school_info and school_info.logo %}
 		<link rel="icon" href="{{ school_info.logo.url }}" type="image/png">
 	{% else %}
@@ -603,6 +603,29 @@
 						</ul>
 					</li>	
 					{% endif %}		
+
+					
+					{% if user.is_authenticated and user.is_superuser or user.is_staff or user.student or user.parent %}
+					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
+						<i class="flaticon-013-checkmark"></i>
+							<span class="nav-text">FINANCE & BILLS</span>
+						</a>					
+						<ul aria-expanded="false"> 
+							
+							{% if user.is_superuser or user.is_staff %}								
+							<li><a href="{% url 'finance:dashboard' %}" target="_blank">School Finance</a></li>
+							
+							{% endif %}	
+
+							{% if user.student or user.parent %}
+							<li><a href="{% url 'finance:dashboard' %}">My Bills & Receipts</a>
+							</li>
+													
+							{% endif %}		
+						
+						</ul>
+					</li>	
+					{% endif %}	
 					
 					{% if user.is_authenticated and not user.parent %}					
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">

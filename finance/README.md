@@ -373,6 +373,51 @@ the only thing other code depends on, so it's a one-file change.
   `transaction_id` — everything else (receipt, ledger, invoice status) is
   handled for you.
 
+## 10b. Independent parent dashboard (optional, per-school)
+
+If your project already has a parent dashboard built against the old
+`payments` app (academic reports + invoices + receipts + balance, all on
+one page), `finance/views_parent_dashboard.py` is a drop-in alternative
+that sources the *financial* sections from `finance` instead — the
+academic sections (mid-term scores, full termly reports, prep cards,
+session reports) are copied verbatim so both versions behave identically
+outside of the money parts.
+
+This is completely independent of everything else in the app:
+
+- **New file, new template, new URL** — `finance/views_parent_dashboard.py`,
+  `finance/templates/finance/parent_dashboard.html`,
+  `finance:parent_dashboard` (`/finance/parent-dashboard/`).
+- **Nothing in `students`/`payments` is touched.** Your existing
+  payments-app dashboard keeps working exactly as it does today.
+- **You choose which one a given school uses** — point that school's nav
+  link/menu item at `finance:parent_dashboard` instead of the old one, or
+  run both side by side (e.g. behind a feature flag, a school-level
+  setting, or just two different nav items) and decide per deployment.
+
+What it does differently from the payments-app version:
+- Invoices tab reads from `InvoiceItem`/`Invoice` instead of
+  `StudentFeeAssignment`, and adds a status badge + "View" link to the
+  full printable invoice.
+- Receipts tab reads from `Payment`/`Receipt` instead of the old
+  `Payment` model, with the same defensive `{% if payment.receipt %}`
+  guard used throughout the rest of the app (a completed payment without
+  a receipt shows "Processing…" instead of crashing).
+- Adds a **Pay Now** button per child (routes to
+  `finance:make_parent_payment?student=<id>`, arriving with that child
+  already selected) and a **Make a Payment** link in the top nav,
+  alongside the existing **Submit Payment Proof** link — parents can
+  either pay through the portal directly or submit proof of an offline
+  bank transfer, same as everywhere else in the app.
+- Total billed/paid/balance are all-time totals (not filtered by term),
+  matching the original's exact scope.
+
+If your `results`/`curriculum`/`prep_reports` apps are named or shaped
+differently than assumed, the only thing to adjust is the three inline
+imports at the top of `parent_dashboard()` in
+`finance/views_parent_dashboard.py` — none of the finance-specific logic
+depends on them.
+
 ## 11. Tests
 
 ```bash
