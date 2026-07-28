@@ -246,117 +246,21 @@ class Subject(models.Model):
       
 
 
-def save_lesson_files(instance, filename):
-    upload_to = 'Images/'
-    ext = filename.split('.')[-1]
-    # get file name
-    if instance.lesson_id:
-        filename = 'lesson_files/{}.{}'.format(instance.lesson_id,instance.lesson_id, ext)
-        if os.path.exists(filename):
-            new_name = str(instance.lesson_id) + str('1')
-            filename = 'lesson_images/{}/{}.{}'.format(instance.lesson_id,new_name, ext)
-    
-    return os.path.join(upload_to, filename)
-
-# Subject For E-Learning
-class ELearningSubject(models.Model):
-    subject_id = models.CharField(max_length=100, unique=True)
-    name = models.CharField(max_length=100)
-    standard = models.ForeignKey(Standard, on_delete=models.CASCADE, related_name='subjects')
-    # image = models.ImageField(upload_to=save_subject_image, blank=True, verbose_name='Subject Image')
-    description = models.CharField(max_length=200, blank=True)
-    slug = models.SlugField(null=True, blank=True)
-
-    def __str__(self):
-        return f'{self.name} - {self.standard.name}'
-
-    def save(self, *args, **kwargs):
-        self.slug = slugify(self.subject_id)
-        super().save(*args, **kwargs)
-
-    class Meta:
-      verbose_name = 'E-Learning Subjects'
-      verbose_name_plural = 'E-Learning Subjects'
-      ordering = ['name']
-      unique_together = ('name', 'standard')
+# =====================================================================
+# ✅ E-LEARNING MODELS MOVED OUT — now in the independent `elearning` app
+# ---------------------------------------------------------------------
+# ELearningSubject, Lesson, Comment, Reply (and the unused
+# save_lesson_files helper) now live in the standalone `elearning` app —
+# see elearning/models.py. There is intentionally NO re-export here:
+# elearning is fully independent, so curriculum has no knowledge of it.
+#
+# If anything elsewhere in your project still does
+# `from curriculum.models import Lesson` (or ELearningSubject/Comment/
+# Reply/save_lesson_files), update it to `from elearning.models import ...`
+# — see the README for a grep command to find every call site.
+#
+# See curriculum/migrations/0003_move_elearning_models_out.py and
+# elearning/migrations/0001_initial.py before running `migrate`.
+# =====================================================================
 
 
-def save_lesson_files(instance, filename):
-    upload_to = 'Images/'
-    ext = filename.split('.')[-1]
-    # get file name
-    if instance.lesson_id:
-        filename = 'lesson_files/{}.{}'.format(instance.lesson_id,instance.lesson_id, ext)
-        if os.path.exists(filename):
-            new_name = str(instance.lesson_id) + str('1')
-            filename = 'lesson_images/{}/{}.{}'.format(instance.lesson_id,new_name, ext)
-    
-    return os.path.join(upload_to, filename)
-    
-
-class Lesson(models.Model):
-    lesson_id = models.CharField(max_length=100, unique=True)
-    standard = models.ForeignKey(Standard, on_delete=models.CASCADE)
-    subject = models.ForeignKey(ELearningSubject, on_delete=models.CASCADE, related_name='lessons')
-    name = models.CharField(max_length=250, verbose_name="Topic", help_text="Enter the lesson topic (e.g. Heat Energy, Algebraic Expressions)")
-    position = models.PositiveSmallIntegerField(verbose_name="Chapter no.")
-    video = EmbedVideoField(blank=True, null=True)
-    notes = models.FileField(upload_to='save_lesson_files', verbose_name="Notes", blank=True)
-    # comment = RichTextField(blank=True, null=True)
-    comment = HTMLField(blank=True, null=True)
-    # comment = CKEditor5Field('Text', config_name='extends')
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    slug = models.SlugField(null=True, blank=True)
-
-    class Meta:
-        ordering = ['position']
-        verbose_name = 'E-Learning Lessons'
-        verbose_name_plural = 'E-Learning Lessons'
-
-    def __str__(self):
-        return self.name
-
-    def save(self, *args, **kwargs):
-        self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
-    def get_absolute_url(self):
-        return reverse('curriculum:lesson_list', kwargs={'slug':self.subject.slug, 'standard':self.standard.slug})
-
-    @property
-    def html_stripped(self):
-       
-       return strip_tags(self.comment)
-            
-            
-
-# comment module
-class Comment(models.Model):
-    lesson_name = models.ForeignKey(Lesson, null=True, on_delete=models.CASCADE, related_name='comments')
-    comm_name = models. CharField(max_length=100, blank=True)
-    # reply = models.ForeignKey("comment", null=True, blank=True, on_delete=CASCADE, related_name='replies')
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
-    body = models.TextField(max_length=500)
-    date_added = models.DateTimeField(auto_now_add=True)
-
-    def save(self, *args, **kwargs):
-        self.comm_name = slugify("comment by" + "-" + str(self.author) + str(self.date_added))
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.comm_name
-
-    class Meta:
-        ordering = ['-date_added']
-
-
-class Reply(models.Model):
-    comment_name = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='replies')
-    reply_body = models.TextField(max_length=500)
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
-    date_added = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return "reply to" + str(self.comment_name.comm_name)
-    

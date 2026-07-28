@@ -1,37 +1,37 @@
-# from xml.etree.ElementTree import Comment
-from django import forms
-from .models import Lesson, Comment, Reply
-# from ckeditor.widgets import CKEditorWidget
+# # from xml.etree.ElementTree import Comment
+# from django import forms
+# from .models import Lesson, Comment, Reply
+# # from ckeditor.widgets import CKEditorWidget
 
 
-class LessonForm(forms.ModelForm):
+# class LessonForm(forms.ModelForm):
    
-    class Meta:
+#     class Meta:
         
-        model = Lesson
-        fields = ('lesson_id', 'name', 'position', 'video', 'comment')
-        widgets = {
-            'comment': forms.Textarea(attrs={'class':'form-control', 'rows':4, 'cols':70, 'placeholder':"Enter Your Comment"}),
-        }
+#         model = Lesson
+#         fields = ('lesson_id', 'name', 'position', 'video', 'comment')
+#         widgets = {
+#             'comment': forms.Textarea(attrs={'class':'form-control', 'rows':4, 'cols':70, 'placeholder':"Enter Your Comment"}),
+#         }
 
-class CommentForm(forms.ModelForm):
-    class Meta:
-        model = Comment
-        fields = ('body',)
+# class CommentForm(forms.ModelForm):
+#     class Meta:
+#         model = Comment
+#         fields = ('body',)
 
-        labels = {"body":"Comment:"}
+#         labels = {"body":"Comment:"}
 
-        widgets = {
-            'body': forms.Textarea(attrs={'class':'form-control', 'rows':4, 'cols':70, 'placeholder':"Enter Your Comment"}),
-        }
+#         widgets = {
+#             'body': forms.Textarea(attrs={'class':'form-control', 'rows':4, 'cols':70, 'placeholder':"Enter Your Comment"}),
+#         }
 
 
-class ReplyForm(forms.ModelForm):
-    class Meta:
-        model = Reply
-        fields = ('reply_body',)
+# class ReplyForm(forms.ModelForm):
+#     class Meta:
+#         model = Reply
+#         fields = ('reply_body',)
 
-        widgets = {
-            'reply_body': forms.Textarea(attrs={'class':'form-control', 'rows':2, 'cols':10}),
-        }
+#         widgets = {
+#             'reply_body': forms.Textarea(attrs={'class':'form-control', 'rows':2, 'cols':10}),
+#         }
 

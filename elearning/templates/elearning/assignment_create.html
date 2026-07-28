@@ -1,0 +1,120 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+{% block title %}<title>KwikSchools - {% if assignment %}Update{% else %}New{% endif %} Assignment</title>{% endblock title %}
+
+{% block content_body %}
+{% if user.is_authenticated and user.is_superuser or user.teacher %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'elearning:lesson_detail' standard=lesson.standard.slug subject=lesson.subject.slug slug=lesson.slug %}">{{ lesson.name }}</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">{% if assignment %}Update{% else %}New{% endif %} Assignment</a></li>
+            </ol>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-xl-8 col-lg-10">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-warning">
+                        <h4 class="card-title mb-0">
+                            <i class="fas fa-tasks me-2"></i>
+                            {% if assignment %}Update Assignment{% else %}New Assignment / Homework{% endif %}
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">
+                            For "<strong>{{ lesson.name }}</strong>" — {{ lesson.subject.name }}, {{ lesson.standard.name }}.
+                            If the assignment has a worksheet or file, paste a link to it (Google Drive, a file hosted
+                            on the school's cPanel, etc.) — nothing is uploaded to this server.
+                        </p>
+
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Title</label>
+                                {{ form.title }}
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold d-block">Instructions</label>
+                                {{ form.instructions }}
+                                <small class="form-text text-muted d-block mt-2">
+                                    What should the student do for this assignment?
+                                </small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Assignment File Link (optional)</label>
+                                {{ form.resource_link }}
+                                <small class="form-text text-muted d-block mt-2">
+                                    e.g. a Google Drive share link, or a file hosted on the school's cPanel.
+                                </small>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Due Date</label>
+                                    {{ form.due_date }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Max Score</label>
+                                    {{ form.max_score }}
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-warning btn-lg">
+                                    <i class="fas fa-save me-2"></i>{% if assignment %}Save Changes{% else %}Post Assignment{% endif %}
+                                </button>
+                                <a href="{% url 'elearning:lesson_detail' standard=lesson.standard.slug subject=lesson.subject.slug slug=lesson.slug %}" class="btn btn-outline-secondary btn-lg">
+                                    <i class="fas fa-times-circle me-2"></i>Cancel
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="alert alert-danger text-center mt-5" role="alert">
+                    <h4 class="alert-heading">Access Denied!</h4>
+                    <p>You do not have permission to manage assignments. Please log in with a teacher or superuser account.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock content_body %}
+
+{% block scripts %}
+{{ block.super }}
+<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
+<style>
+    .ck.ck-editor { width: 100% !important; box-sizing: border-box !important; }
+    .ck-toolbar { flex-wrap: wrap; width: 100%; }
+    .ck-content { max-width: 100%; overflow-x: hidden; word-break: break-word; overflow-wrap: break-word; }
+</style>
+<script>
+    ClassicEditor
+        .create( document.querySelector( '#id_instructions' ), {})
+        .catch( error => { console.error( error ); });
+</script>
+{% endblock scripts %}

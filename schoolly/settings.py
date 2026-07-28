@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     'prep_reports.apps.PrepReportsConfig',
     'ai_center.apps.AiCenterConfig',
     'finance.apps.FinanceConfig',
+    'elearning.apps.ElearningConfig',
+
 
 
     # Installed Apps

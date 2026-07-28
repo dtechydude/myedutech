@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title|default:"Finance" }} | KwikSchools</title>
+    <title>{{ title|default:"Finance" }} | {{ school_info.name }}</title>
     <!-- FAVICONS ICON -->	
     {% if school_info and school_info.logo %}
 		<link rel="icon" href="{{ school_info.logo.url }}" type="image/png">
@@ -27,10 +27,15 @@
 
         /* ---- Sidebar (off-canvas drawer on mobile/tablet, fixed on desktop) ---- */
         .kw-sidebar {
-            min-height: 100vh; background: var(--kw-primary); color: #fff; width: 250px; position: fixed;
-            top: 0; left: 0; padding-top: 1rem; overflow-y: auto; z-index: 1045;
+            height: 100vh; background: var(--kw-primary); color: #fff; width: 250px; position: fixed;
+            top: 0; left: 0; padding-top: 1rem; padding-bottom: 1rem; overflow-y: auto; z-index: 1045;
             transition: transform .25s ease;
+            scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.25) transparent;
         }
+        .kw-sidebar::-webkit-scrollbar { width: 6px; }
+        .kw-sidebar::-webkit-scrollbar-track { background: transparent; }
+        .kw-sidebar::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,.25); border-radius: 3px; }
+        .kw-sidebar::-webkit-scrollbar-thumb:hover { background-color: rgba(255,255,255,.4); }
         .kw-sidebar .brand { font-weight: 700; font-size: 1.1rem; padding: .5rem 1.25rem 1.25rem; display: flex; align-items: center; justify-content: space-between; }
         .kw-sidebar a { color: #cfe0ec; text-decoration: none; display: block; padding: .55rem 1.25rem; border-left: 3px solid transparent; }
         .kw-sidebar a:hover, .kw-sidebar a.active { background: rgba(255,255,255,.08); color: #fff; border-left-color: var(--kw-accent); }
@@ -84,7 +89,7 @@
 
 <nav class="kw-sidebar" id="kwSidebar">
     <div class="brand">
-        <span><i class="fa-solid fa-coins"></i>&nbsp; KwikSchools Finance</span>
+        <span><i class="fa-solid fa-coins"></i>&nbsp; <small>{{ school_info.name }}</small> - Finance</span>
         <button class="kw-sidebar-close" id="kwSidebarClose" aria-label="Close menu"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="section-title">Overview</div>

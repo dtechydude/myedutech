@@ -491,6 +491,8 @@
 							{% elif user.teacher %}
 							<li><a href="{% url 'attendance:take_daily_attendance' %}">Mark STUDENT Attendance</a></li>
 							<li><a href="{% url 'staff:teacher_self_attendance' %}">MY ATTENDANCE</a></li>
+							<li><a href="{% url 'attendance:attendance_summary_class_bulk' %}"><i class="fas fa-book"></i><span>Custom Attendance Entry</span></a></li>
+
 							{% endif %}							
 							<li><a href="{% url 'attendance:attendance_report' %}">STUDENT Attendance Report</a></li>
 							<li><a href="{% url 'attendance:attendance-student-list' %}">STUDENT Attendance List</a></li>
@@ -668,14 +670,14 @@
 						<ul aria-expanded="false">							
 						
 							{% if user.is_authenticated and user.student %}
-							<li><a href="{% url 'curriculum:my-standard' %}">Learning Center</a></li>
+							<li><a href="{% url 'elearning:my-standard' %}">Learning Center</a></li>
 							
 							{% elif user.is_authenticated and user.teacher %}
 							<li><a href="{% url 'curriculum:standard_list' %}">E-Class List</a></li>
 							
 							{% elif user.is_authenticated and user.is_superuser or user.is_staff %}
-							<li><a href="/admin/curriculum/elearningsubject/" target="_blank">Add Subjects & Lessons </a></li>
-							<li><a href="{% url 'curriculum:standard_list' %}">E-Class List</a></li>										
+							<li><a href="/admin/elearning/elearningsubject/" target="_blank">Add Subjects & Lessons </a></li>
+							<li><a href="{% url 'elearning:standard_list' %}">E-Class List</a></li>										
 																
 							{% endif %}
 						</ul>					

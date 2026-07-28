@@ -1,5 +1,6 @@
 # curriculum/admin.py
-from curriculum.models import SchoolIdentity, Lesson, Subject, ELearningSubject, Session, Standard, ClassGroup, Term
+from curriculum.models import SchoolIdentity, Subject, Session, Standard, ClassGroup, Term
+# NOTE: ELearningSubject/Lesson admin registrations moved to elearning/admin.py
 from embed_video.admin import AdminVideoMixin
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
@@ -148,24 +149,6 @@ class SubjectAdmin(ImportExportModelAdmin):
     list_display = ('subject_id', 'name', 'description')
     search_fields = ('subject_id', 'name')
     exclude = ['slug']
-
-@admin.register(ELearningSubject)
-class ELearningSubjectAdmin(ImportExportModelAdmin):
-    list_display = ('subject_id', 'name', 'standard', 'description')
-    list_filter = ['standard__name']
-    search_fields = ('standard__name', 'subject_id')
-    exclude = ['slug']
-
-@admin.register(Lesson)
-class LessonAdmin(ImportExportModelAdmin):
-    list_display = ('standard', 'subject', 'lesson_id', 'name')
-    list_filter = ['standard',]
-    search_fields = ('standard__name', 'subject__name')
-    raw_id_fields = ['created_by',]
-    exclude = ['slug']
-
-
-   
 
 @admin.register(ClassFeeTemplate)
 class ClassFeeTemplateAdmin(ImportExportModelAdmin):
