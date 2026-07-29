@@ -611,11 +611,11 @@ class MidTermReportRemark(models.Model):
         ]
 
         verbose_name = (
-            'Custom Report Remarks (MID-TERM)'
+            'Custom Remarks (MID-TERM)'
         )
 
         verbose_name_plural = (
-            'Custom Report Remarks (MID-TERM)'
+            'Custom Remarks (MID-TERM)'
         )
 
     def __str__(self):
@@ -717,8 +717,8 @@ class ReportComments(models.Model):
 
     class Meta:
         unique_together = ('student', 'standard', 'term', 'session')
-        verbose_name = "Custom Report Remarks (END OF TERM)"
-        verbose_name_plural = "Custom Report Remarks (END OF TERM)"
+        verbose_name = "Custom Remarks (END OF TERM)"
+        verbose_name_plural = "Custom Remarks (END OF TERM)"
 
     def __str__(self):
         return f"Comments for {self.student.get_full_name()} - {self.term.name} - {self.session.name}"
@@ -761,8 +761,8 @@ class SessionReportComments(models.Model):
 
     class Meta:
         unique_together = ('student', 'standard', 'session')
-        verbose_name = "Custom Report Remarks (SESSION)"
-        verbose_name_plural = "Custom Report Remarks (SESSION)"
+        verbose_name = "Custom Remarks (SESSION)"
+        verbose_name_plural = "Custom Remarks (SESSION)"
 
     def __str__(self):
         return f"Session Comments for {self.student.get_full_name()} - {self.session.name}"

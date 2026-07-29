@@ -34,7 +34,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 @login_required
 def class_list(request):
-    total_class = Student.objects.filter().order_by('section').values('class_id__id').annotate(count=Count('class_id__id'))
+    total_class = (Student.objects .values('current_class') .annotate(count=Count('id')).order_by('current_class'))
     total_gender = Student.objects.filter().order_by('gender').values('gender').annotate(count=Count('gender'))
 
     context = {
