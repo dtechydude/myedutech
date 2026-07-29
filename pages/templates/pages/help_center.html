@@ -106,7 +106,7 @@
                 <!-- row -->
                 <!-- Row starts -->
                 <div class="row justify-content-center">
-                    {% if is_student %}
+                    {% if is_student or is_parent %}
                     <!-- Column starts -->
                     <div class="col-xl-8 col-lg-10">
                         <div class="card">
@@ -406,7 +406,7 @@
                     <!-- Column ends -->
                     {% endif %}
 
-                    {% if not is_student and not is_teacher and not is_staff_or_admin %}
+                    {% if not is_student and not is_parent and not is_teacher and not is_staff_or_admin %}
                     <div class="col-xl-8 col-lg-10">
                         <div class="alert alert-warning border-0 shadow-sm text-center">
                             No help topics found for your account type. Please contact the admin office for assistance.

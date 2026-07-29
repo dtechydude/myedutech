@@ -197,27 +197,6 @@ class Answer(models.Model):
 
 
 
-
-# class QuizResult(models.Model):
-#     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
-#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cbt_results')
-#     score = models.FloatField()
-#     passed = models.BooleanField(default=False)
-#     timestamp = models.DateTimeField(auto_now_add=True)
-
-#     cancelled = models.BooleanField(default=False)  # ✅ NEW FIELD
-
-#     # def __str__(self):
-#     #     return f"{self.user} - {self.quiz} ({self.score}%)"
-    
-#     #     # Before
-#     # def __str__(self):
-#     #     return f"{self.user} - {self.quiz} ({self.score}%)"
-
-#     # After
-#     def __str__(self):
-#         return f"{self.user} - {self.quiz} ({self.score:.1f}%)"
-
 class QuizResult(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cbt_results')
