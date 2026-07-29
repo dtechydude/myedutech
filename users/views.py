@@ -351,6 +351,7 @@ class CustomLoginView(LoginView):
 
         if is_parent:
             return reverse_lazy('students:parent-dashboard')
+            # return reverse_lazy('finance:parent_dashboard')
         
         # If not a parent, use the default redirect URL
         return super().get_success_url()

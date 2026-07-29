@@ -745,7 +745,9 @@
     <div class="action-bar">
 
         {% if user.parent %}
-            <a href="{% url 'students:parent-dashboard' %}" class="btn btn-outline">← Parent Dashboard</a>
+            {% comment %} <a href="{% url 'students:parent-dashboard' %}" class="btn btn-outline">← Parent Dashboard</a> {% endcomment %}
+            <a href="{% url 'finance:parent_dashboard' %}" class="btn btn-outline">← Parent Dashboard</a>
+
         {% elif user.student %}
             <a href="{% url 'results:student_midterm_list' %}" class="btn btn-outline">← Mid-Term List</a>
         {% else %}
