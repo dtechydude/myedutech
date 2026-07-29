@@ -198,6 +198,26 @@ class Answer(models.Model):
 
 
 
+# class QuizResult(models.Model):
+#     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cbt_results')
+#     score = models.FloatField()
+#     passed = models.BooleanField(default=False)
+#     timestamp = models.DateTimeField(auto_now_add=True)
+
+#     cancelled = models.BooleanField(default=False)  # ✅ NEW FIELD
+
+#     # def __str__(self):
+#     #     return f"{self.user} - {self.quiz} ({self.score}%)"
+    
+#     #     # Before
+#     # def __str__(self):
+#     #     return f"{self.user} - {self.quiz} ({self.score}%)"
+
+#     # After
+#     def __str__(self):
+#         return f"{self.user} - {self.quiz} ({self.score:.1f}%)"
+
 class QuizResult(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cbt_results')
@@ -205,15 +225,23 @@ class QuizResult(models.Model):
     passed = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now_add=True)
 
-    cancelled = models.BooleanField(default=False)  # ✅ NEW FIELD
+    cancelled = models.BooleanField(default=False)
 
-    # def __str__(self):
-    #     return f"{self.user} - {self.quiz} ({self.score}%)"
-    
-    #     # Before
-    # def __str__(self):
-    #     return f"{self.user} - {self.quiz} ({self.score}%)"
-
-    # After
     def __str__(self):
         return f"{self.user} - {self.quiz} ({self.score:.1f}%)"
+
+    # ✅ NEW — computed, not stored. QuizResult only ever saved a
+    # percentage, so the raw "X out of Y" count is derived from that
+    # percentage against the quiz's question count, the same way
+    # attendance_percentage/days_absent are derived elsewhere. Rounds to
+    # the nearest whole question since score is a float percentage.
+    @property
+    def correct_answers_count(self):
+        total = self.quiz.number_of_questions or 0
+        if total <= 0:
+            return None
+        return round((self.score / 100) * total)
+
+    @property
+    def total_questions(self):
+        return self.quiz.number_of_questions

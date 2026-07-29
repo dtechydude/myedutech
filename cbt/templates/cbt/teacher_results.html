@@ -85,6 +85,7 @@
                     <th class="ps-3">Student Name</th>
                     <th>Subject</th>
                     <th>Score</th>
+                    <th>Correct Answers</th>
                     <th>Status</th>
                     <th>Retaken</th>
                     <th>Date Taken</th>
@@ -103,6 +104,18 @@
                             {{ res.score|floatformat:1 }}%
                         </span>
                     </td>
+
+                    <!-- NEW CORRECT ANSWERS COLUMN -->
+                    <td>
+                        {% if res.total_questions %}
+                            <span class="badge bg-info text-dark">
+                                {{ res.correct_answers_count }}/{{ res.total_questions }}
+                            </span>
+                        {% else %}
+                            <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
+
                     <td>
                         {% if res.passed %}
                             <span class="badge bg-success">
@@ -134,7 +147,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" class="text-center py-5 text-muted">
+                    <td colspan="7" class="text-center py-5 text-muted">
                         <i class="fas fa-info-circle fa-2x mb-3 d-block"></i>
                         No student results found matching your criteria.
                     </td>
