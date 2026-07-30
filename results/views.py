@@ -1830,17 +1830,49 @@ class MidTermReportCardView(LoginRequiredMixin, View):
         # MIDTERM SCORES
         # ============================================
 
+        # midterm_scores = (
+        #     MidTermScore.objects
+        #     .filter(
+        #         student=student,
+        #         term=term,
+        #         exam_total_score__isnull=False,
+        #         is_graded=True  # Ensure this filter is applied
+        #     )
+        #     .select_related('subject')
+        #     .prefetch_related('component_scores__component')
+        #     .order_by('subject__name')
+        # )
+
+        # ============================================
+        # MIDTERM SCORES
+        # ============================================
+
         midterm_scores = (
             MidTermScore.objects
             .filter(
                 student=student,
                 term=term,
                 exam_total_score__isnull=False,
-                is_graded=True  # Ensure this filter is applied
+                is_graded=True
             )
-            .select_related('subject')
+            .select_related('subject', 'standard')
             .prefetch_related('component_scores__component')
             .order_by('subject__name')
+        )
+
+        # ============================================
+        # HISTORICAL CLASS RESOLUTION
+        # Use the class snapshot recorded at the time the
+        # midterm result was entered, not the student's
+        # current class — mirrors StudentReportCardView.
+        # ============================================
+
+        first_score = midterm_scores.first()
+
+        standard = (
+            first_score.standard
+            if first_score and first_score.standard
+            else student.current_class  # fallback for legacy rows with no snapshot
         )
 
         # ============================================
@@ -1885,11 +1917,19 @@ class MidTermReportCardView(LoginRequiredMixin, View):
                 if central_max > 0 else 0
             )
 
+            # # -- classmates scores for statistics --
+            # classmates_scores = MidTermScore.objects.filter(
+            #     term=term,
+            #     subject=score.subject,
+            #     student__current_class=student.current_class,
+            #     exam_total_score__isnull=False,
+            # )
+
             # -- classmates scores for statistics --
             classmates_scores = MidTermScore.objects.filter(
                 term=term,
                 subject=score.subject,
-                student__current_class=student.current_class,
+                standard=standard,   # was: student__current_class=student.current_class
                 exam_total_score__isnull=False,
             )
 
@@ -2008,6 +2048,7 @@ class MidTermReportCardView(LoginRequiredMixin, View):
             'student':              student,
             'term':                 term,
             'exam_setting':         exam_setting,
+            'standard':             standard,   # 🔥 new — historical class snapshot
             'central_max':          central_max,
             'component_headers':    component_headers,
             'report_data':          report_data,

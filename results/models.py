@@ -404,6 +404,14 @@ class MidTermScore(models.Model):
     # ... your existing fields ...
     is_graded = models.BooleanField(default=False)
 
+    standard = models.ForeignKey(
+        Standard,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='midterm_result_scores'
+    )
+
     # def calculate_total_score(self):
     #     return self.component_scores.aggregate(
     #         total=models.Sum('score')
@@ -419,17 +427,32 @@ class MidTermScore(models.Model):
             total=models.Sum('score')
         )['total']
 
-    # def save(self, *args, **kwargs):
-    #     super().save(*args, **kwargs)
-
-    #     total = self.calculate_total_score()
-
-    #     if self.exam_total_score != total:
-    #         self.exam_total_score = total
-
-    #         super().save(update_fields=['exam_total_score'])
 
     def save(self, *args, **kwargs):
+
+        # super().save(*args, **kwargs)
+
+        # total = self.calculate_total_score()
+
+        # updates = []
+
+        # if self.exam_total_score != total:
+        #     self.exam_total_score = total
+        #     updates.append('exam_total_score')
+
+        # graded = total is not None
+
+        # if self.is_graded != graded:
+        #     self.is_graded = graded
+        #     updates.append('is_graded')
+
+        # if updates:
+        #     super().save(update_fields=updates)
+
+        # NEW logic
+        # Snapshot historical class ONLY on creation — mirrors Score.save()
+        if not self.pk and not self.standard and self.student:
+            self.standard = self.student.current_class
 
         super().save(*args, **kwargs)
 
