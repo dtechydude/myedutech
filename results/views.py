@@ -974,6 +974,10 @@ class StudentSessionReportCardView(LoginRequiredMixin, View):
         # 6b. Determine the student's Standard for THIS session (historical,
         # not necessarily their current class if they've since been promoted).
         student_standard = get_student_standard_for_session(student, terms_in_session)
+        # ✅ NEW — fall back to current_class only if no historical standard
+        # could be resolved (e.g. no scores at all that session), mirroring
+        # the same fallback already used in StudentReportCardView.
+        result_class = student_standard or student.current_class
 
         # 6c. Fetch/create the session comment and compute edit permissions.
         # No longer gated behind student_standard resolving — a missing
@@ -996,6 +1000,7 @@ class StudentSessionReportCardView(LoginRequiredMixin, View):
         context = {
             'student': student,
             'session': session,
+            'result_class': result_class,   # ✅ NEW — historical class for this session
             'terms_in_session': terms_in_session,
             'report_data': report_data,
             'overall_session_average': f"{overall_session_average:.2f}" if overall_session_average is not None else 'N/A',

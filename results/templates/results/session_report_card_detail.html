@@ -305,7 +305,8 @@
                 <tr>
                     <td width="50%"><strong>NAME: {{ student.last_name|upper }} {{ student.first_name|upper }} {% if student.middle_name %} {{ student.middle_name|upper|default:"" }} {% endif %}</strong> <span style="color:green;"> <small> - (GENDER: {{ student.gender|upper|default:"" }} )</small> </span></td>
                     <td width="25%"><strong>USN:</strong> {{ student.USN|default:"N/A" }}</td>
-                    <td width="25%"><strong>CLASS:</strong> {{ student.current_class.name|default:"N/A" }}</td>
+                    {% comment %} <td width="25%"><strong>CLASS:</strong> {{ student.current_class.name|default:"N/A" }}</td> {% endcomment %}
+                    <td width="25%"><strong>CLASS:</strong>  {{result_class}}</td>
                 </tr>
                 <tr>
                     <td><strong>SESSION AVERAGE:</strong> <span style="color: #0056b3; font-weight: bold; font-size: 16px;">{{ overall_session_average|floatformat:2 }}% - </span>
@@ -322,7 +323,9 @@
 
                     </td>
                     <td><strong>ATTENDANCE:</strong> {{ days_present }} / {{ total_school_days }}</td>
-                    <td><strong>SESSION ENDS:</strong> {% now "M d, Y" %}</td>
+                    {% comment %} <td><strong>SESSION ENDS:</strong> {% now "M d, Y" %} - {{ next_session }}</td> {% endcomment %}
+                    <td><strong>NEXT SESSION STARTS:</strong>  {{ next_session_start_date|date:"M d, Y"|default:"TBA" }}</td>
+
                 </tr>
             </table>
         </div>

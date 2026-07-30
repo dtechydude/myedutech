@@ -28,9 +28,11 @@ class PublicHolidayInline(admin.TabularInline):
 
 @admin.register(Term)
 class TermAdmin(admin.ModelAdmin):
-    list_display = ('name', 'start_date', 'end_date', 'is_current')
+    list_display = ('name', 'session', 'start_date', 'end_date', 'is_current')
     raw_id_fields = ('session',)
     # ADDED: This also needs search_fields for autocomplete
+    list_filter = ('session',)
+
     search_fields = ['name', 'session__name']
 
     inlines = [PublicHolidayInline]
