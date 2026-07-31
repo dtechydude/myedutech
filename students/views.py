@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
-from django.db.models import Count, Sum, Q
+from django.db.models import Count, Sum, Q, F
 from django.db import models
 import datetime
 #converting html to pdf
@@ -371,12 +371,29 @@ def student_search_list(request):
 @login_required
 def student_in_class(request):
     students = Student.objects.all()
-    student_no = Student.objects.exclude(current_class__name="Alumni").order_by('current_class').values('current_class__name').annotate(count=Count('current_class__name'))
+    # student_no = Student.objects.exclude(current_class__name="Alumni").order_by('current_class').values('current_class__name').annotate(count=Count('current_class__name'))
+    student_no = (
+    Student.objects
+    .filter(
+        current_class__isnull=False,
+        current_class__name__isnull=False
+    )
+    .exclude(current_class__name__in=["", "Alumni"])
+    .values("current_class__name")
+    .annotate(count=Count("id"))
+    .order_by("current_class__name")
+)
+    # try:
+    #     num_inclass = Student.objects.filter(standard__name = request.user.student.standard).count()
+    # except Student.DoesNotExist:
+    #     num_inclass = Student.objects.filter()
 
     try:
-        num_inclass = Student.objects.filter(standard__name = request.user.student.standard).count()
+        num_inclass = Student.objects.filter(
+            current_class=request.user.student.current_class
+            ).count()
     except Student.DoesNotExist:
-        num_inclass = Student.objects.filter()
+        num_inclass = 0
 
     return render(request, 'students/student_no_in_class.html', {'students': students, 'student_no':student_no, 'num_inclass':num_inclass})
 
@@ -671,9 +688,13 @@ def promote_individual_students_view(request):
         students = Student.objects.filter(current_class=from_class).order_by('last_name', 'first_name')
         
         # Get next class options (all classes after the selected one)
-        next_class_options = Standard.objects.filter(
-            promotion_order__gt=from_class.promotion_order
-        ).order_by('promotion_order')
+        # next_class_options = Standard.objects.filter(
+        #     promotion_order__gt=from_class.promotion_order
+        # ).order_by('promotion_order')
+
+        next_class_options = Standard.objects.exclude(
+        id=from_class.id
+    ).order_by(F('promotion_order').asc(nulls_last=True), 'name')
 
     context = {
         'classes': classes,
