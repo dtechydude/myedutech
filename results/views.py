@@ -737,7 +737,7 @@ class StudentReportCardView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
 
         # ---------------- CONTEXT ----------------
         context = {
-            'result_class': standard,
+            'result_class': standard, #new add
             'student': student,
             'term': term,
             'report_data': report_data,
