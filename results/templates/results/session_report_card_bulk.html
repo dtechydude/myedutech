@@ -5,12 +5,16 @@
 <head>
     <meta charset="UTF-8">
     <title>Bulk Session Report Cards - {{ standard.name }} - {{ session.name }}</title>
-       <!-- FAVICONS ICON -->	
+ <!-- FAVICONS ICON -->	
+	
     {% if school_info and school_info.logo %}
 		<link rel="icon" href="{{ school_info.logo.url }}" type="image/png">
 	{% else %}
-		<link rel="icon" href="{% static 'pages/images/school_logo.jpg' %}" type="image/png">
+		<link rel="icon" href="{% static 'pages/images/favicon.png' %}" type="image/png">
 	{% endif %}
+
+
+
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <style>
         @page { size: A4; margin: 5mm; }

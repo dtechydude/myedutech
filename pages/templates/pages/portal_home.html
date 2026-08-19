@@ -23,8 +23,7 @@
 	
 	<!-- FAVICONS ICON -->
 	
-	{% comment %} <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" /> {% endcomment %}
-	<!-- FAVICONS ICON -->	
+	
     {% if school_info and school_info.logo %}
 		<link rel="icon" href="{{ school_info.logo.url }}" type="image/png">
 	{% else %}

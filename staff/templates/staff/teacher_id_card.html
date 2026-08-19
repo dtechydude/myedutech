@@ -6,12 +6,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Staff ID: {{ teacher.first_name }} {{ teacher.last_name }}</title>
 
-    <!-- FAVICONS ICON -->	
-{% if school_info and school_info.logo %}
-    <link rel="icon" href="{{ school_info.logo.url }}" type="image/png">
-{% else %}
-    <link rel="icon" href="{% static 'pages/images/school_logo.jpg' %}" type="image/png">
-{% endif %}
+<!-- FAVICONS ICON -->	
+	
+    {% if school_info and school_info.logo %}
+		<link rel="icon" href="{{ school_info.logo.url }}" type="image/png">
+	{% else %}
+		<link rel="icon" href="{% static 'pages/images/favicon.png' %}" type="image/png">
+	{% endif %}
+
 
 
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">

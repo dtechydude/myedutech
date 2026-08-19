@@ -4,8 +4,16 @@
 <head>
     <meta charset="utf-8">
     <title>{{ student.first_name }}'s Report Card - {{ term.name }}</title>
-    <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+<!-- FAVICONS ICON -->	
+	
+    {% if school_info and school_info.logo %}
+		<link rel="icon" href="{{ school_info.logo.url }}" type="image/png">
+	{% else %}
+		<link rel="icon" href="{% static 'pages/images/favicon.png' %}" type="image/png">
+	{% endif %}
 
+
+	
     
     <style>
         /* All CSS is in one place for reliable PDF rendering */

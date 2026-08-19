@@ -5,12 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bulk Print Session Report Cards</title>
-       <!-- FAVICONS ICON -->	
+ <!-- FAVICONS ICON -->	
+	
     {% if school_info and school_info.logo %}
 		<link rel="icon" href="{{ school_info.logo.url }}" type="image/png">
 	{% else %}
-		<link rel="icon" href="{% static 'pages/images/school_logo.jpg' %}" type="image/png">
+		<link rel="icon" href="{% static 'pages/images/favicon.png' %}" type="image/png">
 	{% endif %}
+
+
     <link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <style>
