@@ -32,7 +32,18 @@
         .positive { color:#16a34a; }
         .negative { color:#dc2626; }
         .no-print {}
-        @media print { .no-print { display:none !important; } body { background:#fff; } .doc-wrapper { border:none; margin:0; padding:0; } }
+        @media print {
+            .no-print { display:none !important; }
+            body { background:#fff; }
+            .doc-wrapper { border:none; margin:0; padding:0; }
+
+            /* Force browsers to keep background colors/shading when printing or saving as PDF */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -64,8 +75,7 @@
                 All-time
             {% endif %}
         </div>
-        <div>Generated {{ today }}</div>
-    </div>
+        <div>Generated: {% now "jS F, Y" %}</div>    </div>
 
     <h5 class="section-title">Income</h5>
     <table class="rpt-table">

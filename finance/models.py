@@ -640,7 +640,7 @@ class PaymentNotification(models.Model):
                                      related_name='fin_payment_notifications_sent')
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     submission_date = models.DateTimeField(auto_now_add=True)
-    notes = models.TextField(blank=True)
+    notes = models.TextField(blank=True, help_text='include depositor name in the note')
 
     processed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                       related_name='fin_payment_notifications_processed')
