@@ -756,3 +756,22 @@ class Expense(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.amount} ({self.expense_date})"
+
+#Notification Read Status
+class NotificationReadStatus(models.Model):
+    """
+    Tracks which staff member has seen which PaymentNotification, so the
+    bell-icon menu can show "N new notifications" per staff member instead
+    of a single school-wide flag.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='fin_read_notifications')
+    notify = models.ForeignKey(PaymentNotification, on_delete=models.CASCADE, related_name='read_statuses')
+    read_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Notification Read Status"
+        verbose_name_plural = "Notification Read Statuses"
+        unique_together = ('user', 'notify')
+
+    def __str__(self):
+        return f"{self.user.get_username()} read {self.notify.student}"

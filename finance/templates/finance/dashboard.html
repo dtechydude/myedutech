@@ -57,6 +57,32 @@
     </div>
 </div>
 
+<!-- ===== Analytics Charts (new, purely additive — no context/view changes needed) ===== -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-5">
+        <div class="table-card h-100">
+            <h6 class="mb-3"><i class="fa-solid fa-chart-pie me-2 text-primary"></i>Financial Overview</h6>
+            <div style="position:relative; height:260px;">
+                <canvas id="financeOverviewChart"></canvas>
+            </div>
+            <div class="d-flex justify-content-center gap-4 mt-3 small text-muted">
+                <span><i class="fa-solid fa-circle text-success me-1"></i>Income</span>
+                <span><i class="fa-solid fa-circle text-danger me-1"></i>Expenses</span>
+                <span><i class="fa-solid fa-circle text-warning me-1"></i>Outstanding</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="table-card h-100">
+            <h6 class="mb-3"><i class="fa-solid fa-chart-column me-2 text-primary"></i>Recent Payments Trend</h6>
+            <div style="position:relative; height:260px;">
+                <canvas id="recentPaymentsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ===== End Analytics Charts ===== -->
+
 <div class="row g-3">
     <div class="col-lg-6">
         <div class="table-card">
@@ -136,4 +162,121 @@
     </div>
 </div>
 
+{% endblock %}
+{% block extra_scripts %}
+{% load static l10n %}
+<script src="{% static 'vendor/chartjs/chart.umd.min.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    if (typeof Chart === 'undefined') {
+        console.error('[KwikSchools] Chart.js did not load. Check the static path: {% static "vendor/chartjs/chart.umd.min.js" %}');
+        return;
+    }
+
+    // ---- Financial Overview (Doughnut) ----
+    const overviewCtx = document.getElementById('financeOverviewChart');
+    if (overviewCtx) {
+        {% localize off %}
+        const overviewData = [
+            {{ summary.total_income|default_if_none:0|default:0|unlocalize }},
+            {{ summary.total_expense|default_if_none:0|default:0|unlocalize }},
+            {{ summary.outstanding_balance|default_if_none:0|default:0|unlocalize }}
+        ];
+        {% endlocalize %}
+        console.log('[KwikSchools] Overview chart data:', overviewData);
+
+        new Chart(overviewCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Income', 'Expenses', 'Outstanding'],
+                datasets: [{
+                    data: overviewData,
+                    backgroundColor: ['#198754', '#dc3545', '#ffc107'],
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                const val = ctx.parsed || 0;
+                                return ctx.label + ': ' + val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        console.warn('[KwikSchools] #financeOverviewChart canvas not found in DOM.');
+    }
+
+    // ---- Recent Payments Trend (Bar) ----
+    const paymentsCtx = document.getElementById('recentPaymentsChart');
+    if (paymentsCtx) {
+        const paymentLabels = [
+            {% for p in recent_payments %}"{{ p.payment_date|date:'M d'|default:'' }}"{% if not forloop.last %},{% endif %}{% endfor %}
+        ];
+        {% localize off %}
+        const paymentAmounts = [
+            {% for p in recent_payments %}{{ p.amount_received|default_if_none:0|default:0|unlocalize }}{% if not forloop.last %},{% endif %}{% endfor %}
+        ];
+        {% endlocalize %}
+        const paymentStudents = [
+            {% for p in recent_payments %}"{{ p.student.get_full_name|default:'Unknown'|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}
+        ];
+
+        console.log('[KwikSchools] Payments chart labels:', paymentLabels);
+        console.log('[KwikSchools] Payments chart amounts:', paymentAmounts);
+
+        if (paymentLabels.length > 0) {
+            new Chart(paymentsCtx, {
+                type: 'bar',
+                data: {
+                    labels: paymentLabels,
+                    datasets: [{
+                        label: 'Amount Received',
+                        data: paymentAmounts,
+                        backgroundColor: '#0d6efd',
+                        borderRadius: 6,
+                        maxBarThickness: 36
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: function (items) {
+                                    return paymentStudents[items[0].dataIndex] || '';
+                                },
+                                label: function (ctx) {
+                                    return 'Amount: ' + (ctx.parsed.y || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grace: '10%' }
+                    }
+                }
+            });
+        } else {
+            paymentsCtx.parentElement.innerHTML = '<p class="text-muted text-center py-5 mb-0">No recent payment data to chart yet.</p>';
+        }
+    } else {
+        console.warn('[KwikSchools] #recentPaymentsChart canvas not found in DOM.');
+    }
+});
+</script>
 {% endblock %}

@@ -2,7 +2,7 @@
 {% load finance_extras %}
 {% block content %}
 <div class="table-card">
-    <div class="d-flex justify-content-between flex-wrap gap-2 mb-3">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
         <form method="get" class="d-flex gap-2 flex-wrap">
             <input type="text" name="q" value="{{ request.GET.q }}" class="form-control form-control-sm" placeholder="Search title / vendor / ref">
             <select name="category" class="form-select form-select-sm">
@@ -15,7 +15,7 @@
             </select>
             <button class="btn btn-outline-primary btn-sm" type="submit">Filter</button>
         </form>
-        <div class="d-flex gap-2">
+        <div class="d-flex align-items-start gap-2">
             <a href="?{{ request.GET.urlencode }}&format=pdf" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-file-pdf me-1"></i> PDF</a>
             <a href="?{{ request.GET.urlencode }}&format=csv" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-file-csv me-1"></i> CSV</a>
             <a href="{% url 'finance:expense_add' %}" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Record Expense</a>

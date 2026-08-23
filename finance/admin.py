@@ -11,7 +11,7 @@ from .models import (
     BankAccount, FeeCategory, FeeStructure, Invoice, InvoiceItem, Payment, Receipt,
     StudentAccountLedger, StudentLedgerEntry, PaymentNotification,
     ExpenseCategory, Vendor, Expense, StudentDiscount, StudentFeeException,
-    InstallmentPlan, Installment,
+    InstallmentPlan, Installment, NotificationReadStatus
 )
 
 
@@ -215,3 +215,12 @@ class ExpenseAdmin(BaseModelAdmin):
         if not obj.pk and not obj.recorded_by:
             obj.recorded_by = request.user
         super().save_model(request, obj, form, change)
+
+
+#notification status
+@admin.register(NotificationReadStatus)
+class NotificationReadStatusAdmin(BaseModelAdmin):
+    list_display = ('user', 'notify', 'read_at')
+    list_filter = ('user',)
+    search_fields = ('user__username', 'notify__student__first_name', 'notify__student__last_name')
+    readonly_fields = ('read_at',)

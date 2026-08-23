@@ -350,7 +350,7 @@ class CustomLoginView(LoginView):
         is_parent = Parent.objects.filter(user=self.request.user).exists()
 
         if is_parent:
-            return reverse_lazy('students:parent-dashboard')
+            return reverse_lazy('finance:parent_dashboard')
             # return reverse_lazy('finance:parent_dashboard')
         
         # If not a parent, use the default redirect URL

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title|default:"My Finance" }} | KwikSchools</title>
+    <title>{{ title|default:"My Finance" }} | {{ school_info.name}}</title>
 
     <!-- FAVICONS ICON -->	
     {% if school_info and school_info.logo %}

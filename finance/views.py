@@ -29,7 +29,7 @@ from .forms import (
 from .models import (
     BankAccount, FeeCategory, FeeStructure, Invoice, InvoiceItem, Payment, Receipt,
     StudentAccountLedger, PaymentNotification, ExpenseCategory, Vendor, Expense,
-    StudentDiscount, StudentFeeException, InstallmentPlan, Installment,
+    StudentDiscount, StudentFeeException, NotificationReadStatus, InstallmentPlan, Installment,
 )
 from .permissions import (
     finance_staff_required, finance_admin_required, is_finance_staff, is_parent, is_student_user,
@@ -1413,3 +1413,64 @@ def school_bank_detail(request):
     return render(request, 'finance/school_bank_detail.html', {
         'bank_detail': bank_details,
     })
+
+
+# Finance Notification
+@login_required
+@finance_staff_required
+def process_notification(request, pk):
+    """Verify a PaymentNotification: turn it into a real, receipted Payment."""
+    notification = get_object_or_404(PaymentNotification, pk=pk)
+    action = request.POST.get('action') if request.method == 'POST' else None
+
+    # Mark read for this staff member the moment they open the review page
+    # (GET) or act on it (POST) — either way they've now seen it, so it
+    # should drop out of their unread bell-icon count.
+    NotificationReadStatus.objects.update_or_create(user=request.user, notify=notification)
+
+    if request.method == 'POST' and action == 'approve':
+        invoice_id = request.POST.get('invoice')
+        invoice = Invoice.objects.filter(pk=invoice_id, student=notification.student).first() if invoice_id else None
+
+        fee_category = None
+        if invoice is None:
+            fee_category_id = request.POST.get('fee_category')
+            if not fee_category_id:
+                messages.error(request, "Since no invoice was selected, choose what this payment is "
+                                         "for (Fee Category) before approving.")
+                return redirect('finance:process_notification', pk=notification.pk)
+            fee_category = get_object_or_404(FeeCategory, pk=fee_category_id)
+
+        try:
+            payment = services.record_payment(
+                user=request.user, student=notification.student, invoice=invoice, fee_category=fee_category,
+                term=notification.term, session=notification.session,
+                amount_received=notification.amount_paid, payment_method='bank_transfer',
+                payment_date=notification.payment_date, transaction_id=notification.transaction_id,
+                notes=f"Verified from payment notification #{notification.pk}.",
+            )
+        except ValueError as exc:
+            messages.error(request, str(exc))
+            return redirect('finance:process_notification', pk=notification.pk)
+
+        notification.status = PaymentNotification.Status.PROCESSED
+        notification.processed_by = request.user
+        notification.processed_at = timezone.now()
+        notification.resulting_payment = payment
+        notification.save()
+        messages.success(request, "Notification approved and payment recorded.")
+        return redirect('finance:notification_list')
+
+    elif request.method == 'POST' and action == 'reject':
+        notification.status = PaymentNotification.Status.REJECTED
+        notification.processed_by = request.user
+        notification.processed_at = timezone.now()
+        notification.save()
+        messages.info(request, "Notification rejected.")
+        return redirect('finance:notification_list')
+
+    invoices = Invoice.objects.filter(student=notification.student).exclude(status=Invoice.Status.CANCELLED)
+    fee_categories = FeeCategory.objects.filter(is_active=True).order_by('name')
+    context = _common_context(notification=notification, invoices=invoices, fee_categories=fee_categories,
+                               title='Review Notification')
+    return render(request, 'finance/process_notification.html', context)

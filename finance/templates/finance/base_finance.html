@@ -103,10 +103,18 @@
     <a href="{% url 'finance:discount_list' %}"><i class="fa-solid fa-percent me-2"></i> Discounts &amp; Concessions</a>
     <a href="{% url 'finance:fee_exception_list' %}"><i class="fa-solid fa-shuffle me-2"></i> Fee Exceptions</a>
 
+    
     <div class="section-title">Payments</div>
+
+    <a href="{% url 'finance:notification_list' %}">
+        <i class="fa-solid fa-bell me-2"></i> Payment Notifications
+        {% if finance_unread_notifications_count > 0 %}
+            <span class="badge bg-danger ms-1">{{ finance_unread_notifications_count }}</span>
+        {% endif %}
+    </a>
+    
     <a href="{% url 'finance:payment_list' %}"><i class="fa-solid fa-clock-rotate-left me-2"></i> Payment History</a>
     <a href="{% url 'finance:payment_directory' %}"><i class="fa-solid fa-users me-2"></i> Student Directory</a>
-    <a href="{% url 'finance:notification_list' %}"><i class="fa-solid fa-bell me-2"></i> Payment Notifications</a>
     <a href="{% url 'finance:bank_account_list' %}"><i class="fa-solid fa-building-columns me-2"></i> Bank Accounts</a>
 
     <div class="section-title">Expenses</div>

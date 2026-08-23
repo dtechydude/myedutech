@@ -1,111 +1,161 @@
-{% extends 'pages/portal_home.html' %}
+{% extends 'finance/base_finance_portal.html' %}
 {% load static %}
 
-{% block title %}
-<title>{{ school_info.name }} - Bank Details</title>
-{% endblock title %}
+{% block content %}
 
-{% block content_body %}
-<div class="content-body">
-    <div class="container-fluid">
-        <div class="row page-titles">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item active"><a href="javascript:void(0)">BANK</a></li>
-                <li class="breadcrumb-item"><a href="javascript:void(0)">Information</a></li>
-            </ol>
-        </div>
+<div class="row justify-content-center">
+    <div class="col-xl-8 col-lg-10">
+        <div class="table-card">
+            <h4 class="mb-3"><i class="fa-solid fa-building-columns text-primary me-2"></i>School Bank Details</h4>
 
-        <div class="row justify-content-center">
-            <div class="col-xl-8 col-lg-10">
-                <div class="card shadow-sm">
-                    <div class="card-header border-0 pb-0">
-                        <h4 class="card-title mb-0"><i class="fas fa-building-columns text-primary me-2"></i>School Bank Details</h4>
-                    </div>
-                    <div class="card-body">
-
-                        <div class="alert alert-info d-flex align-items-start shadow-sm mb-4">
-                            <i class="fas fa-circle-info fa-lg me-3 mt-1"></i>
-                            <div>
-                                <strong>Payment Instruction:</strong> Always pay into one of the official
-                                accounts listed below, and keep your teller/receipt as proof.
-                                Your payment is subject to verification by the admin — contact the
-                                school by mail or phone if you have any questions about a payment.
-                            </div>
-                        </div>
-
-                        {% if bank_detail %}
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-
-                                        <th>Bank</th>
-                                        <th>Account Name</th>
-                                        <th>Account Number</th>
-                                        <th>Primary</th>
-                                        <th>Purpose</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for b in bank_detail %}
-                                    <tr>
-                                        <td class="fw-bold">{{ b.bank_name }}</td>
-                                        <td>{{ b.account_name }}</td>
-                                        <td>
-                                            <span class="fw-bold text-primary me-2" id="acc-number-{{ b.id }}">{{ b.account_number }}</span>
-                                            <button type="button"
-                                                    class="btn btn-sm btn-outline-secondary copy-btn"
-                                                    data-target="acc-number-{{ b.id }}"
-                                                    title="Copy account number">
-                                                <i class="fas fa-copy"></i>
-                                            </button>
-                                        </td>
-                                        <td>{% if b.is_primary %}<span class="badge bg-primary">Primary</span>{% endif %}</td>
-                                        <td class="text-muted">{{ b.branch }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        {% else %}
-                        <div class="text-center py-5 text-muted">
-                            <i class="fas fa-building-columns fa-2x mb-3 d-block"></i>
-                            No bank account details have been published yet. Please check back later
-                            or contact the school administration.
-                        </div>
-                        {% endif %}
-
-                    </div>
+            <div class="alert alert-info d-flex align-items-start shadow-sm mb-4">
+                <i class="fas fa-circle-info fa-lg me-3 mt-1"></i>
+                <div>
+                    <strong>Payment Instruction:</strong> Always pay into one of the official
+                    accounts listed below, and keep your teller/receipt as proof.
+                    Your payment is subject to verification by the admin — contact the
+                    school by mail or phone if you have any questions about a payment.
                 </div>
             </div>
-        </div>
 
+            {% if bank_detail %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Bank</th>
+                            <th>Account Name</th>
+                            <th>Account Number</th>
+                            <th>Primary</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in bank_detail %}
+                        <tr>
+                            <td class="fw-bold">{{ b.bank_name }}</td>
+                            <td>{{ b.account_name }}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2 acc-copy-wrap" data-target="acc-number-{{ b.id }}" role="button" title="Tap to copy account number">
+                                    <span class="fw-bold text-primary fs-6 user-select-all" id="acc-number-{{ b.id }}">{{ b.account_number }}</span>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-secondary copy-btn"
+                                            data-target="acc-number-{{ b.id }}"
+                                            title="Copy account number">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </td>
+                            <td>{% if b.is_primary %}<span class="badge bg-primary">Primary</span>{% endif %}</td>
+                            <td class="text-muted">{{ b.branch }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-building-columns fa-2x mb-3 d-block"></i>
+                No bank account details have been published yet. Please check back later
+                or contact the school administration.
+            </div>
+            {% endif %}
+
+        </div>
     </div>
 </div>
 
+<!-- Toast feedback for copy action -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+    <div id="copyToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-check-circle me-1"></i> Account number copied!
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .acc-copy-wrap { cursor: pointer; }
+    .acc-copy-wrap:hover .copy-btn { background-color: var(--kw-accent); border-color: var(--kw-accent); color: #fff; }
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.copy-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var target = document.getElementById(btn.dataset.target);
-            var text = target.textContent.trim();
 
-            navigator.clipboard.writeText(text).then(function () {
-                var icon = btn.querySelector('i');
+    function copyAccountNumber(targetId, triggerBtn) {
+        var target = document.getElementById(targetId);
+        if (!target) return;
+        var text = target.textContent.trim();
+
+        function showSuccess() {
+            if (triggerBtn) {
+                var icon = triggerBtn.querySelector('i');
                 icon.classList.remove('fa-copy');
                 icon.classList.add('fa-check');
-                btn.classList.remove('btn-outline-secondary');
-                btn.classList.add('btn-success');
+                triggerBtn.classList.remove('btn-outline-secondary');
+                triggerBtn.classList.add('btn-success');
 
                 setTimeout(function () {
                     icon.classList.remove('fa-check');
                     icon.classList.add('fa-copy');
-                    btn.classList.remove('btn-success');
-                    btn.classList.add('btn-outline-secondary');
+                    triggerBtn.classList.remove('btn-success');
+                    triggerBtn.classList.add('btn-outline-secondary');
                 }, 1500);
+            }
+
+            var toastEl = document.getElementById('copyToast');
+            if (toastEl && window.bootstrap) {
+                var toast = bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 1800 });
+                toast.show();
+            }
+        }
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(showSuccess).catch(function () {
+                fallbackCopy(text, showSuccess);
             });
+        } else {
+            // Fallback for older browsers or non-HTTPS (common on some cPanel-hosted school sites)
+            fallbackCopy(text, showSuccess);
+        }
+    }
+
+    function fallbackCopy(text, onSuccess) {
+        var tempInput = document.createElement('textarea');
+        tempInput.value = text;
+        tempInput.style.position = 'fixed';
+        tempInput.style.opacity = '0';
+        document.body.appendChild(tempInput);
+        tempInput.focus();
+        tempInput.select();
+        try {
+            document.execCommand('copy');
+            onSuccess();
+        } catch (err) {
+            console.error('Copy failed:', err);
+        }
+        document.body.removeChild(tempInput);
+    }
+
+    // Copy button click
+    document.querySelectorAll('.copy-btn').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            copyAccountNumber(btn.dataset.target, btn);
+        });
+    });
+
+    // Tap anywhere on the account number row to copy (bigger touch target for mobile)
+    document.querySelectorAll('.acc-copy-wrap').forEach(function (wrap) {
+        wrap.addEventListener('click', function () {
+            var btn = wrap.querySelector('.copy-btn');
+            copyAccountNumber(wrap.dataset.target, btn);
         });
     });
 });
 </script>
-{% endblock content_body %}
+
+{% endblock content %}

@@ -27,7 +27,18 @@
         table.rpt-table td.amount, table.rpt-table th.amount { text-align:right; }
         tr.total-row td { font-weight:bold; border-top:2px solid #0f3d5c; background:#f7f9fb; }
         .no-print {}
-        @media print { .no-print { display:none !important; } body { background:#fff; } .doc-wrapper { border:none; margin:0; padding:0; } }
+        @media print {
+            .no-print { display:none !important; }
+            body { background:#fff; }
+            .doc-wrapper { border:none; margin:0; padding:0; }
+
+            /* Force browsers to keep background colors/shading when printing or saving as PDF */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -64,7 +75,7 @@
         <h6> {{ school_info.name }} </h6>
         <p class="school-name">Debtors Report</p>
         <div>{{ term }} — {{ session }}{% if selected_class %} — {{ selected_class.name }}{% endif %}</div>
-        <div>Generated {{ today }}</div>
+      <div>Generated: {% now "jS F, Y" %}</div>
     </div>
 
     <table class="rpt-table">
