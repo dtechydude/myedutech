@@ -27,16 +27,32 @@
 
         /* ---- Sidebar (off-canvas drawer on mobile/tablet, fixed on desktop) ---- */
         .kw-sidebar {
-            height: 100vh; background: var(--kw-primary); color: #fff; width: 250px; position: fixed;
-            top: 0; left: 0; padding-top: 1rem; padding-bottom: 1rem; overflow-y: auto; z-index: 1045;
+            height: 100vh;
+            height: 100dvh; /* accounts for mobile browser address-bar chrome; falls back to 100vh on older browsers */
+            background: var(--kw-primary); color: #fff; width: 250px; position: fixed;
+            top: 0; left: 0; z-index: 1045;
+            display: flex; flex-direction: column;
             transition: transform .25s ease;
+        }
+        .kw-sidebar .brand {
+            flex: 0 0 auto;
+            font-weight: 700; font-size: 1.1rem; padding: 1rem 1.25rem 1.25rem;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+
+        /* Independently scrollable nav-links area, so the menu can never be cut off regardless of viewport height */
+        .kw-sidebar-links {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 1.5rem;
             scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.25) transparent;
         }
-        .kw-sidebar::-webkit-scrollbar { width: 6px; }
-        .kw-sidebar::-webkit-scrollbar-track { background: transparent; }
-        .kw-sidebar::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,.25); border-radius: 3px; }
-        .kw-sidebar::-webkit-scrollbar-thumb:hover { background-color: rgba(255,255,255,.4); }
-        .kw-sidebar .brand { font-weight: 700; font-size: 1.1rem; padding: .5rem 1.25rem 1.25rem; display: flex; align-items: center; justify-content: space-between; }
+        .kw-sidebar-links::-webkit-scrollbar { width: 6px; }
+        .kw-sidebar-links::-webkit-scrollbar-track { background: transparent; }
+        .kw-sidebar-links::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,.25); border-radius: 3px; }
+        .kw-sidebar-links::-webkit-scrollbar-thumb:hover { background-color: rgba(255,255,255,.4); }
+
         .kw-sidebar a { color: #cfe0ec; text-decoration: none; display: block; padding: .55rem 1.25rem; border-left: 3px solid transparent; }
         .kw-sidebar a:hover, .kw-sidebar a.active { background: rgba(255,255,255,.08); color: #fff; border-left-color: var(--kw-accent); }
         .kw-sidebar .section-title { text-transform: uppercase; font-size: .7rem; letter-spacing: .06em; color: #7fa2ba; padding: 1rem 1.25rem .25rem; }
@@ -52,8 +68,13 @@
         }
 
         .kw-main { margin-left: 250px; padding: 1.75rem; }
-        .kw-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; gap: .75rem; }
-        .kw-topbar-left { display: flex; align-items: center; gap: .75rem; }
+        .kw-topbar {
+            display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+            margin-bottom: 1.25rem; gap: .75rem; row-gap: .5rem;
+        }
+        .kw-topbar-left { display: flex; align-items: center; gap: .75rem; min-width: 0; }
+        .kw-topbar-left h4 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .kw-topbar > a.btn { flex-shrink: 0; white-space: nowrap; }
 
         .card-metric { border: none; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
         .table-card { background: #fff; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); padding: 1.25rem; }
@@ -80,6 +101,10 @@
             .kw-main { margin-left: 0; padding: 1rem; }
             .kw-menu-btn { display: inline-flex; }
         }
+
+        @media (max-width: 420px) {
+            .kw-topbar-left h4 { max-width: 60vw; }
+        }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
@@ -92,40 +117,42 @@
         <span><i class="fa-solid fa-coins"></i>&nbsp; <small>{{ school_info.name }}</small> - Finance</span>
         <button class="kw-sidebar-close" id="kwSidebarClose" aria-label="Close menu"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div class="section-title">Overview</div>
-    <a href="{% url 'finance:dashboard' %}"><i class="fa-solid fa-gauge-high me-2"></i> Dashboard</a>
 
-    <div class="section-title">Fees & Invoicing</div>
-    <a href="{% url 'finance:fee_category_list' %}"><i class="fa-solid fa-tags me-2"></i> Fee Categories</a>
-    <a href="{% url 'finance:fee_structure_list' %}"><i class="fa-solid fa-layer-group me-2"></i> Fee Structure</a>
-    <a href="{% url 'finance:fee_table' %}"><i class="fa-solid fa-table-list me-2"></i> Printable Fee Table</a>
-    <a href="{% url 'finance:invoice_list' %}"><i class="fa-solid fa-file-invoice me-2"></i> Invoices</a>
-    <a href="{% url 'finance:discount_list' %}"><i class="fa-solid fa-percent me-2"></i> Discounts &amp; Concessions</a>
-    <a href="{% url 'finance:fee_exception_list' %}"><i class="fa-solid fa-shuffle me-2"></i> Fee Exceptions</a>
+    <div class="kw-sidebar-links">
+        <div class="section-title">Overview</div>
+        <a href="{% url 'finance:dashboard' %}"><i class="fa-solid fa-gauge-high me-2"></i> Dashboard</a>
 
-    
-    <div class="section-title">Payments</div>
+        <div class="section-title">Fees & Invoicing</div>
+        <a href="{% url 'finance:fee_category_list' %}"><i class="fa-solid fa-tags me-2"></i> Fee Categories</a>
+        <a href="{% url 'finance:fee_structure_list' %}"><i class="fa-solid fa-layer-group me-2"></i> Fee Structure</a>
+        <a href="{% url 'finance:fee_table' %}"><i class="fa-solid fa-table-list me-2"></i> Printable Fee Table</a>
+        <a href="{% url 'finance:invoice_list' %}"><i class="fa-solid fa-file-invoice me-2"></i> Invoices</a>
+        <a href="{% url 'finance:discount_list' %}"><i class="fa-solid fa-percent me-2"></i> Discounts &amp; Concessions</a>
+        <a href="{% url 'finance:fee_exception_list' %}"><i class="fa-solid fa-shuffle me-2"></i> Fee Exceptions</a>
 
-    <a href="{% url 'finance:notification_list' %}">
-        <i class="fa-solid fa-bell me-2"></i> Payment Notifications
-        {% if finance_unread_notifications_count > 0 %}
-            <span class="badge bg-danger ms-1">{{ finance_unread_notifications_count }}</span>
-        {% endif %}
-    </a>
-    
-    <a href="{% url 'finance:payment_list' %}"><i class="fa-solid fa-clock-rotate-left me-2"></i> Payment History</a>
-    <a href="{% url 'finance:payment_directory' %}"><i class="fa-solid fa-users me-2"></i> Student Directory</a>
-    <a href="{% url 'finance:bank_account_list' %}"><i class="fa-solid fa-building-columns me-2"></i> Bank Accounts</a>
+        <div class="section-title">Payments</div>
 
-    <div class="section-title">Expenses</div>
-    <a href="{% url 'finance:expense_list' %}"><i class="fa-solid fa-receipt me-2"></i> Expenses</a>
-    <a href="{% url 'finance:expense_category_list' %}"><i class="fa-solid fa-folder-tree me-2"></i> Expense Categories</a>
-    <a href="{% url 'finance:vendor_list' %}"><i class="fa-solid fa-truck-field me-2"></i> Vendors / Payees</a>
+        <a href="{% url 'finance:notification_list' %}">
+            <i class="fa-solid fa-bell me-2"></i> Payment Notifications
+            {% if finance_unread_notifications_count > 0 %}
+                <span class="badge bg-danger ms-1">{{ finance_unread_notifications_count }}</span>
+            {% endif %}
+        </a>
 
-    <div class="section-title">Reports</div>
-    <a href="{% url 'finance:debtors_report' %}"><i class="fa-solid fa-user-clock me-2"></i> Debtors Report</a>
-    <a href="{% url 'finance:total_payments_report' %}"><i class="fa-solid fa-sack-dollar me-2"></i> Income Report</a>
-    <a href="{% url 'finance:profit_loss_report' %}"><i class="fa-solid fa-chart-line me-2"></i> Profit &amp; Loss</a>
+        <a href="{% url 'finance:payment_list' %}"><i class="fa-solid fa-clock-rotate-left me-2"></i> Payment History</a>
+        <a href="{% url 'finance:payment_directory' %}"><i class="fa-solid fa-users me-2"></i> Student Directory</a>
+        <a href="{% url 'finance:bank_account_list' %}"><i class="fa-solid fa-building-columns me-2"></i> Bank Accounts</a>
+
+        <div class="section-title">Expenses</div>
+        <a href="{% url 'finance:expense_list' %}"><i class="fa-solid fa-receipt me-2"></i> Expenses</a>
+        <a href="{% url 'finance:expense_category_list' %}"><i class="fa-solid fa-folder-tree me-2"></i> Expense Categories</a>
+        <a href="{% url 'finance:vendor_list' %}"><i class="fa-solid fa-truck-field me-2"></i> Vendors / Payees</a>
+
+        <div class="section-title">Reports</div>
+        <a href="{% url 'finance:debtors_report' %}"><i class="fa-solid fa-user-clock me-2"></i> Debtors Report</a>
+        <a href="{% url 'finance:total_payments_report' %}"><i class="fa-solid fa-sack-dollar me-2"></i> Income Report</a>
+        <a href="{% url 'finance:profit_loss_report' %}"><i class="fa-solid fa-chart-line me-2"></i> Profit &amp; Loss</a>
+    </div>
 </nav>
 
 <main class="kw-main">
