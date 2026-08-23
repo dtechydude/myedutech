@@ -86,6 +86,8 @@ class AttendanceSummary(models.Model):
 
     class Meta:
         unique_together = ('student', 'session', 'term')
+        verbose_name = "Attendance Summary"
+        verbose_name_plural = "Attendance Summaries"
 
     @property
     def total_school_days(self):

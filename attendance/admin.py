@@ -58,3 +58,9 @@ class AttendanceSummaryAdmin(admin.ModelAdmin):
         'term'
     )
 
+    raw_id_fields = (
+            'student',
+            'entered_by',
+  
+        )
+
