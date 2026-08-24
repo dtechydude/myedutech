@@ -207,7 +207,9 @@ EMAIL_HOST_PASSWORD = 'fsme syad fqgx cdqp'  # Paste your 16-digit App Password 
 DEFAULT_FROM_EMAIL = 'kwikschools@gmail.com'
 
 
-
+# settings.py
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024   # 5 MB — hard stop on total request size
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024   # 2 MB — above this, Django streams to a temp file instead of RAM
 
 # # EMAIL SETTINGS FOR SMTP2GO
 # # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' 

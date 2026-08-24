@@ -172,7 +172,7 @@ def _fetch_teachers() -> list:
     Teacher.get_full_name() uses user.last_name / user.first_name.
     """
     try:
-        from teachers.models import Teacher
+        from staff.models import Teacher
     except ImportError:
         try:
             from staff.models import Teacher
@@ -340,6 +340,8 @@ def get_users_for_type(user_type: str, class_filter_pk: int | None = None) -> li
         return []
 
 
+
+from django.core.exceptions import ValidationError
 # ── Save photos ───────────────────────────────────────────────────────────────
 
 def save_bulk_photos(files_map: dict) -> dict:
@@ -347,6 +349,13 @@ def save_bulk_photos(files_map: dict) -> dict:
     Process { 'photo_<user_id>': UploadedFile } from request.FILES.
 
     Returns { 'saved': int, 'skipped': int, 'errors': list[dict] }
+
+    NOTE: The 100KB size cap and old-image cleanup are now enforced centrally
+    inside Profile.save() (model-level), so they apply no matter which view,
+    form, or service touches Profile.image — not just this bulk path. The
+    validate_single_image() pre-check below is kept as a fast, user-friendly
+    first pass; the try/except ValidationError block below is a safety net
+    in case that pre-check and the model rule ever drift out of sync.
     """
     Profile = _get_profile_model()
     results = {'saved': 0, 'skipped': 0, 'errors': []}
@@ -360,13 +369,20 @@ def save_bulk_photos(files_map: dict) -> dict:
         except (ValueError, IndexError):
             continue
 
+        try:
+            username = User.objects.get(pk=user_id).username
+        except User.DoesNotExist:
+            results['errors'].append({
+                'user_id': user_id,
+                'username': f'user_{user_id}',
+                'message': f'User with ID {user_id} does not exist.',
+            })
+            results['skipped'] += 1
+            continue
+
         # Server-side validation (client already checked, but never trust client)
         file_errors = validate_single_image(uploaded_file)
         if file_errors:
-            try:
-                username = User.objects.get(pk=user_id).username
-            except User.DoesNotExist:
-                username = f'user_{user_id}'
             for err in file_errors:
                 results['errors'].append({'user_id': user_id, 'username': username, 'message': err})
             results['skipped'] += 1
@@ -382,18 +398,21 @@ def save_bulk_photos(files_map: dict) -> dict:
                     profile = Profile.objects.create(user=u)
                     logger.info(f'save_bulk_photos: created missing Profile for user_id={user_id}')
 
-                # Remove old image from disk to save space
-                if profile.image:
-                    try:
-                        old_path = profile.image.path
-                        if os.path.isfile(old_path):
-                            os.remove(old_path)
-                    except Exception:
-                        pass  # non-fatal
-
+                # Old-image deletion is handled automatically inside Profile.save()
+                # — no manual os.remove() needed here anymore.
                 profile.image = uploaded_file
-                profile.save(update_fields=['image'])
-                results['saved'] += 1
+                try:
+                    profile.save(update_fields=['image'])
+                    results['saved'] += 1
+                except ValidationError as ve:
+                    messages_list = ve.messages if hasattr(ve, 'messages') else [str(ve)]
+                    for msg in messages_list:
+                        results['errors'].append({
+                            'user_id': user_id,
+                            'username': username,
+                            'message': msg,
+                        })
+                    results['skipped'] += 1
 
         except User.DoesNotExist:
             results['errors'].append({
@@ -406,7 +425,7 @@ def save_bulk_photos(files_map: dict) -> dict:
             logger.exception(f'save_bulk_photos: failed for user_id={user_id}')
             results['errors'].append({
                 'user_id': user_id,
-                'username': f'user_{user_id}',
+                'username': username,
                 'message': f'Unexpected error: {e}',
             })
             results['skipped'] += 1
