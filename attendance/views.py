@@ -634,26 +634,44 @@ def scan_attendance_ajax(request, usn):
 
 
 
+# Manual Attendance Entry
 @login_required
 def attendance_summary_class_bulk(request):
     """
-    Bulk manual attendance entry for a whole class, per session+term.
+    Bulk manual attendance entry for a whole class, for the CURRENT
+    session + CURRENT term only.
+
     days_present is the only value a teacher enters — days_absent is
     ALWAYS derived (config.total_school_days - days_present), never
     entered directly, so it can never conflict with the configured
     total school days for the term.
 
+    Session and term are ALWAYS resolved from is_current=True and are
+    never accepted from GET/POST — this applies to admins too, not
+    just form teachers. This prevents:
+      - a stale/mismatched session+term combo in the URL producing a
+        404 (e.g. switching session while an old term id lingers in
+        the querystring),
+      - a teacher (or a crafted request) reopening a past term to
+        adjust attendance in a student's favour after the fact.
+
+    To work in a different session/term, the admin must first go and
+    flip that session/term's `is_current` flag on (e.g. via Django
+    admin or a session/term management screen) — this view will then
+    automatically pick it up.
+
     Access: staff/superuser (any class), or the class's form teacher
     (own class only).
     """
-      
+
     user = request.user
+    is_admin = user.is_staff or user.is_superuser
 
     # ======================================================
     # ADMIN / STAFF USERS
     # ======================================================
 
-    if user.is_staff or user.is_superuser:
+    if is_admin:
 
         available_standards = (
             Standard.objects
@@ -697,21 +715,35 @@ def attendance_summary_class_bulk(request):
 
         return redirect("/dashboard/")
 
-    sessions = Session.objects.all().order_by('-start_date')
+    # ======================================================
+    # SESSION / TERM — ALWAYS the current ones, for everyone.
+    # Never read from GET/POST. Admin changes "current" elsewhere
+    # (e.g. Session/Term admin) if they need to work in a different
+    # session or term.
+    # ======================================================
 
-    session_id = request.GET.get('session') or request.POST.get('session_id')
+    session = Session.objects.filter(is_current=True).first()
+    term = Term.objects.filter(session=session, is_current=True).first() if session else None
+
+    if not session or not term:
+        messages.warning(
+            request,
+            "No current session/term has been set up yet. Please set one as current "
+            "in Session/Term management before entering manual attendance."
+        )
+        return redirect("/dashboard/")
+
+    # ======================================================
+    # CLASS — admin may pick any class, teacher only their own.
+    # ======================================================
+
     standard_id = request.GET.get('standard') or request.POST.get('standard_id')
-    term_id = request.GET.get('term') or request.POST.get('term_id')
-
-    session = get_object_or_404(sessions, id=session_id) if session_id else sessions.first()
     standard = get_object_or_404(available_standards, id=standard_id) if standard_id else available_standards.first()
-    terms_in_session = Term.objects.filter(session=session).order_by('start_date') if session else Term.objects.none()
-    term = get_object_or_404(terms_in_session, id=term_id) if term_id else terms_in_session.first()
 
-    config = AttendanceConfiguration.objects.filter(session=session, term=term).first() if session and term else None
+    config = AttendanceConfiguration.objects.filter(session=session, term=term).first()
 
     rows = []
-    if session and term and standard:
+    if standard:
         students = Student.objects.filter(current_class=standard).order_by('last_name', 'first_name')
 
         if request.method == 'POST':
@@ -721,7 +753,7 @@ def attendance_summary_class_bulk(request):
                     "Set the total school days for this session/term in Attendance Configuration "
                     "before entering manual attendance."
                 )
-                return redirect(f"{request.path}?session={session.id}&term={term.id}&standard={standard.id}")
+                return redirect(f"{request.path}?standard={standard.id}")
 
             updated_count = 0
             for student in students:
@@ -745,7 +777,7 @@ def attendance_summary_class_bulk(request):
                 updated_count += 1
 
             messages.success(request, f"Saved manual attendance for {updated_count} student(s).")
-            return redirect(f"{request.path}?session={session.id}&term={term.id}&standard={standard.id}")
+            return redirect(f"{request.path}?standard={standard.id}")
 
         existing = {
             s.student_id: s for s in AttendanceSummary.objects.filter(
@@ -755,8 +787,8 @@ def attendance_summary_class_bulk(request):
         rows = [{'student': s, 'summary': existing.get(s.id)} for s in students]
 
     context = {
-        'sessions': sessions, 'available_standards': available_standards,
-        'terms_in_session': terms_in_session, 'session': session,
-        'standard': standard, 'term': term, 'config': config, 'rows': rows,
+        'available_standards': available_standards,
+        'session': session, 'standard': standard, 'term': term,
+        'config': config, 'rows': rows, 'is_admin': is_admin,
     }
     return render(request, 'attendance/attendance_summary_class_bulk.html', context)

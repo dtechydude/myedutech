@@ -31,11 +31,18 @@
         .page-card-body { padding: 24px; }
         .filter-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 18px; }
         .filter-row .form-group { min-width: 180px; margin-bottom: 0; }
+        .locked-field {
+            font-size: 13px; padding: 6px 10px; border-radius: 6px;
+            background: #eef1f5; border: 1px solid #dde2e8; color: #333;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .locked-field .badge { font-size: 10px; }
         .config-note {
             font-size: 12px; padding: 8px 12px; border-radius: 6px;
             background: #eef1f5; color: #555; margin-bottom: 16px;
         }
         .config-note.missing { background: #fdecea; color: #a94442; }
+        .admin-hint { font-size: 11px; color: #888; margin-top: 4px; }
         table.entry-table th { background: #f4f6f9; font-size: 12px; text-transform: uppercase; color: #555; }
         table.entry-table td { vertical-align: middle; font-size: 13px; }
         table.entry-table input.num-input { width: 90px; }
@@ -68,19 +75,23 @@
             <form method="get" class="filter-row" id="filter-form">
                 <div class="form-group">
                     <label class="small fw-bold d-block">Session</label>
-                    <select name="session" class="form-control form-control-sm" onchange="document.getElementById('filter-form').submit()">
-                        {% for s in sessions %}
-                        <option value="{{ s.id }}" {% if s.id == session.id %}selected{% endif %}>{{ s.name }}</option>
-                        {% endfor %}
-                    </select>
+                    <div class="locked-field">
+                        <i class="fa fa-lock text-muted"></i> {{ session.name }}
+                        <span class="badge bg-success">Current</span>
+                    </div>
+                    {% if is_admin %}
+                    <div class="admin-hint">To work in a different session, mark it current in Session management.</div>
+                    {% endif %}
                 </div>
                 <div class="form-group">
                     <label class="small fw-bold d-block">Term</label>
-                    <select name="term" class="form-control form-control-sm" onchange="document.getElementById('filter-form').submit()">
-                        {% for t in terms_in_session %}
-                        <option value="{{ t.id }}" {% if t.id == term.id %}selected{% endif %}>{{ t.name }}</option>
-                        {% endfor %}
-                    </select>
+                    <div class="locked-field">
+                        <i class="fa fa-lock text-muted"></i> {{ term.name }}
+                        <span class="badge bg-success">Current</span>
+                    </div>
+                    {% if is_admin %}
+                    <div class="admin-hint">To work in a different term, mark it current in Term management.</div>
+                    {% endif %}
                 </div>
                 <div class="form-group">
                     <label class="small fw-bold d-block">Class</label>
@@ -92,25 +103,21 @@
                 </div>
             </form>
 
-            {% if term %}
-                {% if config %}
-                <div class="config-note">
-                    Total school days configured for <strong>{{ session.name }} / {{ term.name }}</strong>: <strong>{{ config.total_school_days }}</strong>
-                </div>
-                {% else %}
-                <div class="config-note missing">
-                    No total-school-days configuration set for <strong>{{ session.name }} / {{ term.name }}</strong> yet.
-                    Manual entry is disabled until this is set in <strong>Attendance Configuration</strong> —
-                    students will fall back to a calendar-computed total (calendar days minus weekends/public holidays)
-                    or daily attendance records in the meantime.
-                </div>
-                {% endif %}
+            {% if config %}
+            <div class="config-note">
+                Total school days configured for <strong>{{ session.name }} / {{ term.name }}</strong>: <strong>{{ config.total_school_days }}</strong>
+            </div>
+            {% else %}
+            <div class="config-note missing">
+                No total-school-days configuration set for <strong>{{ session.name }} / {{ term.name }}</strong> yet.
+                Manual entry is disabled until this is set in <strong>Attendance Configuration</strong> —
+                students will fall back to a calendar-computed total (calendar days minus weekends/public holidays)
+                or daily attendance records in the meantime.
+            </div>
             {% endif %}
 
             <form method="post">
                 {% csrf_token %}
-                <input type="hidden" name="session_id" value="{{ session.id }}">
-                <input type="hidden" name="term_id" value="{{ term.id }}">
                 <input type="hidden" name="standard_id" value="{{ standard.id }}">
 
                 <div class="table-responsive">
