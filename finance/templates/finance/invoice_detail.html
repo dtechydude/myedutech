@@ -64,11 +64,11 @@
     <table class="doc-header">
         <tr>
             <td style="width:60%;">
-                <p class="school-name">{{ school_info.name|default:"Your School Name" }}</p>
+                <p class="school-name">{{ school.name|default:"Your School Name" }}</p>
                 <p class="school-meta">
-                    {{ school_info.address_line_1|default:"" }},  {{ school_info.address_line_2|default:"" }}<br>
-                    {% if school_info.phone1 %}Tel: {{ school_info.phone1 }}{% endif %}
-                    {% if school_info.email %} &bull; Email: {{ school_info.email }}{% endif %}
+                    {{ school.address_line_1|default:"" }},  {{ school.address_line_2|default:"" }}<br>
+                    {% if school.phone1 %}Tel: {{ school.phone1 }}{% endif %}
+                    {% if school.email %} &bull; Email: {{ school.email }}{% endif %}
                 </p>
             </td>
             <td style="width:40%;">
