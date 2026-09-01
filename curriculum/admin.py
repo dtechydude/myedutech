@@ -139,12 +139,12 @@ class StandardAdmin(ImportExportModelAdmin):
 
 
 
-@admin.register(ClassGroup)
-class ClassGroupAdmin(ImportExportModelAdmin):
-    list_display = ('name', 'standard', 'form_teacher')
-    list_filter = ['standard__name']
-    search_fields = ('standard__name', 'name')
-    autocomplete_fields = ['form_teacher']
+# @admin.register(ClassGroup)
+# class ClassGroupAdmin(ImportExportModelAdmin):
+#     list_display = ('name', 'standard', 'form_teacher')
+#     list_filter = ['standard__name']
+#     search_fields = ('standard__name', 'name')
+#     autocomplete_fields = ['form_teacher']
 
 @admin.register(Subject)
 class SubjectAdmin(ImportExportModelAdmin):
