@@ -429,3 +429,275 @@ def send_newsletter_task(newsletter_id):
 
     newsletter.sent = True
     newsletter.save()
+
+
+# New View For Chart Reporting
+import logging
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.shortcuts import render
+from django.db.models import Sum, Avg, Count, Q
+from curriculum.models import Term,  Session
+
+logger = logging.getLogger(__name__)
+
+
+@method_decorator(login_required(login_url='login'), name='dispatch')
+class PerformanceDashboardView(View):
+    """
+    Role-aware performance & analytics dashboard.
+    Extends portal_home.html and only overrides content_body — so the
+    header, sidebar, nav, and footer are 100% reused, not duplicated.
+
+    NOTE: Adjust the import paths below (finance.models, results.models,
+    attendance.models, teachers.models/staff.models) if your actual app
+    names differ. Each query is wrapped in try/except so one missing
+    model never breaks the whole page — it just shows that section as
+    empty/zero instead of crashing.
+    """
+    template_name = 'pages/performance_dashboard.html'
+
+    def get(self, request):
+        user = request.user
+        context = {}
+
+        try:
+            from curriculum.models import Term
+            current_term = Term.objects.filter(is_current=True).select_related('session').first()
+        except Exception:
+            current_term = None
+            logger.warning('PerformanceDashboardView: could not resolve current Term.')
+
+        context['current_term'] = current_term
+
+        if user.is_superuser or user.is_staff:
+            context['role'] = 'admin'
+            context.update(self._school_wide_context(current_term))
+        elif getattr(user, 'teacher', None):
+            context['role'] = 'teacher'
+            context.update(self._teacher_context(user.teacher, current_term))
+        elif getattr(user, 'student', None):
+            context['role'] = 'student'
+            context.update(self._student_context(user.student, current_term))
+        elif getattr(user, 'parent', None):
+            context['role'] = 'parent'
+            context.update(self._parent_context(user.parent, current_term))
+        else:
+            context['role'] = 'none'
+
+        return render(request, self.template_name, context)
+
+    # ── School-wide (superuser / staff) ─────────────────────────────
+    def _school_wide_context(self, term):
+        ctx = {}
+
+        try:
+            from students.models import Student
+            from django.db.models import F
+
+            active_students = Student.objects.exclude(
+                student_status__in=['graduated', 'dropped', 'expelled', 'suspended']
+            )
+
+            ctx['total_students'] = active_students.count()
+
+            ctx['class_distribution'] = list(
+                active_students
+                .values(class_name=F('current_class__name'))
+                .annotate(student_count=Count('id'))
+                .order_by('class_name')
+            )
+        except Exception:
+            logger.exception('PerformanceDashboardView: enrollment query failed')
+            ctx['total_students'] = 0
+            ctx['class_distribution'] = []
+
+        try:
+            from finance.models import Payment, Expense
+            income_total = Payment.objects.aggregate(total=Sum('amount_received'))['total'] or 0
+            expense_total = Expense.objects.aggregate(total=Sum('amount'))['total'] or 0
+            ctx['finance_income'] = income_total
+            ctx['finance_expense'] = expense_total
+            ctx['finance_net'] = income_total - expense_total
+        except Exception:
+            logger.exception('PerformanceDashboardView: finance query failed')
+            ctx['finance_income'] = 0
+            ctx['finance_expense'] = 0
+            ctx['finance_net'] = 0
+
+        try:
+            from attendance.models import AttendanceSummary
+            if term:
+                summaries = AttendanceSummary.objects.filter(term=term).select_related('session', 'term')
+                if summaries.exists():
+                    total_pct = sum(s.attendance_percentage for s in summaries)
+                    avg_rate = round(total_pct / summaries.count(), 1)
+                    # Sanity guard — attendance_percentage is already capped by the model logic,
+                    # but this protects the display in case of bad config data upstream.
+                    ctx['attendance_rate'] = avg_rate if 0 <= avg_rate <= 100 else None
+                else:
+                    ctx['attendance_rate'] = None
+            else:
+                ctx['attendance_rate'] = None
+        except Exception:
+            logger.exception('PerformanceDashboardView: attendance query failed')
+            ctx['attendance_rate'] = None
+
+        try:
+            from results.models import Score
+            if term:
+                class_perf = (
+                    Score.objects.filter(term=term, total_score__isnull=False)
+                    .values('standard__name')
+                    .annotate(avg_score=Avg('total_score'))
+                    .order_by('standard__name')
+                )
+                ctx['class_performance'] = list(class_perf)
+            else:
+                ctx['class_performance'] = []
+        except Exception:
+            logger.exception('PerformanceDashboardView: score query failed')
+            ctx['class_performance'] = []
+
+        try:
+            from staff.models import Teacher
+            ctx['total_teachers'] = Teacher.objects.filter(active=True).count()
+        except Exception:
+            try:
+                from staff.models import Teacher
+                ctx['total_teachers'] = Teacher.objects.filter(active=True).count()
+            except Exception:
+                ctx['total_teachers'] = 0
+
+        return ctx
+
+    # ── Teacher ──────────────────────────────────────────────────────
+    def _teacher_context(self, teacher, term):
+        ctx = {'my_classes': [], 'class_performance': [], 'attendance_rate': None}
+
+        try:
+            standards = teacher.standards_assigned.all()
+            ctx['my_classes'] = list(standards.values_list('name', flat=True))
+
+            from results.models import Score
+            if term:
+                ctx['class_performance'] = list(
+                    Score.objects.filter(term=term, standard__in=standards, total_score__isnull=False)
+                    .values('standard__name')
+                    .annotate(avg_score=Avg('total_score'))
+                    .order_by('standard__name')
+                )
+        except Exception:
+            logger.exception('PerformanceDashboardView: teacher class/performance query failed')
+            standards = teacher.standards_assigned.none()
+            ctx['my_classes'] = []
+            ctx['class_performance'] = []
+
+        try:
+            from attendance.services import get_student_attendance
+            if term:
+                class_students = Student.objects.filter(current_class__in=standards).exclude(
+                    student_status__in=['graduated', 'dropped', 'expelled', 'suspended']
+                )
+                rates = []
+                for s in class_students:
+                    info = get_student_attendance(student=s, session=term.session, term=term)
+                    if info.get('has_data'):
+                        rates.append(info['attendance_percentage'])
+                ctx['attendance_rate'] = round(sum(rates) / len(rates), 1) if rates else None
+        except Exception:
+            logger.exception('PerformanceDashboardView: teacher attendance query failed')
+            ctx['attendance_rate'] = None
+
+        return ctx
+
+
+    
+
+    # ── Student ──────────────────────────────────────────────────────
+
+    def _student_context(self, student, term):
+        ctx = {'my_term_performance': [], 'my_attendance_trend': []}
+
+        try:
+            from results.models import Score
+            ctx['my_term_performance'] = list(
+                Score.objects.filter(student=student, total_score__isnull=False)
+                .values('term__name')
+                .annotate(avg_score=Avg('total_score'))
+                .order_by('term__id')
+            )
+        except Exception:
+            logger.exception('PerformanceDashboardView: student performance query failed')
+            ctx['my_term_performance'] = []
+
+        try:
+            from attendance.services import get_student_attendance
+            from curriculum.models import Term
+
+            trend = []
+            terms = Term.objects.select_related('session').order_by('start_date')
+            for t in terms:
+                info = get_student_attendance(student=student, session=t.session, term=t)
+                if info.get('has_data'):
+                    trend.append({
+                        'term': t.name,
+                        'rate': info['attendance_percentage'],
+                        'is_current': (term is not None and t.pk == term.pk),
+                    })
+            ctx['my_attendance_trend'] = trend
+        except Exception:
+            logger.exception('PerformanceDashboardView: student attendance query failed')
+            ctx['my_attendance_trend'] = []
+
+        return ctx
+     
+      
+
+    # # ── Parent ───────────────────────────────────────────────────────
+    def _parent_context(self, parent, term):
+        ctx = {'children_data': []}
+
+        try:
+            from results.models import Score
+            from attendance.services import get_student_attendance
+            from curriculum.models import Term
+
+            terms = Term.objects.select_related('session').order_by('start_date')
+            children_data = []
+
+            for child in parent.children.all():
+                try:
+                    scores = list(
+                        Score.objects.filter(student=child, total_score__isnull=False)
+                        .values('term__name')
+                        .annotate(avg_score=Avg('total_score'))
+                        .order_by('term__id')
+                    )
+                except Exception:
+                    logger.exception(f'PerformanceDashboardView: parent performance query failed for child {child.pk}')
+                    scores = []
+
+                try:
+                    trend = []
+                    for t in terms:
+                        info = get_student_attendance(student=child, session=t.session, term=t)
+                        if info.get('has_data'):
+                            trend.append({
+                                'term': t.name,
+                                'rate': info['attendance_percentage'],
+                                'is_current': (term is not None and t.pk == term.pk),
+                            })
+                except Exception:
+                    logger.exception(f'PerformanceDashboardView: parent attendance query failed for child {child.pk}')
+                    trend = []
+
+                children_data.append({'student': child, 'performance': scores, 'attendance': trend})
+
+            ctx['children_data'] = children_data
+        except Exception:
+            logger.exception('PerformanceDashboardView: parent context failed')
+            ctx['children_data'] = []
+
+        return ctx

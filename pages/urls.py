@@ -29,6 +29,8 @@ urlpatterns = [
      path('payment-instruction/', page_views.payment_instruction, name='payment_instruction'),
      path('payment-chart/', page_views.payment_chart, name='payment_chart'),
      path('video-guides/', page_views.video_guides_view, name='video-guides'),
+     
+     path('performance/', page_views.PerformanceDashboardView.as_view(), name='performance_dashboard'),
 
 
 

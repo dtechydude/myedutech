@@ -20,9 +20,17 @@
 
     <title> {{ student.last_name }} {{ student.first_name }}'s Report Card - {{ term.name }}_{{ term.session }}</title>
     <style>
+    :root {
+        --rc-primary: {{ request.GET.rc_primary|default:"#006699" }};
+        --rc-title-color: {{ request.GET.rc_title|default:"#333366" }};
+        --rc-heading-bg: {{ request.GET.rc_heading_bg|default:"#2f2f2f" }};
+        --rc-heading-text: {{ request.GET.rc_heading_text|default:"#ffffff" }};
+        --rc-badge-bg: {{ request.GET.rc_badge|default:"#990000" }};
+    }
+
     /* Base styles for web view */
     body {
-      background-color: #006699;
+      background-color: var(--rc-primary);
       font-family: Arial, sans-serif;
     }
     .report-card-wrapper {
@@ -32,6 +40,36 @@
       border: 1px solid #ddd;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       position: relative; overflow: hidden;
+    }
+
+    .color-panel {
+        max-width: fit;
+        margin: 0 auto 16px;
+        background: #f8f9fa;
+        border: 1px solid #e2e5ea;
+        border-radius: 8px;
+        padding: 12px 16px;
+        text-align: left;
+    }
+    .color-field-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 4px 10px;
+    }
+    .color-field-group input[type="color"] {
+        width: 40px;
+        height: 30px;
+        padding: 2px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .color-field-group label {
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 0;
+        color: #333;
     }
 
     /* Header Layout Adjustments */
@@ -64,10 +102,10 @@
       font-size: 22px;
       margin: 0;
       font-weight: bold;
-      color: #333366; /* color for school name */
+      color: var(--rc-title-color); /* color for school name */
     }
     .header-info-container p {
-      color: #333366;
+      color: var(--rc-title-color);
       font-size: 13px;
       margin: 2px 0 0;
       line-height: 1.2;
@@ -81,7 +119,7 @@
     .student-profile-top img {
       width: 80px;
       height: 80px;
-      border: 2px solid #006699;
+      border: 2px solid var(--rc-primary);
       object-fit: cover;
       border-radius: 4px;
     }
@@ -112,7 +150,7 @@
       font-size: 13px;
       font-weight: bold;
       margin: 4px 0 2px;
-      color: #333366;
+      color: var(--rc-title-color);
     }
     .psychomotor-heading .scale {
       font-size: 12px;
@@ -161,8 +199,8 @@
       margin: 20px 0;
     }
     .report-heading {
-        background-color: #2f2f2f !important; /* color for the background of Report Heading */
-        color: #ffffff !important;
+        background-color: var(--rc-heading-bg) !important; /* color for the background of Report Heading */
+        color: var(--rc-heading-text) !important;
         padding: 8px 10px !important;
         font-size: 18px !important;
         font-weight: 700;
@@ -173,7 +211,7 @@
     }
     .report-subheading {
         font-size: 13px;
-        color: #ffffff;
+        color: var(--rc-heading-text);
     }
     .grading-keys-table { margin-top: 3px; }
     .grading-keys-table th, .grading-keys-table td {
@@ -188,6 +226,33 @@
         text-align: center;
         font-size: 11px;
     }
+    .grading-key-value {
+        color: var(--rc-badge-bg);
+    }
+    .comment-label {
+        font-size: 13px;
+        color: var(--rc-badge-bg);
+        text-decoration: underline;
+        letter-spacing: 0.4px;
+    }
+    .summary-avg-box {
+        padding: 6px;
+        text-align: center;
+        background: #f0f8ff;
+        border-right: 1px solid #dee2e6;
+        min-width: 120px;
+    }
+    .summary-avg-label {
+        text-transform: uppercase;
+        color: var(--rc-primary);
+        font-size: 10px;
+        font-weight: bold;
+    }
+    .summary-avg-value {
+        font-weight: 800;
+        font-size: 18px;
+        color: var(--rc-primary);
+    }
     .trait {
       text-align: center;
       padding: 4px 2px;
@@ -198,7 +263,7 @@
       display: block; font-size: 10px; font-weight: 600; color: #003366; text-transform: uppercase; margin-bottom: 1px; line-height: 1.1;
     }
     .trait .score {
-      display: inline-block; min-width: 22px; padding: 2px 6px; border-radius: 12px; font-size: 11px; font-weight: bold; color: #fff; background: #990000;
+      display: inline-block; min-width: 22px; padding: 2px 6px; border-radius: 12px; font-size: 11px; font-weight: bold; color: #fff; background: var(--rc-badge-bg);
     }
     .report-card-wrapper::before {
       content: ""; position: absolute; inset: 0;
@@ -238,6 +303,39 @@
     <div class="no-print">
         <a href="javascript:window.print()" class="btn btn-secondary btn-lg">Print Result</a>
     </div>
+
+    {% if user.is_superuser %}
+    <!-- ── SCHOOL COLOR CUSTOMIZATION (superuser only) ─────────────
+         Restricted to superusers so individual teachers/parents/students
+         viewing this same report can't change print colors for everyone
+         else — avoids uniformity conflicts across printed report cards. -->
+    <form method="get" class="color-panel no-print" id="reportColorForm">
+        <div class="color-field-group">
+            <label for="rcPrimary">Accent Color</label>
+            <input type="color" name="rc_primary" id="rcPrimary" value="{{ request.GET.rc_primary|default:'#006699' }}">
+        </div>
+        <div class="color-field-group">
+            <label for="rcTitle">Title Text</label>
+            <input type="color" name="rc_title" id="rcTitle" value="{{ request.GET.rc_title|default:'#333366' }}">
+        </div>
+        <div class="color-field-group">
+            <label for="rcHeadingBg">Heading Bar</label>
+            <input type="color" name="rc_heading_bg" id="rcHeadingBg" value="{{ request.GET.rc_heading_bg|default:'#2f2f2f' }}">
+        </div>
+        <div class="color-field-group">
+            <label for="rcHeadingText">Heading Text</label>
+            <input type="color" name="rc_heading_text" id="rcHeadingText" value="{{ request.GET.rc_heading_text|default:'#ffffff' }}">
+        </div>
+        <div class="color-field-group">
+            <label for="rcBadge">Highlight Color</label>
+            <input type="color" name="rc_badge" id="rcBadge" value="{{ request.GET.rc_badge|default:'#990000' }}">
+        </div>
+        <button type="submit" class="btn btn-sm btn-primary ml-2">Apply Colors</button>
+        <div class="text-muted mt-2" style="font-size:11px;">
+            Superuser only. Colors preview instantly. Click <strong>Apply Colors</strong> to lock them in before printing/saving as PDF.
+        </div>
+    </form>
+    {% endif %}
 
     <div class="report-card-wrapper">
 
@@ -363,9 +461,9 @@
                     <div style="font-weight: bold; font-size: 13px;">{{ total_marks_obtained|floatformat:0 }}</div>
                 </td>
 
-                <td style="padding: 6px; text-align: center; background: #f0f8ff; border-right: 1px solid #dee2e6; min-width: 120px;">
-                    <div style="text-transform: uppercase; color: #006699; font-size: 10px; font-weight: bold;">Overall Average</div>
-                    <div style="font-weight: 800; font-size: 18px; color: #006699;">
+                <td class="summary-avg-box">
+                    <div class="summary-avg-label">Overall Average</div>
+                    <div class="summary-avg-value">
                         {% if overall_average is not None %}{{ overall_average|floatformat:1 }}%{% else %}N/A{% endif %}
                     </div>
                 </td>
@@ -433,7 +531,7 @@
               <tbody>
               <tr style="border-style: hidden;">
                 <td style="border-style: hidden; padding-right: 15px; width: 50%;">
-                  <strong style="font-size:13px; color:#990000; text-decoration:underline; letter-spacing:0.4px;">CLASS TEACHER:</strong><br>
+                  <strong class="comment-label">CLASS TEACHER:</strong><br>
                                   
                   <span style="font-size:12px; font-style: italic; line-height:1.35; color:#333;">
 
@@ -472,7 +570,7 @@
                 </span>
                 </td>
                 <td style="border-style: hidden; width: 50%;">
-                  <strong style="font-size:13px; color:#990000; text-decoration:underline; letter-spacing:0.4px;">PRINCIPAL / HEAD TEACHER:</strong><br>
+                  <strong class="comment-label">PRINCIPAL / HEAD TEACHER:</strong><br>
                   <span style="font-size:12px; font-style: italic; line-height:1.35; color:#333;">
 
                 {% if principal_comment %}
@@ -522,8 +620,8 @@
                 <thead><tr><th>EXAMINATION - 100%</th><th>PSYCHOMOTOR- 5Points</th></tr></thead>
                 <tbody>
                     <tr>
-                        <td style="text-align:center;"><span style="color: #990000;">80-100</span><strong> A</strong>, <span style="color:#990000;">71-79</span><strong> B+</strong>, <span style="color:#990000;">60-70</span><strong> B</strong>, <span style="color:#990000;">50-59</span><strong> C</strong>, <span style="color:#990000;">45-49</span><strong> D</strong>, <span style="color:#990000;">40-44</span><strong> E</strong>, <span style="color:#990000;">0-39</span><strong> F</strong></td>
-                        <td style="text-align:center;"><span style="color:#990000;"><strong>5-</strong></span><strong> Excellent</strong>, <span style="color:#990000;"><strong>4-</strong></span><strong> Good</strong>, <span style="color:#990000;"><strong>3-</strong></span><strong> Fair</strong>, <span style="color:#990000;"><strong>2-</strong></span><strong> Poor</strong>, <span style="color:#990000;"><strong>1-</strong></span><strong> Very Poor</strong></td>
+                        <td style="text-align:center;"><span class="grading-key-value">80-100</span><strong> A</strong>, <span class="grading-key-value">71-79</span><strong> B+</strong>, <span class="grading-key-value">60-70</span><strong> B</strong>, <span class="grading-key-value">50-59</span><strong> C</strong>, <span class="grading-key-value">45-49</span><strong> D</strong>, <span class="grading-key-value">40-44</span><strong> E</strong>, <span class="grading-key-value">0-39</span><strong> F</strong></td>
+                        <td style="text-align:center;"><span class="grading-key-value"><strong>5-</strong></span><strong> Excellent</strong>, <span class="grading-key-value"><strong>4-</strong></span><strong> Good</strong>, <span class="grading-key-value"><strong>3-</strong></span><strong> Fair</strong>, <span class="grading-key-value"><strong>2-</strong></span><strong> Poor</strong>, <span class="grading-key-value"><strong>1-</strong></span><strong> Very Poor</strong></td>
                     </tr>
                 </tbody>
             </table>
@@ -587,5 +685,28 @@
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" crossorigin="anonymous"></script>
+
+    {% if user.is_superuser %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const root = document.documentElement;
+            const bindings = [
+                ['rcPrimary', '--rc-primary'],
+                ['rcTitle', '--rc-title-color'],
+                ['rcHeadingBg', '--rc-heading-bg'],
+                ['rcHeadingText', '--rc-heading-text'],
+                ['rcBadge', '--rc-badge-bg'],
+            ];
+            bindings.forEach(([inputId, cssVar]) => {
+                const el = document.getElementById(inputId);
+                if (el) {
+                    el.addEventListener('input', () => {
+                        root.style.setProperty(cssVar, el.value);
+                    });
+                }
+            });
+        });
+    </script>
+    {% endif %}
   </body>
 </html>

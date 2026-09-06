@@ -1,0 +1,304 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+
+{% block content_body %}
+<div class="content-body">
+<div class="container-fluid">
+
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card">
+                <div class="card-header border-0 pb-0">
+                    <h4 class="fs-20"><i class="fas fa-chart-line me-2"></i>Performance & Analytics</h4>
+                    <a href="{% url 'pages:portal-home' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                    </a>
+                </div>
+                <div class="card-body pt-2">
+
+                    {% if role == 'admin' %}
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tabEnrollment">Enrollment</a></li>
+                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabAcademic">Academic</a></li>
+                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabAttendance">Attendance</a></li>
+                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabFinance">Finance</a></li>
+                    </ul>
+
+                    <div class="tab-content mt-3">
+                        <div class="tab-pane fade show active" id="tabEnrollment">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <div class="card booking"><div class="card-body">
+                                        <h5 class="mb-0">{{ total_students }}</h5>
+                                        <p class="mb-0 text-nowrap">Total Active Students</p>
+                                    </div></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card booking"><div class="card-body">
+                                        <h5 class="mb-0">{{ total_teachers }}</h5>
+                                        <p class="mb-0 text-nowrap">Total Teachers</p>
+                                    </div></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card booking"><div class="card-body">
+                                        <h5 class="mb-0">{{ current_term.name|default:"N/A" }}</h5>
+                                        <p class="mb-0 text-nowrap">Current Term</p>
+                                    </div></div>
+                                </div>
+                            </div>
+                            <div style="position:relative; height:320px;">
+                                <canvas id="enrollmentChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="tabAcademic">
+                            <div style="position:relative; height:320px;">
+                                <canvas id="academicChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="tabAttendance">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <div class="card booking"><div class="card-body">
+                                        <h5 class="mb-0">{{ attendance_rate|default:"N/A" }}%</h5>
+                                        <p class="mb-0 text-nowrap">School-wide Attendance Rate</p>
+                                    </div></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="tabFinance">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <div class="card booking"><div class="card-body">
+                                        <h5 class="mb-0 text-success">₦{{ finance_income|default:0|floatformat:2 }}</h5>
+                                            <p class="mb-0 text-nowrap">Total Income</p>
+                                    </div></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card booking"><div class="card-body">
+                                       <h5 class="mb-0 text-danger">₦{{ finance_expense|default:0|floatformat:2 }}</h5>
+                                            <p class="mb-0 text-nowrap">Total Expenses</p>
+                                    </div></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card booking"><div class="card-body">
+                                        <h5 class="mb-0">₦{{ finance_net|default:0|floatformat:2 }}</h5>
+                                        <p class="mb-0 text-nowrap">Net Profit</p>
+                                    </div></div>
+                                </div>
+                            </div>
+                            <div style="position:relative; height:280px;">
+                                <canvas id="financeChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% elif role == 'teacher' %}
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tabMyAcademic">My Classes — Academic</a></li>
+                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabMyAttendance">My Classes — Attendance</a></li>
+                    </ul>
+                    <div class="tab-content mt-3">
+                        <div class="tab-pane fade show active" id="tabMyAcademic">
+                            <div style="position:relative; height:320px;">
+                                <canvas id="teacherAcademicChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tabMyAttendance">
+                            <div class="card booking"><div class="card-body">
+                                <h5 class="mb-0">{{ attendance_rate|default:"N/A" }}%</h5>
+                                <p class="mb-0 text-nowrap">Average Attendance Rate — My Classes</p>
+                            </div></div>
+                        </div>
+                    </div>
+
+                    {% elif role == 'student' %}
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tabMyPerf">My Performance</a></li>
+                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabMyAttend">My Attendance</a></li>
+                    </ul>
+                    <div class="tab-content mt-3">
+                        <div class="tab-pane fade show active" id="tabMyPerf">
+                            <div style="position:relative; height:320px;">
+                                <canvas id="studentPerfChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tabMyAttend">
+                            <div style="position:relative; height:320px;">
+                                <canvas id="studentAttendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% elif role == 'parent' %}
+                    <ul class="nav nav-tabs" role="tablist">
+                        {% for child_data in children_data %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if forloop.first %}active{% endif %}" data-bs-toggle="tab" href="#tabChild{{ forloop.counter }}">
+                                {{ child_data.student.get_full_name }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    <div class="tab-content mt-3">
+                        {% for child_data in children_data %}
+                        <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="tabChild{{ forloop.counter }}">
+                            <div style="position:relative; height:280px;">
+                                <canvas id="childPerfChart{{ forloop.counter }}"></canvas>
+                            </div>
+                            <div style="position:relative; height:280px; margin-top:20px;">
+                                <canvas id="childAttendChart{{ forloop.counter }}"></canvas>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted text-center py-4">No children linked to your account yet.</p>
+                        {% endfor %}
+                    </div>
+
+                    {% else %}
+                    <p class="text-muted text-center py-4">No performance data available for your account type.</p>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock content_body %}
+
+{% block scripts %}
+{{ block.super }}
+{% load l10n %}
+<script src="{% static 'vendor/chartjs/chart.umd.min.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof Chart === 'undefined') {
+        console.error('[KwikSchools] Chart.js failed to load from static files.');
+        return;
+    }
+
+    {% if role == 'admin' %}
+    {% localize off %}
+    const classLabels = [{% for c in class_distribution %}"{{ c.class_name|default:"Unassigned"|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}];    const classCounts = [{% for c in class_distribution %}{{ c.student_count|default:0|unlocalize }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    const academicLabels = [{% for c in class_performance %}"{{ c.standard__name|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+    const academicScores = [{% for c in class_performance %}{{ c.avg_score|default:0|unlocalize }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    {% endlocalize %}
+
+    const enrollmentCtx = document.getElementById('enrollmentChart');
+    if (enrollmentCtx && classLabels.length) {
+        new Chart(enrollmentCtx, {
+            type: 'bar',
+            data: { labels: classLabels, datasets: [{ label: 'Students per Class', data: classCounts, backgroundColor: '#0d6efd', borderRadius: 6 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+    }
+
+    const academicCtx = document.getElementById('academicChart');
+    if (academicCtx && academicLabels.length) {
+        new Chart(academicCtx, {
+            type: 'bar',
+            data: { labels: academicLabels, datasets: [{ label: 'Class Average Score', data: academicScores, backgroundColor: '#20c997', borderRadius: 6 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+    }
+
+    const financeCtx = document.getElementById('financeChart');
+    if (financeCtx) {
+        new Chart(financeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Income', 'Expenses'],
+                datasets: [{
+                    data: [{{ finance_income|default:0|unlocalize }}, {{ finance_expense|default:0|unlocalize }}],
+                    backgroundColor: ['#198754', '#dc3545']
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+    {% endif %}
+
+    {% if role == 'teacher' %}
+    {% localize off %}
+    const teacherLabels = [{% for c in class_performance %}"{{ c.standard__name|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+    const teacherScores = [{% for c in class_performance %}{{ c.avg_score|default:0|unlocalize }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    {% endlocalize %}
+    const teacherCtx = document.getElementById('teacherAcademicChart');
+    if (teacherCtx && teacherLabels.length) {
+        new Chart(teacherCtx, {
+            type: 'bar',
+            data: { labels: teacherLabels, datasets: [{ label: 'Average Score', data: teacherScores, backgroundColor: '#0d6efd', borderRadius: 6 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+    }
+    {% endif %}
+
+    {% if role == 'student' %}
+    {% localize off %}
+    const studLabels = [{% for t in my_term_performance %}"{{ t.term__name|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+    const studScores = [{% for t in my_term_performance %}{{ t.avg_score|default:0|unlocalize }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    const attendLabels = [{% for a in my_attendance_trend %}"{{ a.term|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+    const attendRates = [{% for a in my_attendance_trend %}{{ a.rate|default:0|unlocalize }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    {% endlocalize %}
+
+    const studPerfCtx = document.getElementById('studentPerfChart');
+    if (studPerfCtx && studLabels.length) {
+        new Chart(studPerfCtx, {
+            type: 'line',
+            data: { labels: studLabels, datasets: [{ label: 'My Average Score', data: studScores, borderColor: '#0d6efd', backgroundColor: 'rgba(13,110,253,0.15)', fill: true, tension: 0.3 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+    }
+
+    const studAttendCtx = document.getElementById('studentAttendChart');
+    if (studAttendCtx && attendLabels.length) {
+        {% comment %} new Chart(studAttendCtx, {
+            type: 'line',
+            data: { labels: attendLabels, datasets: [{ label: 'Attendance Rate %', data: attendRates, borderColor: '#20c997', backgroundColor: 'rgba(32,201,151,0.15)', fill: true, tension: 0.3 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+        }); {% endcomment %}
+        new Chart(studAttendCtx, {
+    type: 'bar',
+    data: { labels: attendLabels, datasets: [{ label: 'Attendance Rate %', data: attendRates, backgroundColor: '#20c997', borderRadius: 6 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+});
+    }
+    {% endif %}
+
+    {% if role == 'parent' %}
+    {% localize off %}
+    {% for child_data in children_data %}
+    (function () {
+        const perfLabels = [{% for t in child_data.performance %}"{{ t.term__name|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+        const perfScores = [{% for t in child_data.performance %}{{ t.avg_score|default:0|unlocalize }}{% if not forloop.last %},{% endif %}{% endfor %}];
+        const attLabels = [{% for a in child_data.attendance %}"{{ a.term|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+        const attRates = [{% for a in child_data.attendance %}{{ a.rate|default:0|unlocalize }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+        const perfCtx = document.getElementById('childPerfChart{{ forloop.counter }}');
+        if (perfCtx && perfLabels.length) {
+            new Chart(perfCtx, {
+                type: 'line',
+                data: { labels: perfLabels, datasets: [{ label: 'Average Score', data: perfScores, borderColor: '#0d6efd', backgroundColor: 'rgba(13,110,253,0.15)', fill: true, tension: 0.3 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+            });
+        }
+
+        const attCtx = document.getElementById('childAttendChart{{ forloop.counter }}');
+        if (attCtx && attLabels.length) {
+            new Chart(attCtx, {
+                type: 'bar',
+                data: { labels: attLabels, datasets: [{ label: 'Attendance Rate %', data: attRates, borderColor: '#20c997', backgroundColor: 'rgba(32,201,151,0.15)', backgroundColor: '#20c997' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+            });
+        }
+    })();
+    {% endfor %}
+    {% endlocalize %}
+    {% endif %}
+});
+</script>
+{% endblock scripts %}
