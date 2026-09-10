@@ -23,6 +23,11 @@
             --brand-gray: #f8f9fa;
         }
 
+        html, body {
+            overflow-x: hidden; /* safety net: never let the whole page scroll sideways */
+            width: 100%;
+        }
+
         body {
             background-color: var(--brand-gray);
             display: flex;
@@ -30,6 +35,18 @@
             min-height: 100vh;
             font-family: "Inter", "Segoe UI", sans-serif;
             color: #212529;
+        }
+
+        /* Flex children default to min-width:auto, which lets them grow to fit
+           their content (the wide table) instead of staying within the viewport.
+           That's what was pushing the whole page sideways instead of letting
+           .table-responsive scroll internally. min-width:0 fixes it. */
+        .header,
+        .container-main,
+        .simple-footer {
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         /* HEADER - First Template Style */
@@ -63,9 +80,61 @@
 
         h5, h3 { color: var(--brand-blue); font-weight: 600; }
 
+        /* PAGE HEADER BLOCK */
+        .page-intro { margin-bottom: 1.5rem; }
+        .page-intro p { margin-bottom: 0.25rem; }
+
+        /* FILTER BAR - compact, always side-by-side */
+        .filter-bar {
+            background-color: var(--brand-gray);
+            border: 1px solid #e9ecef;
+            border-radius: 0.6rem;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .filter-bar .filter-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--brand-blue);
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            white-space: nowrap;
+        }
+
+        .filter-bar .form-select {
+            border: 1px solid #ced4da;
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.65rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .filter-bar .form-select:focus {
+            border-color: var(--brand-orange);
+            box-shadow: 0 0 0 0.2rem rgba(255,102,0,0.15);
+        }
+
+        /* SCROLL HINT - mobile only */
+        .scroll-hint {
+            display: none;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.78rem;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+        }
+
         /* TABLE LOGIC - Upgraded Template Core */
         .table-responsive {
-            overflow-x: auto; 
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch; /* momentum scroll on iOS */
+            touch-action: pan-x;               /* let horizontal swipe scroll the table, vertical swipe still bubbles to the page */
+            overscroll-behavior-x: contain;
             border: 1px solid #eee;
             border-radius: 8px;
             background: white;
@@ -90,7 +159,7 @@
             border: none;
         }
 
-        /* Sticky Columns */
+        /* Sticky Columns (desktop) */
         .sticky-sn {
             position: sticky;
             left: 0;
@@ -172,6 +241,36 @@
             color: #6c757d;
             margin-top: auto;
         }
+
+        /* ============================================= */
+        /* MOBILE FIX: corner cells sticky on BOTH axes   */
+        /* (top + left at once) freeze touch-scrolling on */
+        /* iOS/Android. Disable sticky positioning below  */
+        /* 768px so the table scrolls normally.           */
+        /* ============================================= */
+        @media (max-width: 768px) {
+            .scroll-hint { display: flex; }
+
+            .table thead th {
+                position: static; /* remove top-stickiness on mobile */
+            }
+
+            .sticky-sn,
+            .sticky-name {
+                position: static;   /* remove left-stickiness on mobile */
+                left: auto;
+                background-color: #fff !important;
+            }
+
+            .sticky-sn { width: 40px; }
+            .sticky-name { min-width: 150px; }
+
+            .table { min-width: 720px; }
+            .score-cell { width: 80px; padding: 6px !important; }
+            .score-cell input { padding: 0.35rem; font-size: 0.9rem; }
+
+            .container-main { padding: 1.25rem; margin: 1rem auto; border-radius: 0.5rem; }
+        }
     </style>
 </head>
 <body>
@@ -184,16 +283,18 @@
         {% endcomment %}
         <div class="d-flex align-items-center gap-3">
             <span class="text-muted small d-none d-md-block">User: <strong>{{ user.username }}</strong></span>
-            <a href="/dashboard/" class="btn btn-outline-primary btn-sm px-3">Dashboard</a>
+            <button type="button" class="btn btn-outline-primary btn-sm px-3" onclick="window.location.href='/dashboard/'">
+                Dashboard
+            </button>
         </div>
     </header>
 
     <main class="container-main">
-        <div class="mb-4">
-            <h5 class="mb-1">SCORE ENTRY TABLE </h5>
-                <P> Welcome, {{ user.get_full_name|default:user.username }}
+        <div class="page-intro">
+            <h5 class="mb-1">SCORE ENTRY TABLE</h5>
+            <p class="text-muted mb-0">Welcome, {{ user.get_full_name|default:user.username }}</p>
             {% if current_term %}
-                <p class="text-muted small mb-0">CURRENT TERM :  <span class="fw-bold text-dark">{{ current_term.name }} - {{ current_term.session }}</span></p>
+                <p class="text-muted small mb-0">CURRENT TERM : <span class="fw-bold text-dark">{{ current_term.name }} - {{ current_term.session }}</span></p>
             {% endif %}
         </div>
 
@@ -206,26 +307,33 @@
             {% endfor %}
         {% endif %}
 
-        <form method="get" id="filter-form" class="row g-3 mb-4">
-            <div class="col-md-6">
-                <label class="form-label fw-bold small">Select Subject</label>
-                <select name="subject" class="form-select" onchange="this.form.submit()">
-                    <option value="">-- Select Subject --</option>
-                    {% for subject in assigned_subjects %}
-                        <option value="{{ subject.id }}" {% if selected_subject_id == subject.id %}selected{% endif %}>{{ subject.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label fw-bold small">Class/Standard</label>
-                <select name="standard" class="form-select" onchange="this.form.submit()">
-                    <option value="">-- Select Class --</option>
-                    {% for std in assigned_standards %}
-                        <option value="{{ std.id }}" {% if selected_standard_id == std.id %}selected{% endif %}>{{ std.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </form>
+        <div class="filter-bar">
+            <form method="get" id="filter-form" class="row g-2 align-items-end">
+                <div class="col-6">
+                    <div class="filter-label"><i class="bi bi-journal-bookmark"></i> Subject</div>
+                    <select name="subject" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Select Subject --</option>
+                        {% for subject in assigned_subjects %}
+                            <option value="{{ subject.id }}" {% if selected_subject_id == subject.id %}selected{% endif %}>{{ subject.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6">
+                    <div class="filter-label"><i class="bi bi-people"></i> Class / Standard</div>
+                    <select name="standard" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Select Class --</option>
+                        {% for std in assigned_standards %}
+                            <option value="{{ std.id }}" {% if selected_standard_id == std.id %}selected{% endif %}>{{ std.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <noscript>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-outline-primary btn-sm mt-2">Apply Filter</button>
+                    </div>
+                </noscript>
+            </form>
+        </div>
 
         {% if selected_subject and selected_standard %}
             <div class="alert alert-light border d-flex justify-content-between align-items-center flex-wrap mb-4">
@@ -235,6 +343,10 @@
                 <div class="badge bg-primary px-3 py-2">
                     GRADING POLICY: CA {{ max_ca|default:"-" }} / Exam {{ max_exam|default:"-" }}
                 </div>
+            </div>
+
+            <div class="scroll-hint">
+                <i class="bi bi-arrow-left-right"></i> Swipe left/right to see all score columns
             </div>
 
             <form method="post" action="{{ request.get_full_path }}">
@@ -247,20 +359,20 @@
                     <table class="table table-hover align-middle">
                         <thead>
                             <tr>
-                                <th class="sticky-sn">S/N</th>
-                                <th class="sticky-name">Student Name</th>
-                                <th>CA 1</th>
-                                <th>CA 2</th>
-                                <th>CA 3</th>
-                                <th class="bg-dark">Exam ({{ max_exam|default:"-" }})</th>
+                                <th>S/N</th>
+                                <th>Student Name</th>
+                                <th>{{ ca1_label|default:"CA 1" }}</th>
+                                <th>{{ ca2_label|default:"CA 2" }}</th>
+                                <th>{{ ca3_label|default:"CA 3" }}</th>
+                                <th class="bg-dark">{{ exam_label|default:"Exam" }} ({{ max_exam|default:"-" }})</th>
                             </tr>
                         </thead>
                         <tbody>
                         {% if formset.forms %}
                             {% for form in formset %}
                             <tr>
-                                <td class="sticky-sn text-muted small">{{ forloop.counter }}</td>
-                                <td class="sticky-name">
+                                <td class="text-muted small">{{ forloop.counter }}</td>
+                                <td>
                                     {{ form.student_id }}
                                     {{ form.score_id }}
                                     {{ form.student_name }}
@@ -314,6 +426,7 @@
         <p class="mb-0">&copy; {% now "Y" %} KwikSchools EdTech</p>
     </footer>
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Apply form-control class to all score inputs and handle selection
@@ -330,3 +443,4 @@
     </script>
 </body>
 </html>
+

@@ -235,6 +235,63 @@
         text-decoration: underline;
         letter-spacing: 0.4px;
     }
+
+    /* INLINE COMMENT EDITOR (mirrors the session report card's remark-card) */
+    .remark-card {
+        border: 1px solid #d8dde3;
+        border-radius: 6px;
+        background-color: #fff;
+        overflow: hidden;
+        height: 100%;
+    }
+    .remark-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #f4f6f9;
+        border-bottom: 1px solid #e2e6ea;
+        padding: 6px 10px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    .remark-card-header .remark-title {
+        margin: 0;
+        font-size: 12px;
+        color: var(--rc-title-color);
+        font-weight: bold;
+    }
+    .remark-badge {
+        font-size: 9px;
+        padding: 2px 7px;
+        border-radius: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .3px;
+    }
+    .remark-badge.auto { background: #eef1f5; color: #6c757d; }
+    .remark-badge.custom { background: #e6f4ea; color: #1e7e34; }
+    .remark-card-body {
+        padding: 8px 10px;
+        min-height: 60px;
+    }
+    .remark-edit-toggle {
+        font-size: 11px;
+        color: #0056b3;
+        cursor: pointer;
+        padding: 5px 10px;
+        border-top: 1px dashed #e2e6ea;
+        background: #fbfbfc;
+        display: block;
+    }
+    .remark-edit-toggle:hover { background: #f0f2f5; }
+    .remark-edit-toggle::-webkit-details-marker { display: none; }
+    .remark-editor {
+        padding: 10px;
+        background: #fbfbfc;
+        border-top: 1px solid #e2e6ea;
+    }
+    .remark-editor textarea { font-size: 12px; resize: vertical; }
+    .remark-editor .btn { margin-top: 6px; font-size: 12px; padding: 4px 16px; }
     .summary-avg-box {
         padding: 6px;
         text-align: center;
@@ -294,6 +351,9 @@
       .no-print, .btn, .d-flex.justify-content-center.mt-5 { display: none !important; }
       table { width: 100% !important; }
       .behavioral-grid { grid-template-columns: repeat(6, 1fr) !important; }
+      .remark-edit-toggle, .remark-editor { display: none !important; }
+      .remark-card { border: 1px solid #999; }
+      .remark-badge { display: none; }
     }
 
     </style>
@@ -402,11 +462,11 @@
             <thead class="bg-light">
               <tr>
                 <th colspan="2" class="text-center">SUBJECT</th>
-                <th class="vertical-th"><span class="vertical-text">CA1</span></th>
-                <th class="vertical-th"><span class="vertical-text">CA2</span></th>
-                <th class="vertical-th"><span class="vertical-text">CA3</span></th>
+                <th class="vertical-th"><span class="vertical-text">{{ ca1_label|default:"CA1" }}</span></th>
+                <th class="vertical-th"><span class="vertical-text">{{ ca2_label|default:"CA2" }}</span></th>
+                <th class="vertical-th"><span class="vertical-text">{{ ca3_label|default:"CA3" }}</span></th>
                 <th class="vertical-th"><span class="vertical-text">CA-Total</span></th>
-                <th class="vertical-th"><span class="vertical-text">EXAM</span></th>
+                <th class="vertical-th"><span class="vertical-text">{{ exam_label|default:"EXAM" }}</span></th>
                 <th class="vertical-th"><span class="vertical-text">TOTAL 100%</th>
                 <th class="vertical-th"><span class="vertical-text">GRADE</th>
                 <th class="vertical-th"><span class="vertical-text">Position</th>
@@ -530,81 +590,130 @@
           <table class="w-100 remark-table" style="border-style: hidden;">
               <tbody>
               <tr style="border-style: hidden;">
-                <td style="border-style: hidden; padding-right: 15px; width: 50%;">
-                  <strong class="comment-label">CLASS TEACHER:</strong><br>
-                                  
-                  <span style="font-size:12px; font-style: italic; line-height:1.35; color:#333;">
+                <td style="border-style: hidden; padding-right: 15px; width: 50%; vertical-align: top;">
+                  <div class="remark-card">
+                    <div class="remark-card-header">
+                        <span class="remark-title comment-label" style="text-decoration:none;">CLASS TEACHER</span>
+                        {% if report_comments.teacher_comment %}
+                            <span class="remark-badge custom no-print">Custom</span>
+                        {% else %}
+                            <span class="remark-badge auto no-print">Auto-generated</span>
+                        {% endif %}
+                    </div>
+                    <div class="remark-card-body">
+                      <span style="font-size:12px; font-style: italic; line-height:1.35; color:#333;">
 
-                {% if teacher_comment %}
+                    {% if teacher_comment %}
 
-                    {{ teacher_comment }}
-
-                {% else %}
-
-                    {% if overall_average is not None and overall_average > 75 %}
-                      <strong style="color:#006600;">Outstanding Performance</strong>,
-                      Your dedication and commitment to learning are clearly reflected in your results.
-                      Keep it up!
-
-                    {% elif overall_average is not None and overall_average > 65 %}
-                      <strong style="color:#004085;">Very Good Effort</strong>,
-                      You have shown commendable progress. Work harder to reach the next level of excellence.
-
-                    {% elif overall_average is not None and overall_average > 55 %}
-                      <strong style="color:#856404;">Good Progress</strong>,
-                      Academic performance is satisfactory. Greater focus on weaker subjects is advised.
-
-                    {% elif overall_average is not None and overall_average > 45 %}
-                      <strong style="color:#721c24;">Fair Performance</strong>,
-                      A significant increase in effort and consistency is required next term.
-
-                    {% elif overall_average is not None and overall_average >= 0 %}
-                      <strong style="color:#990000;">Below Average Performance</strong>,
-                      Immediate attention and sustained effort are necessary to improve results.
+                        {{ teacher_comment }}
 
                     {% else %}
-                      Performance data is unavailable.
-                    {% endif %}
 
-                {% endif %}
-                </span>
+                        {% if overall_average is not None and overall_average > 75 %}
+                          <strong style="color:#006600;">Outstanding Performance</strong>,
+                          Your dedication and commitment to learning are clearly reflected in your results.
+                          Keep it up!
+
+                        {% elif overall_average is not None and overall_average > 65 %}
+                          <strong style="color:#004085;">Very Good Effort</strong>,
+                          You have shown commendable progress. Work harder to reach the next level of excellence.
+
+                        {% elif overall_average is not None and overall_average > 55 %}
+                          <strong style="color:#856404;">Good Progress</strong>,
+                          Academic performance is satisfactory. Greater focus on weaker subjects is advised.
+
+                        {% elif overall_average is not None and overall_average > 45 %}
+                          <strong style="color:#721c24;">Fair Performance</strong>,
+                          A significant increase in effort and consistency is required next term.
+
+                        {% elif overall_average is not None and overall_average >= 0 %}
+                          <strong style="color:#990000;">Below Average Performance</strong>,
+                          Immediate attention and sustained effort are necessary to improve results.
+
+                        {% else %}
+                          Performance data is unavailable.
+                        {% endif %}
+
+                    {% endif %}
+                    </span>
+                    </div>
+
+                    {% if can_edit_teacher_comment %}
+                    <details class="no-print">
+                        <summary class="remark-edit-toggle">✎ Edit remark</summary>
+                        <div class="remark-editor">
+                            <form method="post" action="{% url 'results:term_report_comment_update' student.id term.id %}">
+                                {% csrf_token %}
+                                <textarea name="teacher_comment" class="form-control form-control-sm" rows="3"
+                                          placeholder="Enter/override class teacher's remark...">{{ report_comments.teacher_comment|default:'' }}</textarea>
+                                <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                            </form>
+                        </div>
+                    </details>
+                    {% endif %}
+                  </div>
                 </td>
-                <td style="border-style: hidden; width: 50%;">
-                  <strong class="comment-label">PRINCIPAL / HEAD TEACHER:</strong><br>
-                  <span style="font-size:12px; font-style: italic; line-height:1.35; color:#333;">
+                <td style="border-style: hidden; width: 50%; vertical-align: top;">
+                  <div class="remark-card">
+                    <div class="remark-card-header">
+                        <span class="remark-title comment-label" style="text-decoration:none;">PRINCIPAL / HEAD TEACHER</span>
+                        {% if report_comments.principal_comment %}
+                            <span class="remark-badge custom no-print">Custom</span>
+                        {% else %}
+                            <span class="remark-badge auto no-print">Auto-generated</span>
+                        {% endif %}
+                    </div>
+                    <div class="remark-card-body">
+                      <span style="font-size:12px; font-style: italic; line-height:1.35; color:#333;">
 
-                {% if principal_comment %}
+                    {% if principal_comment %}
 
-                    {{ principal_comment }}
-
-                {% else %}
-
-                    {% if overall_average is not None and overall_average > 75 %}
-                      <strong style="color:#006600;">Outstanding Term</strong>,
-                      Exceptional performance. Maintain this level of focus and excellence.
-
-                    {% elif overall_average is not None and overall_average > 65 %}
-                      <strong style="color:#004085;">Very Good Result</strong>,
-                      A strong showing this term. Aim higher by embracing new challenges.
-
-                    {% elif overall_average is not None and overall_average > 55 %}
-                      <strong style="color:#856404;">Satisfactory Performance</strong>,
-                      Improvement is encouraged to achieve higher academic standards.
-
-                    {% elif overall_average is not None and overall_average > 45 %}
-                      <strong style="color:#721c24;">Needs Improvement</strong>,
-                      Increased diligence and commitment will lead to better outcomes.
-
-                    {% elif overall_average is not None and overall_average >= 0 %}
-                      <strong style="color:#990000;">Academic Concern</strong>,
-                      A parent/guardian meeting is required to discuss necessary support.
+                        {{ principal_comment }}
 
                     {% else %}
-                      General performance information is unavailable.
-                    {% endif %}
 
-                {% endif %}
-                </span>
+                        {% if overall_average is not None and overall_average > 75 %}
+                          <strong style="color:#006600;">Outstanding Term</strong>,
+                          Exceptional performance. Maintain this level of focus and excellence.
+
+                        {% elif overall_average is not None and overall_average > 65 %}
+                          <strong style="color:#004085;">Very Good Result</strong>,
+                          A strong showing this term. Aim higher by embracing new challenges.
+
+                        {% elif overall_average is not None and overall_average > 55 %}
+                          <strong style="color:#856404;">Satisfactory Performance</strong>,
+                          Improvement is encouraged to achieve higher academic standards.
+
+                        {% elif overall_average is not None and overall_average > 45 %}
+                          <strong style="color:#721c24;">Needs Improvement</strong>,
+                          Increased diligence and commitment will lead to better outcomes.
+
+                        {% elif overall_average is not None and overall_average >= 0 %}
+                          <strong style="color:#990000;">Academic Concern</strong>,
+                          A parent/guardian meeting is required to discuss necessary support.
+
+                        {% else %}
+                          General performance information is unavailable.
+                        {% endif %}
+
+                    {% endif %}
+                    </span>
+                    </div>
+
+                    {% if can_edit_principal_comment %}
+                    <details class="no-print">
+                        <summary class="remark-edit-toggle">✎ Edit remark</summary>
+                        <div class="remark-editor">
+                            <form method="post" action="{% url 'results:term_report_comment_update' student.id term.id %}">
+                                {% csrf_token %}
+                                <textarea name="principal_comment" class="form-control form-control-sm" rows="3"
+                                          placeholder="Enter/override principal's/head teacher's remark...">{{ report_comments.principal_comment|default:'' }}</textarea>
+                                <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                            </form>
+                        </div>
+                    </details>
+                    {% endif %}
+                  </div>
                 </td>
               </tr>
             </tbody>

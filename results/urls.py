@@ -26,6 +26,7 @@ from .views import (
     SessionReportCommentUpdateView,
     BulkSessionReportCardSelectView,
     BulkSessionReportCardView,
+    TermReportCommentUpdateView,
     
 )
 
@@ -81,6 +82,12 @@ urlpatterns = [
         'session-comments/<int:session_id>/',
         SessionCommentClassView.as_view(),
         name='session_comment_class_list'
+    ),
+
+    path(
+        'report-card/<int:student_id>/<int:term_id>/comment-update/',
+        TermReportCommentUpdateView.as_view(),
+        name='term_report_comment_update',
     ),
 
     path(

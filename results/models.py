@@ -1,3 +1,7 @@
+
+#=========================================================
+# edit to allow flexibility of ca scores labels
+
 from django.db import models
 from django.contrib.auth.models import User
 from users.models import Profile
@@ -48,6 +52,29 @@ class SchoolYearSettings(models.Model):
     )
     is_active = models.BooleanField(default=True, help_text="Only one setting should be active.")
 
+    # --- Configurable display names -----------------------------------
+    # These are DISPLAY LABELS ONLY. The underlying database fields
+    # (Score.ca1 / ca2 / ca3 / exam_score), their validation, and the
+    # total-score calculation are completely unaffected — a school that
+    # renames "CA1" to "1st Test" is still storing that score in the exact
+    # same ca1 column, with the exact same 0..max_ca_total validation.
+    ca1_label = models.CharField(
+        max_length=50, default='CA1', blank=True,
+        help_text="Label shown for the first CA score, e.g. '1st Test', 'Class Work', 'Assignment'."
+    )
+    ca2_label = models.CharField(
+        max_length=50, default='CA2', blank=True,
+        help_text="Label shown for the second CA score."
+    )
+    ca3_label = models.CharField(
+        max_length=50, default='CA3', blank=True,
+        help_text="Label shown for the third CA score."
+    )
+    exam_label = models.CharField(
+        max_length=50, default='Exam', blank=True,
+        help_text="Label shown for the examination score."
+    )
+
     class Meta:
         verbose_name = "Grading Configuration"
         verbose_name_plural = "Grading Configurations"
@@ -58,6 +85,25 @@ class SchoolYearSettings(models.Model):
     def clean(self):
         if (self.max_ca_total + self.max_exam_score) != 100:
             raise ValidationError("The sum of Max CA and Max Exam must equal 100.")
+
+    @classmethod
+    def get_active_labels(cls):
+        """
+        Returns (ca1_label, ca2_label, ca3_label, exam_label) from the
+        active grading configuration, falling back to the original static
+        names if no configuration exists yet or a label was left blank —
+        so nothing changes for a school that never touches this setting.
+        Mirrors Score.get_grading_configs()'s existing fallback pattern.
+        """
+        config = cls.objects.filter(is_active=True).first()
+        if config:
+            return (
+                config.ca1_label or 'CA1',
+                config.ca2_label or 'CA2',
+                config.ca3_label or 'CA3',
+                config.exam_label or 'Exam',
+            )
+        return 'CA1', 'CA2', 'CA3', 'Exam'
      
 
 

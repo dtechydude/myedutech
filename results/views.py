@@ -181,9 +181,14 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
             return config.max_ca_total, config.max_exam_score
         return 40, 60
 
+    def get_grading_labels(self):
+        """Helper to fetch the school's custom CA/Exam display names, or the original defaults."""
+        return SchoolYearSettings.get_active_labels()
+
     def get(self, request, *args, **kwargs):
         # Fetch dynamic configuration
         max_ca, max_exam = self.get_grading_config()
+        ca1_label, ca2_label, ca3_label, exam_label = self.get_grading_labels()
 
         # If superuser or staff, they are treated as having access to all classes and subjects
         if request.user.is_superuser or request.user.is_staff:
@@ -210,7 +215,10 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
         ScoreFormSet = formset_factory(ScoreEntryForm, extra=0)
         
         # Initialize formset with dynamic limits
-        formset = ScoreFormSet(form_kwargs={'max_ca': max_ca, 'max_exam': max_exam})
+        formset = ScoreFormSet(form_kwargs={
+            'max_ca': max_ca, 'max_exam': max_exam,
+            'ca1_label': ca1_label, 'ca2_label': ca2_label, 'ca3_label': ca3_label, 'exam_label': exam_label,
+        })
 
         if selected_subject_id and selected_standard_id:
             try:
@@ -243,7 +251,11 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
                 # Re-initialize formset with initial data AND dynamic limits
                 formset = ScoreFormSet(
                     initial=initial_data, 
-                    form_kwargs={'max_ca': max_ca, 'max_exam': max_exam}
+                    form_kwargs={
+                        'max_ca': max_ca, 'max_exam': max_exam,
+                        'ca1_label': ca1_label, 'ca2_label': ca2_label, 'ca3_label': ca3_label,
+                        'exam_label': exam_label,
+                    }
                 )
 
         try:
@@ -264,12 +276,17 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
             'school_identity': school_identity,
             'max_ca': max_ca,
             'max_exam': max_exam,
+            'ca1_label': ca1_label,
+            'ca2_label': ca2_label,
+            'ca3_label': ca3_label,
+            'exam_label': exam_label,
         }
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
         # Fetch dynamic configuration
         max_ca, max_exam = self.get_grading_config()
+        ca1_label, ca2_label, ca3_label, exam_label = self.get_grading_labels()
 
         if request.user.is_superuser or request.user.is_staff:
             teacher = None
@@ -307,7 +324,11 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
         # Pass dynamic limits into the POST initialization so the form knows how to validate
         formset = ScoreFormSet(
             request.POST, 
-            form_kwargs={'max_ca': max_ca, 'max_exam': max_exam}
+            form_kwargs={
+                'max_ca': max_ca, 'max_exam': max_exam,
+                'ca1_label': ca1_label, 'ca2_label': ca2_label, 'ca3_label': ca3_label,
+                'exam_label': exam_label,
+            }
         )
 
         if formset.is_valid():
@@ -391,6 +412,10 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
             'school_identity': school_identity,
             'max_ca': max_ca,
             'max_exam': max_exam,
+            'ca1_label': ca1_label,
+            'ca2_label': ca2_label,
+            'ca3_label': ca3_label,
+            'exam_label': exam_label,
         }
         return render(request, self.template_name, context)
 
@@ -543,6 +568,12 @@ class StudentReportCardView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
 
         if not self.has_permission(request, student):
             return self.handle_no_permission(request)
+
+        # ---------------- DYNAMIC CA/EXAM LABELS ----------------
+        # Pulls the school's configured CA1/CA2/CA3/Exam display names from
+        # SchoolYearSettings, same source used by the score entry form, so
+        # the report card header matches whatever the admin has configured.
+        ca1_label, ca2_label, ca3_label, exam_label = SchoolYearSettings.get_active_labels()
 
         # ---------------- ATTENDANCE ----------------
         # student_attendance = Attendance.objects.filter(
@@ -735,6 +766,27 @@ class StudentReportCardView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
             teacher_comment = None
             principal_comment = None
 
+
+    # ---------------- 🔥 REPORT COMMENTS (now editable inline, like the session report card) ----------------
+        report_comments, _ = ReportComments.objects.get_or_create(
+            student=student,
+            standard=standard,
+            term=term,
+            session=term.session,
+        )
+        teacher_comment = report_comments.teacher_comment
+        principal_comment = report_comments.principal_comment
+
+        # Who can edit inline: superusers, staff, and the class's form teacher.
+        # ⚠️ Adjust `standard.form_teacher_id` below if your Standard model
+        # uses a different field name for the assigned form/class teacher.
+        is_form_teacher = (
+            hasattr(request.user, 'teacher')
+            and getattr(standard, 'form_teacher_id', None) == request.user.teacher_id
+        )
+        can_edit_teacher_comment = request.user.is_superuser or request.user.is_staff or is_form_teacher
+        can_edit_principal_comment = request.user.is_superuser or request.user.is_staff or is_form_teacher
+
         # ---------------- CONTEXT ----------------
         context = {
             'result_class': standard, #new add
@@ -765,6 +817,15 @@ class StudentReportCardView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
             'days_absent': days_absent,
             'next_term_start_date': next_term_start_date,
             'total_students_in_class': total_students_in_class,
+
+            'ca1_label': ca1_label,
+            'ca2_label': ca2_label,
+            'ca3_label': ca3_label,
+            'exam_label': exam_label,
+
+            'report_comments': report_comments,
+            'can_edit_teacher_comment': can_edit_teacher_comment,
+            'can_edit_principal_comment': can_edit_principal_comment,
         }
 
         # ---------------- PDF ----------------
@@ -2605,6 +2666,17 @@ class ParentTermlyReportView(LoginRequiredMixin, View):
             )
 
         # =====================================================
+        # DYNAMIC CA/EXAM LABELS
+        # =====================================================
+        # Same source as ScoreEntryView / StudentReportCardView, so the
+        # parent-facing report card header matches the admin's configured
+        # CA/Exam display names instead of the static "CA1/CA2/CA3/EXAM".
+
+        ca1_label, ca2_label, ca3_label, exam_label = (
+            SchoolYearSettings.get_active_labels()
+        )
+
+        # =====================================================
         # CLASS / HISTORICAL CLASS
         # =====================================================
 
@@ -2990,6 +3062,18 @@ class ParentTermlyReportView(LoginRequiredMixin, View):
 
             'report_type':
                 'Full Termly Report',
+
+            'ca1_label':
+                ca1_label,
+
+            'ca2_label':
+                ca2_label,
+
+            'ca3_label':
+                ca3_label,
+
+            'exam_label':
+                exam_label,
         }
 
         return render(
@@ -3639,3 +3723,122 @@ class BulkSessionReportCardView(LoginRequiredMixin, View):
             return HttpResponse("Error generating bulk PDF.", status=500)
 
         return render(request, self.template_name, context)
+
+    
+
+
+# ============================================================================
+# REPORT CARD — INLINE COMMENT EDITING (termly report card)
+# ============================================================================
+# Everything in this file is ADDITIVE. Nothing in your existing
+# StudentReportCardView logic is changed — only the REPORT COMMENTS block
+# is replaced, and one new view + one new URL are added.
+#
+# ⚠️ ASSUMPTION TO VERIFY:
+#   `standard.form_teacher` is assumed to be the FK on your Standard model
+#   that points to the assigned class/form teacher. If your field is named
+#   differently (e.g. `class_teacher`), replace `form_teacher_id` /
+#   `form_teacher` in BOTH places below (search for "ADJUST FIELD NAME").
+#
+# ⚠️ ASSUMPTION TO VERIFY:
+#   The redirect target `'results:student_report_card'` is assumed to be
+#   the URL name of your existing report card detail view. If it's named
+#   differently, update the two `redirect(...)` calls in
+#   TermReportCommentUpdateView below.
+# ============================================================================
+
+
+# ----------------------------------------------------------------------------
+# 1) views.py — REPLACE the existing "🔥 NEW: REPORT COMMENTS" block inside
+#    StudentReportCardView.get() with this:
+# ----------------------------------------------------------------------------
+#
+#         # ---------------- 🔥 REPORT COMMENTS (now editable inline, like the session report card) ----------------
+#         report_comments, _ = ReportComments.objects.get_or_create(
+#             student=student,
+#             standard=standard,
+#             term=term,
+#             session=term.session,
+#         )
+#         teacher_comment = report_comments.teacher_comment
+#         principal_comment = report_comments.principal_comment
+#
+#         # Who can edit inline: superusers, staff, and the class's form teacher.
+#         is_form_teacher = (
+#             hasattr(request.user, 'teacher')
+#             and getattr(standard, 'form_teacher_id', None) == request.user.teacher_id  # ADJUST FIELD NAME if needed
+#         )
+#         can_edit_teacher_comment = request.user.is_superuser or request.user.is_staff or is_form_teacher
+#         can_edit_principal_comment = request.user.is_superuser or request.user.is_staff or is_form_teacher
+#
+# ----------------------------------------------------------------------------
+# 2) views.py — ADD these three keys to the existing `context` dict, anywhere
+#    alongside 'teacher_comment' / 'principal_comment':
+# ----------------------------------------------------------------------------
+#
+#             'report_comments': report_comments,
+#             'can_edit_teacher_comment': can_edit_teacher_comment,
+#             'can_edit_principal_comment': can_edit_principal_comment,
+#
+# ----------------------------------------------------------------------------
+# 3) views.py — ADD this new class anywhere in the same file (needs the same
+#    imports StudentReportCardView already uses: LoginRequiredMixin, View,
+#    get_object_or_404, messages, redirect, Student, Term, Score,
+#    ReportComments):
+# ----------------------------------------------------------------------------
+
+class TermReportCommentUpdateView(LoginRequiredMixin, View):
+    """
+    Handles inline saving of the class teacher's and/or principal's comment
+    for a single student's termly report card. Mirrors the session-level
+    comment update flow so admins/staff/form teachers can edit comments
+    directly from the report card page instead of going through the admin.
+    """
+
+    def post(self, request, student_id, term_id, *args, **kwargs):
+        student = get_object_or_404(Student, id=student_id)
+        term = get_object_or_404(Term, id=term_id)
+
+        # Resolve the historical class for this term the same way
+        # StudentReportCardView does, so comments attach to the correct
+        # Standard even if the student has since been promoted.
+        first_score = Score.objects.filter(student=student, term=term).select_related('standard').first()
+        standard = first_score.standard if first_score and first_score.standard else student.current_class
+
+        is_form_teacher = (
+            hasattr(request.user, 'teacher')
+            and getattr(standard, 'form_teacher_id', None) == request.user.teacher_id  # ADJUST FIELD NAME if needed
+        )
+        if not (request.user.is_superuser or request.user.is_staff or is_form_teacher):
+            messages.error(request, "You are not authorized to edit this report card's comments.")
+            return redirect('results:student_report_card', student_id=student.id, term_id=term.id)
+
+        report_comments, _ = ReportComments.objects.get_or_create(
+            student=student,
+            standard=standard,
+            term=term,
+            session=term.session,
+        )
+
+        if 'teacher_comment' in request.POST:
+            report_comments.teacher_comment = request.POST.get('teacher_comment', '').strip()
+        if 'principal_comment' in request.POST:
+            report_comments.principal_comment = request.POST.get('principal_comment', '').strip()
+
+        report_comments.created_by = request.user
+        report_comments.save()
+
+        messages.success(request, "Comment saved successfully.")
+        return redirect('results:student_report_card_detail', student_id=student.id, term_id=term.id)
+
+
+# ----------------------------------------------------------------------------
+# 4) urls.py — ADD this pattern inside your `results` app's urlpatterns
+#    (make sure TermReportCommentUpdateView is imported from views.py):
+# ----------------------------------------------------------------------------
+#
+#     path(
+#         'report-card/<int:student_id>/<int:term_id>/comment-update/',
+#         TermReportCommentUpdateView.as_view(),
+#         name='term_report_comment_update',
+#     ),
