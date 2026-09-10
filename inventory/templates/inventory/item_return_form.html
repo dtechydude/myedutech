@@ -1,0 +1,22 @@
+{% extends 'pages/portal_home.html' %}
+{% block content_body %}
+<div class="content-body"><div class="container-fluid">
+    <div class="row justify-content-center"><div class="col-xl-6">
+        <div class="card">
+            <div class="card-header border-0 pb-0"><h4 class="fs-20">Return: {{ custody.item.name }}</h4></div>
+            <div class="card-body">
+                <p class="text-muted">Currently with <strong>{{ custody.held_by_name }}</strong> since {{ custody.issued_date }}</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Return Notes</label>
+                        <textarea name="return_notes" class="form-control" rows="3" placeholder="Condition at return, any damage noted"></textarea>
+                    </div>
+                    <button class="btn btn-primary">Confirm Return</button>
+                    <a href="{% url 'inventory:item_detail' custody.item.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div></div>
+</div></div>
+{% endblock content_body %}

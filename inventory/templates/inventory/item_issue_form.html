@@ -1,0 +1,29 @@
+{% extends 'pages/portal_home.html' %}
+{% block content_body %}
+<div class="content-body"><div class="container-fluid">
+    <div class="row justify-content-center"><div class="col-xl-6">
+        <div class="card">
+            <div class="card-header border-0 pb-0"><h4 class="fs-20">Issue: {{ item.name }}</h4></div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Issued To</label>
+                        <input type="text" name="held_by_name" class="form-control" required placeholder="Staff/student/department name">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Expected Return Date</label>
+                        <input type="date" name="expected_return_date" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea name="issue_notes" class="form-control" rows="3" placeholder="Condition at issue, purpose, etc."></textarea>
+                    </div>
+                    <button class="btn btn-primary">Confirm Issue</button>
+                    <a href="{% url 'inventory:item_detail' item.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div></div>
+</div></div>
+{% endblock content_body %}

@@ -27,6 +27,8 @@ urlpatterns = [
     path('ai_center/', include('ai_center.urls', namespace='ai_center')),
     path('finance/', include('finance.urls', namespace='finance')),
     path('elearning/', include('elearning.urls', namespace='elearning')),
+    path('inventory/', include('inventory.urls', namespace='inventory')),
+
 
 
 

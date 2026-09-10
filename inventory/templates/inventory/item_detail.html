@@ -1,0 +1,60 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+{% block content_body %}
+<div class="content-body"><div class="container-fluid">
+    <div class="row"><div class="col-xl-10 mx-auto">
+        <div class="card">
+            <div class="card-header border-0 pb-0 flex-wrap">
+                <h4 class="fs-20">{{ item.name }}</h4>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'inventory:item_qr_label' item.pk %}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="fas fa-qrcode me-1"></i> Print QR Label</a>
+                    <a href="{% url 'inventory:item_edit' item.pk %}" class="btn btn-outline-secondary btn-sm">Edit Item</a>
+                    <a href="{% url 'inventory:item_list' %}" class="btn btn-outline-secondary btn-sm">Back to List</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm w-auto">
+                    <tr><td class="text-muted">Category</td><td>{{ item.category.name|default:"—" }}</td></tr>
+                    <tr><td class="text-muted">Stock</td><td>{{ item.quantity_in_stock }} {{ item.get_unit_display }}</td></tr>
+                    <tr><td class="text-muted">Location</td><td>{{ item.location|default:"—" }}</td></tr>
+                    <tr><td class="text-muted">Is Trackable Asset</td><td>{{ item.is_asset|yesno:"Yes,No" }}</td></tr>
+                </table>
+
+                {% if item.is_asset %}
+                <hr>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0">Custody</h6>
+                    {% if not item.current_custody %}
+                    <a href="{% url 'inventory:item_issue' item.pk %}" class="btn btn-sm btn-primary">Issue This Item</a>
+                    {% endif %}
+                </div>
+
+                {% if item.current_custody %}
+                <div class="alert alert-warning">
+                    Currently with <strong>{{ item.current_custody.held_by_name }}</strong> since {{ item.current_custody.issued_date }}
+                    {% if item.current_custody.is_overdue %}<span class="badge bg-danger ms-2">OVERDUE</span>{% endif %}
+                    <a href="{% url 'inventory:item_return' item.current_custody.pk %}" class="btn btn-sm btn-outline-dark float-end">Mark Returned</a>
+                </div>
+                {% endif %}
+
+                <table class="table table-sm">
+                    <thead><tr><th>Held By</th><th>Issued</th><th>Returned</th><th>Notes</th></tr></thead>
+                    <tbody>
+                    {% for c in custody_history %}
+                        <tr>
+                            <td>{{ c.held_by_name }}</td>
+                            <td>{{ c.issued_date }}</td>
+                            <td>{{ c.returned_date|default:"—" }}</td>
+                            <td>{{ c.issue_notes|default:"—" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4" class="text-muted text-center py-3">No custody history yet.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
+        </div>
+    </div></div>
+</div></div>
+{% endblock content_body %}

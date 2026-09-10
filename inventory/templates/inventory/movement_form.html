@@ -1,0 +1,83 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+
+{% block content_body %}
+<div class="content-body">
+<div class="container-fluid">
+
+    <div class="row justify-content-center">
+        <div class="col-xl-7 col-lg-9">
+            <div class="card">
+                <div class="card-header border-0 pb-0">
+                    <h4 class="fs-20"><i class="fas fa-right-left me-2"></i>Record Stock Movement</h4>
+                    <a href="{% url 'inventory:movement_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Movements
+                    </a>
+                </div>
+                <div class="card-body pt-2">
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form.item.id_for_label }}">Item</label>
+                            {{ form.item }}
+                            {% if form.item.errors %}<div class="text-danger small mt-1">{{ form.item.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" for="{{ form.movement_type.id_for_label }}">Movement Type</label>
+                                {{ form.movement_type }}
+                                {% if form.movement_type.errors %}<div class="text-danger small mt-1">{{ form.movement_type.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" for="{{ form.quantity.id_for_label }}">Quantity</label>
+                                {{ form.quantity }}
+                                {% if form.quantity.errors %}<div class="text-danger small mt-1">{{ form.quantity.errors }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" for="{{ form.vendor.id_for_label }}">Vendor (for Stock In)</label>
+                                {{ form.vendor }}
+                                {% if form.vendor.errors %}<div class="text-danger small mt-1">{{ form.vendor.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" for="{{ form.issued_to.id_for_label }}">Issued To (for Stock Out)</label>
+                                {{ form.issued_to }}
+                                <div class="form-text">e.g. Class name, department, staff name</div>
+                                {% if form.issued_to.errors %}<div class="text-danger small mt-1">{{ form.issued_to.errors }}</div>{% endif %}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                       
+                        <label class="form-label" for="{{ form.to_location.id_for_label }}">New Location (for Internal Transfer)</label>
+                        {{ form.to_location }}
+                        <div class="form-text">Updates the item's recorded location. Only relevant for Internal Transfer.</div>
+                        {% if form.to_location.errors %}<div class="text-danger small mt-1">{{ form.to_location.errors }}</div>{% endif %}
+                    </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form.notes.id_for_label }}">Notes</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}<div class="text-danger small mt-1">{{ form.notes.errors }}</div>{% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Record Movement</button>
+                        <a href="{% url 'inventory:movement_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock content_body %}

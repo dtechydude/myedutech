@@ -26,8 +26,8 @@ class SchoolIdentity(models.Model):
     identity_label = models.CharField(max_length=50, help_text="e.g. Primary, Secondary, or Main", blank=True, null=True)
     is_default = models.BooleanField(default=False, help_text="Fallback identity if no specific class identity is set.")
     # ... (your existing address, phone, logo, signature fields) ...
-    address_line_1 = models.CharField(max_length=60)
-    address_line_2 = models.CharField(max_length=60, blank=True, null=True)
+    address_line_1 = models.CharField(max_length=100)
+    address_line_2 = models.CharField(max_length=100, blank=True, null=True)
     phone1 = models.CharField(max_length=11)
     phone2 = models.CharField(max_length=11, blank=True, null=True)
     email = models.CharField(max_length=50, blank=True, null=True)

@@ -1,0 +1,38 @@
+{% extends 'pages/portal_home.html' %}
+{% block content_body %}
+<div class="content-body"><div class="container-fluid">
+    <div class="row"><div class="col-xl-12">
+        <div class="card">
+            <div class="card-header border-0 pb-0 flex-wrap">
+                <h4 class="fs-20">Item Custody — Who Has What</h4>
+                <a href="{% url 'inventory:dashboard' %}" class="btn btn-outline-secondary btn-sm">Back to Dashboard</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead><tr><th>Item</th><th>Held By</th><th>Issued</th><th>Expected Return</th><th>Returned</th><th>Status</th></tr></thead>
+                        <tbody>
+                        {% for c in custody_records %}
+                            <tr>
+                                <td><a href="{% url 'inventory:item_detail' c.item.pk %}">{{ c.item.name }}</a></td>
+                                <td>{{ c.held_by_name }}</td>
+                                <td>{{ c.issued_date }}</td>
+                                <td>{{ c.expected_return_date|default:"—" }}</td>
+                                <td>{{ c.returned_date|default:"—" }}</td>
+                                <td>
+                                    {% if c.returned_date %}<span class="badge bg-success">Returned</span>
+                                    {% elif c.is_overdue %}<span class="badge bg-danger">Overdue</span>
+                                    {% else %}<span class="badge bg-warning text-dark">With Holder</span>{% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="6" class="text-center text-muted py-4">No custody records yet.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div></div>
+</div></div>
+{% endblock content_body %}

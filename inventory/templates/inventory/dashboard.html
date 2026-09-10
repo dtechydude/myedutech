@@ -1,0 +1,119 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+
+{% block content_body %}
+<div class="content-body">
+<div class="container-fluid">
+
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card">
+                <div class="card-header border-0 pb-0">
+                    <h4 class="fs-20"><i class="fas fa-boxes-stacked me-2"></i>Inventory Management</h4>
+                    <a href="{% url 'pages:portal-home' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                    </a>
+                </div>
+                <div class="card-body pt-2">
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="card booking"><div class="card-body">
+                                <div class="ms-2">
+                                    <h5 class="mb-0 font-w600">{{ total_items }}</h5>
+                                    <p class="mb-0 text-nowrap">Total Items Tracked</p>
+                                </div>
+                            </div></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card booking"><div class="card-body">
+                                <div class="ms-2">
+                                    <h5 class="mb-0 font-w600 text-success">₦{{ total_stock_value|floatformat:2 }}</h5>
+                                    <p class="mb-0 text-nowrap">Total Stock Value</p>
+                                </div>
+                            </div></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card booking"><div class="card-body">
+                                <div class="ms-2">
+                                    <h5 class="mb-0 font-w600 text-danger">{{ low_stock_items|length }}</h5>
+                                    <p class="mb-0 text-nowrap">Low Stock Alerts</p>
+                                </div>
+                            </div></div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <a href="{% url 'inventory:item_add' %}" class="btn btn-primary w-100 py-3">
+                                <i class="fa-solid fa-box me-2"></i>Add New Item
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{% url 'inventory:movement_add' %}" class="btn btn-outline-primary w-100 py-3">
+                                <i class="fa-solid fa-right-left me-2"></i>Record Stock Movement
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{% url 'inventory:item_list' %}" class="btn btn-outline-secondary w-100 py-3">
+                                <i class="fa-solid fa-list me-2"></i>View All Items
+                            </a>
+                        </div>
+                    </div>
+
+                    {% if low_stock_items %}
+                    <div class="card mb-4">
+                        <div class="card-header border-0 pb-0">
+                            <h6 class="mb-0 text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i> Low Stock Items — Reorder Soon</h6>
+                        </div>
+                        <div class="card-body table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead><tr><th>Item</th><th>Current Stock</th><th>Reorder Level</th><th>Location</th></tr></thead>
+                                <tbody>
+                                {% for item in low_stock_items %}
+                                    <tr>
+                                        <td><a href="{% url 'inventory:item_edit' item.pk %}">{{ item.name }}</a></td>
+                                        <td class="text-danger fw-bold">{{ item.quantity_in_stock }} {{ item.get_unit_display }}</td>
+                                        <td>{{ item.reorder_level }}</td>
+                                        <td>{{ item.location|default:"—" }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="card">
+                        <div class="card-header border-0 pb-0">
+                            <h6 class="mb-0">Recent Stock Movements</h6>
+                        </div>
+                        <div class="card-body table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead><tr><th>Item</th><th>Type</th><th>Qty</th><th>To/From</th><th>Date</th></tr></thead>
+                                <tbody>
+                                {% for m in recent_movements %}
+                                    <tr>
+                                        <td>{{ m.item.name }}</td>
+                                        <td>{{ m.get_movement_type_display }}</td>
+                                        <td>{{ m.quantity }}</td>
+                                        <td>{{ m.issued_to|default:m.vendor.name|default:"—" }}</td>
+                                        <td>{{ m.date }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr><td colspan="5" class="text-muted text-center py-3">No stock movements recorded yet.</td></tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            <a href="{% url 'inventory:movement_list' %}" class="small">View all movements &rarr;</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock content_body %}

@@ -1,0 +1,95 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+
+{% block content_body %}
+<div class="content-body">
+<div class="container-fluid">
+
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card">
+                <div class="card-header border-0 pb-0 flex-wrap">
+                    <h4 class="fs-20"><i class="fas fa-boxes-stacked me-2"></i>All Inventory Items</h4>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'inventory:item_add' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i> Add Item
+                        </a>
+                        <a href="{% url 'inventory:bulk_qr_print' %}?category={{ request.GET.category }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-qrcode me-1"></i> Print QR Labels
+                        </a>
+                        <a href="{% url 'inventory:dashboard' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body pt-2">
+
+                    <form method="get" class="d-flex gap-2 flex-wrap mb-3">
+                        <input type="text" name="q" value="{{ request.GET.q }}" class="form-control form-control-sm" style="max-width:220px;" placeholder="Search name or location">
+                        <select name="category" class="form-select form-select-sm" style="max-width:200px;">
+                            <option value="">All Categories</option>
+                            {% for c in categories %}
+                                <option value="{{ c.pk }}" {% if request.GET.category == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn btn-outline-primary btn-sm" type="submit">Filter</button>
+                    </form>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Category</th>
+                                    <th>Stock</th>
+                                    <th>Unit Cost</th>
+                                    <th>Total Value</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for item in items %}
+                                <tr>
+                                    <td>{{ item.name }}</td>
+                                    <td>{{ item.category.name|default:"—" }}</td>
+                                    <td>{{ item.quantity_in_stock }} {{ item.get_unit_display }}</td>
+                                    <td>₦{{ item.unit_cost|floatformat:2 }}</td>
+                                    <td>₦{{ item.total_value|floatformat:2 }}</td>
+                                    <td>{{ item.location|default:"—" }}</td>
+                                    <td>
+                                        {% if item.is_low_stock %}
+                                            <span class="badge bg-danger">Low Stock</span>
+                                        {% else %}
+                                            <span class="badge bg-success">OK</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'inventory:item_edit' item.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    <a href="{% url 'inventory:item_qr_label' item.pk %}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-qrcode"></i></a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="8" class="text-center text-muted py-4">No inventory items recorded yet.</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if is_paginated %}
+                    <nav><ul class="pagination">
+                        {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+                        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+                        {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+                    </ul></nav>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</div>
+{% endblock content_body %}
