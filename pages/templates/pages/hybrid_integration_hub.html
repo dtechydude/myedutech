@@ -1,0 +1,418 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybrid Integration | KwikSchools</title>
+
+    {% if school_info and school_info.logo %}
+        <link rel="icon" href="{{ school_info.logo.url }}" type="image/png">
+    {% else %}
+        <link rel="icon" href="{% static 'pages/images/favicon.png' %}" type="image/png">
+    {% endif %}
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --brand-blue: #003366;
+            --brand-orange: #ff6600;
+            --brand-red: #cc0000;
+            --brand-accent: linear-gradient(90deg, var(--brand-orange), var(--brand-red));
+            --brand-gray: #f8f9fa;
+        }
+
+        html, body {
+            overflow-x: hidden; /* keep the page itself from ever scrolling sideways */
+            width: 100%;
+        }
+
+        body {
+            background-color: var(--brand-gray);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-family: "Inter", "Segoe UI", sans-serif;
+            color: #212529;
+        }
+
+        /* flex children default to min-width:auto, which can force the
+           page wider than the viewport on mobile — lock them to 100%. */
+        .header, .container-main, .simple-footer {
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .header {
+            background-color: #fff;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1100;
+        }
+
+        .container-main {
+            max-width: 1100px;
+            margin: 2rem auto;
+            background-color: #fff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 2rem;
+        }
+
+        h5, h3 { color: var(--brand-blue); font-weight: 600; }
+
+        .page-intro { margin-bottom: 1.5rem; }
+        .page-intro p { margin-bottom: 0.25rem; }
+
+        /* ROLE TABS */
+        .role-nav .nav-link {
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--brand-blue);
+            padding: 0.5rem 1.25rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .role-nav .nav-link.active {
+            background: var(--brand-accent);
+            color: #fff;
+        }
+
+        /* RESOURCE CARDS */
+        .resource-card {
+            border: 1px solid #eee;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            background: #fff;
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .resource-card:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
+        }
+        .resource-icon {
+            width: 46px; height: 46px;
+            border-radius: 0.6rem;
+            background: rgba(0, 51, 102, 0.08);
+            color: var(--brand-blue);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 0.75rem;
+        }
+        .resource-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--brand-blue);
+            margin-bottom: 0.35rem;
+        }
+        .resource-desc {
+            font-size: 0.8rem;
+            color: #6c757d;
+            flex-grow: 1;
+            margin-bottom: 0.9rem;
+        }
+        .resource-card .btn {
+            align-self: flex-start;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+        }
+        .resource-card .btn-primary {
+            background: var(--brand-accent);
+            border: none;
+        }
+        .resource-card .btn-outline-primary {
+            border-color: var(--brand-orange);
+            color: var(--brand-orange);
+        }
+        .resource-card .btn-outline-primary:hover {
+            background-color: var(--brand-orange);
+            color: #fff;
+        }
+        .resource-card.disabled {
+            opacity: 0.55;
+        }
+
+        .section-heading {
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--brand-blue);
+            margin: 1.75rem 0 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .section-heading i { color: var(--brand-orange); }
+
+        /* ADMIN SETTINGS EDITOR (matches the remark-editor pattern used elsewhere) */
+        .settings-panel {
+            border: 1px solid #d8dde3;
+            border-radius: 0.6rem;
+            background: #fbfbfc;
+            margin-top: 1.5rem;
+        }
+        .settings-panel summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 0.75rem 1rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--brand-blue);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .settings-panel summary::-webkit-details-marker { display: none; }
+        .settings-panel-body {
+            padding: 0 1rem 1rem;
+            border-top: 1px dashed #e2e6ea;
+        }
+        .settings-panel-body .form-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--brand-blue);
+            margin-top: 0.6rem;
+            margin-bottom: 0.2rem;
+        }
+        .settings-panel-body .form-control,
+        .settings-panel-body .form-select {
+            font-size: 0.85rem;
+        }
+        .settings-panel-body .form-text { font-size: 0.72rem; }
+
+        .simple-footer {
+            background-color: #fff;
+            border-top: 1px solid #e9ecef;
+            text-align: center;
+            padding: 1.5rem 0;
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: auto;
+        }
+
+        @media (max-width: 768px) {
+            .container-main { padding: 1.25rem; margin: 1rem auto; border-radius: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <h5 class="logo mb-0">{{ school_info.name|default:"KwikSchools" }}</h5>
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-muted small d-none d-md-block">User: <strong>{{ user.username }}</strong></span>
+            <button type="button" class="btn btn-outline-primary btn-sm px-3" onclick="window.location.href='/dashboard/'">
+                Dashboard
+            </button>
+        </div>
+    </header>
+
+    <main class="container-main">
+        <div class="page-intro">
+            <h5 class="mb-1"><i class="bi bi-diagram-3 text-warning"></i> HYBRID INTEGRATION HUB</h5>
+            <p class="text-muted mb-0">Your central shortcut to lesson resources, live classes, and connected platforms.</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- ROLE TABS: only the sections relevant to this user render at all -->
+        <ul class="nav role-nav" id="hubTabs" role="tablist">
+            {% if student_resources %}
+            <li class="nav-item">
+                <button class="nav-link {% if is_student and not is_school_admin %}active{% endif %}"
+                        id="tab-student" data-bs-toggle="tab" data-bs-target="#pane-student" type="button">
+                    <i class="bi bi-mortarboard"></i> For Students
+                </button>
+            </li>
+            {% endif %}
+            {% if teacher_resources %}
+            <li class="nav-item">
+                <button class="nav-link {% if is_teacher and not is_school_admin and not is_student %}active{% endif %} {% if not student_resources and not is_school_admin %}active{% endif %}"
+                        id="tab-teacher" data-bs-toggle="tab" data-bs-target="#pane-teacher" type="button">
+                    <i class="bi bi-person-workspace"></i> For Teachers
+                </button>
+            </li>
+            {% endif %}
+            {% if school_resources %}
+            <li class="nav-item">
+                <button class="nav-link {% if is_school_admin %}active{% endif %}"
+                        id="tab-school" data-bs-toggle="tab" data-bs-target="#pane-school" type="button">
+                    <i class="bi bi-building"></i> For School Admin
+                </button>
+            </li>
+            {% endif %}
+        </ul>
+
+        <div class="tab-content mt-2">
+
+            {% if student_resources %}
+            <div class="tab-pane fade {% if is_student and not is_school_admin %}show active{% endif %}" id="pane-student" role="tabpanel">
+                <div class="section-heading"><i class="bi bi-mortarboard"></i> Student Resources</div>
+                <div class="row g-3">
+                    {% for item in student_resources %}
+                    <div class="col-12 col-sm-6 col-lg-4">
+                        <div class="resource-card h-100 {% if not item.url %}disabled{% endif %}">
+                            <div class="resource-icon"><i class="bi {{ item.icon }}"></i></div>
+                            <div class="resource-title">{{ item.title }}</div>
+                            <div class="resource-desc">{{ item.description }}</div>
+                            {% if item.url %}
+                                <a href="{{ item.url }}" class="btn {% if item.external %}btn-outline-primary{% else %}btn-primary{% endif %}"
+                                   {% if item.external %}target="_blank" rel="noopener noreferrer"{% endif %}>
+                                    {% if item.external %}Sign In <i class="bi bi-box-arrow-up-right"></i>{% else %}Open{% endif %}
+                                </a>
+                            {% else %}
+                                <button class="btn btn-outline-secondary" disabled>Coming Soon</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if teacher_resources %}
+            <div class="tab-pane fade {% if is_teacher and not is_school_admin and not is_student %}show active{% endif %} {% if not student_resources and not is_school_admin %}show active{% endif %}" id="pane-teacher" role="tabpanel">
+                <div class="section-heading"><i class="bi bi-person-workspace"></i> Teacher Resources</div>
+                <div class="row g-3">
+                    {% for item in teacher_resources %}
+                    <div class="col-12 col-sm-6 col-lg-4">
+                        <div class="resource-card h-100 {% if not item.url %}disabled{% endif %}">
+                            <div class="resource-icon"><i class="bi {{ item.icon }}"></i></div>
+                            <div class="resource-title">{{ item.title }}</div>
+                            <div class="resource-desc">{{ item.description }}</div>
+                            {% if item.url %}
+                                <a href="{{ item.url }}" class="btn {% if item.external %}btn-outline-primary{% else %}btn-primary{% endif %}"
+                                   {% if item.external %}target="_blank" rel="noopener noreferrer"{% endif %}>
+                                    {% if item.external %}Sign In <i class="bi bi-box-arrow-up-right"></i>{% else %}Open{% endif %}
+                                </a>
+                            {% else %}
+                                <button class="btn btn-outline-secondary" disabled>Coming Soon</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if school_resources %}
+            <div class="tab-pane fade {% if is_school_admin %}show active{% endif %}" id="pane-school" role="tabpanel">
+                <div class="section-heading"><i class="bi bi-building"></i> School Administration</div>
+                <div class="row g-3">
+                    {% for item in school_resources %}
+                    <div class="col-12 col-sm-6 col-lg-4">
+                        <div class="resource-card h-100 {% if not item.url %}disabled{% endif %}">
+                            <div class="resource-icon"><i class="bi {{ item.icon }}"></i></div>
+                            <div class="resource-title">{{ item.title }}</div>
+                            <div class="resource-desc">{{ item.description }}</div>
+                            {% if item.url %}
+                                <a href="{{ item.url }}" class="btn {% if item.external %}btn-outline-primary{% else %}btn-primary{% endif %}"
+                                   {% if item.external %}target="_blank" rel="noopener noreferrer"{% endif %}>
+                                    {% if item.external %}Open <i class="bi bi-box-arrow-up-right"></i>{% else %}Open{% endif %}
+                                </a>
+                            {% else %}
+                                <button class="btn btn-outline-secondary" disabled>Coming Soon</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- ADMIN-ONLY: edit the external integration links inline -->
+                <details class="settings-panel">
+                    <summary><i class="bi bi-gear"></i> Integration Settings — Edit Links</summary>
+                    <div class="settings-panel-body">
+                        <form method="post" action="{% url 'pages:hybrid_integration_settings_update' %}">
+                            {% csrf_token %}
+
+                            <h6 class="mt-3" style="font-size:0.85rem; color:var(--brand-orange);">Google for Education</h6>
+                            <label class="form-label">Google Classroom Sign-in URL</label>
+                            <input type="url" name="google_classroom_url" class="form-control"
+                                   value="{{ integration_settings.google_classroom_url }}">
+
+                            <label class="form-label">Google Meet URL</label>
+                            <input type="url" name="google_meet_url" class="form-control"
+                                   value="{{ integration_settings.google_meet_url }}">
+
+                            <label class="form-label">Google Workspace Admin Console URL</label>
+                            <input type="url" name="google_workspace_admin_url" class="form-control"
+                                   value="{{ integration_settings.google_workspace_admin_url }}">
+
+                            <h6 class="mt-3" style="font-size:0.85rem; color:var(--brand-orange);">Microsoft Teams for Education</h6>
+                            <label class="form-label">Microsoft Teams Sign-in URL</label>
+                            <input type="url" name="microsoft_teams_url" class="form-control"
+                                   value="{{ integration_settings.microsoft_teams_url }}">
+
+                            <label class="form-label">Microsoft 365 Admin Center URL</label>
+                            <input type="url" name="microsoft_365_admin_url" class="form-control"
+                                   value="{{ integration_settings.microsoft_365_admin_url }}">
+
+                            <h6 class="mt-3" style="font-size:0.85rem; color:var(--brand-orange);">Bulk SMS</h6>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="bulk_sms_enabled" id="bulkSmsEnabled"
+                                       {% if integration_settings.bulk_sms_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="bulkSmsEnabled" style="font-size:0.82rem;">
+                                    Enable Bulk SMS tile for admins/teachers
+                                </label>
+                            </div>
+                            <label class="form-label">Provider Name</label>
+                            <input type="text" name="bulk_sms_provider_name" class="form-control"
+                                   placeholder="e.g. Termii, KudiSMS, Africa's Talking"
+                                   value="{{ integration_settings.bulk_sms_provider_name }}">
+
+                            <label class="form-label">Provider Dashboard URL (optional)</label>
+                            <input type="url" name="bulk_sms_provider_url" class="form-control"
+                                   value="{{ integration_settings.bulk_sms_provider_url }}">
+                            <div class="form-text text-muted">
+                                Leave blank to use your internal Bulk SMS / Communication Center page instead.
+                            </div>
+
+                            <h6 class="mt-3" style="font-size:0.85rem; color:var(--brand-orange);">Other</h6>
+                            <label class="form-label">Zoom URL (optional)</label>
+                            <input type="url" name="zoom_url" class="form-control"
+                                   value="{{ integration_settings.zoom_url }}">
+
+                            <button type="submit" class="btn btn-primary mt-3">Save Integration Settings</button>
+                        </form>
+                    </div>
+                </details>
+            </div>
+            {% endif %}
+
+            {% if not student_resources and not teacher_resources and not school_resources %}
+                <div class="alert alert-warning mt-3">
+                    No hybrid integration resources are available for your account yet.
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <footer class="simple-footer">
+        <p class="mb-0">&copy; {% now "Y" %} KwikSchools EdTech</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

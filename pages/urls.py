@@ -32,8 +32,31 @@ urlpatterns = [
      
      path('performance/', page_views.PerformanceDashboardView.as_view(), name='performance_dashboard'),
 
+     path('hybrid-integration/', page_views.HybridIntegrationHubView.as_view(), name='hybrid_integration_hub'),
+     path('hybrid-integration/settings/update/', page_views.HybridIntegrationSettingsUpdateView.as_view(),
+         name='hybrid_integration_settings_update'),
+
 
 
      # path('<str:pk>/', views.StudentCardDetailView.as_view(), name='my_idcard'),
 
 ]
+
+# ----------------------------------------------------------------------------
+# 3) urls.py
+# ----------------------------------------------------------------------------
+#
+# from django.urls import path
+# from .views import HybridIntegrationHubView, HybridIntegrationSettingsUpdateView
+#
+# app_name = 'core'  # ⚠️ VERIFY — match whatever namespace you register this app under
+#
+# urlpatterns = [
+#     ...
+#     path('hybrid-integration/', HybridIntegrationHubView.as_view(), name='hybrid_integration_hub'),
+#     path('hybrid-integration/settings/update/', HybridIntegrationSettingsUpdateView.as_view(),
+#          name='hybrid_integration_settings_update'),
+# ]
+#
+# Don't forget: python manage.py makemigrations && python manage.py migrate
+# after adding HybridIntegrationSettings to models.py.

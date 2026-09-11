@@ -701,3 +701,220 @@ class PerformanceDashboardView(View):
             ctx['children_data'] = []
 
         return ctx
+
+
+
+
+
+# ----------------------------------------------------------------------------
+# 2) views.py
+# ----------------------------------------------------------------------------
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import redirect, render
+from django.urls import NoReverseMatch, reverse
+from django.views import View
+
+from .models import HybridIntegrationSettings  # adjust import path
+
+
+def _safe_reverse(url_name, default=None):
+    """
+    Resolves an internal URL name if it exists in this deployment;
+    otherwise returns `default` (None) so the calling code can mark the
+    tile as "not yet available" instead of the page throwing a 500
+    because an app's URL names differ from what's assumed here.
+    """
+    try:
+        return reverse(url_name)
+    except NoReverseMatch:
+        return default
+
+
+class HybridIntegrationHubView(LoginRequiredMixin, View):
+    """
+    Central 'Hybrid Integration' hub. Surfaces role-appropriate shortcuts
+    to internal KwikSchools resources (lesson notes, live classes,
+    downloadable materials, bulk SMS/communication center) and external
+    EdTech platforms (Google for Education, Microsoft Teams for
+    Education), segregated into Student / Teacher / School sections.
+    School admins (superuser/staff) see all three sections plus a
+    settings panel to edit the external links inline.
+    """
+    template_name = 'pages/hybrid_integration_hub.html'
+
+    def get(self, request, *args, **kwargs):
+        integration_settings = HybridIntegrationSettings.get_solo()
+
+        is_school_admin = request.user.is_superuser or request.user.is_staff
+        is_teacher = hasattr(request.user, 'teacher')
+        is_student = hasattr(request.user, 'student')
+
+        # ---------------- STUDENT RESOURCES ----------------
+        student_resources = [
+            {
+                'title': 'Lesson Notes',
+                'description': 'Browse notes, PDFs, and materials uploaded by your teachers.',
+                'icon': 'bi-journal-text',
+                'url': _safe_reverse('elearning:student_notes_list'),   # ⚠️ VERIFY url name
+                'external': False,
+            },
+            {
+                'title': 'Live Classes',
+                'description': 'Join scheduled live classes for your subjects.',
+                'icon': 'bi-camera-video',
+                'url': _safe_reverse('elearning:live_classes_list'),    # ⚠️ VERIFY url name
+                'external': False,
+            },
+            {
+                'title': 'Downloadable Materials',
+                'description': 'Download assignments, videos, and study resources.',
+                'icon': 'bi-cloud-download',
+                'url': _safe_reverse('elearning:materials_list'),       # ⚠️ VERIFY url name
+                'external': False,
+            },
+            {
+                'title': 'Google Classroom',
+                'description': "Sign in with your school Google account to access Classroom.",
+                'icon': 'bi-google',
+                'url': integration_settings.google_classroom_url,
+                'external': True,
+            },
+            {
+                'title': 'Microsoft Teams',
+                'description': 'Sign in to Microsoft Teams for Education.',
+                'icon': 'bi-microsoft',
+                'url': integration_settings.microsoft_teams_url,
+                'external': True,
+            },
+        ]
+
+        # ---------------- TEACHER RESOURCES ----------------
+        teacher_resources = [
+            {
+                'title': 'Upload Lesson Notes',
+                'description': 'Post notes, PDFs, and assignments for your classes.',
+                'icon': 'bi-journal-plus',
+                'url': _safe_reverse('elearning:teacher_notes_manage'),        # ⚠️ VERIFY url name
+                'external': False,
+            },
+            {
+                'title': 'Manage Live Classes',
+                'description': 'Schedule or start a live class session.',
+                'icon': 'bi-broadcast',
+                'url': _safe_reverse('elearning:teacher_live_class_manage'),   # ⚠️ VERIFY url name
+                'external': False,
+            },
+            {
+                'title': 'Grade Submissions',
+                'description': 'Review and grade student assignment submissions.',
+                'icon': 'bi-check2-square',
+                'url': _safe_reverse('elearning:submissions_list'),            # ⚠️ VERIFY url name
+                'external': False,
+            },
+            {
+                'title': 'Google Classroom',
+                'description': 'Sign in to manage your Google Classroom classes.',
+                'icon': 'bi-google',
+                'url': integration_settings.google_classroom_url,
+                'external': True,
+            },
+            {
+                'title': 'Microsoft Teams',
+                'description': 'Sign in to Microsoft Teams for Education.',
+                'icon': 'bi-microsoft',
+                'url': integration_settings.microsoft_teams_url,
+                'external': True,
+            },
+        ]
+        if integration_settings.bulk_sms_enabled:
+            teacher_resources.append({
+                'title': 'Send Bulk SMS',
+                'description': f"Message parents/students via {integration_settings.bulk_sms_provider_name or 'your SMS provider'}.",
+                'icon': 'bi-chat-dots',
+                'url': integration_settings.bulk_sms_provider_url or _safe_reverse('communication:bulk_sms_dashboard'),  # ⚠️ VERIFY url name
+                'external': bool(integration_settings.bulk_sms_provider_url),
+            })
+
+        # ---------------- SCHOOL (ADMIN) RESOURCES ----------------
+        school_resources = [
+            {
+                'title': 'Bulk SMS / Communication Center',
+                'description': 'Send announcements and bulk SMS to parents, teachers, and students.',
+                'icon': 'bi-megaphone',
+                'url': integration_settings.bulk_sms_provider_url or _safe_reverse('communication:bulk_sms_dashboard'),  # ⚠️ VERIFY url name
+                'external': bool(integration_settings.bulk_sms_provider_url),
+            },
+            {
+                'title': 'Google Workspace Admin',
+                'description': "Manage your school's Google for Education domain.",
+                'icon': 'bi-google',
+                'url': integration_settings.google_workspace_admin_url or 'https://admin.google.com/',
+                'external': True,
+            },
+            {
+                'title': 'Microsoft 365 Admin Center',
+                'description': "Manage your school's Microsoft Teams for Education tenant.",
+                'icon': 'bi-microsoft',
+                'url': integration_settings.microsoft_365_admin_url or 'https://admin.microsoft.com/',
+                'external': True,
+            },
+            {
+                'title': 'E-Learning Overview',
+                'description': 'Monitor lesson notes, materials, and live class activity school-wide.',
+                'icon': 'bi-mortarboard',
+                'url': _safe_reverse('elearning:admin_dashboard'),   # ⚠️ VERIFY url name
+                'external': False,
+            },
+        ]
+
+        context = {
+            'is_school_admin': is_school_admin,
+            'is_teacher': is_teacher,
+            'is_student': is_student,
+            'student_resources': student_resources if (is_student or is_school_admin) else [],
+            'teacher_resources': teacher_resources if (is_teacher or is_school_admin) else [],
+            'school_resources': school_resources if is_school_admin else [],
+            'integration_settings': integration_settings,
+        }
+        return render(request, self.template_name, context)
+
+
+class HybridIntegrationSettingsUpdateView(LoginRequiredMixin, View):
+    """
+    Lets school admins (superuser/staff) update the external integration
+    links directly from the hub page, instead of going through /admin/.
+    """
+
+    def post(self, request, *args, **kwargs):
+        if not (request.user.is_superuser or request.user.is_staff):
+            messages.error(request, "You are not authorized to update integration settings.")
+            return redirect('pages:hybrid_integration_hub')  # ⚠️ VERIFY url name
+
+        integration_settings = HybridIntegrationSettings.get_solo()
+
+        integration_settings.google_classroom_url = request.POST.get(
+            'google_classroom_url', integration_settings.google_classroom_url).strip()
+        integration_settings.google_meet_url = request.POST.get(
+            'google_meet_url', integration_settings.google_meet_url).strip()
+        integration_settings.google_workspace_admin_url = request.POST.get(
+            'google_workspace_admin_url', integration_settings.google_workspace_admin_url).strip()
+
+        integration_settings.microsoft_teams_url = request.POST.get(
+            'microsoft_teams_url', integration_settings.microsoft_teams_url).strip()
+        integration_settings.microsoft_365_admin_url = request.POST.get(
+            'microsoft_365_admin_url', integration_settings.microsoft_365_admin_url).strip()
+
+        integration_settings.bulk_sms_enabled = request.POST.get('bulk_sms_enabled') == 'on'
+        integration_settings.bulk_sms_provider_name = request.POST.get(
+            'bulk_sms_provider_name', integration_settings.bulk_sms_provider_name).strip()
+        integration_settings.bulk_sms_provider_url = request.POST.get(
+            'bulk_sms_provider_url', integration_settings.bulk_sms_provider_url).strip()
+
+        integration_settings.zoom_url = request.POST.get('zoom_url', integration_settings.zoom_url).strip()
+
+        integration_settings.updated_by = request.user
+        integration_settings.save()
+
+        messages.success(request, "Integration settings updated successfully.")
+        return redirect('pages:hybrid_integration_hub')  # ⚠️ VERIFY url name
