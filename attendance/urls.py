@@ -1,12 +1,20 @@
 from django.urls import path
 from . import views
-
+from .views_import import AttendanceCSVImportView
 
 
 
 app_name ='attendance'
 
 urlpatterns = [
+        # attendance/urls.py
+    # ... your existing patterns ...
+        # attendance/urls.py
+    # ... your existing patterns ...
+    path('import-csv/',
+        AttendanceCSVImportView.as_view(),
+        name='import_csv'),
+
     path('take-attendance/', views.take_daily_attendance, name='take_daily_attendance'),
     path('attendance-report/', views.attendance_report, name='attendance_report'),
     
@@ -29,6 +37,13 @@ urlpatterns = [
   # ATTENDANCE SCANNING
     path('scanner/', views.attendance_scanner_view, name='attendance_scanner'),
     path('scan/<str:usn>/', views.scan_attendance_ajax, name='scan_attendance_ajax'),
+
+    # # attendance/urls.py
+    # # ... your existing patterns ...
+    # path('import-csv/',
+    #     views.AttendanceCSVImportView.as_view(),
+    #     name='import_csv'),
+
 
 
 ]

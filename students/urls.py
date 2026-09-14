@@ -7,11 +7,14 @@ from .views import (
     download_sample_csv,
     ajax_validate_csv_headers,
 )
-
+from .views_export import StudentCSVExportView
 
 app_name ='students'
 
 urlpatterns = [
+    path('export-for-attendance/',
+        StudentCSVExportView.as_view(),
+        name='export_for_attendance'),
   
     path('student_list/', students_views.student_list, name='student-list'),
     path('parent-dashboard/', students_views.parent_dashboard, name='parent-dashboard'),
@@ -77,6 +80,10 @@ urlpatterns = [
     # path('<str:id>/update/', StudentUpdateView.as_view(), name="student-update"),
     path('<str:id>/delete/', StudentDeleteView.as_view(), name="student-delete"), 
     path('<str:id>/', MyTeacherDetailView.as_view(), name="my-teacher-detail"),
+
+    # path('export-for-attendance/',
+    #     StudentCSVExportView.as_view(),
+    #     name='export_for_attendance'),
 
 
     # path('progress/', students_views.class_progress, name='my_class_progress'),           # student's own

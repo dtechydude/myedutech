@@ -454,6 +454,7 @@
 							<li><a href="{% url 'students:parent-dashboard' %}">PARENTS DASHBOARD</a></li>
 							<li><a href="{% url 'students:graduate_students' %}">Move Students To Alumni</a></li>
 							<li><a href="{% url 'students:alumni_list' %}">GRADUATE/ALUMNI List</a></li>
+
 							
 							{% elif user.teacher %}		
 							<li><a href="{% url 'students:student-list' %}">My Students</a></li>
@@ -485,14 +486,24 @@
 						</a>
 						<ul aria-expanded="false">
 							{% if user.is_superuser or user.is_staff %}
-							<li><a href="/admin/attendance/attendance/" target="_blank">Take Attendance-MANUAL</a></li>
+							<li><a href="/admin/attendance/attendance/" target="_blank"><i class="fas fa-book" aria-hidden="true"></i>T<span></span>Take Attendance-MANUAL</span></a></li>
 							<li><a href="{% url 'attendance:attendance_scanner' %}"><i class="fas fa-qrcode"></i><span>Take Attendance-SCANNING</span></a></li>
 							<li><a href="{% url 'attendance:attendance_summary_class_bulk' %}"><i class="fas fa-book"></i><span>Custom Attendance Entry</span></a></li>
+							<li><a href="#"><i class="fas fa-book"></i><span> Send Attendance + SMS</span></a></li>
+							<li><a href="#"><i class="fas fa-book"></i><span> Send Attendance + SMS</span></a></li>
+							<li><a href="{% url 'students:export_for_attendance' %}"><i class="fas fa-upload" aria-hidden="true"></i><span>Export For Attendance </span></a></li>
+							<li><a href="{% url 'attendance:import_csv' %}"><i class="fas fa-file-import"></i><span>Import To Attendance </span></a></li>
+
+
+
+
 
 							{% elif user.teacher %}
 							<li><a href="{% url 'attendance:take_daily_attendance' %}">Mark STUDENT Attendance</a></li>
 							<li><a href="{% url 'staff:teacher_self_attendance' %}">MY ATTENDANCE</a></li>
 							<li><a href="{% url 'attendance:attendance_summary_class_bulk' %}"><i class="fas fa-book"></i><span>Custom Attendance Entry</span></a></li>
+							<li><a href="#"><i class="fas fa-export"></i><span> Send Attendance + SMS</span></a></li>
+
 
 							{% endif %}							
 							<li><a href="{% url 'attendance:attendance_report' %}">STUDENT Attendance Report</a></li>

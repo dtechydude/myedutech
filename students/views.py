@@ -1396,3 +1396,5 @@ def class_progress(request, student_id=None):
         'is_staff_view': user.is_superuser or user.groups.filter(name__in=['Admin', 'Teacher']).exists(),
     }
     return render(request, 'students/class_progress.html', context)
+
+
