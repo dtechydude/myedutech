@@ -486,7 +486,7 @@
 						</a>
 						<ul aria-expanded="false">
 							{% if user.is_superuser or user.is_staff %}
-							<li><a href="/admin/attendance/attendance/" target="_blank"><i class="fas fa-book" aria-hidden="true"></i>T<span></span>Take Attendance-MANUAL</span></a></li>
+							<li><a href="/admin/attendance/attendance/" target="_blank"><i class="fas fa-book" aria-hidden="true"></i><span>Take Attendance-MANUAL</span></a></li>
 							<li><a href="{% url 'attendance:attendance_scanner' %}"><i class="fas fa-qrcode"></i><span>Take Attendance-SCANNING</span></a></li>
 							<li><a href="{% url 'attendance:attendance_summary_class_bulk' %}"><i class="fas fa-book"></i><span>Custom Attendance Entry</span></a></li>
 							<li><a href="#"><i class="fas fa-book"></i><span> Send Attendance + SMS</span></a></li>

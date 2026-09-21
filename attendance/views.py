@@ -82,7 +82,7 @@ def take_daily_attendance(request):
             'selected_date': selected_date, 'teacher': teacher,
         })
 
-    students = Student.objects.filter(form_teacher=teacher).order_by('first_name', 'last_name')
+    students = Student.objects.filter(form_teacher=teacher).order_by('last_name', 'first_name')
 
     # READ existing records for display only — never writes.
     existing = {
