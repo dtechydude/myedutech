@@ -26,7 +26,6 @@ class Attendance(models.Model):
 
 
 
-
 # Attendance Configuration
 class AttendanceConfiguration(models.Model):
     """
