@@ -1,0 +1,8 @@
+{# usage: {% include "studentstatus/_status_badge.html" with status=student.student_status label=student.get_student_status_display %} #}
+{% if status == 'active' %}<span class="badge bg-success">{{ label|capfirst }}</span>
+{% elif status == 'inactive' %}<span class="badge bg-secondary">{{ label|capfirst }}</span>
+{% elif status == 'suspended' %}<span class="badge bg-warning text-dark">{{ label|capfirst }}</span>
+{% elif status == 'dropped' %}<span class="badge bg-dark">{{ label|capfirst }}</span>
+{% elif status == 'expelled' %}<span class="badge bg-danger">{{ label|capfirst }}</span>
+{% elif status == 'graduated' %}<span class="badge bg-info text-dark">{{ label|capfirst }}</span>
+{% else %}<span class="badge bg-light text-dark border">{{ label|capfirst }}</span>{% endif %}

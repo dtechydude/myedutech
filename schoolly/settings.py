@@ -56,6 +56,8 @@ INSTALLED_APPS = [
     'finance.apps.FinanceConfig',
     'elearning.apps.ElearningConfig',
     'inventory.apps.InventoryConfig',
+    'studentstatus.apps.StudentstatusConfig',
+
 
 
 
@@ -85,6 +87,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'studentstatus.middleware.StudentStatusAccessMiddleware',  # must come AFTER Auth + Messages
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -145,6 +148,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'studentstatus.backends.StudentStatusGuardBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/

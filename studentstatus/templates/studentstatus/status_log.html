@@ -1,0 +1,41 @@
+{% extends "studentstatus/base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h4 class="mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i>Status Change Log</h4>
+    <a href="{% url 'studentstatus:list' %}" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-arrow-left me-1"></i> Student list</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-md-6"><input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search student, USN, admin or reason"></div>
+            <div class="col-md-2"><button class="btn btn-outline-primary w-100" type="submit"><i class="fa-solid fa-filter me-1"></i> Filter</button></div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead><tr><th>Date</th><th>Student</th><th>Change</th><th>Reason</th><th>By</th><th>IP</th></tr></thead>
+                <tbody>
+                {% for log in logs %}
+                    <tr>
+                        <td class="text-nowrap">{{ log.changed_at|date:"d M Y, H:i" }}</td>
+                        <td>
+                            {% if log.student_id %}<a href="{% url 'studentstatus:change' log.student_id %}">{{ log.student_name }}</a>{% else %}{{ log.student_name }}{% endif %}
+                            <div class="small text-muted">{{ log.student_usn }}</div>
+                        </td>
+                        <td class="text-nowrap">{{ log.get_old_status_display }} → {{ log.get_new_status_display }}</td>
+                        <td>{{ log.reason|default:"—" }}</td>
+                        <td>{{ log.changed_by_name|default:"—" }}</td>
+                        <td class="text-muted small">{{ log.ip_address|default:"—" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">No status changes recorded.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% include "studentstatus/_pagination.html" %}
+    </div>
+</div>
+{% endblock %}

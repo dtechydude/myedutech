@@ -1,0 +1,65 @@
+{% extends "studentstatus/base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h4 class="mb-0"><i class="fa-solid fa-user-shield me-2"></i>Student Status</h4>
+    <a href="{% url 'studentstatus:log' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fa-solid fa-clock-rotate-left me-1"></i> Change log
+    </a>
+</div>
+
+<div class="row g-2 mb-3">
+    {% for c in status_counts %}
+    <div class="col-6 col-md-4 col-xl-2">
+        <a href="?status={{ c.status }}" class="text-decoration-none text-reset">
+            <div class="card h-100 {% if c.selected %}border-primary{% endif %}">
+                <div class="card-body py-2 text-center">
+                    <div class="fs-4 fw-semibold">{{ c.count }}</div>
+                    <div class="small text-muted">{{ c.label }}</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-md-4">{{ filter_form.q }}</div>
+            <div class="col-md-3">{{ filter_form.status }}</div>
+            <div class="col-md-3">{{ filter_form.standard }}</div>
+            <div class="col-md-2 d-flex gap-2">
+                <button class="btn btn-outline-primary flex-fill" type="submit"><i class="fa-solid fa-filter me-1"></i> Filter</button>
+                <a href="{% url 'studentstatus:list' %}" class="btn btn-outline-secondary" title="Clear filters"><i class="fa-solid fa-xmark"></i></a>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr><th>Student</th><th>USN</th><th>Class</th><th>Status</th><th class="text-end">Action</th></tr>
+                </thead>
+                <tbody>
+                {% for s in students %}
+                    <tr>
+                        <td>{{ s.get_full_name }}</td>
+                        <td>{{ s.USN }}</td>
+                        <td>{{ s.current_class|default_if_none:"—" }}</td>
+                        <td>{% include "studentstatus/_status_badge.html" with status=s.student_status label=s.get_student_status_display %}</td>
+                        <td class="text-end">
+                            <a href="{% url 'studentstatus:change' s.pk %}" class="btn btn-sm btn-outline-primary">
+                                {% if s.student_status == 'graduated' %}View{% else %}Manage{% endif %}
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">No students found.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% include "studentstatus/_pagination.html" %}
+    </div>
+</div>
+{% endblock %}

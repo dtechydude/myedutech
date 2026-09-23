@@ -1,0 +1,94 @@
+{% extends "studentstatus/base.html" %}
+{% block content %}
+<div class="mb-3">
+    <a href="{% url 'studentstatus:list' %}" class="text-decoration-none"><i class="fa-solid fa-arrow-left me-1"></i> Back to student list</a>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title mb-3">{{ student.get_full_name }}</h5>
+                <dl class="row mb-0">
+                    <dt class="col-5">USN</dt><dd class="col-7">{{ student.USN }}</dd>
+                    <dt class="col-5">Class</dt><dd class="col-7">{{ student.current_class|default_if_none:"—" }}</dd>
+                    <dt class="col-5">Status</dt>
+                    <dd class="col-7">{% include "studentstatus/_status_badge.html" with status=student.student_status label=status_label %}</dd>
+                    <dt class="col-5">Portal login</dt>
+                    <dd class="col-7">{% if is_login_blocked %}<span class="text-danger fw-semibold">Blocked</span>{% else %}<span class="text-success fw-semibold">Allowed</span>{% endif %}</dd>
+                </dl>
+                {% if is_login_blocked %}
+                <div class="small text-muted mt-3">The student sees: “{{ block_message }}”</div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if is_protected %}
+        <div class="alert alert-info mb-0">
+            <i class="fa-solid fa-graduation-cap me-1"></i>
+            This student has graduated. Graduation and alumni records are managed in the graduation module,
+            so the status cannot be changed here. Portal login stays disabled.
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Change status</h6>
+                <form method="post" onsubmit="return confirmStatusChange(this);">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger py-2">{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ form.new_status.id_for_label }}">{{ form.new_status.label }}</label>
+                        {{ form.new_status }}
+                        {% for e in form.new_status.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ form.reason.id_for_label }}">{{ form.reason.label }}</label>
+                        {{ form.reason }}
+                        <div class="form-text">Required for every status except Active. Saved in the audit log.</div>
+                        {% for e in form.reason.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-1"></i> Save status</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Status history</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead><tr><th>Date</th><th>Change</th><th>Reason</th><th>By</th></tr></thead>
+                        <tbody>
+                        {% for log in history %}
+                            <tr>
+                                <td class="text-nowrap">{{ log.changed_at|date:"d M Y, H:i" }}</td>
+                                <td class="text-nowrap">{{ log.get_old_status_display }} → {{ log.get_new_status_display }}</td>
+                                <td>{{ log.reason|default:"—" }}</td>
+                                <td>{{ log.changed_by_name|default:"—" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted py-3">No status changes recorded yet.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmStatusChange(form) {
+    var select = form.querySelector('[name="new_status"]');
+    if (!select || select.value === 'active') { return true; }
+    var label = select.options[select.selectedIndex].text;
+    return confirm('Mark this student as ' + label + '?\n\nThey will be logged out immediately and cannot sign in until the status is set back to Active.');
+}
+</script>
+{% endblock %}

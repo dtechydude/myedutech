@@ -28,6 +28,7 @@ urlpatterns = [
     path('finance/', include('finance.urls', namespace='finance')),
     path('elearning/', include('elearning.urls', namespace='elearning')),
     path('inventory/', include('inventory.urls', namespace='inventory')),
+    path('student-status/', include('studentstatus.urls')),
 
 
 
