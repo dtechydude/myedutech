@@ -803,6 +803,46 @@ def make_parent_payment(request):
     return render(request, 'finance/parent_payment_form.html', context)
 
 
+# class PaymentListView(LoginRequiredMixin, ListView):
+#     model = Payment
+#     template_name = 'finance/payment_list.html'
+#     context_object_name = 'payments'
+#     paginate_by = 25
+
+#     def get_queryset(self):
+#         user = self.request.user
+#         qs = Payment.objects.filter(status=Payment.Status.COMPLETED).select_related(
+#             'student', 'fee_category', 'term', 'session', 'invoice', 'receipt')
+
+#         if not is_finance_staff(user):
+#             if is_parent(user):
+#                 qs = qs.filter(student__parent=user.parent)
+#             elif is_student_user(user):
+#                 qs = qs.filter(student=user.student)
+#             else:
+#                 qs = qs.none()
+
+#         term_id = self.request.GET.get('term')
+#         session_id = self.request.GET.get('session')
+#         category_id = self.request.GET.get('fee_category')
+#         q = self.request.GET.get('q')
+#         if term_id:
+#             qs = qs.filter(term_id=term_id)
+#         if session_id:
+#             qs = qs.filter(session_id=session_id)
+#         if category_id:
+#             qs = qs.filter(fee_category_id=category_id)
+#         if q and is_finance_staff(user):
+#             qs = qs.filter(Q(student__first_name__icontains=q) | Q(student__last_name__icontains=q) |
+#                             Q(transaction_id__icontains=q))
+#         return qs
+
+#     def get_context_data(self, **kwargs):
+#         ctx = super().get_context_data(**kwargs)
+#         ctx.update(base_template=_base_template_for(self.request.user), title='Payment History',
+#                     terms=Term.objects.all(), sessions=Session.objects.all(),
+#                     categories=FeeCategory.objects.all(), is_finance_staff=is_finance_staff(self.request.user))
+#         return ctx
 class PaymentListView(LoginRequiredMixin, ListView):
     model = Payment
     template_name = 'finance/payment_list.html'
@@ -834,16 +874,20 @@ class PaymentListView(LoginRequiredMixin, ListView):
             qs = qs.filter(fee_category_id=category_id)
         if q and is_finance_staff(user):
             qs = qs.filter(Q(student__first_name__icontains=q) | Q(student__last_name__icontains=q) |
-                            Q(transaction_id__icontains=q))
+                            Q(transaction_id__icontains=q) |
+                            Q(invoice__invoice_number__icontains=q))  # search by invoice number
         return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        # Current filters minus "page", so pagination links keep term/session/search
+        params = self.request.GET.copy()
+        params.pop('page', None)
         ctx.update(base_template=_base_template_for(self.request.user), title='Payment History',
                     terms=Term.objects.all(), sessions=Session.objects.all(),
-                    categories=FeeCategory.objects.all(), is_finance_staff=is_finance_staff(self.request.user))
+                    categories=FeeCategory.objects.all(), is_finance_staff=is_finance_staff(self.request.user),
+                    filter_qs=params.urlencode())
         return ctx
-
 
 @login_required
 def receipt_detail(request, pk):

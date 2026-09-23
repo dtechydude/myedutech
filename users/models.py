@@ -97,6 +97,7 @@ class Profile(models.Model):
         ('Imo', imo),
         ('Jigawa', jigawa),
         ('Kaduna', kaduna),
+        ('Kano', kano),
         ('Katsina', katsina),
         ('Kebbi', kebbi),
         ('Kogi', kogi),

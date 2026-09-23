@@ -4,6 +4,7 @@ from .models import Attendance, Student, AttendanceConfiguration # Assuming Stud
 from django.utils import timezone # For initial date values
 from staff.models import Teacher # Make sure Teacher is imported if form_teacher links to it
 from curriculum.models import Standard
+from .eligibility import attendance_eligible_students  # hides graduated/dropped/expelled/suspended
 # --- Form for taking attendance on a specific date ---
 class AttendanceDateForm(forms.Form):
     # Use DateInput widget for a calendar picker in most browsers
@@ -91,8 +92,8 @@ class AttendanceReportForm(forms.Form):
 
         # 1. Filter Student Field
         if not is_superuser and teacher:
-            self.fields['student'].queryset = Student.objects.filter(
-                form_teacher=teacher
+            self.fields['student'].queryset = attendance_eligible_students(
+                Student.objects.filter(form_teacher=teacher)
             ).order_by('last_name', 'first_name')
             
             # 2. Filter Class Field (Non-Superuser Logic)
@@ -102,7 +103,7 @@ class AttendanceReportForm(forms.Form):
             self.fields['current_class'].queryset = teacher_classes
 
         elif is_superuser:
-            self.fields['student'].queryset = Student.objects.all().order_by('last_name', 'first_name')
+            self.fields['student'].queryset = attendance_eligible_students().order_by('last_name', 'first_name')
             # Superuser gets all classes by default (from field definition)
         else:
             self.fields['student'].queryset = Student.objects.none()

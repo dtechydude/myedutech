@@ -23,6 +23,41 @@ from django.forms import formset_factory
 from .forms import SimpleAttendanceEntryForm
 
 
+# ======================================================
+# ATTENDANCE ELIGIBILITY (by student status)
+# Students who have graduated, dropped out, been expelled or are
+# suspended must not appear in — or be recorded by — any attendance
+# screen. "inactive" students stay visible.
+# ======================================================
+
+# ATTENDANCE_EXCLUDED_STATUSES = ('graduated', 'dropped', 'expelled', 'suspended')
+
+
+# def attendance_eligible_students(queryset=None):
+#     """
+#     Returns only students who can take part in attendance.
+#     Pass an existing Student queryset to narrow it, or nothing to start
+#     from all students. Existing attendance rows are never deleted —
+#     they are simply hidden from the live attendance screens.
+#     """
+#     if queryset is None:
+#         queryset = Student.objects.all()
+#     return queryset.exclude(student_status__in=ATTENDANCE_EXCLUDED_STATUSES)
+
+
+# def is_attendance_eligible(student):
+#     """Single-student check, used by the scan and CSV import flows."""
+#     return student.student_status not in ATTENDANCE_EXCLUDED_STATUSES
+
+
+
+# Attendance eligibility (hides graduated / dropped / expelled / suspended students).
+# Defined in attendance/eligibility.py so forms.py can share it without a circular import.
+from .eligibility import (
+    ATTENDANCE_EXCLUDED_STATUSES,
+    attendance_eligible_students,
+    is_attendance_eligible,
+)
 
 
 # ======================================================
@@ -82,7 +117,9 @@ def take_daily_attendance(request):
             'selected_date': selected_date, 'teacher': teacher,
         })
 
-    students = Student.objects.filter(form_teacher=teacher).order_by('last_name', 'first_name')
+    students = attendance_eligible_students(
+        Student.objects.filter(form_teacher=teacher)
+    ).order_by('last_name', 'first_name')
 
     # READ existing records for display only — never writes.
     existing = {
@@ -95,16 +132,34 @@ def take_daily_attendance(request):
     if request.method == 'POST':
         formset = AttendanceFormSet(request.POST)
         if formset.is_valid():
+            # Only students on this teacher's eligible roster may be saved.
+            allowed_ids = set(students.values_list('id', flat=True))
+            skipped = 0
             with transaction.atomic():
                 for form in formset:
                     student_id = form.cleaned_data['student']
                     present = form.cleaned_data['present']
+                    # Ignore anyone outside the roster (stale page, crafted POST,
+                    # or status changed to graduated/suspended/etc. meanwhile).
+                    try:
+                        if int(student_id) not in allowed_ids:
+                            skipped += 1
+                            continue
+                    except (TypeError, ValueError):
+                        skipped += 1
+                        continue
                     Attendance.objects.update_or_create(
                         student_id=student_id,
                         date=selected_date,
                         defaults={'present': present}
                     )
             messages.success(request, f"Attendance for {selected_date.strftime('%Y-%m-%d')} saved successfully!")
+            if skipped:
+                messages.warning(
+                    request,
+                    f"{skipped} entr{'y was' if skipped == 1 else 'ies were'} ignored because the student "
+                    "is no longer on your active class list."
+                )
             return redirect(f"{request.path}?date={selected_date}")
         else:
             messages.error(request, "There were errors saving attendance. Please check the form.")
@@ -130,7 +185,7 @@ def take_daily_attendance(request):
 
 
 # ATTENDANCE REPORT
-login_required
+@login_required
 def attendance_report(request):
     # ... (initial setup remains unchanged) ...
     current_user = request.user
@@ -178,7 +233,7 @@ def attendance_report(request):
         )
         
         # Determine the base set of students to report on (Teacher/Superuser/Selected Student)
-        students_to_report = Student.objects.all()
+        students_to_report = attendance_eligible_students()
 
         if selected_student:
             students_to_report = students_to_report.filter(pk=selected_student.pk)
@@ -282,7 +337,9 @@ def student_list_view(request):
     
     # 1. Staff/Admin View (See All)
     if user.is_staff:
-        students = Student.objects.select_related('current_class').all().order_by('current_class__name', 'first_name')
+        students = attendance_eligible_students(
+            Student.objects.select_related('current_class')
+        ).order_by('current_class__name', 'first_name')
         title = "All Students Attendance Records"
     
     # 2. Teacher/Student View (Filtered)
@@ -292,7 +349,9 @@ def student_list_view(request):
             teacher_profile = Teacher.objects.get(user=user)
             
             # Filter students where the form_teacher is the logged-in user's Teacher profile
-            students = Student.objects.filter(form_teacher=teacher_profile).select_related('current_class').order_by('current_class__name', 'first_name')
+            students = attendance_eligible_students(
+                Student.objects.filter(form_teacher=teacher_profile).select_related('current_class')
+            ).order_by('current_class__name', 'first_name')
             title = f"Your Assigned Class Attendance"
             
         except Teacher.DoesNotExist:
@@ -569,8 +628,10 @@ def self_attendance_detail(request):
 @login_required
 def attendance_scanner_view(request):
     today = timezone.now().date()
-    total_students = Student.objects.count()
-    present_count = Attendance.objects.filter(date=today, present=True).count()
+    total_students = attendance_eligible_students().count()
+    present_count = Attendance.objects.filter(
+        date=today, present=True
+    ).exclude(student__student_status__in=ATTENDANCE_EXCLUDED_STATUSES).count()
     
     return render(request, 'attendance/attendance_scanner.html', {
         'total_students': total_students,
@@ -590,6 +651,13 @@ def scan_attendance_ajax(request, usn):
         # student = Student.objects.get(USN__iexact=clean_usn)
         student = Student.objects.get(USN__iexact=usn.strip())
         today = timezone.now().date()
+
+        # Graduated / dropped / expelled / suspended students cannot be marked.
+        if not is_attendance_eligible(student):
+            return JsonResponse({
+                'status': 'error',
+                'message': f'{student.get_full_name()} is {student.student_status} and cannot be marked present.'
+            }, status=200)
 
         #new----------------------
         from curriculum.models import Term
@@ -616,7 +684,9 @@ def scan_attendance_ajax(request, usn):
             attendance.save()
 
         # Get updated count for the UI
-        current_present = Attendance.objects.filter(date=today, present=True).count()
+        current_present = Attendance.objects.filter(
+            date=today, present=True
+        ).exclude(student__student_status__in=ATTENDANCE_EXCLUDED_STATUSES).count()
 
         return JsonResponse({
             'status': 'success', 
@@ -744,7 +814,9 @@ def attendance_summary_class_bulk(request):
 
     rows = []
     if standard:
-        students = Student.objects.filter(current_class=standard).order_by('last_name', 'first_name')
+        students = attendance_eligible_students(
+            Student.objects.filter(current_class=standard)
+        ).order_by('last_name', 'first_name')
 
         if request.method == 'POST':
             if not config:
@@ -900,6 +972,7 @@ class AttendanceCSVImportView(View):
         created  = updated = skipped = 0
         warnings = []
         student_cache: dict[str, Student] = {}
+        ineligible_usns: set[str] = set()  # graduated/dropped/expelled/suspended
 
         with transaction.atomic():
             for i, row in enumerate(rows, start=2):
@@ -911,14 +984,30 @@ class AttendanceCSVImportView(View):
                     skipped += 1
                     continue
 
+                # Already known to be ineligible — skip without another query
+                if usn in ineligible_usns:
+                    skipped += 1
+                    continue
+
                 # Resolve student via USN
                 if usn not in student_cache:
                     try:
-                        student_cache[usn] = Student.objects.get(USN=usn)
+                        found = Student.objects.get(USN=usn)
                     except Student.DoesNotExist:
                         warnings.append(f'Row {i}: USN "{usn}" not found — skipped.')
                         skipped += 1
                         continue
+
+                    if not is_attendance_eligible(found):
+                        ineligible_usns.add(usn)
+                        warnings.append(
+                            f'USN "{usn}" ({found.get_full_name()}) is {found.student_status} '
+                            f'— attendance skipped.'
+                        )
+                        skipped += 1
+                        continue
+
+                    student_cache[usn] = found
 
                 student = student_cache[usn]
 

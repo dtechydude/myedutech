@@ -476,8 +476,8 @@
 							{% endif %}					
 						</ul>
 					</li>
-
 					{% endif %}
+					
 					{% if user.is_authenticated and not user.parent %}
 					{% if user.is_superuser or user.is_staff or user.teacher %}
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
@@ -493,9 +493,6 @@
 							<li><a href="#"><i class="fas fa-book"></i><span> Send Attendance + SMS</span></a></li>
 							<li><a href="{% url 'students:export_for_attendance' %}"><i class="fas fa-upload" aria-hidden="true"></i><span>Export For Attendance </span></a></li>
 							<li><a href="{% url 'attendance:import_csv' %}"><i class="fas fa-file-import"></i><span>Import To Attendance </span></a></li>
-
-
-
 
 
 							{% elif user.teacher %}

@@ -85,7 +85,7 @@
     <table class="detail-table">
         <tr><td class="label">Received From</td><td>{{ payment.student.get_full_name }}</td></tr>
         <tr><td class="label">Class</td><td>{{ payment.student.current_class.name|default:"—" }}</td></tr>
-        <tr><td class="label">Payment For</td><td>{{ payment.fee_category.name }}{% if invoice %} — Invoice {{ invoice.invoice_number }}{% endif %}</td></tr>
+        <tr><td class="label">Payment For</td><td>{% if invoice %}{{ invoice.invoice_number }}{% else %}{{ payment.fee_category.name }} (no invoice){% endif %}</td></tr>
         <tr><td class="label">Term / Session</td><td>{{ payment.term }} — {{ payment.session }}</td></tr>
         <tr><td class="label">Payment Method</td><td>{{ payment.get_payment_method_display }}</td></tr>
         <tr><td class="label">Transaction Ref.</td><td>{{ payment.transaction_id }}</td></tr>
