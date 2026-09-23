@@ -198,6 +198,50 @@ class ViewTests(TestCase):
         self.assertEqual(r.context['filter_qs'], 'status=active')
         self.assertContains(r, 'status=active&amp;page=2')
 
+
+        def test_page_numbers_summary_and_footer(self):
+        for i in range(30):
+            make_student(f'pg{i}')
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('studentstatus:list'), {'status': ACTIVE})
+        self.assertContains(r, 'Showing 1–25 of 31 students')
+        self.assertContains(r, 'status=active&amp;page=2')
+        self.assertContains(r, 'Powered by <strong>KwikSchools</strong>')
+        self.assertEqual([i['number'] for i in r.context['page_items']], [1, 2])
+
+    def test_summary_shown_even_with_a_single_page(self):
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('studentstatus:list'))
+        self.assertContains(r, 'Showing 1–1 of 1 students')
+        self.assertNotIn('page_items', r.context)
+
+    def test_per_page_option_and_invalid_value(self):
+        for i in range(14):
+            make_student(f'pp{i}')
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('studentstatus:list'), {'per_page': 10})
+        self.assertEqual(len(r.context['students']), 10)
+        self.assertEqual(r.context['per_page'], 10)
+        for bad in ('7', 'abc', '100000', '-5'):
+            r = self.client.get(reverse('studentstatus:list'), {'per_page': bad})
+            self.assertEqual(r.context['per_page'], 25, bad)
+
+    def test_per_page_survives_paging(self):
+        for i in range(14):
+            make_student(f'pk{i}')
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('studentstatus:list'), {'per_page': 10})
+        self.assertContains(r, 'per_page=10&amp;page=2')
+
+    def test_long_page_range_is_elided(self):
+        for i in range(300):
+            make_student(f'many{i}')
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse('studentstatus:list'), {'per_page': 10, 'page': 15})
+        items = r.context['page_items']
+        self.assertTrue(any(i['gap'] for i in items))
+        self.assertEqual([i['number'] for i in items if i['current']], [15])
+
     def test_post_changes_status_and_logs(self):
         self.client.force_login(self.admin)
         r = self.client.post(self.url, {'new_status': SUSPENDED, 'reason': 'Two-week suspension'})

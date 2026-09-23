@@ -454,6 +454,8 @@
 							<li><a href="{% url 'students:parent-dashboard' %}">PARENTS DASHBOARD</a></li>
 							<li><a href="{% url 'students:graduate_students' %}">Move Students To Alumni</a></li>
 							<li><a href="{% url 'students:alumni_list' %}">GRADUATE/ALUMNI List</a></li>
+							<li><a href="{% url 'studentstatus:list' %}">CHANGE STUDENT STATUS</a></li>
+
 
 							
 							{% elif user.teacher %}		
@@ -477,7 +479,7 @@
 						</ul>
 					</li>
 					{% endif %}
-					
+
 					{% if user.is_authenticated and not user.parent %}
 					{% if user.is_superuser or user.is_staff or user.teacher %}
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
@@ -486,13 +488,13 @@
 						</a>
 						<ul aria-expanded="false">
 							{% if user.is_superuser or user.is_staff %}
-							<li><a href="/admin/attendance/attendance/" target="_blank"><i class="fas fa-book" aria-hidden="true"></i><span>Take Attendance-MANUAL</span></a></li>
-							<li><a href="{% url 'attendance:attendance_scanner' %}"><i class="fas fa-qrcode"></i><span>Take Attendance-SCANNING</span></a></li>
-							<li><a href="{% url 'attendance:attendance_summary_class_bulk' %}"><i class="fas fa-book"></i><span>Custom Attendance Entry</span></a></li>
-							<li><a href="#"><i class="fas fa-book"></i><span> Send Attendance + SMS</span></a></li>
-							<li><a href="#"><i class="fas fa-book"></i><span> Send Attendance + SMS</span></a></li>
-							<li><a href="{% url 'students:export_for_attendance' %}"><i class="fas fa-upload" aria-hidden="true"></i><span>Export For Attendance </span></a></li>
-							<li><a href="{% url 'attendance:import_csv' %}"><i class="fas fa-file-import"></i><span>Import To Attendance </span></a></li>
+							<li><a href="/admin/attendance/attendance/" target="_blank"><span>Take Attendance-MANUAL</span></a></li>
+							<li><a href="{% url 'attendance:attendance_scanner' %}"><span>Take Attendance-SCANNING</span></a></li>
+							<li><a href="{% url 'attendance:attendance_summary_class_bulk' %}"><span>Custom Attendance Entry</span></a></li>
+							<li><a href="#"><span> Send Attendance + SMS</span></a></li>
+							<li><a href="#"><span> Send Attendance + SMS</span></a></li>
+							<li><a href="{% url 'students:export_for_attendance' %}"><span>Export For Attendance </span></a></li>
+							<li><a href="{% url 'attendance:import_csv' %}"><span>Import To Attendance </span></a></li>
 
 
 							{% elif user.teacher %}

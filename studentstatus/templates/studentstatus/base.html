@@ -22,7 +22,10 @@
     {% endblock %}
 
     <style>
-        body { background: #f4f6f9; }
+        {% comment %} body { background: #f4f6f9; } {% endcomment %}
+        body { background: #f4f6f9; min-height: 100vh; display: flex; flex-direction: column; }
+        main { flex: 1 0 auto; }
+        .ss-footer { border-top: 1px solid #dee2e6; background: #fff; }
         .ss-navbar { background: #1f3a5f; }
         .ss-navbar .navbar-brand, .ss-navbar .nav-link { color: #fff; }
         .ss-navbar .nav-link { opacity: .8; }
@@ -56,6 +59,9 @@
 
         {% block content %}{% endblock %}
     </main>
+        <footer class="ss-footer text-center text-muted small py-3">
+        Powered by <strong>KwikSchools</strong>
+    </footer>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

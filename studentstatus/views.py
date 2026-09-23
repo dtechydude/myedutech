@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.views.generic import FormView, ListView
+from django.core.paginator import Paginator
 
 from students.models import Student
 
@@ -23,9 +24,64 @@ def _client_ip(request):
     # Nginx, configure real_ip so REMOTE_ADDR carries the visitor's address.
     return request.META.get('REMOTE_ADDR') or None
 
+# class StatusAdminMixin(LoginRequiredMixin, UserPassesTestMixin):
+#     """Superusers and staff only. Anonymous -> login page, other users -> 403."""
+
+#     def test_func(self):
+#         return is_status_admin(self.request.user)
+
+#     def get_context_data(self, **kwargs):
+#         ctx = super().get_context_data(**kwargs)
+#         params = self.request.GET.copy()
+#         params.pop('page', None)
+#         ctx['filter_qs'] = params.urlencode()  # keeps filters on pagination links
+#         return ctx
+
+# class StudentStatusListView(StatusAdminMixin, ListView):
+#     """Searchable, filterable list of all students with their status."""
+#     template_name = 'studentstatus/status_list.html'
+#     context_object_name = 'students'
+#     paginate_by = 25
+
+#     @cached_property
+#     def filter_form(self):
+#         return StudentStatusFilterForm(self.request.GET or None)
+
+#     def get_queryset(self):
+#         qs = Student.objects.select_related('current_class').order_by('last_name', 'first_name')
+#         form = self.filter_form
+#         if form.is_valid():
+#             data = form.cleaned_data
+#             if data['q']:
+#                 q = data['q']
+#                 qs = qs.filter(
+#                     Q(first_name__icontains=q) | Q(last_name__icontains=q) |
+#                     Q(middle_name__icontains=q) | Q(USN__icontains=q)
+#                 )
+#             if data['status']:
+#                 qs = qs.filter(student_status=data['status'])
+#             if data['standard']:
+#                 qs = qs.filter(current_class=data['standard'])
+#         return qs
+
+#     def get_context_data(self, **kwargs):
+#         ctx = super().get_context_data(**kwargs)
+#         counts = dict(
+#             Student.objects.order_by().values_list('student_status').annotate(n=Count('pk'))
+#         )
+#         selected = self.request.GET.get('status', '')
+#         ctx['filter_form'] = self.filter_form
+#         ctx['status_counts'] = [
+#             {'status': value, 'label': label, 'count': counts.get(value, 0),
+#              'selected': value == selected}
+#             for value, label in STATUS_CHOICES
+#         ]
+#         ctx['title'] = 'Student Status'
+#         return ctx
+
+
 class StatusAdminMixin(LoginRequiredMixin, UserPassesTestMixin):
     """Superusers and staff only. Anonymous -> login page, other users -> 403."""
-
     def test_func(self):
         return is_status_admin(self.request.user)
 
@@ -34,13 +90,32 @@ class StatusAdminMixin(LoginRequiredMixin, UserPassesTestMixin):
         params = self.request.GET.copy()
         params.pop('page', None)
         ctx['filter_qs'] = params.urlencode()  # keeps filters on pagination links
+
+        # Numbered page links with "…" gaps, e.g. 1 … 4 5 [6] 7 8 … 20
+        page_obj = ctx.get('page_obj')
+        if page_obj is not None and ctx.get('is_paginated'):
+            ctx['page_items'] = [
+                {'number': n, 'gap': n == Paginator.ELLIPSIS, 'current': n == page_obj.number}
+                for n in page_obj.paginator.get_elided_page_range(
+                    page_obj.number, on_each_side=2, on_ends=1)
+            ]
         return ctx
+
 
 class StudentStatusListView(StatusAdminMixin, ListView):
     """Searchable, filterable list of all students with their status."""
     template_name = 'studentstatus/status_list.html'
     context_object_name = 'students'
     paginate_by = 25
+    per_page_options = (10, 25, 50, 100)
+
+    def get_paginate_by(self, queryset):
+        """Rows per page from ?per_page=, limited to the allowed options."""
+        try:
+            per_page = int(self.request.GET.get('per_page', ''))
+        except ValueError:
+            return self.paginate_by
+        return per_page if per_page in self.per_page_options else self.paginate_by
 
     @cached_property
     def filter_form(self):
@@ -70,6 +145,8 @@ class StudentStatusListView(StatusAdminMixin, ListView):
         )
         selected = self.request.GET.get('status', '')
         ctx['filter_form'] = self.filter_form
+        ctx['per_page'] = self.get_paginate_by(None)
+        ctx['per_page_options'] = self.per_page_options
         ctx['status_counts'] = [
             {'status': value, 'label': label, 'count': counts.get(value, 0),
              'selected': value == selected}

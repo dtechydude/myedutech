@@ -1,4 +1,5 @@
 {% extends "studentstatus/base.html" %}
+{% include "studentstatus/_pagination.html" with noun="changes" %}
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
     <h4 class="mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i>Status Change Log</h4>

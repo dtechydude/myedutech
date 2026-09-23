@@ -25,9 +25,14 @@
 <div class="card">
     <div class="card-body">
         <form method="get" class="row g-2 mb-3">
-            <div class="col-md-4">{{ filter_form.q }}</div>
-            <div class="col-md-3">{{ filter_form.status }}</div>
+            <div class="col-md-3">{{ filter_form.q }}</div>
+            <div class="col-md-2">{{ filter_form.status }}</div>
             <div class="col-md-3">{{ filter_form.standard }}</div>
+            <div class="col-md-2">
+                <select name="per_page" class="form-select" aria-label="Students per page">
+                    {% for n in per_page_options %}<option value="{{ n }}" {% if n == per_page %}selected{% endif %}>{{ n }} per page</option>{% endfor %}
+                </select>
+            </div>
             <div class="col-md-2 d-flex gap-2">
                 <button class="btn btn-outline-primary flex-fill" type="submit"><i class="fa-solid fa-filter me-1"></i> Filter</button>
                 <a href="{% url 'studentstatus:list' %}" class="btn btn-outline-secondary" title="Clear filters"><i class="fa-solid fa-xmark"></i></a>
@@ -59,7 +64,7 @@
             </table>
         </div>
 
-        {% include "studentstatus/_pagination.html" %}
+        {% include "studentstatus/_pagination.html" with noun="students" %}
     </div>
 </div>
 {% endblock %}
