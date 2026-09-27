@@ -33,12 +33,12 @@
     <h6>Recent Payments</h6>
     <div class="table-responsive">
         <table class="table table-sm table-hover">
-            <thead><tr><th>Student</th><th>Category</th><th>Amount</th><th>Term/Session</th><th>Date</th></tr></thead>
+            <thead><tr><th>Student</th><th>Invoice</th><th>Amount</th><th>Term/Session</th><th>Date</th></tr></thead>
             <tbody>
             {% for p in payments %}
                 <tr>
                     <td>{{ p.student.get_full_name }}</td>
-                    <td>{{ p.fee_category.name }}</td>
+                    <td>{{ p.invoice.invoice_number }}</td>
                     <td>{{ p.amount_received|currency }}</td>
                     <td>{{ p.term }} / {{ p.session }}</td>
                     <td>{{ p.payment_date }}</td>

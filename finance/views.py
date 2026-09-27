@@ -1402,6 +1402,33 @@ def profit_loss_report(request):
     return render(request, 'finance/profit_loss_report.html', context)
 
 
+from collections import defaultdict
+
+def _category_breakdown(qs):
+    """
+    Splits each payment's amount_received across the fee categories on its
+    invoice, weighted by each category's share of the invoice subtotal —
+    instead of attributing the whole payment to Payment.fee_category, which
+    only ever holds the first category on the invoice. Falls back to
+    Payment.fee_category for misc payments with no linked invoice.
+    """
+    totals = defaultdict(Decimal)
+    payments = qs.select_related('invoice', 'fee_category').prefetch_related('invoice__items__fee_category')
+    for p in payments:
+        items = list(p.invoice.items.all()) if p.invoice_id else []
+        invoice_subtotal = sum((i.amount for i in items), Decimal('0.00'))
+        if items and invoice_subtotal > 0:
+            for item in items:
+                share = item.amount / invoice_subtotal
+                totals[item.fee_category.name] += p.amount_received * share
+        else:
+            totals[p.payment_category_display] += p.amount_received
+
+    return [
+        {'fee_category__name': name, 'total': total}
+        for name, total in sorted(totals.items(), key=lambda x: x[1], reverse=True)
+    ]
+
 @login_required
 @finance_staff_required
 def total_payments_report(request):
@@ -1417,8 +1444,10 @@ def total_payments_report(request):
         if form.cleaned_data.get('session'):
             qs = qs.filter(session=form.cleaned_data['session'])
 
+    # total = qs.aggregate(total=Sum('amount_received'))['total'] or Decimal('0.00')
+    # breakdown = qs.values('fee_category__name').annotate(total=Sum('amount_received')).order_by('-total')
     total = qs.aggregate(total=Sum('amount_received'))['total'] or Decimal('0.00')
-    breakdown = qs.values('fee_category__name').annotate(total=Sum('amount_received')).order_by('-total')
+    breakdown = _category_breakdown(qs)   # was: qs.values('fee_category__name').annotate(total=Sum('amount_received')).order_by('-total')
 
     if request.GET.get('format') == 'csv':
         response = HttpResponse(content_type='text/csv')
