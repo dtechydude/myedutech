@@ -89,8 +89,9 @@
 					<div class="col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h4 class="card-title" style="color:green;"><i class="fas fa-users"></i> Students Profile Datatable </h4>
-                                <a href="{% url 'students:student-list' %}?export=csv" class="btn btn-success float-end">
+                               <h4 class="card-title" style="color:orange;">Students Profile Datatable <br>
+                                <span style="font-size:14px; color:#001111"><small>Total Active Students : {{ student_num_active  }}</small> </span></h4>
+                                <a href="{% url 'all_users' %}?export=csv" class="btn btn-success float-end">
                                         <i class="fas fa-file-download me-2"></i> Export to CSV
                                     </a>
                                     </div>

@@ -69,7 +69,7 @@ def student_list(request):
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         writer = csv.writer(response)
         writer.writerow([
-            'StudentID', 'Full Name', 'Current Class', 'DOB', 'Student Email', 'Student Phone', 
+            'StudentID', 'Full Name', 'Current Class', 'gender', 'DOB', 'Student Email', 'Student Phone', 
             'Guardian Phone', 'Guardian Email', 'Student Status'
         ])
 
@@ -78,6 +78,7 @@ def student_list(request):
                 student.user.username,
                 student.get_full_name(),
                 student.current_class.name if student.current_class else '',
+                student.gender,
                 student.DOB.strftime('%Y-%m-%d'),
                 student.user.email,
                 student.user.profile.phone,
@@ -90,6 +91,8 @@ def student_list(request):
     # Rendering logic for the HTML page
     my_students = []
     all_students = Student.objects.exclude(student_status='graduated').order_by('-date_admitted')
+    student_num_active = Student.objects.filter(student_status__in=['active']).count()
+
 
     if hasattr(request.user, 'teacher'):
         my_students = Student.objects.filter(
@@ -98,7 +101,8 @@ def student_list(request):
 
     context = {
         'all_students': all_students,
-        'my_students': my_students
+        'my_students': my_students,
+        'student_num_active': student_num_active,
     }
 
     if request.user.is_superuser or request.user.is_staff:
