@@ -90,7 +90,10 @@ def student_list(request):
 
     # Rendering logic for the HTML page
     my_students = []
-    all_students = Student.objects.exclude(student_status='graduated').order_by('-date_admitted')
+    # all_students = Student.objects.exclude(student_status='graduated', 'dropped',).order_by('-date_admitted')
+    all_students = Student.objects.filter(
+    student_status__in=['active', 'inactive', 'suspended']
+        ).order_by('-date_admitted')
     student_num_active = Student.objects.filter(student_status__in=['active']).count()
 
 
@@ -114,26 +117,31 @@ def student_list(request):
 
 
 
-# For Boading Students
+# For Boarding Students
 @login_required
 def student_boarder_list(request):
-    # Filter for 'boarder' students and exclude any with a 'graduated' status
+    # Filter for boarder students with active, inactive, or suspended status
     boarder_student = Student.objects.filter(
-        student_type='boarder'
-    ).exclude(
-        student_status='graduated'
+        student_type='boarder',
+        student_status__in=['active', 'inactive', 'suspended']
     ).order_by('-date_admitted')
 
     context = {
         'boarder_student': boarder_student,
         'total_count': boarder_student.count()
-
     }
 
     if request.user.is_superuser or request.user.is_staff:
-        return render(request, 'students/student_boarder_list.html', context)
+        return render(
+            request,
+            'students/student_boarder_list.html',
+            context
+        )
     else:
-        return render(request, 'pages/portal_home.html')
+        return render(
+            request,
+            'pages/portal_home.html'
+        )
 
 
 
