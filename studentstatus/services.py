@@ -121,3 +121,65 @@ def get_login_block_status_for_username(username):
         .first()
     )
     return status if status in LOGIN_BLOCKED_STATUSES else None
+
+
+
+from students.models import Parent, Student
+
+from .constants import LOGIN_BLOCKED_STATUSES, PARENT_NO_ACTIVE_CHILDREN
+
+
+def get_login_block_status(user):
+    """
+    Returns a blocking status key if this logged-in user must not access the
+    portal, otherwise None. Staff and superusers are never blocked, so an
+    admin can't be locked out by a stray student/parent record.
+    """
+    if not getattr(user, 'is_authenticated', False) or user.is_staff or user.is_superuser:
+        return None
+
+    status = (
+        Student.objects.filter(user_id=user.pk)
+        .values_list('student_status', flat=True)
+        .first()
+    )
+    if status is not None:
+        return status if status in LOGIN_BLOCKED_STATUSES else None
+
+    # Not a student account — check whether it's a parent with no active children.
+    parent = getattr(user, 'parent', None)
+    if parent is not None and not parent.has_active_children:
+        return PARENT_NO_ACTIVE_CHILDREN
+
+    return None
+
+
+def get_login_block_status_for_username(username):
+    """Same check, by username, for use before a login succeeds."""
+    if not username:
+        return None
+
+    status = (
+        Student.objects.filter(
+            user__username__iexact=username,
+            user__is_staff=False,
+            user__is_superuser=False,
+        )
+        .values_list('student_status', flat=True)
+        .first()
+    )
+    if status is not None:
+        return status if status in LOGIN_BLOCKED_STATUSES else None
+
+    parent = (
+        Parent.objects.filter(
+            user__username__iexact=username,
+            user__is_staff=False,
+            user__is_superuser=False,
+        )
+        .first()
+    )
+    if parent is not None and not parent.has_active_children:
+        return PARENT_NO_ACTIVE_CHILDREN
+
+    return None

@@ -36,6 +36,12 @@ PROTECTED_STATUSES = (GRADUATED,)
 # Students in these statuses can neither log in nor keep an existing session.
 LOGIN_BLOCKED_STATUSES = (INACTIVE, SUSPENDED, DROPPED, EXPELLED, GRADUATED)
 
+# Not a Student.student_status value — a separate blocking key used when a
+# PARENT account's every linked child is non-active (see services.py:
+# get_login_block_status / get_login_block_status_for_username, and
+# Parent.has_active_children on students/models.py).
+PARENT_NO_ACTIVE_CHILDREN = 'parent_no_active_children'
+
 DEFAULT_BLOCK_MESSAGE = (
     "Your portal account is not active. Please contact the school administration."
 )
@@ -48,9 +54,11 @@ BLOCK_MESSAGES = {
               "Please contact the school administration.",
     GRADUATED: "You have graduated, so this portal account is no longer active. "
                "Please contact the school administration if you need your records.",
+    PARENT_NO_ACTIVE_CHILDREN: "Your access is currently disabled because none of your children have an "
+               "active enrolment. Please contact the school administration.",
 }
 
 
 def block_message(status):
-    """Message shown to a student who is blocked from the portal."""
+    """Message shown to a student or parent who is blocked from the portal."""
     return BLOCK_MESSAGES.get(status, DEFAULT_BLOCK_MESSAGE)

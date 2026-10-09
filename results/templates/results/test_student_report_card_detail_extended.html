@@ -773,6 +773,9 @@
                                     <div class="sig-box">
                                         {% if school_data.signature %}
                                             <img src="{{ school_data.signature.url }}" alt="School stamp / signature" class="sig-img">
+                                            {% else %}
+                                            <img src="{{ school_data.logo.url }}" alt="School stamp / signature" class="sig-img">
+
                                         {% endif %}
                                     </div>
                                 </td>

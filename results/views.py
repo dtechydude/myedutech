@@ -228,8 +228,8 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
                 messages.error(request, 'Invalid subject or standard selected.')
 
             if selected_subject and selected_standard:
-                students_in_standard = Student.objects.filter(current_class=selected_standard).order_by('last_name', 'first_name')
-
+                # students_in_standard = Student.objects.filter(current_class=selected_standard).order_by('last_name', 'first_name')
+                students_in_standard = Student.objects.enrolled().filter(current_class=selected_standard).order_by('last_name', 'first_name')
                 initial_data = []
                 for student in students_in_standard:
                     score_instance = Score.objects.filter(
@@ -318,7 +318,8 @@ class ScoreEntryView(LoginRequiredMixin, TeacherRequiredMixin, View):
             messages.error(request, 'You are not authorized to enter scores for this subject or standard.')
             return redirect('score_entry')
 
-        students_in_standard = Student.objects.filter(current_class=selected_standard).order_by('last_name', 'first_name')
+        # students_in_standard = Student.objects.filter(current_class=selected_standard).order_by('last_name', 'first_name')
+        students_in_standard = Student.objects.enrolled().filter(current_class=selected_standard).order_by('last_name', 'first_name')
         ScoreFormSet = formset_factory(ScoreEntryForm, extra=0)
         
         # Pass dynamic limits into the POST initialization so the form knows how to validate

@@ -156,6 +156,40 @@ class Room(models.Model):
     
 
 
+class StudentQuerySet(models.QuerySet):
+    def enrolled(self):
+        """
+        Students who should count as currently enrolled — i.e. appear in
+        teacher rosters, result-entry screens, class counts, and similar
+        "which students are in this class right now" screens.
+
+        Only 'active' counts as enrolled here. This is intentionally
+        broader than the attendance app's eligibility filter (which still
+        shows 'inactive' students on attendance screens) — the two rules
+        serve different questions and are kept separate on purpose.
+
+        This NEVER touches current_class or any other field — a student
+        who goes inactive/suspended/dropped/expelled/graduated keeps their
+        class assignment, so putting them back to 'active' restores them
+        to the right roster with no extra work.
+        """
+        return self.filter(student_status=Student.active)
+
+
+class StudentManager(models.Manager):
+    """
+    Drop-in replacement for the default manager — get_queryset() is
+    unfiltered, so every existing Student.objects.* call anywhere in the
+    project behaves exactly as before. The only addition is .enrolled().
+    """
+    def get_queryset(self):
+        return StudentQuerySet(self.model, using=self._db)
+
+    def enrolled(self):
+        return self.get_queryset().enrolled()
+
+
+
 #parent Model
 class Parent(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, help_text='The user account for this parent.')
@@ -167,7 +201,18 @@ class Parent(models.Model):
     # e.g., address, phone_number, etc.
     # The guardian_name, guardian_address, etc., from the Student model
     # can be moved here to avoid redundancy.
+    @property
+    def has_active_children(self):
+        """
+        True if at least one linked child is currently 'active'.
 
+        Computed live from Student.student_status every time it's called —
+        never stored — so it can never go stale when a child's status
+        changes (the same approach AttendanceSummary.days_absent already
+        uses elsewhere in this project).
+        """
+        return self.children.filter(student_status=Student.active).exists()
+    
     def __str__(self):
         return self.user.get_full_name()
 
@@ -265,6 +310,7 @@ class Student(models.Model):
     ]
 
     student_status = models.CharField(max_length=15, choices=student_status, default=active)
+    objects = StudentManager()  # adds Student.objects.enrolled(); every existing query is unaffected
     graduated_session = models.ForeignKey(Session, on_delete=models.SET_NULL, null=True, blank=True, related_name="graduated_students", help_text='only applicable for graduated students')
     fee_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0, blank=True, null=True)
 

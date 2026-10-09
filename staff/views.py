@@ -202,11 +202,22 @@ class TeacherStudentCountListView(ListView):
 
         filtered_teachers = []
 
+        # for teacher in context['teachers']:
+        #     # 1. Filter students: Exclude "Alumni"
+        #     active_students = [
+        #         s for s in teacher.teacher.all()
+        #         if s.current_class and s.current_class.name != "Alumni"
+        #     ]
+        
         for teacher in context['teachers']:
-            # 1. Filter students: Exclude "Alumni"
+        # NOTE: status check is done here in Python, not via .enrolled(),
+        # to keep the single prefetch_related() query above — calling a
+        # custom queryset method on the related manager bypasses Django's
+        # prefetch cache and triggers one extra query per teacher.
             active_students = [
                 s for s in teacher.teacher.all()
                 if s.current_class and s.current_class.name != "Alumni"
+                and s.student_status == Student.active
             ]
 
             # 2. Calculate the Total Count

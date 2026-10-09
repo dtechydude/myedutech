@@ -51,20 +51,37 @@ def student_list(request):
     # Now that we know the user is authenticated, we can safely access user properties.
     
     # Check for CSV export request first
+    # if request.GET.get('export') == 'csv':
+    #     response = HttpResponse(content_type='text/csv')
+
+    #     # Determine which students to export based on user's role
+    #     if request.user.is_superuser or request.user.is_staff:
+    #         students_to_export = Student.objects.exclude(student_status='graduated').order_by('-date_admitted')
+    #         filename = 'all_students.csv'
+    #     elif hasattr(request.user, 'teacher'):
+    #         students_to_export = Student.objects.filter(
+    #             form_teacher__user=request.user
+    #         ).exclude(student_status='graduated').order_by('user')
+    #         filename = 'my_students.csv'
+    #     else:
+    #         return HttpResponse('You are not authorized to export student data.', status=403)
+    
+    # Check for CSV export request first
     if request.GET.get('export') == 'csv':
         response = HttpResponse(content_type='text/csv')
 
         # Determine which students to export based on user's role
         if request.user.is_superuser or request.user.is_staff:
-            students_to_export = Student.objects.exclude(student_status='graduated').order_by('-date_admitted')
+            students_to_export = Student.objects.enrolled().order_by('-date_admitted')
             filename = 'all_students.csv'
         elif hasattr(request.user, 'teacher'):
-            students_to_export = Student.objects.filter(
+            students_to_export = Student.objects.enrolled().filter(
                 form_teacher__user=request.user
-            ).exclude(student_status='graduated').order_by('user')
+            ).order_by('user')
             filename = 'my_students.csv'
         else:
             return HttpResponse('You are not authorized to export student data.', status=403)
+        
 
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         writer = csv.writer(response)
@@ -89,18 +106,32 @@ def student_list(request):
         return response
 
     # Rendering logic for the HTML page
-    my_students = []
-    # all_students = Student.objects.exclude(student_status='graduated', 'dropped',).order_by('-date_admitted')
-    all_students = Student.objects.filter(
-    student_status__in=['active', 'inactive', 'suspended']
-        ).order_by('-date_admitted')
-    student_num_active = Student.objects.filter(student_status__in=['active']).count()
+    # my_students = []
+    # # all_students = Student.objects.exclude(student_status='graduated', 'dropped',).order_by('-date_admitted')
+    # all_students = Student.objects.filter(
+    # student_status__in=['active', 'inactive', 'suspended']
+    #     ).order_by('-date_admitted')
+    # student_num_active = Student.objects.filter(student_status__in=['active']).count()
 
+
+    # if hasattr(request.user, 'teacher'):
+    #     my_students = Student.objects.filter(
+    #         form_teacher__user=request.user
+    #     ).exclude(student_status='graduated').order_by('user')
+
+        # Rendering logic for the HTML page
+    my_students = []
+    # Only students who are currently 'active' count as enrolled — this keeps
+    # the admin roster consistent with the teacher list, result entry, and
+    # class counts. Inactive/suspended/dropped/expelled/graduated students
+    # are managed from the Student Status pages, not hidden piecemeal here.
+    all_students = Student.objects.enrolled().order_by('-date_admitted')
+    student_num_active = Student.objects.enrolled().count()
 
     if hasattr(request.user, 'teacher'):
-        my_students = Student.objects.filter(
+        my_students = Student.objects.enrolled().filter(
             form_teacher__user=request.user
-        ).exclude(student_status='graduated').order_by('user')
+        ).order_by('user')
 
     context = {
         'all_students': all_students,
@@ -379,13 +410,42 @@ def student_search_list(request):
 
 
 
-#count students in each class
+# #count students in each class
+# @login_required
+# def student_in_class(request):
+#     students = Student.objects.all()
+#     # student_no = Student.objects.exclude(current_class__name="Alumni").order_by('current_class').values('current_class__name').annotate(count=Count('current_class__name'))
+#     student_no = (
+#     Student.objects
+#     .filter(
+#         current_class__isnull=False,
+#         current_class__name__isnull=False
+#     )
+#     .exclude(current_class__name__in=["", "Alumni"])
+#     # .exclude(student_status__in=["inactive", "graduated", "suspended", "dropped", "expelled"])
+#     .values("current_class__name")
+#     .annotate(count=Count("id"))
+#     .order_by("current_class__name")
+# )
+#     # try:
+#     #     num_inclass = Student.objects.filter(standard__name = request.user.student.standard).count()
+#     # except Student.DoesNotExist:
+#     #     num_inclass = Student.objects.filter()
+
+#     try:
+#         num_inclass = Student.objects.filter(
+#             current_class=request.user.student.current_class
+#             ).count()
+#     except Student.DoesNotExist:
+#         num_inclass = 0
+
+#     return render(request, 'students/student_no_in_class.html', {'students': students, 'student_no':student_no, 'num_inclass':num_inclass})
+
 @login_required
 def student_in_class(request):
-    students = Student.objects.all()
-    # student_no = Student.objects.exclude(current_class__name="Alumni").order_by('current_class').values('current_class__name').annotate(count=Count('current_class__name'))
+    students = Student.objects.enrolled()
     student_no = (
-    Student.objects
+    Student.objects.enrolled()
     .filter(
         current_class__isnull=False,
         current_class__name__isnull=False
@@ -395,13 +455,8 @@ def student_in_class(request):
     .annotate(count=Count("id"))
     .order_by("current_class__name")
 )
-    # try:
-    #     num_inclass = Student.objects.filter(standard__name = request.user.student.standard).count()
-    # except Student.DoesNotExist:
-    #     num_inclass = Student.objects.filter()
-
     try:
-        num_inclass = Student.objects.filter(
+        num_inclass = Student.objects.enrolled().filter(
             current_class=request.user.student.current_class
             ).count()
     except Student.DoesNotExist:
@@ -846,7 +901,8 @@ def parent_dashboard(request):
 
     try:
         parent = Parent.objects.get(user=request.user)
-        children = Student.objects.filter(parent=parent).prefetch_related('scores__term')
+        # children = Student.objects.filter(parent=parent).prefetch_related('scores__term')
+        children = Student.objects.enrolled().filter(parent=parent).prefetch_related('scores__term')
     except Parent.DoesNotExist:
         children = []
 

@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-<title>Bus Enrollments List | KwikSchools</title>
+<title>Bus Enrollments List | {{ school_info.name }}</title>
 {% endblock title %}
 
 {% block head %}
@@ -42,8 +42,8 @@
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-primary py-3 d-flex justify-content-between align-items-center">
                         <h4 class="card-title text-white mb-0">🚌 All Bus Enrollments</h4>
-                        <a href="{% url 'transport:signup' %}" class="btn btn-light btn-sm fw-bold text-primary">
-                            <i class="fa fa-plus me-1"></i> New Enrollment
+                        <a href="/admin/transport/studentonroute/add/" class="btn btn-light btn-sm fw-bold text-primary">
+                            <i class="fa fa-plus me-1"></i> New Enrollment(Admin)
                         </a>
                     </div>
                     <div class="card-body">
