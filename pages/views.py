@@ -23,6 +23,8 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from .models import Newsletter
 
+from studentstatus.constants import ACTIVE
+
 
 # Create your views here.
 def schoolly_home(request):
@@ -158,19 +160,6 @@ def email_list(request):
         'users': users,   
     }
     return render(request, 'pages/email_list.html', context )
-
-# birthday list
-@login_required
-def birthday_list(request):
-    user_birthday = Profile.objects.all()
-    teacher_birthday = Teacher.objects.all()
-    student_birthday = Student.objects.all()
-    context = {        
-        'user_birthday': user_birthday,
-        'teacher_birthday':teacher_birthday,
-        'student_birthday': student_birthday,
-    }
-    return render(request, 'pages/birthday_list.html', context)
 
 
 

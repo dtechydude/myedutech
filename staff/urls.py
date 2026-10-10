@@ -78,6 +78,12 @@ urlpatterns = [
         name='teacher_self_attendance'
     ),
 
+    # Teachers Birthday
+    path(
+        'birthdays/teachers/',
+        staff_views.teacher_upcoming_birthdays_view,
+        name='teacher_upcoming_birthdays',
+    ),
      
 
 ]

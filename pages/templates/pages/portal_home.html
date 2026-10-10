@@ -455,13 +455,15 @@
 							<li><a href="{% url 'students:graduate_students' %}">Move Students To Alumni</a></li>
 							<li><a href="{% url 'students:alumni_list' %}">GRADUATE/ALUMNI List</a></li>
 							<li><a href="{% url 'studentstatus:list' %}">CHANGE STUDENT STATUS</a></li>
+							<li><a href="{% url 'students:upcoming_birthdays' %}"><i class="fas fa-birthday-cake me-2"></i>Upcoming Birthday</a></li>	
+
 
 
 							
 							{% elif user.teacher %}		
 							<li><a href="{% url 'students:student-list' %}">My Students</a></li>
 							<li><a href="{% url 'staff:my_assignments' %}">My Assigned Classes</a></li>
-							<li><a href="{% url 'students:upcoming_birthdays' %}">My Students Birthday</a></li>	
+							<li><a href="{% url 'students:upcoming_birthdays' %}"><i class="fas fa-birthday-cake me-2"></i>Upcoming Birthday</a></li>	
 							<li><a href="{% url 'students:hostel_list' %}">Hostel List</a></li>																	
 							
 							{% elif user.student %}	
@@ -575,7 +577,10 @@
 							<li><a href="{% url 'staff:staff_attendance_report' %}">Staff Attendance Report</a></li>
 							{% comment %} <li><a href="{% url 'curriculum:form_teachers_head' %}">FormTeachers List</a></li> {% endcomment %}
 							{% comment %} <li><a href="{% url 'curriculum:classgroup_form_teachers' %}">ClassGroup FormTeachers</a></li> {% endcomment %}
-
+							<li><a href="{% url 'staff:teacher_upcoming_birthdays' %}">							
+								<i class="fas fa-birthday-cake me-2"></i>
+								Teacher Birthdays
+							</a></li>
 						</ul>
 					</li>
 					{% endif %}

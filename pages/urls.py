@@ -19,7 +19,6 @@ urlpatterns = [
      path('bank-detail/', page_views.bank_detail, name='bank-detail'),
     #  path('record-result/', page_views.record_result, name='record-result'),
      path('success-submission/', page_views.success_submission, name='success_submission'),
-     path('birthday-list/', page_views.birthday_list, name='birthday_list'),
      path('students-phone-list/', page_views.student_phone_list_view, name='students_phone_list'),
      path('students-email-list/', page_views.student_email_list_view, name='students_email_list'),
 

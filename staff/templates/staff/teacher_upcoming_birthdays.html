@@ -1,0 +1,237 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Birthdays - KwikSchools</title>
+ <!-- FAVICONS ICON -->	
+    {% if school_info and school_info.logo %}
+		<link rel="icon" href="{{ school_info.logo.url }}" type="image/png">
+	{% else %}
+		<link rel="icon" href="{% static 'pages/images/school_logo.jpg' %}" type="image/png">
+	{% endif %}   
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+
+  <style>
+    :root {
+      --primary: #6f42c1;
+      --secondary: #f0b429;
+      --bg-light: #f5f7fb;
+      --text-dark: #333;
+      --card-bg: #fff;
+      --gradient-primary: linear-gradient(135deg, #6f42c1 0%, #4b238f 100%);
+      --gradient-secondary: linear-gradient(135deg, #f0b429 0%, #d98200 100%);
+    }
+
+    body {
+      background: var(--bg-light);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text-dark);
+    }
+
+    .header-section {
+      background: #fff;
+      border-bottom: 1px solid #e9ecef;
+      padding: 1rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    }
+
+    .school-logo {
+      max-height: 55px;
+    }
+
+    .birthday-card {
+      border-radius: 1.25rem;
+      border: none;
+      overflow: hidden;
+      background: var(--card-bg);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+
+    .birthday-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+    }
+
+    .card-header {
+      color: #fff;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .card-header.current { background: var(--gradient-primary); }
+    .card-header.upcoming { background: var(--gradient-secondary); }
+
+    .list-group-item {
+      padding: 1.5rem;
+      border: none;
+      border-bottom: 1px solid #f1f1f1;
+    }
+
+    .list-group-item:last-child { border-bottom: none; }
+
+    .student-name { font-weight: 600; }
+
+    .contact-table th {
+      width: 110px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    .contact-table td { color: #555; }
+
+    .empty-state {
+      padding: 3rem 1rem;
+      text-align: center;
+      color: #999;
+      font-style: italic;
+    }
+
+    .email-link, .phone-link {
+      color: #555;
+      text-decoration: none;
+    }
+    .email-link:hover { color: #2979FF; }
+    .phone-link:hover { color: #17a898; }
+
+    .badge-date {
+      background: var(--secondary);
+      color: #fff;
+      padding: .35em .65em;
+      border-radius: .75rem;
+      font-size: .8rem;
+    }
+  </style>
+</head>
+<body>
+
+<header class="header-section">
+  <div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+      <a href="/dashboard/" class="btn btn-outline-secondary mb-2 mb-md-0">
+        <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+      </a>
+      <div class="text-center flex-grow-1">
+        {% if school_info and school_info.logo %}
+          <img src="{{ school_info.logo.url }}" alt="School Logo" class="school-logo">
+          {% else %}
+          <img src="{% static 'pages/images/school_logo.jpg' %}" alt="School Logo" class="school-logo">
+          {% endif %}
+        <h4 class="mt-2 mb-0 text-muted fw-semibold"><span style="font-size: 11px;">By: KwikSchools EdTech</span><br> 🎉 Teacher Birthdays</h4>
+      </div>
+      <a href="{% url 'staff:teacher_upcoming_birthdays' %}?export=csv" class="btn btn-success mb-2 mb-md-0">
+        <i class="fas fa-file-export me-2"></i> Export CSV
+      </a>
+    </div>
+  </div>
+</header>
+
+<main class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      <!-- Current Month Birthdays -->
+      <div class="birthday-card mb-5">
+        <div class="card-header current">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-birthday-cake me-2"></i> 
+            Teacher Birthdays This Month ({{ current_birthdays|length }})
+          </h5>
+        </div>
+        <ul class="list-group list-group-flush">
+          {% for teacher in current_birthdays %}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <h5 class="student-name text-primary mb-0">{{ teacher.user.get_full_name }}</h5>
+                <span class="badge-date"><i class="fas fa-calendar-alt me-1"></i>{{ teacher.DOB|date:"F d" }}</span>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-sm table-borderless contact-table mb-0">
+                <thead>
+                  <tr>
+                    <th>Role</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th><i class="fas fa-chalkboard-teacher me-2"></i> Teacher</th>
+                    <td><a href="mailto:{{ teacher.user.email }}" class="email-link">{{ teacher.user.email|default:"Not provided" }}</a></td>
+                    <td><a href="tel:{{ teacher.user.profile.phone }}" class="phone-link">{{ teacher.user.profile.phone|default:"Not provided" }}</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </li>
+          {% empty %}
+          <li class="list-group-item empty-state">
+            <i class="fas fa-birthday-cake fa-3x mb-3 text-muted"></i>
+            <p>No birthdays this month. 🎂</p>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- Upcoming Teacher Birthdays -->
+      <div class="birthday-card">
+        <div class="card-header upcoming">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-calendar-check me-2"></i>
+            Upcoming Teacher Birthdays ({{ upcoming_birthdays|length }})
+          </h5>
+        </div>
+        <ul class="list-group list-group-flush">
+          {% for teacher in upcoming_birthdays %}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <h5 class="student-name text-info mb-0">{{ teacher.user.get_full_name }}</h5>
+                <span class="badge-date"><i class="fas fa-calendar-alt me-1"></i>{{ teacher.DOB|date:"F d" }}</span>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-sm table-borderless contact-table mb-0">
+                <thead>
+                  <tr>
+                    <th>Role</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th><i class="fas fa-chalkboard-teacher me-2"></i> Teacher</th>
+                    <td><a href="mailto:{{ teacher.user.email }}" class="email-link">{{ teacher.user.email|default:"Not provided" }}</a></td>
+                    <td><a href="tel:{{ teacher.user.profile.phone }}" class="phone-link">{{ teacher.user.profile.phone|default:"Not provided" }}</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </li>
+          {% empty %}
+          <li class="list-group-item empty-state">
+            <i class="fas fa-calendar-check fa-3x mb-3 text-muted"></i>
+            <p>No upcoming birthdays found. 📅</p>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

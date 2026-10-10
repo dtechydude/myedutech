@@ -208,7 +208,7 @@ class TeacherStudentCountListView(ListView):
         #         s for s in teacher.teacher.all()
         #         if s.current_class and s.current_class.name != "Alumni"
         #     ]
-        
+
         for teacher in context['teachers']:
         # NOTE: status check is done here in Python, not via .enrolled(),
         # to keep the single prefetch_related() query above — calling a
@@ -965,4 +965,153 @@ def teacher_self_attendance(request):
         request,
         'staff/staff_self_attendance.html',
         context
+    )
+
+
+
+
+# @login_required
+# def teacher_upcoming_birthdays_view(request):
+#     """
+#     Only superusers and staff members can view or export
+#     teacher birthdays.
+#     """
+
+#     # Restrict access to superusers and staff
+#     if not (request.user.is_superuser or request.user.is_staff):
+#         return redirect('dashboard')
+
+#     # today = datetime.date.today()
+#     today = date.today()
+#     current_month = today.month
+#     upcoming_month_1 = (current_month % 12) + 1
+#     upcoming_month_2 = (upcoming_month_1 % 12) + 1
+
+#     birthday_months = [
+#         current_month,
+#         upcoming_month_1,
+#         upcoming_month_2,
+#     ]
+
+#     birthday_teachers = Teacher.objects.select_related(
+#         'user__profile'
+#     ).filter(
+#         user__is_active=True,
+#         DOB__month__in=birthday_months,
+#     ).order_by(
+#         'DOB__month',
+#         'DOB__day',
+#     )
+
+#     # Keep your existing CSV export and template-rendering logic below.
+
+# Teacher's Birthday
+@login_required
+def teacher_upcoming_birthdays_view(request):
+    """
+    Staff members can view all active teachers' birthdays.
+    Non-staff teachers can view their own birthday.
+    Inactive Django user accounts are excluded.
+    """
+
+    """
+    Only superusers and staff members can view or export
+    teacher birthdays.
+    """
+
+    # Restrict access to superusers and staff
+    if not (request.user.is_superuser or request.user.is_staff):
+        return redirect('pages:portal-home')
+
+    # today = datetime.date.today()
+    today = date.today()
+    current_month = today.month
+    upcoming_month_1 = (current_month % 12) + 1
+    upcoming_month_2 = (upcoming_month_1 % 12) + 1
+
+    birthday_months = [
+        current_month,
+        upcoming_month_1,
+        upcoming_month_2,
+    ]
+
+    # Only teachers with active portal accounts and birthdays
+    # in the current or next two calendar months.
+    birthday_queryset = Teacher.objects.select_related(
+        'user__profile'
+    ).filter(
+        user__is_active=True,
+        DOB__month__in=birthday_months,
+    )
+
+    if request.user.is_staff:
+        birthday_teachers = birthday_queryset.order_by(
+            'DOB__month',
+            'DOB__day',
+        )
+    else:
+        # A non-staff teacher can see their own birthday only.
+        try:
+            teacher = request.user.teacher
+        except Teacher.DoesNotExist:
+            return redirect('dashboard')
+
+        birthday_teachers = birthday_queryset.filter(
+            pk=teacher.pk,
+        ).order_by(
+            'DOB__month',
+            'DOB__day',
+        )
+
+    # CSV export
+    if request.GET.get('export') == 'csv':
+        response = HttpResponse(content_type='text/csv')
+
+        filename = (
+            'all_teachers_birthdays.csv'
+            if request.user.is_staff
+            else 'my_birthday.csv'
+        )
+        response['Content-Disposition'] = (
+            f'attachment; filename="{filename}"'
+        )
+
+        writer = csv.writer(response)
+        writer.writerow([
+            'Full Name',
+            'DOB',
+            'Teacher Email',
+            'Teacher Phone',
+        ])
+
+        for teacher in birthday_teachers:
+            user = teacher.user
+            profile = getattr(user, 'profile', None)
+
+            writer.writerow([
+                user.get_full_name(),
+                teacher.DOB.strftime('%B %d') if teacher.DOB else '',
+                user.email,
+                getattr(profile, 'phone', '') if profile else '',
+            ])
+
+        return response
+
+    # Separate birthdays for this month and the next two months.
+    current_birthdays = birthday_teachers.filter(
+        DOB__month=current_month,
+    )
+    upcoming_birthdays = birthday_teachers.exclude(
+        DOB__month=current_month,
+    )
+
+    context = {
+        'current_birthdays': current_birthdays,
+        'upcoming_birthdays': upcoming_birthdays,
+    }
+
+    return render(
+        request,
+        'staff/teacher_upcoming_birthdays.html',
+        context,
     )

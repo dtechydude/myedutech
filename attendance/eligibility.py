@@ -10,7 +10,7 @@ they are simply hidden from the live attendance screens.
 """
 from students.models import Student
 
-ATTENDANCE_EXCLUDED_STATUSES = ('graduated', 'dropped', 'expelled', 'suspended')
+ATTENDANCE_EXCLUDED_STATUSES = ('graduated', 'dropped', 'expelled', 'suspended', 'inactive', 'Alumni')
 
 
 def attendance_eligible_students(queryset=None):

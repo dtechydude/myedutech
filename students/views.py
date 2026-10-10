@@ -35,6 +35,7 @@ from datetime import date
 from django.views import View
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.exceptions import PermissionDenied
+from studentstatus.constants import ACTIVE
 
 
 
@@ -1109,46 +1110,142 @@ def export_parents_csv(request):
     return response
 
 
-# Student's Birthay
+# # Student's Birthay
+# @login_required
+# def upcoming_birthdays_view(request):
+#     """
+#     Allows form teachers to view their own students' birthdays
+#     and admins (is_staff) to view all students' birthdays.
+#     """
+#     today = datetime.date.today()
+#     current_month = today.month
+#     upcoming_month_1 = (today.month % 12) + 1
+#     upcoming_month_2 = (upcoming_month_1 % 12) + 1
+    
+#     # Check if the user is a staff member (admin)
+#     if request.user.is_staff:
+#         # Staff members see all students
+#         birthday_students = Student.objects.select_related('user__profile').filter(
+#             Q(DOB__month=current_month) | 
+#             Q(DOB__month=upcoming_month_1) | 
+#             Q(DOB__month=upcoming_month_2)
+#         ).order_by('DOB__month', 'DOB__day')
+#     else:
+#         # Normal users (form teachers) see only their own students
+#         try:
+#             form_teacher = request.user.teacher # Assuming a one-to-one relationship
+#             birthday_students = Student.objects.select_related('user__profile').filter(
+#                 form_teacher=form_teacher,
+#                 DOB__month__in=[current_month, upcoming_month_1, upcoming_month_2]
+#             ).order_by('DOB__month', 'DOB__day')
+#         except Teacher.DoesNotExist:
+#             # Handle cases where the user is logged in but not a teacher
+#             return redirect('some_other_view_name') # Change to a safe URL name
+
+#     # Handle CSV export request
+#     if request.GET.get('export') == 'csv':
+#         response = HttpResponse(content_type='text/csv')
+#         filename = "all_students_birthdays.csv" if request.user.is_staff else "my_students_birthdays.csv"
+#         response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+#         writer = csv.writer(response)
+#         writer.writerow(['Full Name', 'DOB', 'Student Email', 'Student Phone', 'Guardian Phone', 'Guardian Email', 'Current Class'])
+
+#         for student in birthday_students:
+#             writer.writerow([
+#                 student.get_full_name(),
+#                 student.DOB.strftime('%B %d'),
+#                 student.user.email,
+#                 student.user.profile.phone,
+#                 student.guardian_phone,
+#                 student.guardian_email,
+#                 student.current_class
+#             ])
+#         return response
+
+#     # Normal template rendering
+#     current_birthdays = birthday_students.filter(DOB__month=current_month)
+#     upcoming_birthdays = birthday_students.exclude(DOB__month=current_month)
+
+#     context = {
+#         'current_birthdays': current_birthdays,
+#         'upcoming_birthdays': upcoming_birthdays,
+#     }
+    
+#     return render(request, 'students/upcoming_birthdays.html', context)
+
+
+
+# Student's Birthday
 @login_required
 def upcoming_birthdays_view(request):
     """
-    Allows form teachers to view their own students' birthdays
-    and admins (is_staff) to view all students' birthdays.
+    Allows form teachers to view birthdays of their own active students
+    and admins (is_staff) to view all active students' birthdays.
     """
     today = datetime.date.today()
     current_month = today.month
-    upcoming_month_1 = (today.month % 12) + 1
+    upcoming_month_1 = (current_month % 12) + 1
     upcoming_month_2 = (upcoming_month_1 % 12) + 1
-    
-    # Check if the user is a staff member (admin)
+
+    birthday_months = [
+        current_month,
+        upcoming_month_1,
+        upcoming_month_2,
+    ]
+
+    # Base queryset: only active students within the birthday window
+    birthday_queryset = Student.objects.select_related(
+        'user__profile'
+    ).filter(
+        student_status=ACTIVE,
+        DOB__month__in=birthday_months,
+    )
+
+    # Staff members (admins) see all active students
     if request.user.is_staff:
-        # Staff members see all students
-        birthday_students = Student.objects.select_related('user__profile').filter(
-            Q(DOB__month=current_month) | 
-            Q(DOB__month=upcoming_month_1) | 
-            Q(DOB__month=upcoming_month_2)
-        ).order_by('DOB__month', 'DOB__day')
+        birthday_students = birthday_queryset.order_by(
+            'DOB__month',
+            'DOB__day',
+        )
     else:
-        # Normal users (form teachers) see only their own students
+        # Form teachers see only their own active students
         try:
-            form_teacher = request.user.teacher # Assuming a one-to-one relationship
-            birthday_students = Student.objects.select_related('user__profile').filter(
-                form_teacher=form_teacher,
-                DOB__month__in=[current_month, upcoming_month_1, upcoming_month_2]
-            ).order_by('DOB__month', 'DOB__day')
+            form_teacher = request.user.teacher
         except Teacher.DoesNotExist:
-            # Handle cases where the user is logged in but not a teacher
-            return redirect('some_other_view_name') # Change to a safe URL name
+            # Preserve the existing redirect for users without a teacher record
+            return redirect('some_other_view_name')
+
+        birthday_students = birthday_queryset.filter(
+            form_teacher=form_teacher,
+        ).order_by(
+            'DOB__month',
+            'DOB__day',
+        )
 
     # Handle CSV export request
     if request.GET.get('export') == 'csv':
         response = HttpResponse(content_type='text/csv')
-        filename = "all_students_birthdays.csv" if request.user.is_staff else "my_students_birthdays.csv"
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+        filename = (
+            "all_students_birthdays.csv"
+            if request.user.is_staff
+            else "my_students_birthdays.csv"
+        )
+        response['Content-Disposition'] = (
+            f'attachment; filename="{filename}"'
+        )
 
         writer = csv.writer(response)
-        writer.writerow(['Full Name', 'DOB', 'Student Email', 'Student Phone', 'Guardian Phone', 'Guardian Email', 'Current Class'])
+        writer.writerow([
+            'Full Name',
+            'DOB',
+            'Student Email',
+            'Student Phone',
+            'Guardian Phone',
+            'Guardian Email',
+            'Current Class',
+        ])
 
         for student in birthday_students:
             writer.writerow([
@@ -1158,20 +1255,29 @@ def upcoming_birthdays_view(request):
                 student.user.profile.phone,
                 student.guardian_phone,
                 student.guardian_email,
-                student.current_class
+                student.current_class,
             ])
+
         return response
 
     # Normal template rendering
-    current_birthdays = birthday_students.filter(DOB__month=current_month)
-    upcoming_birthdays = birthday_students.exclude(DOB__month=current_month)
+    current_birthdays = birthday_students.filter(
+        DOB__month=current_month
+    )
+    upcoming_birthdays = birthday_students.exclude(
+        DOB__month=current_month
+    )
 
     context = {
         'current_birthdays': current_birthdays,
         'upcoming_birthdays': upcoming_birthdays,
     }
-    
-    return render(request, 'students/upcoming_birthdays.html', context)
+
+    return render(
+        request,
+        'students/upcoming_birthdays.html',
+        context,
+    )
 
 
 #============================================================
