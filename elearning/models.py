@@ -1,46 +1,24 @@
 from django.db import models
 from django.utils.text import slugify
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.urls import reverse
 import os
 from django.utils.html import strip_tags
 from embed_video.fields import EmbedVideoField
 from tinymce.models import HTMLField
 
+from .services import extract_youtube_id, validate_web_link
+
 # =====================================================================
-# ✅ E-LEARNING APP — fully independent
-# ---------------------------------------------------------------------
-# This app is standalone: its own namespace ('elearning', not
-# 'curriculum'), its own URL prefix, its own templates folder, and no
-# Python-level imports of `curriculum` anywhere in this app's code.
+# E-LEARNING APP — fully independent ('elearning' namespace).
+# The only link to `curriculum` is the lazy 'curriculum.Standard' FK
+# (single source of truth for the class list). Models that moved from
+# curriculum keep their ORIGINAL db_table so no data migration is needed.
 #
-# The ONE unavoidable link: a Lesson/ELearningSubject has to belong to
-# some class, and "class" (Standard) is owned by `curriculum` as the
-# single source of truth for the school's class list — duplicating that
-# model here would create two disagreeing copies of the same data, which
-# is worse than a schema relationship. That link is expressed as a lazy
-# 'curriculum.Standard' string on the FK fields below (Django resolves
-# this through the app registry at query time — no `import curriculum...`
-# anywhere in this file), and in views.py, where the 3 views that list
-# classes fetch the Standard model via `django.apps.apps.get_model(...)`
-# rather than a top-level import. This is a schema/data dependency, not a
-# code dependency — elearning's own logic never reaches into curriculum's
-# views, forms, or admin, and curriculum has no knowledge of elearning at
-# all (no re-exports, no shims — this app was previously delivered with
-# backward-compatible re-exports in curriculum for a transition period;
-# those have been removed here in favor of full independence, per your
-# request. If anything else in your project still does
-# `from curriculum.models import Lesson` or `{% url 'curriculum:lesson_detail' %}`,
-# see the README for what to update).
-#
-# IMPORTANT — data continuity (unrelated to app independence):
-# ELearningSubject / Lesson / Comment / Reply are UNCHANGED in every
-# field/behavior from their previous home in curriculum/models.py. Each
-# one has an explicit Meta.db_table pointing at its ORIGINAL table name
-# (e.g. 'curriculum_lesson') — that's just where the data already
-# physically lives in your database; it has nothing to do with which
-# app "owns" the Python code. See the migration notes in the README
-# before running `migrate`.
+# Media policy: nothing is uploaded to this server. Videos live on
+# YouTube (set to "Unlisted"), files live on Google Drive ("Anyone with
+# the link" -> Viewer) or any other https host; we only store the links.
 # =====================================================================
 
 
@@ -68,11 +46,9 @@ class ELearningSubject(models.Model):
 
 
 def save_lesson_files(instance, filename):
-    # Kept exactly as it was in curriculum.models — note this function is
-    # NOT actually wired up as Lesson.notes' upload_to (that field uses
-    # the literal string 'save_lesson_files' as its upload_to, not this
-    # function reference), so it currently has no effect. Preserved as-is
-    # to avoid changing existing behavior; safe to clean up separately.
+    # Kept exactly as it was in curriculum.models — not wired up as
+    # Lesson.notes' upload_to (that field uses the literal string
+    # 'save_lesson_files'). Preserved as-is to avoid changing behavior.
     upload_to = 'Images/'
     ext = filename.split('.')[-1]
     if instance.lesson_id:
@@ -90,8 +66,23 @@ class Lesson(models.Model):
     subject = models.ForeignKey(ELearningSubject, on_delete=models.CASCADE, related_name='lessons')
     name = models.CharField(max_length=250, verbose_name="Topic", help_text="Enter the lesson topic (e.g. Heat Energy, Algebraic Expressions)")
     position = models.PositiveSmallIntegerField(verbose_name="Chapter no.")
-    video = EmbedVideoField(blank=True, null=True)
+    video = EmbedVideoField(
+        blank=True, null=True,
+        verbose_name="YouTube video link",
+        help_text="Paste the YouTube link. Set the video to 'Unlisted' (not 'Private') so "
+                  "students can watch without a Google account.",
+    )
+    # Legacy server upload — kept only so lessons that already have a file keep working.
+    # New lessons should use `notes_link` instead.
     notes = models.FileField(upload_to='save_lesson_files', verbose_name="Notes", blank=True)
+    # ✅ NEW — lesson file hosted externally, same approach as Assignment.resource_link
+    notes_link = models.URLField(
+        max_length=500, blank=True, null=True, validators=[validate_web_link],
+        verbose_name="Lesson notes link (optional)",
+        help_text="Link to the lesson notes/handout — e.g. a Google Drive share link "
+                  "(set sharing to 'Anyone with the link' so students need no Google account). "
+                  "Nothing is uploaded here.",
+    )
     comment = HTMLField(blank=True, null=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -115,7 +106,17 @@ class Lesson(models.Model):
 
     @property
     def html_stripped(self):
-        return strip_tags(self.comment)
+        # strip_tags(None) would return the text "None"
+        return strip_tags(self.comment or '')
+
+    @property
+    def youtube_id(self):
+        """11-char YouTube id parsed from `video`, or None for non-YouTube links."""
+        return extract_youtube_id(self.video)
+
+    @property
+    def has_resources(self):
+        return bool(self.video or self.notes_link or self.notes)
 
 
 # comment module
@@ -146,26 +147,15 @@ class Reply(models.Model):
 
     class Meta:
         db_table = 'curriculum_reply'  # keep the original table — no data migration needed
+        verbose_name = 'Reply'
+        verbose_name_plural = 'Replies'
 
     def __str__(self):
         return "reply to" + str(self.comment_name.comm_name)
 
 
 # =====================================================================
-# ✅ NEW — ASSIGNMENTS / HOMEWORK
-# ---------------------------------------------------------------------
-# Deliberately simple, k-12-appropriate, and file-upload-free:
-#   - Teachers post an assignment with instructions and (optionally) a
-#     link to the assignment file/sheet hosted externally — Google Drive,
-#     a cPanel-hosted file, etc. Nothing is stored on this server.
-#   - Students submit their own external link (Google Drive, cPanel, a
-#     doc shared link, etc.) plus an optional note — again, no file ever
-#     touches this server.
-#   - Grading (score + feedback) is done by teachers/staff — simplest
-#     path is directly through Django admin (AssignmentSubmission is
-#     registered there with score/feedback editable inline), so no new
-#     grading UI/package is required. A dedicated grading page can be
-#     added later if wanted.
+# ASSIGNMENTS / HOMEWORK — external links only (no uploads)
 # =====================================================================
 
 class Assignment(models.Model):
@@ -176,7 +166,7 @@ class Assignment(models.Model):
         help_text="What the student needs to do for this assignment/homework."
     )
     resource_link = models.URLField(
-        max_length=500, blank=True, null=True,
+        max_length=500, blank=True, null=True, validators=[validate_web_link],
         verbose_name="Assignment file link (optional)",
         help_text="External link to the assignment sheet/file — e.g. a Google Drive share "
                    "link or a file hosted on the school's cPanel. Nothing is uploaded here."
@@ -197,9 +187,6 @@ class Assignment(models.Model):
         if not self.slug:
             base_slug = slugify(self.title) or 'assignment'
             self.slug = base_slug
-            # keep it globally unique even if two lessons have a similarly
-            # titled assignment — avoids any ambiguity when looking one up
-            # by slug alone (the same pattern Lesson relies on already).
             counter = 1
             while Assignment.objects.filter(slug=self.slug).exclude(pk=self.pk).exists():
                 counter += 1
@@ -227,13 +214,12 @@ class Assignment(models.Model):
 class AssignmentSubmission(models.Model):
     """
     A student's submission for an Assignment — always an external link,
-    never a server upload, per the school's hosting preference (Google
-    Drive / cPanel-hosted files / YouTube for any video work).
+    never a server upload (Google Drive / cPanel-hosted file / YouTube).
     """
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='submissions')
     student = models.ForeignKey('students.Student', on_delete=models.CASCADE, related_name='assignment_submissions')
     submission_link = models.URLField(
-        max_length=500,
+        max_length=500, validators=[validate_web_link],
         help_text="Link to your completed work (Google Drive, cPanel file link, etc.)"
     )
     comment = models.TextField(max_length=500, blank=True, null=True, help_text="Optional note to your teacher")
@@ -249,9 +235,16 @@ class AssignmentSubmission(models.Model):
         unique_together = ('assignment', 'student')
         ordering = ['-submitted_at']
 
+    def clean(self):
+        super().clean()
+        # Guard against typos when grading in the admin (e.g. 85 out of 10).
+        if self.score is not None and self.assignment_id:
+            max_score = self.assignment.max_score
+            if max_score is not None and self.score > max_score:
+                raise ValidationError({'score': f'Score cannot be higher than the maximum of {max_score}.'})
+
     def save(self, *args, **kwargs):
-        # Stamp graded_at automatically the moment a score gets set,
-        # without requiring a separate grading view/form.
+        # Stamp graded_at automatically the moment a score gets set.
         if self.score is not None and self.graded_at is None:
             from django.utils import timezone
             self.graded_at = timezone.now()
@@ -269,3 +262,7 @@ class AssignmentSubmission(models.Model):
         if not self.assignment.due_date:
             return False
         return self.submitted_at > self.assignment.due_date
+
+
+# Teacher lesson notes — registers the models below with this app (independent feature in elearning/lessonnotes/)
+from .lessonnotes.models import LessonNote, LessonNoteEvent  # noqa: E402,F401

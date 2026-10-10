@@ -1,0 +1,20 @@
+{% load static elearning_extras %}
+{% comment %}
+  Usage: {% include "elearning/partials/resource_link.html" with url=lessons.notes_link label="Open lesson notes" %}
+{% endcomment %}
+{% resource_link_info url as res %}
+{% if res %}
+<link rel="stylesheet" href="{% static 'elearning/css/media.css' %}">
+<div class="kws-resource">
+  <a class="kws-btn" href="{{ res.url }}" target="_blank" rel="noopener noreferrer">
+    {{ label|default:"Open file" }}{% if res.is_drive %} (Google Drive){% endif %}
+  </a>
+  {% if res.preview_url %}
+  <details>
+    <summary>Preview here</summary>
+    <iframe src="{{ res.preview_url }}" loading="lazy" title="{{ label|default:'File preview' }}" allow="autoplay"></iframe>
+    <p class="kws-help">If Google asks you to sign in or request access, don't worry. Tell your teacher the file needs to be shared as "Anyone with the link".</p>
+  </details>
+  {% endif %}
+</div>
+{% endif %}

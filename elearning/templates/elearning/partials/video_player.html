@@ -1,0 +1,23 @@
+{% load static %}
+{% comment %}
+  Usage: {% include "elearning/partials/video_player.html" with video_url=lessons.video video_id=lessons.youtube_id %}
+{% endcomment %}
+{% if video_url %}
+<link rel="stylesheet" href="{% static 'elearning/css/media.css' %}">
+<section class="kws-video" aria-label="Lesson video" {% if video_id %}data-youtube-id="{{ video_id }}"{% endif %}>
+  {% if video_id %}
+    <div class="kws-video__frame"><div class="kws-video__player"></div></div>
+  {% endif %}
+
+  <div class="kws-notice kws-video__fallback" role="status" {% if video_id %}hidden{% endif %}>
+    <strong>This video can't be played inside the lesson page.</strong>
+    <p class="kws-help">It is still available. Tap the button to watch it{% if video_id %} on YouTube{% endif %}, then come back here to continue your lesson.</p>
+    <a class="kws-btn" href="{{ video_url }}" target="_blank" rel="noopener noreferrer">▶ Watch{% if video_id %} on YouTube{% endif %}</a>
+  </div>
+
+  <p class="kws-video__link">
+    <a href="{{ video_url }}" target="_blank" rel="noopener noreferrer">▶ Open this video{% if video_id %} on YouTube{% endif %}</a>
+  </p>
+</section>
+{% if video_id %}<script src="{% static 'elearning/js/video-player.js' %}" defer></script>{% endif %}
+{% endif %}

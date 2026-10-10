@@ -22,46 +22,51 @@
                     </div>
                     <div class="card-body">
                         <p class="text-muted mb-4">
-                            Fill out the form below to create a new lesson. For videos, please use a valid link (e.g., from YouTube or Vimeo).
+                            Fill out the form below to create a new lesson. Videos and lesson files are not uploaded here &mdash; paste a link to your YouTube video and (optionally) your Google Drive notes instead.
                         </p>
                         
-                        <form method="post" enctype="multipart/form-data">
+                        <form method="post">
                             {% csrf_token %}
-                            
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                            {% endif %}
+
                             <div class="row">
                                 <div class="col-lg-6 mb-3">
-                                    <label class="form-label fw-bold">Lesson ID</label>
+                                    <label class="form-label fw-bold" for="{{ form.lesson_id.id_for_label }}">Lesson ID</label>
                                     {{ form.lesson_id }}
+                                    {% for error in form.lesson_id.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                                 </div>
                                 <div class="col-lg-6 mb-3">
-                                    <label class="form-label fw-bold">Lesson Name</label>
+                                    <label class="form-label fw-bold" for="{{ form.name.id_for_label }}">Lesson Name</label>
                                     {{ form.name }}
+                                    {% for error in form.name.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                                 </div>
-                                
                                 <div class="col-lg-6 mb-3">
-                                    <label class="form-label fw-bold">Chapter Number</label>
+                                    <label class="form-label fw-bold" for="{{ form.position.id_for_label }}">Chapter Number</label>
                                     {{ form.position }}
+                                    {% for error in form.position.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                                 </div>
                                 <div class="col-lg-6 mb-3">
-                                    <label class="form-label fw-bold">Video Link</label>
+                                    <label class="form-label fw-bold" for="{{ form.video.id_for_label }}">YouTube Video Link</label>
                                     {{ form.video }}
+                                    <small class="form-text text-muted d-block mt-1">Upload to your school&rsquo;s YouTube channel and set Visibility to <strong>Unlisted</strong> (not Private) so students can watch without a Google account.</small>
+                                    {% for error in form.video.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                                 </div>
-                                
+                                <div class="col-12 mb-3">
+                                    <label class="form-label fw-bold" for="{{ form.notes_link.id_for_label }}">Lesson Notes Link (Google Drive)</label>
+                                    {{ form.notes_link }}
+                                    <small class="form-text text-muted d-block mt-1">In Google Drive choose <strong>Share &rarr; General access &rarr; Anyone with the link &rarr; Viewer</strong>, then paste the link here. Optional.</small>
+                                    {% for error in form.notes_link.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                                </div>
+
                                 <div class="col-12 mb-3">
                                     <label class="form-label fw-bold d-block">Teacher's Highlights</label>
                                     {{ form.comment }}
                                     <small class="form-text text-muted d-block mt-2">
                                         Add your key takeaways and notes for the students, with support for formatting.
                                     </small>
-                                </div>
-                                
-                                <div class="col-12 mb-4">
-                                    <label class="form-label fw-bold">Upload Lesson File</label>
-                                    <div class="input-group">
-                                        <input type="file" class="form-control" name="{{ form.ppt.name }}" id="{{ form.ppt.id_for_label }}">
-                                        <label class="input-group-text">Browse</label>
-                                    </div>
-                                    <small class="form-text text-muted d-block mt-2">e.g., PowerPoint, PDF, or Word document.</small>
+                                    {% for error in form.comment.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                                 </div>
                             </div>
 

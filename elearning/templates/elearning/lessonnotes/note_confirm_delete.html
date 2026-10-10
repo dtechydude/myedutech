@@ -1,0 +1,26 @@
+{% extends 'pages/portal_home.html' %}
+{% block title %}<title>Delete Lesson Note</title>{% endblock title %}
+
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        {% include "elearning/lessonnotes/_messages.html" %}
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow-sm border-danger">
+                    <div class="card-header bg-danger text-white"><h4 class="card-title text-white mb-0">Delete lesson note?</h4></div>
+                    <div class="card-body">
+                        <p>You are about to delete <strong>{{ note.title }}</strong> ({{ note.standard }}, Week {{ note.week }}).</p>
+                        <p class="text-muted small">This removes it and its history from the school's list. The Google file itself is not deleted.</p>
+                        <form method="post" class="d-flex gap-2">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-1"></i>Yes, delete</button>
+                            <a href="{{ note.get_absolute_url }}" class="btn btn-outline-secondary">Cancel</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content_body %}

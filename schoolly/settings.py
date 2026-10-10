@@ -319,3 +319,11 @@ CKEDITOR_5_CONFIGS = {
         },
     },
 }
+
+
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+# For Lesson Notes
+LESSONNOTES_SHARED_FOLDER_URL = "https://drive.google.com/drive/folders/XXXX"  # shown to teachers
+LESSONNOTES_REVIEWER_EMAIL = "academics@yourschool.com"                        # shown to teachers/reviewers
+LESSONNOTES_PAGE_SIZE = 20

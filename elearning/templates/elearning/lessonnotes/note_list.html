@@ -1,0 +1,105 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+{% block title %}<title>Lesson Notes</title>{% endblock title %}
+
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="javascript:void(0)">Lesson Notes</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">{% if mode == 'mine' %}My notes{% elif scoped_teacher %}{{ scoped_teacher.get_full_name|default:scoped_teacher.username }}{% else %}All notes{% endif %}</a></li>
+            </ol>
+        </div>
+
+        {% include "elearning/lessonnotes/_messages.html" %}
+        {% include "elearning/lessonnotes/_nav.html" %}
+
+        {% if scoped_teacher %}
+        <div class="alert alert-light border d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-user me-2"></i>Showing notes submitted by <strong>{{ scoped_teacher.get_full_name|default:scoped_teacher.username }}</strong></span>
+            <a href="{% url 'lessonnotes:teachers' %}" class="btn btn-sm btn-outline-secondary">All teachers</a>
+        </div>
+        {% endif %}
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body py-3"><div class="text-muted small">Total</div><div class="fs-3 fw-bold">{{ stats.total }}</div></div></div></div>
+            <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body py-3"><div class="text-muted small">Awaiting review</div><div class="fs-3 fw-bold text-info">{{ stats.submitted }}</div></div></div></div>
+            <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body py-3"><div class="text-muted small">Changes requested</div><div class="fs-3 fw-bold text-warning">{{ stats.revision }}</div></div></div></div>
+            <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body py-3"><div class="text-muted small">Approved</div><div class="fs-3 fw-bold text-success">{{ stats.approved }}</div></div></div></div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-2 align-items-end">
+                    <div class="col-12 col-lg-4">{{ filter_form.q }}</div>
+                    <div class="col-6 col-lg-2">{{ filter_form.status }}</div>
+                    <div class="col-6 col-lg-2">{{ filter_form.term }}</div>
+                    <div class="col-6 col-lg-2">{{ filter_form.session }}</div>
+                    <div class="col-6 col-lg-2">{{ filter_form.week }}</div>
+                    <div class="col-6 col-lg-3">{{ filter_form.standard }}</div>
+                    {% if filter_form.teacher %}<div class="col-6 col-lg-3">{{ filter_form.teacher }}</div>{% endif %}
+                    <div class="col-12 col-lg-auto d-flex gap-2">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-1"></i>Filter</button>
+                        <a href="{{ request.path }}" class="btn btn-outline-secondary">Reset</a>
+                        {% if ln_is_reviewer and mode != 'mine' %}
+                        <a href="{% url 'lessonnotes:export' %}{% if querystring %}?{{ querystring }}{% endif %}" class="btn btn-outline-success"><i class="fas fa-file-csv me-1"></i>Export CSV</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            {% if mode != 'mine' and not scoped_teacher %}<th>Teacher</th>{% endif %}
+                            <th>Class</th>
+                            <th>Subject</th>
+                            <th>Week / Term</th>
+                            <th>File</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for n in notes %}
+                        <tr>
+                            {% if mode != 'mine' and not scoped_teacher %}<td><a href="{% url 'lessonnotes:teacher_notes' n.teacher_id %}">{{ n.teacher_display }}</a></td>{% endif %}
+                            <td>{{ n.standard }}</td>
+                            <td>{{ n.subject_name }}</td>
+                            <td>Week {{ n.week }} &middot; {{ n.get_term_display }}<br><small class="text-muted">{{ n.academic_session }}</small></td>
+                            <td><i class="fas {{ n.kind_icon }} me-1 text-muted"></i>{{ n.kind_label }}</td>
+                            <td><span class="badge bg-{{ n.badge_class }}">{{ n.get_status_display }}</span></td>
+                            <td class="text-nowrap">{{ n.submitted_at|date:"M j, Y" }}</td>
+                            <td class="text-end text-nowrap">
+                                <a href="{{ n.get_absolute_url }}" class="btn btn-sm btn-outline-primary">{% if mode != 'mine' %}Review{% else %}View{% endif %}</a>
+                                {% if n.safe_link %}<a href="{{ n.safe_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary" title="Open in Google Drive"><i class="fab fa-google-drive"></i></a>{% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="8" class="text-center text-muted py-5">
+                            <i class="fas fa-info-circle me-1"></i>No lesson notes found.
+                            {% if mode == 'mine' %}<a href="{% url 'lessonnotes:submit' %}">Submit your first note</a>.{% endif %}
+                        </td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if is_paginated %}
+        <nav class="mt-4" aria-label="Pages">
+            <ul class="pagination justify-content-center flex-wrap">
+                {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+                <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock content_body %}

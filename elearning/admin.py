@@ -1,7 +1,7 @@
 from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
 from .models import ELearningSubject, Lesson, Comment, Reply, Assignment, AssignmentSubmission
-
+from .lessonnotes import admin as _lessonnotes_admin  # noqa: F401
 
 @admin.register(ELearningSubject)
 class ELearningSubjectAdmin(ImportExportModelAdmin):
@@ -13,7 +13,7 @@ class ELearningSubjectAdmin(ImportExportModelAdmin):
 
 @admin.register(Lesson)
 class LessonAdmin(ImportExportModelAdmin):
-    list_display = ('standard', 'subject', 'lesson_id', 'name')
+    list_display = ('standard', 'subject', 'lesson_id', 'name', 'notes')
     list_filter = ['standard']
     search_fields = ('standard__name', 'subject__name')
     raw_id_fields = ['created_by']

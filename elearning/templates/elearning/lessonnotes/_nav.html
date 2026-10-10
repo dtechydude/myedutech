@@ -1,0 +1,10 @@
+<ul class="nav nav-pills mb-4 flex-wrap gap-2">
+    {% if ln_is_author %}
+    <li class="nav-item"><a class="nav-link {% if nav_active == 'mine' %}active{% endif %}" href="{% url 'lessonnotes:mine' %}"><i class="fas fa-folder-open me-1"></i>My notes</a></li>
+    <li class="nav-item"><a class="nav-link {% if nav_active == 'submit' %}active{% endif %}" href="{% url 'lessonnotes:submit' %}"><i class="fas fa-plus-circle me-1"></i>Submit a note</a></li>
+    {% endif %}
+    {% if ln_is_reviewer %}
+    <li class="nav-item"><a class="nav-link {% if nav_active == 'all' %}active{% endif %}" href="{% url 'lessonnotes:all' %}"><i class="fas fa-list me-1"></i>All notes</a></li>
+    <li class="nav-item"><a class="nav-link {% if nav_active == 'teachers' %}active{% endif %}" href="{% url 'lessonnotes:teachers' %}"><i class="fas fa-chalkboard-teacher me-1"></i>Teachers</a></li>
+    {% endif %}
+</ul>

@@ -1,5 +1,4 @@
 {% extends 'pages/portal_home.html'%}
-{% load crispy_forms_tags %}
 {% load static %}
 {% block title %}<title>KwikSchools - Update Lesson</title>{% endblock title %}
 
@@ -10,6 +9,7 @@
         <div class="row page-titles">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{% url 'elearning:standard_list' %}">E-Learning</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'elearning:lesson_detail' standard=lessons.standard.slug subject=lessons.subject.slug slug=lessons.slug %}">{{ lessons.name }}</a></li>
                 <li class="breadcrumb-item active"><a href="javascript:void(0)">Update Lesson</a></li>
             </ol>
         </div>
@@ -21,24 +21,65 @@
                         <h4 class="card-title text-white mb-0">Update Lesson</h4>
                     </div>
                     <div class="card-body">
+                        <p class="text-muted mb-4">
+                            Videos and lesson files are not uploaded here &mdash; paste a link to your YouTube video and your Google Drive notes instead.
+                            <span class="d-block small mt-1">Lesson ID: <code>{{ lessons.lesson_id }}</code></span>
+                        </p>
+
                         {% if messages %}
                             {% for message in messages %}
-                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
                                     {{ message }}
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                 </div>
                             {% endfor%}
                         {% endif%}
                         
-                        <form method="post" enctype="multipart/form-data">
-                            {% csrf_token%}
-                            {{ form|crispy }}
-                            
+                        <form method="post">
+                            {% csrf_token %}
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-lg-6 mb-3">
+                                    <label class="form-label fw-bold" for="{{ form.name.id_for_label }}">Lesson Name</label>
+                                    {{ form.name }}
+                                    {% for error in form.name.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                                </div>
+                                <div class="col-lg-6 mb-3">
+                                    <label class="form-label fw-bold" for="{{ form.position.id_for_label }}">Chapter Number</label>
+                                    {{ form.position }}
+                                    {% for error in form.position.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label fw-bold" for="{{ form.video.id_for_label }}">YouTube Video Link</label>
+                                    {{ form.video }}
+                                    <small class="form-text text-muted d-block mt-1">Set the video to <strong>Unlisted</strong> (not Private) on YouTube so students can watch without a Google account.</small>
+                                    {% for error in form.video.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label fw-bold" for="{{ form.notes_link.id_for_label }}">Lesson Notes Link (Google Drive)</label>
+                                    {{ form.notes_link }}
+                                    <small class="form-text text-muted d-block mt-1">In Google Drive choose <strong>Share &rarr; General access &rarr; Anyone with the link &rarr; Viewer</strong>. Optional.</small>
+                                    {% for error in form.notes_link.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                                </div>
+
+                                <div class="col-12 mb-3">
+                                    <label class="form-label fw-bold d-block">Teacher's Highlights</label>
+                                    {{ form.comment }}
+                                    <small class="form-text text-muted d-block mt-2">
+                                        Add your key takeaways and notes for the students, with support for formatting.
+                                    </small>
+                                    {% for error in form.comment.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                                </div>
+                            </div>
+
                             <div class="d-grid gap-2 mt-4">
                                 <button type="submit" class="btn btn-success btn-lg">
                                     <i class="fas fa-edit me-2"></i>Update Lesson
                                 </button>
-                                <a href="{% url 'elearning:standard_list' %}" class="btn btn-outline-danger btn-lg">
+                                <a href="{% url 'elearning:lesson_detail' standard=lessons.standard.slug subject=lessons.subject.slug slug=lessons.slug %}" class="btn btn-outline-danger btn-lg">
                                     <i class="fas fa-times-circle me-2"></i>Cancel Update
                                 </a>
                             </div>
@@ -64,3 +105,8 @@
 </div>
 {% endif %}
 {% endblock content_body %}
+
+{% block scripts %}
+{{ block.super }}
+{% include "elearning/partials/ckeditor_editor.html" %}
+{% endblock scripts %}

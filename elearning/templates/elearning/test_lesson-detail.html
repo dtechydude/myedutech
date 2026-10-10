@@ -1,6 +1,5 @@
 {% extends 'pages/portal_home.html' %}
 {% load static %}
-{% load embed_video_tags %}
 
 {% block title %}
 <title>Lesson Detail</title>
@@ -15,8 +14,17 @@
                 <li class="breadcrumb-item"><a href="javascript:void(0)">{{ lessons.subject }}</a></li>
                 <li class="breadcrumb-item active"><a href="javascript:void(0)">Topic: {{ lessons.name }}</a></li>
                 <li class="breadcrumb-item"><a href="javascript:void(0)">Class: {{ lessons.standard }}</a></li>
-            </ol>
+                        </ol>
         </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
 
         <div class="row">
             <div class="col-lg-12">
@@ -84,30 +92,31 @@
                                     <hr>
 
                                     <h5 class="mt-4 mb-3">Video Lesson</h5>
-                                    <div class="ratio ratio-16x9 mb-4">
-                                        {% if lessons.video %}
-                                            {% video lessons.video 'medium' %}
-                                        {% else %}
+                                    {% if lessons.video %}
+                                        {# YouTube player with a friendly fallback + "Watch on YouTube" link (replaces {% video %} / Error 153) #}
+                                        {% include "elearning/partials/video_player.html" with video_url=lessons.video video_id=lessons.youtube_id %}
+                                    {% else %}
+                                        <div class="ratio ratio-16x9 mb-4">
                                             <div class="bg-dark text-white d-flex align-items-center justify-content-center rounded">
                                                 <p class="lead"><i class="fas fa-video me-2"></i>No video available for this lesson.</p>
                                             </div>
-                                        {% endif %}
-                                    </div>
+                                        </div>
+                                    {% endif %}
 
                                     <h5 class="mt-4 mb-3">Teacher's Highlights</h5>
                                     <div class="card p-3 mb-4 bg-light border-0">
                                         <div class="text-break" style="color:black;">{{ lessons.comment|safe|linebreaks }}</div>
                                     </div>
 
-                                    {% if lessons.ppt %}
-                                    <h5 class="mt-4 mb-3">Lesson Attachments</h5>
-                                    <div class="d-flex flex-wrap gap-3">
-                                        <a href="{{ lessons.ppt.url }}" class="btn btn-outline-primary" download>
-                                            <i class="fas fa-file-download me-2"></i>Download Lesson
+                                    {% if lessons.notes_link or lessons.notes %}
+                                    <h5 class="mt-4 mb-3">Lesson Notes</h5>
+                                    <div class="mb-4">
+                                        {% include "elearning/partials/resource_link.html" with url=lessons.notes_link label="Open Lesson Notes" %}
+                                        {% if lessons.notes %}
+                                        <a href="{{ lessons.notes.url }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm mt-2">
+                                            <i class="fas fa-file-download me-2"></i>Download notes (older upload)
                                         </a>
-                                        <a href="{{ lessons.ppt.url }}" target="_blank" class="btn btn-outline-secondary">
-                                            <i class="fas fa-eye me-2"></i>View Lesson
-                                        </a>
+                                        {% endif %}
                                     </div>
                                     {% endif %}
 
@@ -154,9 +163,7 @@
                                                     {% endif %}
 
                                                     {% if assignment.resource_link %}
-                                                    <a href="{{ assignment.resource_link }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary mb-2">
-                                                        <i class="fas fa-external-link-alt me-1"></i>Open Assignment File
-                                                    </a>
+                                                    {% include "elearning/partials/resource_link.html" with url=assignment.resource_link label="Open Assignment File" %}
                                                     {% endif %}
 
                                                     {% if user.is_authenticated and user.student %}
@@ -182,20 +189,26 @@
                                                             </div>
                                                             {% endif %}
 
-                                                            <form method="post" class="d-flex flex-column gap-2">
-                                                                {% csrf_token %}
-                                                                <input type="hidden" name="submission_form" value="1">
-                                                                <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
-                                                                {{ assignment.submission_form.submission_link }}
-                                                                {{ assignment.submission_form.comment }}
-                                                                <button type="submit" class="btn btn-success btn-sm align-self-start">
-                                                                    <i class="fas fa-paper-plane me-1"></i>{% if assignment.my_submission %}Update{% else %}Submit{% endif %} My Work
-                                                                </button>
-                                                            </form>
+                                                            {% if assignment.my_submission.is_graded %}
+                                                                <p class="small text-muted mb-0"><i class="fas fa-lock me-1"></i>Your work has been graded, so it can no longer be changed.</p>
+                                                            {% else %}
+                                                                <p class="text-muted small mb-2">In Google Drive choose <strong>Share &rarr; Anyone with the link</strong>, then paste the link below.</p>
+                                                                <form method="post" class="d-flex flex-column gap-2">
+                                                                    {% csrf_token %}
+                                                                    <input type="hidden" name="submission_form" value="1">
+                                                                    <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+                                                                    {{ assignment.submission_form.submission_link }}
+                                                                    {{ assignment.submission_form.comment }}
+                                                                    <button type="submit" class="btn btn-success btn-sm align-self-start">
+                                                                        <i class="fas fa-paper-plane me-1"></i>{% if assignment.my_submission %}Update{% else %}Submit{% endif %} My Work
+                                                                    </button>
+                                                                </form>
+                                                            {% endif %}
 
                                                             {% if assignment.my_submission %}
                                                             <p class="text-muted small mt-2 mb-0">
                                                                 Last submitted {{ assignment.my_submission.submitted_at|date:"M j, Y — g:i A" }}
+                                                                &middot; <a href="{{ assignment.my_submission.submission_link }}" target="_blank" rel="noopener noreferrer">View submitted link</a>
                                                             </p>
                                                             {% endif %}
                                                         </div>
@@ -227,7 +240,7 @@
                                     </div>
 
                                     <div class="comments-list">
-                                        {% for comment in lessons.comments.all %}
+                                        {% for comment in comments %}
                                             <div class="card border-0 shadow-sm mb-3">
                                                 <div class="card-body">
                                                     <div class="d-flex align-items-start">

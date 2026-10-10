@@ -1,0 +1,72 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+{% block title %}<title>{% if mode == 'update' %}Edit{% else %}Submit{% endif %} Lesson Note</title>{% endblock title %}
+
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'lessonnotes:mine' %}">Lesson Notes</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">{% if mode == 'update' %}Edit note{% else %}Submit a note{% endif %}</a></li>
+            </ol>
+        </div>
+
+        {% include "elearning/lessonnotes/_messages.html" %}
+        {% include "elearning/lessonnotes/_nav.html" %}
+
+        <div class="row g-4">
+            <div class="col-xl-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="card-title text-white mb-0">{% if mode == 'update' %}Edit lesson note{% else %}Submit a lesson note{% endif %}</h4>
+                    </div>
+                    <div class="card-body">
+                        {% if mode == 'update' and note.status == 'revision' %}
+                        <div class="alert alert-warning">
+                            <strong>The school asked for changes:</strong> {{ note.review_remark }}
+                            <div class="small mt-1">Fix the note in Google Drive, then save here to send it back for review.</div>
+                        </div>
+                        {% endif %}
+
+                        <form method="post">
+                            {% csrf_token %}
+                            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+                            <div class="row">
+                                {% for f in form %}
+                                <div class="{% if f.name == 'doc_link' or f.name == 'teacher_note' or f.name == 'title' %}col-12{% else %}col-md-6{% endif %} mb-3">
+                                    <label class="form-label fw-bold" for="{{ f.id_for_label }}">{{ f.label }}</label>
+                                    {{ f }}
+                                    {% if f.help_text %}<small class="form-text text-muted d-block mt-1">{{ f.help_text }}</small>{% endif %}
+                                    {% for error in f.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="d-grid gap-2 mt-3">
+                                <button type="submit" class="btn btn-success btn-lg"><i class="fas fa-paper-plane me-2"></i>{% if mode == 'update' %}Save changes{% else %}Submit for review{% endif %}</button>
+                                <a href="{% if mode == 'update' %}{{ note.get_absolute_url }}{% else %}{% url 'lessonnotes:mine' %}{% endif %}" class="btn btn-outline-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fab fa-google-drive me-2 text-primary"></i>How it works</h5>
+                        <ol class="small ps-3 mb-3">
+                            <li>Write your lesson note in <strong>Google Docs</strong> (or Sheets / Slides, or upload a file to Drive). You need a Google account.</li>
+                            <li>{% if ln_folder_url %}Create it inside the <a href="{{ ln_folder_url }}" target="_blank" rel="noopener noreferrer">school's lesson-notes folder</a> so the school can open it automatically.{% else %}Share it with the school so reviewers can open it.{% endif %}{% if ln_reviewer_email %} Reviewer account: <strong>{{ ln_reviewer_email }}</strong>.{% endif %}</li>
+                            <li>Click <strong>Share</strong> in Google and give the school <strong>Editor</strong> access (or <strong>Commenter</strong> if you want to keep edits yourself).</li>
+                            <li>Copy the file's link, paste it here and submit.</li>
+                            <li>The school comments or edits right inside Google, then approves it here or asks for changes.</li>
+                        </ol>
+                        <p class="small text-muted mb-0">Paste the link to the <em>file</em>, not to a folder.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content_body %}

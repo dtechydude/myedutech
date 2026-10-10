@@ -1,0 +1,34 @@
+{# Rich-text editor for the "Teacher's Highlights" box (#id_comment).        #}
+{# Use inside {% block scripts %} after {{ block.super }}.                    #}
+<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
+
+<style>
+    /* Keep the editor responsive inside cards and on phones */
+    .ck.ck-editor { width: 100% !important; box-sizing: border-box !important; }
+    .ck-toolbar { flex-wrap: wrap; width: 100%; }
+    .ck-content {
+        max-width: 100%;
+        overflow-x: hidden;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+</style>
+
+<script>
+(function () {
+    var field = document.querySelector('#id_comment');
+    if (!field) return;
+
+    // If the editor script is blocked (offline / restricted school network) the
+    // box would show raw HTML. Keep it usable and tell the teacher why.
+    if (typeof ClassicEditor === 'undefined') {
+        var note = document.createElement('div');
+        note.className = 'alert alert-warning small mt-2';
+        note.textContent = 'The text editor could not load. You can still save, but this box shows HTML code \u2014 please do not delete the tags.';
+        field.parentNode.insertBefore(note, field.nextSibling);
+        return;
+    }
+
+    ClassicEditor.create(field).catch(function (error) { console.error(error); });
+})();
+</script>

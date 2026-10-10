@@ -29,6 +29,8 @@ urlpatterns = [
     path('elearning/', include('elearning.urls', namespace='elearning')),
     path('inventory/', include('inventory.urls', namespace='inventory')),
     path('student-status/', include('studentstatus.urls')),
+    # For Lesson Note
+    path('lesson-notes/', include('elearning.lessonnotes.urls')),
 
 
 

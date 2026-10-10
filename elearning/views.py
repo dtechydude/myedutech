@@ -1,18 +1,23 @@
-from django.http import HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Count
-from django.db.models import Prefetch, Q  # Add Q and Prefetch
+from django.db.models import Prefetch, Q
 from django.views.generic import (TemplateView, DetailView,
                                    ListView, FormView, CreateView,
                                    UpdateView, DeleteView)
 from .models import (
     Lesson, ELearningSubject, save_lesson_files,
-    Assignment, AssignmentSubmission,
+    Assignment, AssignmentSubmission, Comment, Reply,
 )
-from .forms import CommentForm, LessonForm, ReplyForm, AssignmentForm, AssignmentSubmissionForm
+# from .forms import CommentForm, LessonForm, ReplyForm, AssignmentForm, AssignmentSubmissionForm
+from .forms import (CommentForm, LessonForm, LessonUpdateForm, ReplyForm,
+                    AssignmentForm, AssignmentSubmissionForm)
+from .permissions import (
+    ClassAccessMixin, TeacherRequiredMixin, get_student, is_teacher_or_staff,
+)
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -22,11 +27,7 @@ from django.apps import apps as django_apps
 def _get_standard_model():
     """
     Lazily fetch curriculum.Standard through Django's app registry
-    instead of a top-level `from curriculum.models import Standard`.
-    This is the one unavoidable link to curriculum (a lesson has to
-    belong to some class, and classes are owned by curriculum) — kept
-    as a runtime lookup rather than an import so this module never
-    directly depends on curriculum's code.
+    instead of a top-level import (the one unavoidable link to curriculum).
     """
     return django_apps.get_model('curriculum', 'Standard')
 
@@ -51,7 +52,14 @@ class ClassListView(LoginRequiredMixin, ListView):
         return Standard.objects.all()
 
 
-class SubjectListView(DetailView):
+# ---------------------------------------------------------------------
+# Access control (✅ hardened): every page below now requires login, and
+# a student can only open their OWN class's subjects/lessons. Teachers,
+# staff and superusers can open everything. This is what keeps
+# "Unlisted" YouTube links and "anyone with the link" Drive files
+# effectively private — the links are only ever shown inside the portal.
+# ---------------------------------------------------------------------
+class SubjectListView(ClassAccessMixin, DetailView):
     context_object_name = 'standards'
     template_name = 'elearning/test_class_subjects.html'
 
@@ -59,14 +67,41 @@ class SubjectListView(DetailView):
         Standard = _get_standard_model()
         return Standard.objects.all()
 
+    def get_standard_id(self, obj):
+        return obj.pk
 
-class LessonListView(DetailView):
+
+class LessonListView(ClassAccessMixin, DetailView):
     context_object_name = 'subjects'
     model = ELearningSubject
     template_name = 'elearning/test_course_list.html'
 
+    def get_queryset(self):
+        # URL carries the class slug too — use it so mismatched URLs 404.
+        return (ELearningSubject.objects
+                .select_related('standard')
+                .prefetch_related('lessons')
+                .filter(standard__slug=self.kwargs['standard']))
 
-class LessonDetailView(DetailView, FormView):
+    def get_standard_id(self, obj):
+        return obj.standard_id
+
+
+class LessonLookupMixin:
+    """
+    Lesson.slug is not unique (two subjects can both have an
+    "Introduction" lesson), so resolve lessons by class + subject + slug
+    — all three are already in the URL.
+    """
+
+    def get_queryset(self):
+        return (Lesson.objects
+                .select_related('standard', 'subject', 'created_by')
+                .filter(standard__slug=self.kwargs['standard'],
+                        subject__slug=self.kwargs['subject']))
+
+
+class LessonDetailView(ClassAccessMixin, LessonLookupMixin, DetailView, FormView):
     context_object_name = 'lessons'
     model = Lesson
     template_name = 'elearning/test_lesson-detail.html'
@@ -78,22 +113,30 @@ class LessonDetailView(DetailView, FormView):
         see which one is posted
         take action on the form which is posted
     '''
+
+    def get_standard_id(self, obj):
+        return obj.standard_id
+
     def get_context_data(self, **kwargs):
         context = super(LessonDetailView, self).get_context_data(**kwargs)
         if 'form' not in context:
             context['form'] = self.form_class()
         if 'form2' not in context:
             context['form2'] = self.second_form_class()
-        # context['comments] = Comment.objects.filter(id=self.object.id)
 
-        # ── NEW — Assignments/Homework for this lesson ────────────────
+        # Optional for templates: comments with authors/replies pre-fetched
+        # (avoids one query per comment/reply).
+        context['comments'] = (
+            self.object.comments
+            .select_related('author')
+            .prefetch_related(Prefetch('replies', queryset=Reply.objects.select_related('author')))
+        )
+
+        # ── Assignments/Homework for this lesson ──────────────────────
         # Each assignment gets `.my_submission` (this student's existing
-        # submission, or None) and `.submission_form` (a form pre-filled
-        # with that submission, so editing shows what was already sent)
-        # attached directly — avoids needing a custom template filter
-        # for dict lookups in the template.
+        # submission, or None) and `.submission_form` (pre-filled).
         assignments = list(self.object.assignments.all())
-        student = getattr(self.request.user, 'student', None)
+        student = get_student(self.request.user)
 
         if student is not None:
             existing_by_assignment = {
@@ -115,42 +158,46 @@ class LessonDetailView(DetailView, FormView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
 
-        # ── NEW — assignment submission (external link only, no uploads) ──
+        # assignment submission (external link only, no uploads)
         if 'submission_form' in request.POST:
             return self.handle_assignment_submission(request)
 
         if 'form' in request.POST:
-            form_class = self.get_form_class()
-            form_name = 'form'
+            form = self.get_form(self.get_form_class())
+            on_valid = self.form_valid
         else:
-            form_class = self.second_form_class
-            form_name = 'form2'
+            form = self.get_form(self.second_form_class)
+            on_valid = self.form2_valid
 
-        form = self.get_form(form_class)
+        if form.is_valid():
+            return on_valid(form)
 
-        if form_name == 'form' and form.is_valid():
-            print("comment form is returned")
-            return self.form_valid(form)
-        elif form_name == 'form2' and form.is_valid():
-            print("reply form is returned")
-            return self.form2_valid(form)
+        # ✅ FIX — an invalid comment/reply used to return None (HTTP 500).
+        messages.error(request, "Your message could not be posted. Please check it and try again.")
+        return HttpResponseRedirect(self.get_success_url())
 
     def handle_assignment_submission(self, request):
         """
-        ✅ NEW — Records a student's external link (Google Drive, a
-        cPanel-hosted file, etc.) as their submission for a specific
-        Assignment tied to this lesson. Nothing is ever uploaded to
-        this server; only the link + an optional note are stored.
+        Records a student's external link (Google Drive, a cPanel-hosted
+        file, etc.) as their submission for an Assignment of this lesson.
         """
-        assignment_id = request.POST.get('assignment_id')
-        assignment = get_object_or_404(Assignment, id=assignment_id, lesson=self.object)
+        raw_id = request.POST.get('assignment_id', '')
+        if not raw_id.isdigit():
+            raise Http404
+        assignment = get_object_or_404(Assignment, id=int(raw_id), lesson=self.object)
 
-        student = getattr(request.user, 'student', None)
+        student = get_student(request.user)
         if student is None:
             messages.error(request, "Only students can submit assignments.")
             return HttpResponseRedirect(self.get_success_url())
 
         existing = AssignmentSubmission.objects.filter(assignment=assignment, student=student).first()
+
+        # ✅ NEW — once the teacher has graded it, the work is locked.
+        if existing is not None and existing.is_graded:
+            messages.error(request, f"'{assignment.title}' has already been graded and can no longer be changed.")
+            return HttpResponseRedirect(self.get_success_url())
+
         form = AssignmentSubmissionForm(request.POST, instance=existing)
 
         if form.is_valid():
@@ -165,7 +212,6 @@ class LessonDetailView(DetailView, FormView):
         return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
-        self.object = self.get_object()
         standard = self.object.standard
         subject = self.object.subject
         return reverse_lazy('elearning:lesson_detail', kwargs={'standard': standard.slug,
@@ -173,24 +219,29 @@ class LessonDetailView(DetailView, FormView):
                                                                  'slug': self.object.slug})
 
     def form_valid(self, form):
-        self.object = self.get_object()
         fm = form.save(commit=False)
         fm.author = self.request.user
-        fm.lesson_name = self.object.comments.name
-        fm.lesson_name_id = self.object.id
+        # ✅ FIX — the old `self.object.comments.name` raised AttributeError
+        # (`comments` is a related manager, not a model instance).
+        fm.lesson_name = self.object
         fm.save()
         return HttpResponseRedirect(self.get_success_url())
 
     def form2_valid(self, form):
-        self.object = self.get_object()
+        raw_id = self.request.POST.get('comment.id', '')
+        if not raw_id.isdigit():
+            raise Http404
+        # ✅ the comment must belong to THIS lesson
+        comment = get_object_or_404(Comment, pk=int(raw_id), lesson_name=self.object)
         fm = form.save(commit=False)
         fm.author = self.request.user
-        fm.comment_name_id = self.request.POST.get('comment.id')
+        fm.comment_name = comment
         fm.save()
         return HttpResponseRedirect(self.get_success_url())
 
 
-class LessonCreateView(CreateView):
+class LessonCreateView(TeacherRequiredMixin, CreateView):
+    # ✅ hardened: previously had no view-level permission check at all.
     form_class = LessonForm
     context_object_name = 'subject'
     model = ELearningSubject
@@ -211,13 +262,11 @@ class LessonCreateView(CreateView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class LessonUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    fields = ('name', 'position', 'video', 'comment')
-    model = Lesson
+class LessonUpdateView(LoginRequiredMixin, UserPassesTestMixin, LessonLookupMixin, UpdateView):
+    form_class = LessonUpdateForm  # ✅ same CKEditor-friendly widgets as the create page    model = Lesson
     template_name = 'elearning/test_lesson_update_view.html'
     context_object_name = 'lessons'
 
-    # function to check if user is the login user
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)
@@ -230,7 +279,7 @@ class LessonUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return False
 
 
-class LessonDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class LessonDeleteView(LoginRequiredMixin, UserPassesTestMixin, LessonLookupMixin, DeleteView):
     model = Lesson
     context_object_name = 'lessons'
     template_name = 'elearning/test_lesson_delete.html'
@@ -249,18 +298,11 @@ class LessonDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 
 # =====================================================================
-# ✅ NEW — Assignment / Homework CRUD (teacher/staff only)
-# ---------------------------------------------------------------------
-# Mirrors the existing Lesson CRUD pattern above for consistency. Unlike
-# the pre-existing LessonCreateView (which has no view-level access
-# check — access is only hidden at the template level), these new views
-# DO enforce access control at the view level via UserPassesTestMixin,
-# since there's no existing behavior here to preserve and it costs
-# nothing to do it properly for new code.
+# Assignment / Homework CRUD (teacher/staff only) — unchanged
 # =====================================================================
 
 def _is_teacher_or_staff(user):
-    return bool(user.is_authenticated and (user.is_superuser or user.is_staff or hasattr(user, 'teacher')))
+    return is_teacher_or_staff(user)
 
 
 class AssignmentCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
@@ -341,13 +383,9 @@ class AssignmentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 @login_required
 def class_meeting_list_view(request):
     """
-    NOTE: Moved into elearning unchanged, exactly as it existed in
-    curriculum/views.py. This view is not currently wired to any URL
-    (there was no `path(...)` for it in the original urls.py either),
-    and its student-facing branch references a `SubjectOnlineMeeting`
-    model that does not exist anywhere in the codebase. It is inert —
-    kept only for continuity, not fixed, since that wasn't part of this
-    refactor's scope.
+    Unchanged from the original: not wired to any URL, and its student
+    branch references a `SubjectOnlineMeeting` model that does not exist.
+    Inert — left alone on purpose.
     """
     user = request.user
     context = {'subjects_with_meetings': []}

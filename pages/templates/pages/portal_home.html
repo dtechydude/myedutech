@@ -572,14 +572,14 @@
 							<li><a href="{% url 'staff:teacher_assignments' %}">Subj/Classes Allocation List</a></li>
 							<li><a href="{% url 'staff:cbv_all_teachers_student_counts' %}">Form Teachers</a></li>
 							
-							<li><a href="{% url 'staff:take_staff_attendance' %}">Take Staff Attendance(MANUAL)</a></li>
-							<li><a href="{% url 'staff:staff_attendance_scanner' %}">Take Staff Attendance(scanning)</a></li>
+							<li><a href="{% url 'staff:take_staff_attendance' %}">MANUAL Attendance</a></li>
+							<li><a href="{% url 'staff:staff_attendance_scanner' %}">Attendance By SCANNING</a></li>
 							<li><a href="{% url 'staff:staff_attendance_report' %}">Staff Attendance Report</a></li>
 							{% comment %} <li><a href="{% url 'curriculum:form_teachers_head' %}">FormTeachers List</a></li> {% endcomment %}
 							{% comment %} <li><a href="{% url 'curriculum:classgroup_form_teachers' %}">ClassGroup FormTeachers</a></li> {% endcomment %}
 							<li><a href="{% url 'staff:teacher_upcoming_birthdays' %}">							
 								<i class="fas fa-birthday-cake me-2"></i>
-								Teacher Birthdays
+								Staff Birthdays
 							</a></li>
 						</ul>
 					</li>
@@ -716,6 +716,28 @@
 							{% endif %}
 						</ul>					
 					</li>
+
+						
+					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
+						<i class="flaticon-013-checkmark"></i>
+							<span class="nav-text">LESSON NOTES</span>
+						</a>
+						<ul aria-expanded="false">							
+						
+							{% if user.is_authenticated and user.is_superuser or user.is_staff %}
+							<li><a href="{% url 'lessonnotes:home' %}">Lesson Notes</a></li>
+							<li><a href="{% url 'lessonnotes:teachers' %}">All Teachers Notes</a></li>														
+							
+							{% elif user.is_authenticated and user.teacher %}
+							<li><a href="{% url 'lessonnotes:mine' %}">My Lesson Notes</a></li>	
+							<li><a href="{% url 'lessonnotes:submit' %}">Submit Lesson Notes</a></li>														
+													
+																
+							{% endif %}
+						</ul>					
+					</li>
+
+
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
 						<span class="nav-text">SCHOOL BUS</span>

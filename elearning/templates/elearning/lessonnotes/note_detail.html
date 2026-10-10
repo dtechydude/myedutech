@@ -1,0 +1,109 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+{% block title %}<title>Lesson Note</title>{% endblock title %}
+
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% if ln_is_reviewer and user != note.teacher %}{% url 'lessonnotes:all' %}{% else %}{% url 'lessonnotes:mine' %}{% endif %}">Lesson Notes</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">{{ note.title|truncatechars:50 }}</a></li>
+            </ol>
+        </div>
+
+        {% include "elearning/lessonnotes/_messages.html" %}
+        {% include "elearning/lessonnotes/_nav.html" %}
+
+        <div class="row g-4">
+            <div class="col-xl-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                            <div>
+                                <h4 class="mb-1">{{ note.title }}</h4>
+                                <p class="text-muted mb-0">by {{ note.teacher_display }}</p>
+                            </div>
+                            <span class="badge bg-{{ note.badge_class }} fs-6">{{ note.get_status_display }}</span>
+                        </div>
+
+                        <dl class="row mb-3">
+                            <dt class="col-sm-3">Class</dt><dd class="col-sm-9">{{ note.standard }}</dd>
+                            <dt class="col-sm-3">Subject</dt><dd class="col-sm-9">{{ note.subject_name }}</dd>
+                            <dt class="col-sm-3">Period</dt><dd class="col-sm-9">Week {{ note.week }}, {{ note.get_term_display }} &middot; {{ note.academic_session }}</dd>
+                            <dt class="col-sm-3">File</dt><dd class="col-sm-9"><i class="fas {{ note.kind_icon }} me-1 text-muted"></i>{{ note.kind_label }}</dd>
+                            <dt class="col-sm-3">Submitted</dt><dd class="col-sm-9">{{ note.submitted_at|date:"D, M j, Y — g:i A" }}</dd>
+                        </dl>
+
+                        {% if note.teacher_note %}
+                        <div class="bg-light rounded p-3 mb-3"><div class="small text-muted mb-1">Message from the teacher</div>{{ note.teacher_note|linebreaksbr }}</div>
+                        {% endif %}
+
+                        {% if note.safe_link %}
+                        <a href="{{ note.safe_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg"><i class="fab fa-google-drive me-2"></i>Open in Google Drive</a>
+                        {% if ln_is_reviewer and user != note.teacher %}
+                        <p class="small text-muted mt-2 mb-0">Opens in Google. Use <strong>Suggesting</strong> mode or add comments to give feedback; changes you make are saved in the file itself.
+                            If Google says you need access, ask the teacher to share it{% if ln_reviewer_email %} with <strong>{{ ln_reviewer_email }}</strong>{% endif %}.</p>
+                        {% endif %}
+                        {% else %}
+                        <div class="alert alert-danger mb-0">This note's link is no longer valid. Please edit the note and paste the correct Google link.</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if note.review_remark %}
+                <div class="alert alert-{% if note.status == 'approved' %}success{% else %}warning{% endif %}">
+                    <strong>School remark{% if note.reviewed_by %} ({{ note.reviewed_by.get_full_name|default:note.reviewed_by.username }}){% endif %}:</strong> {{ note.review_remark|linebreaksbr }}
+                </div>
+                {% endif %}
+
+                {% if can_edit or can_delete %}
+                <div class="d-flex gap-2 mb-4">
+                    {% if can_edit %}<a href="{% url 'lessonnotes:edit' note.pk %}" class="btn btn-info"><i class="fas fa-edit me-1"></i>Edit{% if note.status == 'revision' %} &amp; resubmit{% endif %}</a>{% endif %}
+                    {% if can_delete %}<a href="{% url 'lessonnotes:delete' note.pk %}" class="btn btn-outline-danger"><i class="fas fa-trash me-1"></i>Delete</a>{% endif %}
+                </div>
+                {% elif note.is_locked and user == note.teacher %}
+                <p class="text-muted small"><i class="fas fa-lock me-1"></i>This note is approved and locked.</p>
+                {% endif %}
+
+                {% if can_review %}
+                <div class="card shadow-sm border-primary mb-4">
+                    <div class="card-header bg-light"><strong><i class="fas fa-clipboard-check me-2"></i>School review</strong></div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'lessonnotes:review' note.pk %}">
+                            {% csrf_token %}
+                            <label class="form-label fw-bold" for="{{ review_form.remark.id_for_label }}">Remark to the teacher</label>
+                            {{ review_form.remark }}
+                            <small class="form-text text-muted d-block mt-1">Required when requesting changes. Detailed comments can stay inside the Google file.</small>
+                            <div class="d-flex flex-wrap gap-2 mt-3">
+                                <button type="submit" name="decision" value="approve" class="btn btn-success"><i class="fas fa-check-circle me-1"></i>Approve</button>
+                                <button type="submit" name="decision" value="request_changes" class="btn btn-warning"><i class="fas fa-undo me-1"></i>Request changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% elif ln_is_reviewer and user == note.teacher %}
+                <p class="text-muted small"><i class="fas fa-info-circle me-1"></i>You cannot review your own note — another reviewer must do it.</p>
+                {% endif %}
+            </div>
+
+            <div class="col-xl-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-history me-2"></i>History</h5>
+                        <ul class="list-unstyled mb-0">
+                            {% for e in events %}
+                            <li class="mb-3">
+                                <div class="fw-bold">{{ e.get_action_display }}</div>
+                                <div class="small text-muted">{{ e.actor.get_full_name|default:e.actor.username|default:"Deleted user" }} &middot; {{ e.created_at|date:"M j, Y g:i A" }}</div>
+                                {% if e.remark %}<div class="small mt-1">{{ e.remark|linebreaksbr }}</div>{% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content_body %}
