@@ -31,8 +31,8 @@ urlpatterns = [
     path('student-status/', include('studentstatus.urls')),
     # For Lesson Note
     path('lesson-notes/', include('elearning.lessonnotes.urls')),
-
-
+    # for lesson notifications
+    path('notifications/', include('elearning.notices.urls')),
 
 
 

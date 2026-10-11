@@ -1,0 +1,63 @@
+{% extends 'pages/portal_home.html' %}
+{% block title %}<title>Notifications</title>{% endblock title %}
+
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="javascript:void(0)">Account</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">Notifications</a></li>
+            </ol>
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <ul class="nav nav-pills gap-2">
+                <li class="nav-item"><a class="nav-link {% if not only_unread %}active{% endif %}" href="{% url 'notices:list' %}">All</a></li>
+                <li class="nav-item"><a class="nav-link {% if only_unread %}active{% endif %}" href="{% url 'notices:list' %}?filter=unread">Unread{% if unread %} <span class="badge bg-danger">{{ unread }}</span>{% endif %}</a></li>
+            </ul>
+            {% if unread %}
+            <form method="post" action="{% url 'notices:read_all' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="fas fa-check-double me-1"></i>Mark all as read</button>
+            </form>
+            {% endif %}
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="list-group list-group-flush">
+                {% for n in notifications %}
+                <div class="list-group-item d-flex gap-3 align-items-start {% if not n.is_read %}bg-light{% endif %}">
+                    <span class="text-{{ n.color }} fs-5 pt-1"><i class="fas {{ n.icon }}"></i></span>
+                    <div class="flex-grow-1">
+                        <a href="{% url 'notices:open' n.pk %}" class="text-decoration-none {% if not n.is_read %}fw-bold{% endif %}">{{ n.title }}</a>
+                        {% if n.message %}<div class="text-muted small">{{ n.message }}</div>{% endif %}
+                        <div class="text-muted small">{{ n.get_category_display }} &middot; {{ n.created_at|timesince }} ago</div>
+                    </div>
+                    {% if not n.is_read %}
+                    <form method="post" action="{% url 'notices:read' n.pk %}" class="m-0">
+                        {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Mark as read"><i class="fas fa-check"></i></button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="list-group-item text-center text-muted py-5">
+                    <i class="fas fa-bell-slash me-1"></i>{% if only_unread %}No unread notifications.{% else %}No notifications yet.{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if is_paginated %}
+        <nav class="mt-4" aria-label="Pages">
+            <ul class="pagination justify-content-center flex-wrap">
+                {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?{% if only_unread %}filter=unread&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+                <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?{% if only_unread %}filter=unread&{% endif %}page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock content_body %}

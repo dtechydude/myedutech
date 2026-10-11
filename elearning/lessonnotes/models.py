@@ -8,6 +8,11 @@ from .links import parse_note_link, validate_google_note_link
 session_validator = RegexValidator(r'^\d{4}/\d{4}$', 'Use the format 2026/2027.')
 
 
+def subject_display(subject):
+    """Readable subject name from a curriculum.Subject (its `name`, else str())."""
+    return (getattr(subject, 'name', '') or str(subject)).strip()
+
+
 class LessonNote(models.Model):
     """
     A teacher's lesson note, kept in Google Drive. Only the LINK is stored
@@ -29,7 +34,11 @@ class LessonNote(models.Model):
                                 related_name='elearning_lesson_notes')
     standard = models.ForeignKey('curriculum.Standard', on_delete=models.PROTECT,
                                  related_name='+', verbose_name='Class')
-    subject_name = models.CharField(max_length=100, verbose_name='Subject')
+    # The teacher picks a curriculum.Subject. `subject_name` is a snapshot of its name
+    # (filled in automatically on save) so lists, exports and older notes keep working.
+    subject = models.ForeignKey('curriculum.Subject', on_delete=models.PROTECT, null=True,
+                                blank=True, related_name='+')
+    subject_name = models.CharField(max_length=100, blank=True, verbose_name='Subject')
     academic_session = models.CharField(max_length=9, validators=[session_validator],
                                         help_text='e.g. 2026/2027')
     term = models.CharField(max_length=1, choices=Term.choices)
@@ -75,7 +84,10 @@ class LessonNote(models.Model):
         return f'{self.title} — {self.teacher}'
 
     def save(self, *args, **kwargs):
-        self.subject_name = ' '.join((self.subject_name or '').split())
+        if self.subject_id:
+            self.subject_name = subject_display(self.subject)[:100]
+        else:  # older notes written before subjects were selectable
+            self.subject_name = ' '.join((self.subject_name or '').split())
         if not self.title:
             self.title = f'Week {self.week} – {self.subject_name} ({self.standard})'[:200]
         super().save(*args, **kwargs)

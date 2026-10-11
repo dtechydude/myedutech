@@ -70,3 +70,30 @@
     </div>
 </div>
 {% endblock content_body %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+(function () {
+    // If subjects belong to classes, show only the chosen class's subjects.
+    var cls = document.getElementById('{{ form.standard.id_for_label }}');
+    var subj = document.getElementById('{{ form.subject.id_for_label }}');
+    if (!cls || !subj) return;
+    var options = Array.prototype.slice.call(subj.options);
+    if (!options.some(function (o) { return o.dataset.standard; })) return;   // not class-specific
+
+    function apply() {
+        var chosen = cls.value;
+        options.forEach(function (o) {
+            var show = !o.value || !chosen || o.dataset.standard === chosen;
+            o.hidden = !show;
+            o.disabled = !show;
+        });
+        var current = subj.options[subj.selectedIndex];
+        if (current && current.disabled) subj.value = '';
+    }
+    cls.addEventListener('change', apply);
+    apply();
+})();
+</script>
+{% endblock scripts %}

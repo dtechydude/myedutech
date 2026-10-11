@@ -266,3 +266,6 @@ class AssignmentSubmission(models.Model):
 
 # Teacher lesson notes — registers the models below with this app (independent feature in elearning/lessonnotes/)
 from .lessonnotes.models import LessonNote, LessonNoteEvent  # noqa: E402,F401
+
+# In-app notifications shared by elearning and lesson notes (elearning/notices/)
+from .notices.models import Notification  # noqa: E402,F401

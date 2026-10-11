@@ -1,13 +1,16 @@
+from io import StringIO
 from unittest import mock
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
 from . import services
-from .forms import NoteForm
+from ..notices.models import Notification
+from .forms import NoteForm, subject_standard_field
 from .links import parse_note_link, validate_google_note_link
 from .models import LessonNote, LessonNoteEvent
 
@@ -23,6 +26,19 @@ def make_standard():
         return Standard.objects.first() or Standard.objects.create(name='JSS 1')
     except Exception as exc:  # pragma: no cover
         raise unittest_skip(f'Cannot create a curriculum.Standard automatically: {exc}')
+
+
+def make_subject(standard, name='Mathematics'):
+    """A curriculum.Subject (tied to the class when the project's Subject has a class link)."""
+    Subject = apps.get_model('curriculum', 'Subject')
+    kwargs = {'name': name}
+    class_field = subject_standard_field(Subject)
+    if class_field:
+        kwargs[class_field] = standard
+    try:
+        return Subject.objects.get_or_create(**kwargs)[0]
+    except Exception as exc:  # pragma: no cover
+        raise unittest_skip(f'Cannot create a curriculum.Subject automatically: {exc}')
 
 
 def unittest_skip(msg):
@@ -66,12 +82,13 @@ class CsvSafetyTests(TestCase):
 class WorkflowTests(TestCase):
     def setUp(self):
         self.std = make_standard()
+        self.maths = make_subject(self.std)
         self.teacher = User.objects.create_user('t1', first_name='Ada', last_name='Obi', password='x')
         self.head = User.objects.create_user('head', is_staff=True, password='x')
         self.boss = User.objects.create_superuser('boss', 'b@x.com', 'x')
 
     def new_note(self, **kw):
-        data = dict(standard=self.std, subject_name='Mathematics', academic_session='2026/2027',
+        data = dict(standard=self.std, subject=self.maths, academic_session='2026/2027',
                     term='1', week=3, doc_link=DOC)
         data.update(kw)
         return services.create_note(LessonNote(**data), self.teacher)
@@ -81,6 +98,16 @@ class WorkflowTests(TestCase):
         self.assertEqual(n.status, LessonNote.Status.SUBMITTED)
         self.assertTrue(n.title.startswith('Week 3 – Mathematics'))
         self.assertEqual(list(n.events.values_list('action', flat=True)), ['submitted'])
+
+    def test_subject_name_is_a_snapshot_of_the_selected_subject(self):
+        n = self.new_note()
+        self.assertEqual(n.subject, self.maths)
+        self.assertEqual(n.subject_name, 'Mathematics')
+
+    def test_duplicate_slot_at_save_time_becomes_a_validation_error(self):
+        self.new_note()
+        with self.assertRaises(ValidationError):
+            self.new_note()  # same teacher/class/subject/term/week
 
     def test_request_changes_needs_a_remark(self):
         n = self.new_note()
@@ -119,7 +146,6 @@ class WorkflowTests(TestCase):
         services.review_note(n2, self.boss, 'approve')
 
     def test_teacher_summary_counts_and_includes_non_submitters(self):
-        quiet = User.objects.create_user('quiet', password='x')
         self.new_note(week=1)
         n2 = self.new_note(week=2)
         services.review_note(n2, self.head, 'approve')
@@ -128,12 +154,11 @@ class WorkflowTests(TestCase):
         self.assertEqual(rows['t1'].total, 2)
         self.assertEqual(rows['t1'].awaiting, 1)
         self.assertEqual(rows['t1'].approved, 1)
-        self.assertNotIn('quiet', rows)
         scoped = {u.username: u for u in services.teacher_summary(session='2099/2100')}
         self.assertEqual(scoped['t1'].total, 0)
 
     def test_csv_export_has_bom_and_rows(self):
-        self.new_note(subject_name='=HYPERLINK("x")')
+        self.new_note(subject=make_subject(self.std, '=HYPERLINK("x")'))
         data = services.notes_csv_bytes(LessonNote.objects.all())
         self.assertTrue(data.startswith(b'\xef\xbb\xbf'))
         self.assertIn(b"'=HYPERLINK", data)
@@ -142,10 +167,11 @@ class WorkflowTests(TestCase):
 class FormTests(TestCase):
     def setUp(self):
         self.std = make_standard()
+        self.maths = make_subject(self.std)
         self.teacher = User.objects.create_user('t1', password='x')
 
     def data(self, **kw):
-        d = dict(standard=self.std.pk, subject_name='  Mathematics ', academic_session='2026/2027',
+        d = dict(standard=self.std.pk, subject=self.maths.pk, academic_session='2026/2027',
                  term='1', week=3, doc_link=DOC, title='', teacher_note='')
         d.update(kw)
         return d
@@ -153,7 +179,12 @@ class FormTests(TestCase):
     def test_valid_and_normalised(self):
         form = NoteForm(self.data(), user=self.teacher)
         self.assertTrue(form.is_valid(), form.errors)
-        self.assertEqual(form.cleaned_data['subject_name'], 'Mathematics')
+
+    def test_subject_is_required_and_comes_from_the_curriculum(self):
+        form = NoteForm(self.data(subject=''), user=self.teacher)
+        self.assertFalse(form.is_valid())
+        self.assertIn('subject', form.errors)
+        self.assertNotIn('subject_name', form.fields)   # no more free typing
 
     def test_bad_link_and_session_rejected(self):
         form = NoteForm(self.data(doc_link='https://example.com/x', academic_session='2026'), user=self.teacher)
@@ -161,17 +192,33 @@ class FormTests(TestCase):
         self.assertIn('doc_link', form.errors)
         self.assertIn('academic_session', form.errors)
 
-    def test_same_slot_twice_is_blocked_case_insensitively(self):
-        services.create_note(LessonNote(standard=self.std, subject_name='Mathematics',
+    def test_same_slot_twice_is_blocked(self):
+        services.create_note(LessonNote(standard=self.std, subject=self.maths,
                                         academic_session='2026/2027', term='1', week=3, doc_link=DOC), self.teacher)
-        form = NoteForm(self.data(subject_name='mathematics'), user=self.teacher)
+        form = NoteForm(self.data(), user=self.teacher)
         self.assertFalse(form.is_valid())
         self.assertIn('already submitted', str(form.errors))
+
+    def test_older_text_only_note_still_counts_as_a_duplicate(self):
+        services.create_note(LessonNote(standard=self.std, subject_name='mathematics',   # written before subjects
+                                        academic_session='2026/2027', term='1', week=3, doc_link=DOC), self.teacher)
+        form = NoteForm(self.data(), user=self.teacher)
+        self.assertFalse(form.is_valid())
+        self.assertIn('already submitted', str(form.errors))
+
+    def test_subject_must_belong_to_the_selected_class(self):
+        if not subject_standard_field():
+            self.skipTest('This project\'s Subject is not tied to a class.')
+        other_class = apps.get_model('curriculum', 'Standard').objects.create(name='JSS 2')
+        form = NoteForm(self.data(standard=other_class.pk), user=self.teacher)
+        self.assertFalse(form.is_valid())
+        self.assertIn('not taught in the selected class', str(form.errors['subject']))
 
 
 class ViewAccessTests(TestCase):
     def setUp(self):
         self.std = make_standard()
+        self.english = make_subject(self.std, 'English')
         self.teacher = User.objects.create_user('t1', password='x')
         self.other = User.objects.create_user('t2', password='x')
         self.head = User.objects.create_user('head', is_staff=True, password='x')
@@ -232,7 +279,7 @@ class ViewAccessTests(TestCase):
         self.client.force_login(self.teacher)
         with mock.patch(TEACHER_PATCH, return_value=True):
             r = self.client.post(reverse('lessonnotes:submit'), dict(
-                standard=self.std.pk, subject_name='English', academic_session='2026/2027', term='2',
+                standard=self.std.pk, subject=self.english.pk, academic_session='2026/2027', term='2',
                 week=4, title='', doc_link='https://docs.google.com/spreadsheets/d/AAA/edit', teacher_note=''))
             self.assertEqual(r.status_code, 302, getattr(r, 'context', None) and r.context['form'].errors)
             note = LessonNote.objects.get(subject_name='English')
@@ -249,3 +296,86 @@ class ViewAccessTests(TestCase):
                 self.assertEqual(r.status_code, 302, name)
             self.client.post(reverse('lessonnotes:delete', args=[self.note.pk]))
         self.assertTrue(LessonNote.objects.filter(pk=self.note.pk).exists())
+
+
+class NotificationTests(TestCase):
+    def setUp(self):
+        self.std = make_standard()
+        self.maths = make_subject(self.std)
+        self.teacher = User.objects.create_user('t1', password='x')
+        self.head = User.objects.create_user('head', is_staff=True, password='x')
+        self.boss = User.objects.create_superuser('boss', 'b@x.com', 'x')
+        self.pupil = User.objects.create_user('pupil', password='x')
+
+    def submit(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            return services.create_note(LessonNote(
+                standard=self.std, subject=self.maths, academic_session='2026/2027',
+                term='1', week=1, doc_link=DOC), self.teacher)
+
+    def test_submitting_notifies_every_reviewer_but_not_the_teacher_or_others(self):
+        note = self.submit()
+        got = set(Notification.objects.values_list('recipient__username', flat=True))
+        self.assertEqual(got, {'head', 'boss'})
+        n = Notification.objects.get(recipient=self.head)
+        self.assertEqual(n.category, 'lesson_note')
+        self.assertEqual(n.url, note.get_absolute_url())
+
+    def test_a_reviewer_who_submits_does_not_notify_themselves(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            services.create_note(LessonNote(standard=self.std, subject=self.maths, academic_session='2026/2027',
+                                            term='1', week=2, doc_link=DOC), self.head)
+        self.assertEqual(set(Notification.objects.values_list('recipient__username', flat=True)), {'boss'})
+
+    def test_review_decisions_notify_the_teacher_and_resubmitting_notifies_reviewers(self):
+        note = self.submit()
+        Notification.objects.all().delete()
+        with self.captureOnCommitCallbacks(execute=True):
+            services.review_note(note, self.head, 'request_changes', 'Add the aims')
+        n = Notification.objects.get()
+        self.assertEqual(n.recipient, self.teacher)
+        self.assertIn('Changes requested', n.title)
+        self.assertIn('Add the aims', n.message)
+
+        note.refresh_from_db()
+        Notification.objects.all().delete()
+        with self.captureOnCommitCallbacks(execute=True):
+            services.update_note(note, self.teacher)
+        self.assertEqual(set(Notification.objects.values_list('recipient__username', flat=True)), {'head', 'boss'})
+
+        note.refresh_from_db()
+        Notification.objects.all().delete()
+        with self.captureOnCommitCallbacks(execute=True):
+            services.review_note(note, self.head, 'approve')
+        n = Notification.objects.get()
+        self.assertEqual((n.recipient, n.title), (self.teacher, 'Your lesson note was approved'))
+
+    def test_a_rolled_back_submission_notifies_nobody(self):
+        self.submit()
+        Notification.objects.all().delete()
+        with self.captureOnCommitCallbacks(execute=True):
+            with self.assertRaises(ValidationError):
+                services.create_note(LessonNote(standard=self.std, subject=self.maths,
+                                                academic_session='2026/2027', term='1', week=1, doc_link=DOC), self.teacher)
+        self.assertEqual(Notification.objects.count(), 0)
+
+
+class LinkSubjectsCommandTests(TestCase):
+    def test_links_by_name_and_leaves_unmatched_as_text(self):
+        std = make_standard()
+        maths = make_subject(std)
+        teacher = User.objects.create_user('t1', password='x')
+        old = services.create_note(LessonNote(standard=std, subject_name='  mathematics ', academic_session='2026/2027',
+                                              term='1', week=1, doc_link=DOC), teacher)
+        odd = services.create_note(LessonNote(standard=std, subject_name='Basket weaving', academic_session='2026/2027',
+                                              term='1', week=2, doc_link=DOC), teacher)
+        out = StringIO()
+        call_command('link_lessonnote_subjects', '--dry-run', stdout=out)
+        old.refresh_from_db()
+        self.assertIsNone(old.subject)                       # dry run changes nothing
+        call_command('link_lessonnote_subjects', stdout=out)
+        old.refresh_from_db(); odd.refresh_from_db()
+        self.assertEqual(old.subject, maths)
+        self.assertEqual(old.subject_name, 'mathematics')    # snapshot left untouched by the command
+        self.assertIsNone(odd.subject)
+        self.assertIn('Linked 1', out.getvalue())

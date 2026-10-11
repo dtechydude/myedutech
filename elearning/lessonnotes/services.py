@@ -7,14 +7,19 @@ import io
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import FieldDoesNotExist, PermissionDenied, ValidationError
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Count, Max, Q
 from django.utils import timezone
 
+from ..notices import services as notices
+from ..notices.models import Notification
 from .models import LessonNote, LessonNoteEvent
 
 Status = LessonNote.Status
 Action = LessonNoteEvent.Action
+
+DUPLICATE_MESSAGE = ('You have already submitted a note for this class, subject and week. '
+                     'Open it and use Edit instead.')
 
 # decision key (from the review form) -> (new status, audit action)
 DECISIONS = {
@@ -28,12 +33,27 @@ def log_event(note, actor, action, remark=''):
 
 
 # ---------------------------------------------------------------- workflow
-@transaction.atomic
+def _short(note):
+    return f'{note.subject_name} · {note.standard} · Week {note.week}'
+
+
+def _tell_reviewers(note, actor, title):
+    # after commit, so nobody is notified about something that was rolled back
+    transaction.on_commit(lambda: notices.notify(
+        notices.reviewers(exclude=actor), Notification.Category.LESSON_NOTE, title,
+        f'{note.teacher_display} — {_short(note)}', url=note.get_absolute_url()))
+
+
 def create_note(note, teacher):
-    note.teacher = teacher
-    note.status = Status.SUBMITTED
-    note.save()
-    log_event(note, teacher, Action.SUBMITTED)
+    try:
+        with transaction.atomic():
+            note.teacher = teacher
+            note.status = Status.SUBMITTED
+            note.save()
+            log_event(note, teacher, Action.SUBMITTED)
+    except IntegrityError:  # two quick submits for the same class/subject/week
+        raise ValidationError(DUPLICATE_MESSAGE)
+    _tell_reviewers(note, teacher, 'New lesson note submitted')
     return note
 
 
@@ -48,6 +68,8 @@ def update_note(note, actor):
         note.status = Status.SUBMITTED
     note.save()
     log_event(note, actor, Action.RESUBMITTED if resubmitting else Action.EDITED)
+    if resubmitting:
+        _tell_reviewers(note, actor, 'Lesson note resubmitted after changes')
     return note
 
 
@@ -70,6 +92,12 @@ def review_note(note, reviewer, decision, remark=''):
     note.review_remark = remark
     note.save()
     log_event(note, reviewer, action, remark)
+    approved = decision == 'approve'
+    transaction.on_commit(lambda: notices.notify(
+        [note.teacher], Notification.Category.LESSON_NOTE,
+        'Your lesson note was approved' if approved else 'Changes requested on your lesson note',
+        _short(note) + ('' if approved or not remark else f' — {remark}'),
+        url=note.get_absolute_url()))
     return note
 
 

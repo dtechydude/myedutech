@@ -202,8 +202,16 @@ class NoteCreateView(AuthorRequiredMixin, NoteFormMixin, CreateView):
             initial.update(academic_session=last.academic_session, term=last.term)
         return initial
 
+    # def form_valid(self, form):
+    #     self.object = services.create_note(form.save(commit=False), self.request.user)
+    #     messages.success(self.request, 'Lesson note submitted for review.')
+    #     return redirect(self.object)
     def form_valid(self, form):
-        self.object = services.create_note(form.save(commit=False), self.request.user)
+        try:
+            self.object = services.create_note(form.save(commit=False), self.request.user)
+        except ValidationError as exc:
+            form.add_error(None, exc)
+            return self.form_invalid(form)
         messages.success(self.request, 'Lesson note submitted for review.')
         return redirect(self.object)
 

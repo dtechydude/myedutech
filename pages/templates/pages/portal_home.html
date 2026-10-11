@@ -1,4 +1,5 @@
 {% load static %}
+{% load notice_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -213,155 +214,57 @@
 							</div>
 						</div>
 						
-						<ul class="navbar-nav header-right">				
-															
-							<li class="nav-item dropdown notification_dropdown">
-							<a class="nav-link" href="{% url 'tickets:ticket_list' %}">
+						<ul class="navbar-nav header-right">
+						{% if user.is_authenticated and not user.parent %}
+							{% notice_bell %}
+						{% endif %}
+
+						{# Support tickets - same link and unread badge as before #}
+						<li class="nav-item dropdown notification_dropdown">
+							<a class="nav-link" href="{% url 'tickets:ticket_list' %}" title="Support tickets" aria-label="Support tickets">
 								<i class="fas fa-bell"></i>
 								{% if unread_count > 0 %}
 								<span class="badge badge-warning navbar-badge" id="unread-count">{{ unread_count }}</span>
 								{% endif %}
 							</a>
-						</li>	
-							<li class="nav-item dropdown notification_dropdown">
-								<a class="nav-link bell-link " href="javascript:void(0);">
-								<svg xmlns="http://www.w3.org/2000/svg" width="26.667" height="24" viewBox="0 0 26.667 24">
-								  <g id="_014-mail" data-name="014-mail" transform="translate(0 -21.833)">
-									<path id="Path_1962" data-name="Path 1962" d="M26.373,26.526A6.667,6.667,0,0,0,20,21.833H6.667A6.667,6.667,0,0,0,.293,26.526,6.931,6.931,0,0,0,0,28.5V39.166a6.669,6.669,0,0,0,6.667,6.667H20a6.669,6.669,0,0,0,6.667-6.667V28.5A6.928,6.928,0,0,0,26.373,26.526ZM6.667,24.5H20a4.011,4.011,0,0,1,3.947,3.36L13.333,33.646,2.72,27.86A4.011,4.011,0,0,1,6.667,24.5ZM24,39.166a4.012,4.012,0,0,1-4,4H6.667a4.012,4.012,0,0,1-4-4V30.873L12.693,36.34a1.357,1.357,0,0,0,1.28,0L24,30.873Z" transform="translate(0 0)" fill="#135846"/>
-								  </g>
-								</svg>
-									<span class="badge light text-white bg-primary rounded-circle">2</span>
+						</li>
+
+						{# Help & Support #}
+						<li class="nav-item dropdown notification_dropdown">
+							<a class="nav-link" href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false" title="Help &amp; Support" aria-label="Help and support">
+								<i class="fas fa-question-circle"></i>
+							</a>
+							<div class="dropdown-menu dropdown-menu-end">
+								<h6 class="dropdown-header">Help &amp; Support</h6>
+								<a class="dropdown-item ai-icon" href="{% url 'pages:video-guides' %}">
+									<i class="fas fa-video text-primary"></i><span class="ms-2">Video Guides</span>
 								</a>
-							</li>	
-								<div class="dropdown-menu dropdown-menu-end">
-									<div id="DZ_W_Notification1" class="widget-media dlab-scroll p-3" style="height:380px;">
-										<ul class="timeline">
-											<li>
-												<div class="timeline-panel">
-													<div class="media me-2 media-info">
-														DS
-													</div>
-													<div class="media-body">
-														<h6 class="mb-1">AI for educators</h6>
-														<small class="d-block">15 Sept 2025 - 02:26 PM</small>
-													</div>
-												</div>
-											</li>
-											<li>
-												<div class="timeline-panel">
-													<div class="media me-2 media-info">
-														KG
-													</div>
-													<div class="media-body">
-														<h6 class="mb-1">Sch, Reports</h6>
-														<small class="d-block">29 July 2025 - 02:26 PM</small>
-													</div>
-												</div>
-											</li>
-											<li>
-												<div class="timeline-panel">
-													<div class="media me-2 media-success">
-														<i class="fa fa-home"></i>
-													</div>
-													<div class="media-body">
-														<h6 class="mb-1">Onboarding!</h6>
-														<small class="d-block">31st Aug 2025 - 02:26 PM</small>
-													</div>
-												</div>
-											</li>
-											 <li>
-												<div class="timeline-panel">
-													<div class="media me-2 media-info">
-														GS
-													</div>
-													<div class="media-body">
-														<h6 class="mb-1">GoldenCitadel Sch.</h6>
-														<small class="d-block">29 Aug 2025 - 02:26 PM</small>
-													</div>
-												</div>
-											</li>
-											<li>
-												<div class="timeline-panel">
-													<div class="media me-2 media-danger">
-														KG
-													</div>
-													<div class="media-body">
-														<h6 class="mb-1">Batch Newsletter</h6>
-														<small class="d-block">31 Aug 2025 - 02:26 PM</small>
-													</div>
-												</div>
-											</li>
-											
-										</ul>
-									</div>
-									<a class="all-notification" href="javascript:void(0);">See all notifications <i class="ti-arrow-end"></i></a>
-								</div>
-							</li>
-							<li class="nav-item dropdown notification_dropdown">
-								<a class="nav-link " href="javascript:void(0);" data-bs-toggle="dropdown">
-									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="21.6" viewBox="0 0 24 21.6">
-									  <g id="_008-chat" data-name="008-chat" transform="translate(-250.397 -62.547)">
-										<path id="Path_1956" data-name="Path 1956" d="M274.4,67.347a4.8,4.8,0,0,0-4.8-4.8H255.2a4.8,4.8,0,0,0-4.8,4.8v15.6a1.2,1.2,0,0,0,2.048.848l3.746-3.745a2.4,2.4,0,0,1,1.7-.7H269.6a4.8,4.8,0,0,0,4.8-4.8Zm-2.4,0a2.4,2.4,0,0,0-2.4-2.4H255.2a2.4,2.4,0,0,0-2.4,2.4v12.7l1.7-1.7a4.8,4.8,0,0,1,3.395-1.406H269.6a2.4,2.4,0,0,0,2.4-2.4Zm-15.6,7.2H266a1.2,1.2,0,1,0,0-2.4h-9.6a1.2,1.2,0,0,0,0,2.4Zm0-4.8h12a1.2,1.2,0,1,0,0-2.4h-12a1.2,1.2,0,0,0,0,2.4Z" fill="#135846" fill-rule="evenodd"/>
-									  </g>
-									</svg>
-									<span class="badge light text-white bg-primary rounded-circle"></span>
+								<a class="dropdown-item ai-icon" href="{% url 'pages:help-center' %}">
+									<i class="fas fa-question-circle text-primary"></i><span class="ms-2">Frequently Asked Questions</span>
 								</a>
-								<div class="dropdown-menu dropdown-menu-end">
-									<div id="DZ_W_TimeLine02" class="widget-timeline dlab-scroll style-1 ps ps--active-y p-3 height370">
-									<ul class="timeline">
-										<li>
-											<div class="timeline-badge primary"></div>
-											<a class="timeline-panel text-muted" href="javascript:void(0);">
-												<span>10 minutes ago</span>
-												<h6 class="mb-0">KwikSchools Youtube <strong class="text-primary">###</strong>.</h6>
-											</a>
-										</li>
-										<li>
-											<div class="timeline-badge info">
-											</div>
-											<a class="timeline-panel text-muted" href="javascript:void(0);">
-												<span>20 minutes ago</span>
-												<h6 class="mb-0">New order placed <strong class="text-info">#XF-2356.</strong></h6>
-												<p class="mb-0">Many Schools Digitalized...</p>
-											</a>
-										</li>
-										<li>
-											<div class="timeline-badge danger">
-											</div>
-											<a class="timeline-panel text-muted" href="javascript:void(0);">
-												<span>30 minutes ago</span>
-												<h6 class="mb-0">ADSS <strong class="text-warning">###</strong></h6>
-											</a>
-										</li>
-										<li>
-											<div class="timeline-badge success">
-											</div>
-											<a class="timeline-panel text-muted" href="javascript:void(0);">
-												<span>15 minutes ago</span>
-												<h6 class="mb-0">ICHS Onboarded. </h6>
-											</a>
-										</li>
-										<li>
-											<div class="timeline-badge warning">
-											</div>
-											<a class="timeline-panel text-muted" href="javascript:void(0);">
-												<span>20 minutes ago</span>
-												<h6 class="mb-0">Annies Comp. Schools goes live.</h6>
-											</a>
-										</li>
-										<li>
-											<div class="timeline-badge dark">
-											</div>
-											<a class="timeline-panel text-muted" href="javascript:void(0);">
-												<span>20 minutes ago</span>
-												<h6 class="mb-0">CISS, new website goes live.</h6>
-											</a>
-										</li>
-									</ul>
-								</div>
-								</div>
-							</li>
-							<li class="nav-item dropdown header-profile">
+								<a class="dropdown-item ai-icon" href="{% url 'pages:support_info' %}">
+									<i class="fas fa-headset text-primary"></i><span class="ms-2">Support Center</span>
+								</a>
+								<div class="dropdown-divider"></div>
+								{% if user.is_superuser or user.is_staff %}
+								<a class="dropdown-item ai-icon" href="{% url 'tickets:admin_ticket_list' %}">
+									<i class="fas fa-ticket-alt text-danger"></i><span class="ms-2">Ticket List</span>
+								</a>
+								{% else %}
+								<a class="dropdown-item ai-icon" href="{% url 'tickets:create_ticket' %}">
+									<i class="fas fa-ticket-alt text-danger"></i><span class="ms-2">Submit New Ticket</span>
+								</a>
+								{% endif %}
+							</div>
+						</li>
+
+						{# School events calendar #}
+						<li class="nav-item dropdown notification_dropdown">
+							<a class="nav-link" href="{% url 'events:calendar' %}" title="School Events Calendar" aria-label="School events calendar">
+								<i class="fas fa-calendar-alt"></i>
+							</a>
+						</li>
+												<li class="nav-item dropdown header-profile">
 								<a class="nav-link" href="/dashboard/" role="button" data-bs-toggle="dropdown">
 								{% if user.profile.image and user.profile.image.name %}
 									<img src="{{ user.profile.image.url }}" width="20" alt="Profile"/>
@@ -705,7 +608,7 @@
 						
 							{% if user.is_authenticated and user.student %}
 							<li><a href="{% url 'elearning:my-standard' %}">Learning Center</a></li>
-							
+							<li><a href="{% url 'notices:list' %}">My Notifications</a></li>
 							{% elif user.is_authenticated and user.teacher %}
 							<li><a href="{% url 'curriculum:standard_list' %}">E-Class List</a></li>
 							
@@ -716,24 +619,26 @@
 							{% endif %}
 						</ul>					
 					</li>
-
-						
+					
+					{% if user.is_superuser or user.is_staff or user.teacher %}	
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>
 							<span class="nav-text">LESSON NOTES</span>
 						</a>
+						<ul aria-expanded="false">	
 						<ul aria-expanded="false">							
-						
 							{% if user.is_authenticated and user.is_superuser or user.is_staff %}
 							<li><a href="{% url 'lessonnotes:home' %}">Lesson Notes</a></li>
-							<li><a href="{% url 'lessonnotes:teachers' %}">All Teachers Notes</a></li>														
-							
+							<li><a href="{% url 'lessonnotes:teachers' %}">All Teachers Notes</a></li>
+
 							{% elif user.is_authenticated and user.teacher %}
 							<li><a href="{% url 'lessonnotes:mine' %}">My Lesson Notes</a></li>	
-							<li><a href="{% url 'lessonnotes:submit' %}">Submit Lesson Notes</a></li>														
-													
-																
+							<li><a href="{% url 'lessonnotes:submit' %}">Submit Lesson Notes</a></li>
 							{% endif %}
+							<li><a href="{% url 'notices:list' %}">Notifications</a></li>
+						</ul>					
+					</li>
+					{% endif %}
 						</ul>					
 					</li>
 
@@ -849,7 +754,6 @@
 							
 							<ul aria-expanded="false">
 								<li class="nav-item dropdown notification_dropdown">
-								<li class="nav-item dropdown notification_dropdown">
 							<a class="nav-link" href="{% url 'tickets:ticket_list' %}">
 								<i class="fas fa-bell"></i>
 								{% if unread_count > 0 %}
@@ -866,8 +770,10 @@
 							<li><a href="{% url 'tickets:ticket_list' %}">My Tickets</a></li>
 							<li><a href="{% url 'tickets:create_ticket' %}">Submit New Ticket</a></li>
 								{% endif %}
-							</ul>							
-					</li>					
+							
+						</ul>							
+					</li>	
+									
 					{% if user.is_authenticated and user.is_superuser or user.is_staff %}
 					<li><a class="has-arrow " href="javascript:void()" aria-expanded="false">
 						<i class="flaticon-013-checkmark"></i>

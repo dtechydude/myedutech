@@ -2,6 +2,7 @@ from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
 from .models import ELearningSubject, Lesson, Comment, Reply, Assignment, AssignmentSubmission
 from .lessonnotes import admin as _lessonnotes_admin  # noqa: F401
+from .notices import admin as _notices_admin  # noqa: F401
 
 @admin.register(ELearningSubject)
 class ELearningSubjectAdmin(ImportExportModelAdmin):

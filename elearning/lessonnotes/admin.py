@@ -15,7 +15,7 @@ class LessonNoteEventInline(admin.TabularInline):
 
 @admin.register(LessonNote)
 class LessonNoteAdmin(admin.ModelAdmin):
-    list_display = ('title', 'teacher', 'standard', 'subject_name', 'academic_session',
+    list_display = ('title', 'teacher', 'standard', 'subject', 'academic_session',
                     'term', 'week', 'status', 'submitted_at')
     list_filter = ('status', 'term', 'academic_session', 'standard')
     search_fields = ('title', 'subject_name', 'teacher__username',
