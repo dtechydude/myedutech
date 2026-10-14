@@ -117,7 +117,8 @@
                                                     <a href="" class="btn btn-sm btn-light border-0 fw-bold text-start px-2 py-1 w-100">
                                                         <i class="fas fa-link me-2 text-primary small"></i>{{ u.username }}
                                                     </a>
-                                                </td>                                                <td><a href=""><strong><img class="rounded-circle" width="40" height="40" src="{{u.profile.image_url}}" alt=""> {{ u.last_name }} </strong> {{ u.first_name }}</a></td>
+                                                </td>
+                                                <td><a href=""><strong><img class="rounded-circle" width="40" height="40" src="{{u.profile.image_url}}" alt=""> {{ u.last_name }} </strong> {{ u.first_name }}</a></td>
                                                 <td class="align-middle">
                                                     {% if u.is_staff or u.is_superuser %}
                                                         <span class="badge bg-danger">
@@ -141,7 +142,7 @@
                                                         </span>
                                                     {% endif %}
                                                 </td>
-                                                <td class="align-middle">
+                                                {% comment %} <td class="align-middle">
                                                     {% if u.is_active %}
                                                         <div class="d-flex align-items-center text-success fw-bold">
                                                             <span class="bg-success rounded-circle me-2" style="width: 8px; height: 8px;"></span>
@@ -153,7 +154,16 @@
                                                             Inactive
                                                         </div>
                                                     {% endif %}
-                                                </td>
+                                                </td> {% endcomment %}
+
+                                                <td class="align-middle">
+                                                <div class="d-flex align-items-center fw-bold {{ u.portal_status.text_class }}"{% if u.portal_status.reason %} title="{{ u.portal_status.reason }}"{% endif %}>
+                                                    <span class="{{ u.portal_status.dot_class }} rounded-circle me-2" style="width: 8px; height: 8px;"></span>
+                                                    {{ u.portal_status.label }}
+                                                </div>
+                                            </td>
+
+
                                                 <td><strong>{{ u.profile.created|date:"M d, Y" }}</strong></a></td>
                                                 <td>{{ u.profile.updated|date:"M d, Y" }}</td>
 

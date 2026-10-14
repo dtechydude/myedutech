@@ -170,7 +170,11 @@ USE_THOUSAND_SEPARATOR = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
+# Locally serving
 STATIC_URL = '/static/'
+
+# Remotely serving from Kwikschools
+#STATIC_URL = 'https://kwikschools.com/kwikschools_external_files/static/'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')

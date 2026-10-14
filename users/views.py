@@ -183,38 +183,95 @@ def users_home(request):
 
 
 # all users
+# @login_required
+# def all_users(request):
+#     """
+#     A view to display all users and export them to a CSV,
+#     only accessible by staff users.
+#     """
+#     user = request.user
+    
+#     # Restrict access to only staff users
+#     if not user.is_staff:
+#         return redirect('pages/portal_home.html') # Redirect to a safe URL for non-staff users
+
+#     all_users_list = User.objects.all().order_by('last_name', 'first_name')
+    
+#     # Handle CSV export request
+#     if request.GET.get('export') == 'csv':
+#         response = HttpResponse(content_type='text/csv')
+#         response['Content-Disposition'] = 'attachment; filename="all_users.csv"'
+
+#         writer = csv.writer(response)
+#         writer.writerow(['Username', 'First Name', 'Last Name', 'Email', 'Phone', 'State Of Origin', 'User Type', 'Registered Date'])
+
+#         for u in all_users_list:
+#             writer.writerow([u.username, u.first_name, u.last_name, u.email, u.profile.phone, u.profile.state_of_origin, u.profile.user_type, u.profile.created])
+#         return response
+
+#     # Normal template rendering
+#     context = {'all_users': all_users_list,
+#              'total_count': all_users_list.count()
+#             }
+#     return render(request, 'users/all_registered_users.html', context)
+
+# All users View
+import csv
+
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from django.shortcuts import redirect, render
+
+from .portal_access import attach_portal_status, users_for_listing
+
+CSV_HEADER = ['Username', 'First Name', 'Last Name', 'Email', 'Phone', 'State Of Origin',
+              'User Type', 'Registered Date', 'Portal Access', 'Can Log In']
+
+
+def _csv_safe(value):
+    """Stop spreadsheet formula injection (a cell starting with = + - @)."""
+    if isinstance(value, str) and value[:1] in ('=', '+', '-', '@', '\t', '\r'):
+        return "'" + value
+    return value
+
+
+def _export_csv(users):
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="all_users.csv"'
+    response.write('\ufeff')  # UTF-8 BOM so Excel shows accents correctly
+    writer = csv.writer(response)
+    writer.writerow(CSV_HEADER)
+    for u in users:
+        profile = getattr(u, 'profile', None)  # an account can exist without a profile
+        writer.writerow([_csv_safe(v) for v in (
+            u.username, u.first_name, u.last_name, u.email,
+            getattr(profile, 'phone', ''), getattr(profile, 'state_of_origin', ''),
+            getattr(profile, 'user_type', ''), getattr(profile, 'created', ''),
+            u.portal_status['label'], 'Yes' if u.portal_status['can_login'] else 'No',
+        )])
+    return response
+
+
+# all users
 @login_required
 def all_users(request):
     """
-    A view to display all users and export them to a CSV,
-    only accessible by staff users.
+    Display all users (with their REAL portal-access status) and export them to CSV.
+    Only for school administrators (staff or superuser).
     """
     user = request.user
-    
-    # Restrict access to only staff users
-    if not user.is_staff:
-        return redirect('pages/portal_home.html') # Redirect to a safe URL for non-staff users
+    if not (user.is_staff or user.is_superuser):
+        return redirect('pages:portal-home')
 
-    all_users_list = User.objects.all().order_by('last_name', 'first_name')
-    
-    # Handle CSV export request
+    users = attach_portal_status(list(users_for_listing()))
+
     if request.GET.get('export') == 'csv':
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="all_users.csv"'
+        return _export_csv(users)
 
-        writer = csv.writer(response)
-        writer.writerow(['Username', 'First Name', 'Last Name', 'Email', 'Phone', 'State Of Origin', 'User Type', 'Registered Date'])
-
-        for u in all_users_list:
-            writer.writerow([u.username, u.first_name, u.last_name, u.email, u.profile.phone, u.profile.state_of_origin, u.profile.user_type, u.profile.created])
-        return response
-
-    # Normal template rendering
-    context = {'all_users': all_users_list,
-             'total_count': all_users_list.count()
-            }
-    return render(request, 'users/all_registered_users.html', context)
-
+    return render(request, 'users/all_registered_users.html', {
+        'all_users': users,
+        'total_count': len(users),
+    })
 
 # Enroll students view
 @login_required
