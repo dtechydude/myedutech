@@ -781,9 +781,10 @@ class StudentReportCardView(LoginRequiredMixin, AdminTeacherOrOwnerMixin, View):
         # Who can edit inline: superusers, staff, and the class's form teacher.
         # ⚠️ Adjust `standard.form_teacher_id` below if your Standard model
         # uses a different field name for the assigned form/class teacher.
+        teacher_profile = getattr(request.user, 'teacher', None)
         is_form_teacher = (
-            hasattr(request.user, 'teacher')
-            and getattr(standard, 'form_teacher_id', None) == request.user.teacher_id
+            teacher_profile is not None
+            and getattr(standard, 'form_teacher_id', None) == teacher_profile.pk
         )
         can_edit_teacher_comment = request.user.is_superuser or request.user.is_staff or is_form_teacher
         can_edit_principal_comment = request.user.is_superuser or request.user.is_staff or is_form_teacher
@@ -3767,7 +3768,7 @@ class BulkSessionReportCardView(LoginRequiredMixin, View):
 #         # Who can edit inline: superusers, staff, and the class's form teacher.
 #         is_form_teacher = (
 #             hasattr(request.user, 'teacher')
-#             and getattr(standard, 'form_teacher_id', None) == request.user.teacher_id  # ADJUST FIELD NAME if needed
+#             and getattr(standard, 'form_teacher_id', None) == request.user.teacher.id  # assumes reverse accessor 'teacher'
 #         )
 #         can_edit_teacher_comment = request.user.is_superuser or request.user.is_staff or is_form_teacher
 #         can_edit_principal_comment = request.user.is_superuser or request.user.is_staff or is_form_teacher
@@ -3806,9 +3807,10 @@ class TermReportCommentUpdateView(LoginRequiredMixin, View):
         first_score = Score.objects.filter(student=student, term=term).select_related('standard').first()
         standard = first_score.standard if first_score and first_score.standard else student.current_class
 
+        teacher_profile = getattr(request.user, 'teacher', None)
         is_form_teacher = (
-            hasattr(request.user, 'teacher')
-            and getattr(standard, 'form_teacher_id', None) == request.user.teacher_id  # ADJUST FIELD NAME if needed
+            teacher_profile is not None
+            and getattr(standard, 'form_teacher_id', None) == teacher_profile.pk
         )
         if not (request.user.is_superuser or request.user.is_staff or is_form_teacher):
             messages.error(request, "You are not authorized to edit this report card's comments.")

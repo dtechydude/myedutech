@@ -9,10 +9,10 @@ def get_session_comment_permissions(user, student):
 
     is_principal = user.groups.filter(name='Principal/HeadTeacher').exists()
 
+    teacher_profile = getattr(user, 'teacher', None)
     is_form_teacher = (
-        hasattr(user, 'teacher')
-        and student.form_teacher_id is not None
-        and student.form_teacher_id == user.teacher.id
+        teacher_profile is not None
+        and getattr(student, 'form_teacher_id', None) == teacher_profile.pk
     )
 
     return is_form_teacher, is_principal

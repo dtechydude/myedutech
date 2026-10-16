@@ -245,7 +245,7 @@
 								<a class="dropdown-item ai-icon" href="{% url 'pages:support_info' %}">
 									<i class="fas fa-headset text-primary"></i><span class="ms-2">Support Center</span>
 								</a>
-								{% if user.is_authenticated and user.is_superuser or user.is_staff or user.techer %}
+								{% if user.is_authenticated and user.is_superuser or user.is_staff or user.teacher %}
 							<a class="dropdown-item ai-icon" href="https://kwikschools.com/guides/kwikschools_elearning_lesson_notes_guide.html" target="_blank" rel="noopener noreferrer">
 									<i class="fas fa-desktop text-primary"></i><span class="ms-2">E-Learning & Lesson Notes</span>
 								</a>
@@ -732,7 +732,7 @@
 								<li><a href="{% url 'pages:video-guides' %}">Video Guide</a></li>
 								<li><a href="{% url 'pages:help-center' %}">Frequently Asked Questions</a></li>
 								<li><a href="{% url 'pages:support_info' %}">Support Center</a></li>
-								{% if user.is_authenticated and user.is_superuser or user.is_staff or user.techer %}
+								{% if user.is_authenticated and user.is_superuser or user.is_staff or user.teacher %}
 								<li><a href="https://kwikschools.com/guides/kwikschools_elearning_lesson_notes_guide.html", target="_blank" rel="noopener noreferrer">E-Learning & Lesson Notes</a></li>
 								{% endif %}
 							</ul>
