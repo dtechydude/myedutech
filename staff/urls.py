@@ -4,6 +4,7 @@ from .views import(TeacherDetailView,
                    TeacherUpdateView,TeacherDeleteView,
                      TeacherSelfDetailView, TeacherStudentCountListView, TeacherIDCardView)
 
+from . import teacher_status_views as ts
 
 app_name ='staff'
 
@@ -23,6 +24,13 @@ urlpatterns = [
     path('my_teacher_view/', staff_views.my_teacher_view, name='my_teacher_view'),
     
     path('classroom/<str:class_id>/students/', staff_views.classroom_students, name='classroom_students'),
+
+    
+    # Teachers Status
+    # inside urlpatterns:
+    path('teachers/archive/', ts.TeacherArchiveView.as_view(), name='teacher_archive'),
+    path('teachers/<int:pk>/deactivate/', ts.TeacherDeactivateView.as_view(), name='teacher_deactivate'),
+    path('teachers/<int:pk>/reactivate/', ts.TeacherReactivateView.as_view(), name='teacher_reactivate'),
 
     #  path('staff-my-detail/', StaffSelfDetailView.as_view(), name="staff-self-detail"),
     path('teacher-my-detail/', TeacherSelfDetailView.as_view(), name="teacher-self-detail"),

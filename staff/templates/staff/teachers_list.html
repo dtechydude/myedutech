@@ -89,7 +89,7 @@
 					<div class="col-12">
                         <div class="card">
                                 <div class="card-header">
-                                <h4 class="card-title" style="color:green;"><i class="fas fa-users"></i> Teachers Profile Datatable </h4>
+                                <h4 class="card-title" style="color:green;"><i class="fas fa-users"></i> Active Teachers List </h4>
                                 <a href="{% url 'staff:teacher-list' %}?export=csv" class="btn btn-success float-end">
                                         <i class="fas fa-file-download me-2"></i> Export to CSV
                                     </a>
@@ -114,6 +114,7 @@
                                         <tbody>
                                             {% for ts in all_teachers %}
                                             <tr>
+                                                {% if ts.active%}
                                                 <td>{{ forloop.counter }}</td>
 												<td><a href="{% url 'staff:teacher-detail' ts.id %}"><img class="rounded-circle" width="40" height="40" src="{{ts.user.profile.image_url}}" alt=""></a></td>
                                                 <td><strong>{{ ts.last_name }}</strong> {% if ts.middle_name %} {{ ts.middle_name }} {% endif %} {{ ts.first_name }}</td>
@@ -135,8 +136,10 @@
                                                             <a href="{% url 'staff:teacher-detail' ts.id %}" class="btn btn-success me-1">View</a>
                                                             <a href="/admin/staff/teacher/" class="btn btn-warning">Edit</a>
                                                         </div>                                               
-												</td>                                               
+												</td> 
+                                                  {% endif %}                                              
                                                 {% endfor %}
+                                              
                                             </tr>
                                            
                                            

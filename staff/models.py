@@ -38,8 +38,18 @@ class StaffPosition(models.Model):
 
 
 
+class TeacherQuerySet(models.QuerySet):
+    def current(self):
+        """Teachers who still work at the school."""
+        return self.filter(active=True)
+
+    def former(self):
+        """Teachers who have left (kept for the archive)."""
+        return self.filter(active=False)
+
 # Teacher Module
 class Teacher(models.Model):
+    objects = TeacherQuerySet.as_manager()
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
     first_name = models.CharField(max_length=20, blank=True, null=True)
     middle_name = models.CharField(max_length=20, blank=True, null=True)
@@ -95,23 +105,38 @@ class Teacher(models.Model):
     staff_role = models.ForeignKey(StaffPosition, on_delete=models.CASCADE, default='select', related_name='staff_role', blank=True, null=True)
     updated = models.DateTimeField(auto_now=True)
     created = models.DateTimeField(auto_now_add=True)
-    active = models.BooleanField(default=False, blank=True)
+    # active = models.BooleanField(default=False, blank=True)
+    active = models.BooleanField(default=True, blank=True,
+                                help_text='Untick when the teacher has left the school. '
+                                'Their portal access is switched off automatically.')
+    date_left = models.DateField(null=True, blank=True)
+    left_reason = models.CharField(max_length=200, blank=True)
 
 
     def __str__(self):
         return f'{self.first_name} - {self.last_name}'
 
-    # def get_full_name(self):
-    #     """
-    #     Returns the teachers's full name.
-    #     """
-    #     return f"{self.user.first_name} - {self.middle_name} - {self.user.last_name}"
-
+ 
     def get_full_name(self):
 
         names = [self.user.last_name, self.user.first_name, self.middle_name]
         full_name = " ".join(filter(None, names))
         return full_name.strip()
+
+    @property
+    def display_name(self):
+        """Safe name for lists (works even when the teacher has no linked user)."""
+        if self.user_id:
+            return self.user.get_full_name() or self.user.get_username()
+        return ' '.join(filter(None, [self.first_name, self.last_name])) or f'Teacher #{self.pk}'
+
+    @property
+    def years_of_service(self):
+        """Years between date_employed and date_left (or today), to one decimal place."""
+        if not self.date_employed:
+            return None
+        end = self.date_left or timezone.localdate()
+        return round(max((end - self.date_employed).days, 0) / 365.25, 1)
 
 
     class Meta:
@@ -223,3 +248,28 @@ class StaffAttendance(models.Model):
             return f"{int(hours)} hrs {int(minutes)} mins"
 
         return "N/A"
+
+
+class TeacherStatusLog(models.Model):
+    """Who marked a teacher as left / reactivated, when, and why."""
+    DEACTIVATED = 'deactivated'
+    REACTIVATED = 'reactivated'
+    ACTIONS = [(DEACTIVATED, 'Marked as left the school'), (REACTIVATED, 'Reactivated')]
+
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='status_logs')
+    action = models.CharField(max_length=20, choices=ACTIONS)
+    reason = models.CharField(max_length=200, blank=True)
+    effective_date = models.DateField(default=timezone.localdate)
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='teacher_status_changes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at', '-id']
+
+    def __str__(self):
+        return f'{self.teacher} - {self.get_action_display()} ({self.effective_date})'
+
+
+# Automatic access control + audit trail for status changes (see teacher_status.py)
+from . import teacher_status  # noqa: E402,F401

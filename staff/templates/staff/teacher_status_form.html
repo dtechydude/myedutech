@@ -1,0 +1,65 @@
+{% extends 'pages/portal_home.html' %}
+{% block title %}<title>{% if mode == 'deactivate' %}Mark Teacher As Left{% else %}Reactivate Teacher{% endif %}</title>{% endblock title %}
+
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'staff:teacher_archive' %}">Teacher Archive</a></li>
+                <li class="breadcrumb-item active"><a href="javascript:void(0)">{% if mode == 'deactivate' %}Mark as left{% else %}Reactivate{% endif %}</a></li>
+            </ol>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-7 col-xl-6">
+                <div class="card shadow-sm {% if mode == 'deactivate' %}border-danger{% else %}border-success{% endif %}">
+                    <div class="card-header {% if mode == 'deactivate' %}bg-danger{% else %}bg-success{% endif %} text-white">
+                        <h4 class="card-title text-white mb-0">{% if mode == 'deactivate' %}Mark {{ teacher.display_name }} as left the school{% else %}Reactivate {{ teacher.display_name }}{% endif %}</h4>
+                    </div>
+                    <div class="card-body">
+                        {% if mode == 'deactivate' %}
+                            <p>Their portal login will be <strong>switched off automatically</strong>, they will disappear from the current teachers lists, and their record stays in the Teacher Archive.</p>
+
+                            {% for w in warnings %}
+                            <div class="alert alert-warning py-2 small"><i class="fas fa-exclamation-triangle me-1"></i>{{ w }}</div>
+                            {% endfor %}
+
+                            <form method="post">
+                                {% csrf_token %}
+                                {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold" for="{{ form.date_left.id_for_label }}">{{ form.date_left.label }}</label>
+                                    {{ form.date_left }}
+                                    {% for e in form.date_left.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold" for="{{ form.reason.id_for_label }}">{{ form.reason.label }}</label>
+                                    {{ form.reason }}
+                                    <datalist id="leave-reasons">
+                                        <option value="Resigned"><option value="Retired"><option value="Contract ended">
+                                        <option value="Terminated"><option value="Transferred"><option value="Deceased">
+                                    </datalist>
+                                    {% for e in form.reason.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-danger"><i class="fas fa-user-slash me-1"></i>Yes, mark as left</button>
+                                    <a href="{% url 'staff:teacher_archive' %}?show=current" class="btn btn-outline-secondary">Cancel</a>
+                                </div>
+                            </form>
+                        {% else %}
+                            <p>Left on <strong>{{ teacher.date_left|date:"F j, Y"|default:"an unknown date" }}</strong>{% if teacher.left_reason %} &mdash; {{ teacher.left_reason }}{% endif %}.</p>
+                            <p>Reactivating switches their portal login back on and returns them to the current teachers lists.</p>
+                            <form method="post" class="d-flex gap-2">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success"><i class="fas fa-user-check me-1"></i>Yes, reactivate</button>
+                                <a href="{% url 'staff:teacher_archive' %}" class="btn btn-outline-secondary">Cancel</a>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content_body %}

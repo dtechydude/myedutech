@@ -474,7 +474,8 @@
 						</a>
 						<ul aria-expanded="false">
 							<li><a href="{% url 'staff:teacher_user_signup'%}">Signup Teacher</a></li>
-							<li><a href="{% url 'staff:teacher-list' %}">All Teachers</a></li>
+							<li><a href="{% url 'staff:teacher-list' %}">Active Teachers</a></li>
+							<li><a href="{% url 'staff:teacher_archive' %}">Teachers History</a></li>	
 							<li><a href="{% url 'staff:assign_form_teacher' %}">Assign FormTeacher To Class</a></li> 
 							{% comment %} <li><a href="{% url 'staff:assign_form_teacher_to_classgroup' %}">Assign FormTeacher To CLASSGROUP</a></li> {% endcomment %}
 							<li><a href="{% url 'staff:teacher_assignments' %}">Subj/Classes Allocation List</a></li>
@@ -789,8 +790,7 @@
 						<ul aria-expanded="false">	
 												
 							<li><a href="{% url 'students:student_archive' %}">Old Students</a></li>							
-							{% comment %} <li><a href="{% url 'payments:archive_payment_chart_list' %}">Archived Fees Chart</a></li>	{% endcomment %}						
-									
+							<li><a href="{% url 'staff:teacher_archive' %}">Teacher Archive (Former Staff)</a></li>		
 						</ul>
 
 						</li>

@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import StaffPosition, Teacher, StaffAttendance
 from import_export.admin import ImportExportModelAdmin
+from .teacher_status import mark_selected_former, reactivate_selected
 
 
 class StaffPositionAdmin(ImportExportModelAdmin):
@@ -11,11 +12,13 @@ class StaffPositionAdmin(ImportExportModelAdmin):
 
     
 class TeacherAdmin(ImportExportModelAdmin):
-    list_display = ( 'user', 'last_name', 'first_name', 'staff_role', 'phone_home', 'qualification' )
+    list_display = ( 'user', 'last_name', 'first_name', 'staff_role', 'phone_home', 'qualification', 'active', 'date_left')
     search_fields = ('first_name', 'last_name')
-    list_filter = ['staff_role',]
+    list_filter = ['staff_role', 'active']
     ordering = ['dept__name', 'first_name']
     raw_id_fields = ['user', 'dept']
+
+    actions = [mark_selected_former, reactivate_selected]
 
 
 
