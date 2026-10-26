@@ -10,14 +10,14 @@
             <div class="card">
                 <div class="card-header border-0 pb-0 flex-wrap">
                     <h4 class="fs-20"><i class="fas fa-boxes-stacked me-2"></i>All Inventory Items</h4>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 flex-wrap">
                         <a href="{% url 'inventory:item_add' %}" class="btn btn-primary btn-sm">
                             <i class="fas fa-plus me-1"></i> Add Item
                         </a>
                         <a href="{% url 'inventory:bulk_qr_print' %}?category={{ request.GET.category }}" class="btn btn-outline-primary btn-sm">
                             <i class="fas fa-qrcode me-1"></i> Print QR Labels
                         </a>
-                        <a href="{% url 'inventory:dashboard' %}" class="btn btn-outline-secondary btn-sm">
+                        <a href="{% url 'inventory:inventory-home' %}" class="btn btn-outline-secondary btn-sm">
                             <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
                         </a>
                     </div>
@@ -46,13 +46,15 @@
                                     <th>Total Value</th>
                                     <th>Location</th>
                                     <th>Status</th>
-                                    <th></th>
+                                    <th class="text-end">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                             {% for item in items %}
                                 <tr>
-                                    <td>{{ item.name }}</td>
+                                    <td>
+                                        <a href="{% url 'inventory:item_detail' item.pk %}" class="fw-semibold text-decoration-none">{{ item.name }}</a>
+                                    </td>
                                     <td>{{ item.category.name|default:"—" }}</td>
                                     <td>{{ item.quantity_in_stock }} {{ item.get_unit_display }}</td>
                                     <td>₦{{ item.unit_cost|floatformat:2 }}</td>
@@ -65,9 +67,16 @@
                                             <span class="badge bg-success">OK</span>
                                         {% endif %}
                                     </td>
-                                    <td>
-                                        <a href="{% url 'inventory:item_edit' item.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
-                                    <a href="{% url 'inventory:item_qr_label' item.pk %}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-qrcode"></i></a>
+                                    <td class="text-end">
+                                        <div class="d-inline-flex gap-1 flex-nowrap">
+                                            <a href="{% url 'inventory:item_detail' item.pk %}" class="btn btn-sm btn-primary" title="View details">
+                                                <i class="fas fa-eye me-1"></i> View
+                                            </a>
+                                            <a href="{% url 'inventory:item_edit' item.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit item">Edit</a>
+                                            <a href="{% url 'inventory:item_qr_label' item.pk %}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="Print QR label">
+                                                <i class="fas fa-qrcode"></i>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             {% empty %}
@@ -78,10 +87,14 @@
                     </div>
 
                     {% if is_paginated %}
-                    <nav><ul class="pagination">
-                        {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+                    <nav aria-label="Inventory pages"><ul class="pagination">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category|urlencode }}{% endif %}">Previous</a></li>
+                        {% endif %}
                         <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
-                        {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+                        {% if page_obj.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category|urlencode }}{% endif %}">Next</a></li>
+                        {% endif %}
                     </ul></nav>
                     {% endif %}
 

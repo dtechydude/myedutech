@@ -486,10 +486,9 @@
 							<li><a href="{% url 'staff:staff_attendance_report' %}">Staff Attendance Report</a></li>
 							{% comment %} <li><a href="{% url 'curriculum:form_teachers_head' %}">FormTeachers List</a></li> {% endcomment %}
 							{% comment %} <li><a href="{% url 'curriculum:classgroup_form_teachers' %}">ClassGroup FormTeachers</a></li> {% endcomment %}
-							<li><a href="{% url 'staff:teacher_upcoming_birthdays' %}">							
-								<i class="fas fa-birthday-cake me-2"></i>
-								Staff Birthdays
-							</a></li>
+							<li><a href="{% url 'staff:teacher_upcoming_birthdays' %}">	<i class="fas fa-birthday-cake me-2"></i>Staff Birthdays</a></li>
+							<li><a href="{% url 'staff:teacher_archive' %}">Teacher Archive (Former Staff)</a></li>		
+
 						</ul>
 					</li>
 					{% endif %}
@@ -564,6 +563,11 @@
 							
 							{% if user.is_superuser or user.is_staff %}								
 							<li><a href="{% url 'inventory:inventory-home' %}" target="_blank">Inventory</a></li>
+							<li><a href="{% url 'inventory:item_list' %}" target="_blank">All Items</a></li>
+							<li><a href="{% url 'inventory:custody_list' %}" target="_blank">Item Custody</a></li>
+							<li><a href="{% url 'inventory:movement_list' %}" target="_blank">Stock Movement</a></li>
+
+
 							
 							{% endif %}						
 						

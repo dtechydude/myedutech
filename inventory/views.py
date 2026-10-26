@@ -4,6 +4,7 @@ from django.urls import reverse_lazy
 from django.db.models import Sum, F, Q
 from .models import InventoryItem, StockMovement, InventoryCategory
 from finance.models import Vendor
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 
 class StaffOnlyMixin(UserPassesTestMixin):
@@ -131,6 +132,20 @@ class ItemDetailView(LoginRequiredMixin, StaffOnlyMixin, DetailView):
         return ctx
 
 
+# def item_qr_label(request, pk):
+#     """
+#     Printable QR label for a single item. Uses the same qrcodejs pattern
+#     already used across ID cards / receipts (self-hosted, no new package).
+#     """
+#     item = get_object_or_404(InventoryItem, pk=pk)
+#     scan_url = request.build_absolute_uri(item.get_qr_scan_url())
+#     return render(request, 'inventory/item_qr_label.html', {'item': item, 'scan_url': scan_url})
+def _is_inventory_staff(user):
+    return user.is_active and (user.is_staff or user.is_superuser)
+
+
+@login_required
+@user_passes_test(_is_inventory_staff)
 def item_qr_label(request, pk):
     """
     Printable QR label for a single item. Uses the same qrcodejs pattern
@@ -139,7 +154,6 @@ def item_qr_label(request, pk):
     item = get_object_or_404(InventoryItem, pk=pk)
     scan_url = request.build_absolute_uri(item.get_qr_scan_url())
     return render(request, 'inventory/item_qr_label.html', {'item': item, 'scan_url': scan_url})
-
 
 class ScanDetailView(DetailView):
     """

@@ -1,0 +1,19 @@
+{% comment %}
+    Renders a possibly-long note. Usage: {% include 'inventory/_note_cell.html' with note=c.issue_notes %}
+    Notes over 100 characters show a preview with a native <details> toggle (no JS).
+{% endcomment %}
+{% if note %}
+    {% if note|length > 100 %}
+    <details class="note-details">
+        <summary>
+            <span class="note-preview">{{ note|truncatechars:100 }}</span>
+            <span class="note-toggle"></span>
+        </summary>
+        <div class="note-full">{{ note|linebreaksbr }}</div>
+    </details>
+    {% else %}
+    <div class="note-full">{{ note|linebreaksbr }}</div>
+    {% endif %}
+{% else %}
+    <span class="text-muted">—</span>
+{% endif %}
