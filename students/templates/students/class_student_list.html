@@ -1,0 +1,129 @@
+{% extends 'pages/portal_home.html' %}
+{% load static %}
+
+{% block title %}
+<title>{{ standard.name }} - Students</title>
+{% endblock title %}
+
+{% block extra_head %}
+<link rel="shortcut icon" type="image/png" href="{% static 'pages/images/favicon.png' %}" />
+<link href="{% static 'pages/vendor/jquery-nice-select/css/nice-select.css' %}" rel="stylesheet">
+<link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
+{% endblock extra_head %}
+
+{% block content_body %}
+<div class="content-body">
+    <div class="container-fluid">
+
+        <div class="row page-titles">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ back_url }}">Students Count by Class</a></li>
+                <li class="breadcrumb-item active">{{ standard.name }}</li>
+            </ol>
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <h4 class="card-title mb-0">{{ standard.name }}</h4>
+                    <p class="text-muted small mb-0">
+                        {{ total }} student{{ total|pluralize }}{% if query %} matching "{{ query }}"{% endif %}
+                    </p>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <form method="get" class="d-flex gap-2" role="search">
+                        <input type="search" name="q" value="{{ query }}" maxlength="100"
+                               class="form-control" style="min-width: 220px;"
+                               placeholder="Name, USN or guardian"
+                               aria-label="Search students in {{ standard.name }}">
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-search me-1"></i> Search</button>
+                        {% if query %}
+                        <a href="{% url 'students:class-student-list' standard.id %}" class="btn btn-light">Clear</a>
+                        {% endif %}
+                    </form>
+
+                    <a href="?export=csv{% if q_string %}&{{ q_string }}{% endif %}" class="btn btn-success">
+                        <i class="fa fa-download me-1"></i> Download CSV
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">S/N</th>
+                                <th scope="col">USN</th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Gender</th>
+                                <th scope="col">Type</th>
+                                <th scope="col">Guardian</th>
+                                <th scope="col">Guardian phone</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in page_obj %}
+                            <tr>
+                                <td>{{ start_index|add:forloop.counter0 }}</td>
+                                <td>{{ s.USN }}</td>
+                                <td><a href="{{ s.get_absolute_url }}" class="fw-bold">{{ s.get_full_name }}</a></td>
+                                <td>{{ s.get_gender_display|capfirst }}</td>
+                                <td>{{ s.get_student_type_display|capfirst }}</td>
+                                <td>{{ s.guardian_name|default:"-" }}</td>
+                                <td>{{ s.guardian_phone|default:"-" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-5">
+                                    {% if query %}No students in {{ standard.name }} match "{{ query }}". Try a different name or USN.
+                                    {% else %}No students are enrolled in {{ standard.name }} yet.{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {% if page_obj.has_other_pages %}
+            <div class="card-footer d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span class="text-muted small">
+                    Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ total }}
+                </span>
+                <nav aria-label="Student pages">
+                    <ul class="pagination mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page=1{% if q_string %}&{{ q_string }}{% endif %}">First</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q_string %}&{{ q_string }}{% endif %}">Previous</a></li>
+                        {% endif %}
+                        <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                        {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q_string %}&{{ q_string }}{% endif %}">Next</a></li>
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if q_string %}&{{ q_string }}{% endif %}">Last</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock content_body %}
+
+{% block scripts %}
+<script src="{% static 'pages/vendor/global/global.min.js' %}"></script>
+<script src="{% static 'pages/vendor/jquery-nice-select/js/jquery.nice-select.min.js' %}"></script>
+<script src="{% static 'pages/js/custom.min.js' %}"></script>
+<script src="{% static 'pages/js/dlabnav-init.js' %}"></script>
+<script src="{% static 'pages/js/demo.js' %}"></script>
+<script src="{% static 'pages/js/styleSwitcher.js' %}"></script>
+{% endblock scripts %}

@@ -29,7 +29,9 @@
                             
                             <div>
                                 <h5 class="card-title text-primary mb-1">
-                                    <a href="#" class="text-decoration-none">{{ st.current_class__name }}</a>
+                                    {% comment %} <a href="#" class="text-decoration-none">{{ st.current_class__name }}</a> {% endcomment %}
+                                <a href="{% url 'students:class-student-list' st.current_class_id %}" class="text-decoration-none">{{ st.current_class__name }}</a>
+
                                 </h5>
                                 <p class="text-muted small mb-0">Total Students</p>
                             </div>
@@ -45,9 +47,9 @@
                              <span class="badge badge-secondary light">
                                  <i class="fa fa-graduation-cap me-1"></i> Class Info
                              </span>
-                             <a href="{% url 'students:student-list' %}" class="text-primary small fw-bold">
+                            <a href="{% url 'students:class-student-list' st.current_class_id %}" class="text-primary small fw-bold">
                                  View Details <i class="fa fa-arrow-right ms-1"></i>
-                             </a>
+                             </a> 
                         </div>
                     </div>
                 </div>

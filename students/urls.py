@@ -8,6 +8,8 @@ from .views import (
     ajax_validate_csv_headers,
 )
 from .views_export import StudentCSVExportView
+from . import views_class_roster
+
 
 app_name ='students'
 
@@ -17,6 +19,8 @@ urlpatterns = [
         name='export_for_attendance'),
   
     path('student_list/', students_views.student_list, name='student-list'),
+    #class roster
+    path('classes/<int:class_id>/students/', views_class_roster.class_student_list, name='class-student-list'),
     path('parent-dashboard/', students_views.parent_dashboard, name='parent-dashboard'),
     path('parents/', students_views.parent_list_view, name='parent_list'),
     path('parents/export-csv/', students_views.export_parents_csv, name='export_parents_csv'),

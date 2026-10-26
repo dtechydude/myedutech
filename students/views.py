@@ -410,38 +410,7 @@ def student_search_list(request):
     return render(request, 'students/search_student_list.html', context)
 
 
-
-# #count students in each class
-# @login_required
-# def student_in_class(request):
-#     students = Student.objects.all()
-#     # student_no = Student.objects.exclude(current_class__name="Alumni").order_by('current_class').values('current_class__name').annotate(count=Count('current_class__name'))
-#     student_no = (
-#     Student.objects
-#     .filter(
-#         current_class__isnull=False,
-#         current_class__name__isnull=False
-#     )
-#     .exclude(current_class__name__in=["", "Alumni"])
-#     # .exclude(student_status__in=["inactive", "graduated", "suspended", "dropped", "expelled"])
-#     .values("current_class__name")
-#     .annotate(count=Count("id"))
-#     .order_by("current_class__name")
-# )
-#     # try:
-#     #     num_inclass = Student.objects.filter(standard__name = request.user.student.standard).count()
-#     # except Student.DoesNotExist:
-#     #     num_inclass = Student.objects.filter()
-
-#     try:
-#         num_inclass = Student.objects.filter(
-#             current_class=request.user.student.current_class
-#             ).count()
-#     except Student.DoesNotExist:
-#         num_inclass = 0
-
-#     return render(request, 'students/student_no_in_class.html', {'students': students, 'student_no':student_no, 'num_inclass':num_inclass})
-
+# Students In Class
 @login_required
 def student_in_class(request):
     students = Student.objects.enrolled()
@@ -452,7 +421,8 @@ def student_in_class(request):
         current_class__name__isnull=False
     )
     .exclude(current_class__name__in=["", "Alumni"])
-    .values("current_class__name")
+    # .values("current_class__name")
+    .values("current_class_id", "current_class__name")
     .annotate(count=Count("id"))
     .order_by("current_class__name")
 )

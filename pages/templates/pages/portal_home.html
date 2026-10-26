@@ -487,7 +487,7 @@
 							{% comment %} <li><a href="{% url 'curriculum:form_teachers_head' %}">FormTeachers List</a></li> {% endcomment %}
 							{% comment %} <li><a href="{% url 'curriculum:classgroup_form_teachers' %}">ClassGroup FormTeachers</a></li> {% endcomment %}
 							<li><a href="{% url 'staff:teacher_upcoming_birthdays' %}">	<i class="fas fa-birthday-cake me-2"></i>Staff Birthdays</a></li>
-							<li><a href="{% url 'staff:teacher_archive' %}">Teacher Archive (Former Staff)</a></li>		
+							<li><a href="{% url 'staff:teacher_archive' %}">Manage Staff Status</a></li>		
 
 						</ul>
 					</li>
@@ -539,7 +539,7 @@
 						<ul aria-expanded="false"> 
 							
 							{% if user.is_superuser or user.is_staff %}								
-							<li><a href="{% url 'finance:dashboard' %}" target="_blank">School Finance</a></li>
+							<li><a href="{% url 'finance:dashboard' %}" target="_blank">School Finance Dashboard</a></li>
 							
 							{% endif %}	
 
