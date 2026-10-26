@@ -473,9 +473,9 @@
 							<span class="nav-text">STAFF/TEACHERS</span>
 						</a>
 						<ul aria-expanded="false">
-							<li><a href="{% url 'staff:teacher_user_signup'%}">Signup Teacher</a></li>
-							<li><a href="{% url 'staff:teacher-list' %}">Active Teachers</a></li>
-							<li><a href="{% url 'staff:teacher_archive' %}">Teachers History</a></li>	
+							<li><a href="{% url 'staff:teacher_user_signup'%}">Signup Teacher/Staff</a></li>
+							<li><a href="{% url 'staff:teacher-list' %}">Active Teachers/Staff</a></li>
+							<li><a href="{% url 'staff:teacher_archive' %}">Teachers/Staff History</a></li>	
 							<li><a href="{% url 'staff:assign_form_teacher' %}">Assign FormTeacher To Class</a></li> 
 							{% comment %} <li><a href="{% url 'staff:assign_form_teacher_to_classgroup' %}">Assign FormTeacher To CLASSGROUP</a></li> {% endcomment %}
 							<li><a href="{% url 'staff:teacher_assignments' %}">Subj/Classes Allocation List</a></li>
@@ -487,7 +487,6 @@
 							{% comment %} <li><a href="{% url 'curriculum:form_teachers_head' %}">FormTeachers List</a></li> {% endcomment %}
 							{% comment %} <li><a href="{% url 'curriculum:classgroup_form_teachers' %}">ClassGroup FormTeachers</a></li> {% endcomment %}
 							<li><a href="{% url 'staff:teacher_upcoming_birthdays' %}">	<i class="fas fa-birthday-cake me-2"></i>Staff Birthdays</a></li>
-							<li><a href="{% url 'staff:teacher_archive' %}">Manage Staff Status</a></li>		
 
 						</ul>
 					</li>
