@@ -1,0 +1,25 @@
+
+{% extends "errors/error_base.html" %}
+
+{% block title %}Access Restricted{% endblock %}
+
+{% block error_content %}
+<div class="error-code">403</div>
+<h1 class="h3 fw-bold mt-3">Access Restricted</h1>
+
+{% if csrf_error %}
+<p class="text-secondary mt-3">
+    We could not verify this request. Your session may have expired.
+    Please return to the page, refresh it, and try again.
+</p>
+{% else %}
+<p class="text-secondary mt-3">
+    You do not have permission to perform this action or access this resource.
+    This may happen when you try to edit a lesson or record owned by another user.
+</p>
+<p class="small text-secondary">
+    Please check that you are signed in to the correct account.
+    If you believe this is a mistake, contact your school administrator.
+</p>
+{% endif %}
+{% endblock %}

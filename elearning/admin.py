@@ -3,13 +3,53 @@ from import_export.admin import ImportExportModelAdmin
 from .models import ELearningSubject, Lesson, Comment, Reply, Assignment, AssignmentSubmission
 from .lessonnotes import admin as _lessonnotes_admin  # noqa: F401
 from .notices import admin as _notices_admin  # noqa: F401
+from curriculum.models import Standard
+
+# @admin.register(ELearningSubject)
+# class ELearningSubjectAdmin(ImportExportModelAdmin):
+#     list_display = ('subject_id', 'name', 'standard', 'description')
+#     list_filter = ['standard__name']
+#     search_fields = ('standard__name', 'subject_id')
+#     exclude = ['slug']
+
+
+class StandardFilter(admin.SimpleListFilter):
+    title = "Standard"
+    parameter_name = "standard"
+
+    def lookups(self, request, model_admin):
+        standards = Standard.objects.exclude(name="Alumni")
+
+        return [
+            (standard.id, standard.name)
+            for standard in standards
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(standard_id=self.value())
+        return queryset
+
 
 @admin.register(ELearningSubject)
 class ELearningSubjectAdmin(ImportExportModelAdmin):
-    list_display = ('subject_id', 'name', 'standard', 'description')
-    list_filter = ['standard__name']
-    search_fields = ('standard__name', 'subject_id')
-    exclude = ['slug']
+    list_display = ("subject_id", "name", "standard", "description")
+    list_filter = (StandardFilter,)
+    search_fields = ("standard__name", "subject_id")
+    exclude = ["slug"]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.exclude(standard__name="Alumni")
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "standard":
+            kwargs["queryset"] = Standard.objects.exclude(
+                name="Alumni"
+            )
+        return super().formfield_for_foreignkey(
+            db_field, request, **kwargs
+        )
 
 
 @admin.register(Lesson)

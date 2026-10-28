@@ -1,0 +1,17 @@
+
+{% extends "errors/error_base.html" %}
+
+{% block title %}Temporary Server Problem{% endblock %}
+
+{% block error_content %}
+<div class="error-code">500</div>
+<h1 class="h3 fw-bold mt-3">Something went wrong</h1>
+<p class="text-secondary mt-3">
+    We encountered an unexpected problem while processing your request.
+    Your data has not necessarily been lost.
+</p>
+<p class="small text-secondary">
+    Please try again shortly. If the problem continues, contact your
+    school administrator or support team.
+</p>
+{% endblock %}

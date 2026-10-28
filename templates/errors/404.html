@@ -1,0 +1,16 @@
+
+{% extends "errors/error_base.html" %}
+
+{% block title %}Page Not Found{% endblock %}
+
+{% block error_content %}
+<div class="error-code">404</div>
+<h1 class="h3 fw-bold mt-3">We couldn't find that page</h1>
+<p class="text-secondary mt-3">
+    The page may have moved, the link may be incorrect, or the resource
+    may no longer be available.
+</p>
+<p class="small text-secondary">
+    Return to the previous page or navigate to the home page.
+</p>
+{% endblock %}

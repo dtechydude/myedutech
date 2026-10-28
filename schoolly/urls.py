@@ -49,6 +49,13 @@ urlpatterns = [
 
 ]
 
+
+handler400 = "pages.error_views.bad_request"
+handler403 = "pages.error_views.permission_denied"
+handler404 = "pages.error_views.page_not_found"
+handler500 = "pages.error_views.server_error"
+
+
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

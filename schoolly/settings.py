@@ -331,3 +331,6 @@ SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 LESSONNOTES_SHARED_FOLDER_URL = "https://drive.google.com/drive/folders/XXXX"  # shown to teachers
 LESSONNOTES_REVIEWER_EMAIL = "academics@yourschool.com"                        # shown to teachers/reviewers
 LESSONNOTES_PAGE_SIZE = 20
+
+
+CSRF_FAILURE_VIEW = "pages.error_views.csrf_failure"
