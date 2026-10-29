@@ -447,7 +447,8 @@
         .grade-b { background: #DBEAFE; color: #1e40af; }
         .grade-c { background: #FEF9C3; color: #854d0e; }
         .grade-d { background: #FEE2E2; color: #991b1b; }
-        .grade-f { background: #F1F5F9; color: #475569; }
+        .grade-e { background: #FEE2E2; color: #991b1b; }
+        .grade-f { background: #fc0808; color: #475569; }
 
         /* Score colours */
         .score-pass { color: var(--success); font-weight: 700; }
@@ -1016,7 +1017,7 @@
         </div>
 
         <!-- ========== GRADING SCALE ========== -->
-        <div class="grading-section">
+        {% comment %} <div class="grading-section">
             <div class="grading-scale">
 
                 <div class="grade-key">
@@ -1042,7 +1043,46 @@
                 
 
             </div>
+        </div> {% endcomment %}
+
+       
+<!-- ========== GRADING SCALE ========== -->
+        <div class="grading-section">
+            <div class="grading-scale">
+
+                <div class="grade-key">
+                    <span class="grade-badge grade-a">A</span>
+                    <span class="gk-range">80–100 &nbsp;Excellent</span>
+                </div>
+
+                <div class="grade-key">
+                    <span class="grade-badge grade-b">B</span>
+                    <span class="gk-range">71–79 &nbsp;Very Good</span>
+                </div>
+
+                <div class="grade-key">
+                    <span class="grade-badge grade-c">C</span>
+                    <span class="gk-range">60–70 &nbsp;Good</span>
+                </div>
+
+                <div class="grade-key">
+                    <span class="grade-badge grade-d">D</span>
+                    <span class="gk-range">50–59 &nbsp;Average</span>
+                </div>
+
+                <div class="grade-key">
+                    <span class="grade-badge grade-e">E</span>
+                    <span class="gk-range">40–49 &nbsp;Needs more effort</span>
+                </div>
+
+                <div class="grade-key">
+                    <span class="grade-badge grade-f">F</span>
+                    <span class="gk-range">0–39 &nbsp;Poor</span>
+                </div>
+
+            </div>
         </div>
+      
 
         <!-- ========== REMARKS ========== -->
         <div class="remarks-section">

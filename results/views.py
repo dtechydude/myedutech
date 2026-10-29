@@ -39,7 +39,9 @@ from prep_reports.models import PrepReportCard
 from .permissions import get_session_comment_permissions
 from .services import get_student_standard_for_session, get_or_create_session_comment, build_session_report_context
 
-
+import math
+from django.core.exceptions import ValidationError
+from django.db import transaction
 
 # important PLEASE DONT DELETE
 #========================================================================
@@ -1697,6 +1699,156 @@ class MidTermScoreEntryView(TeacherRequiredMixin, LoginRequiredMixin, View):
     # ============================================
     # POST (SAME ACCESS CONTROL)
     # ============================================
+    # def post(self, request, class_id, subject_id, term_id):
+
+    #     assigned_class = get_object_or_404(Standard, id=class_id)
+    #     subject = get_object_or_404(Subject, id=subject_id)
+    #     term = get_object_or_404(Term, id=term_id)
+
+    #     if request.user.is_superuser or request.user.is_staff:
+    #         teacher = None
+    #         assigned_subjects = Subject.objects.all()
+    #         assigned_classes = Standard.objects.all()
+    #     else:
+    #         teacher = request.user.teacher
+    #         assigned_subjects = teacher.subjects_taught.all()
+    #         assigned_classes = teacher.standards_assigned.all()
+
+    #     if (
+    #         assigned_class not in assigned_classes
+    #         or subject not in assigned_subjects
+    #     ):
+    #         messages.error(request, "Unauthorized access.")
+    #         return redirect('results:teacher_dashboard')
+
+    #     exam_setting = get_object_or_404(
+    #         ExamSetting,
+    #         term=term,
+    #         exam_type="Midterm"
+    #     )
+
+    #     central_max = exam_setting.max_score
+
+    #     components = MidTermComponent.objects.filter(
+    #         term=term,
+    #         is_active=True
+    #     ).order_by('order')
+
+    #     students = Student.objects.filter(
+    #         current_class=assigned_class
+    #     )
+
+    #     queryset = MidTermScore.objects.filter(
+    #         student__in=students,
+    #         subject=subject,
+    #         term=term
+    #     ).select_related('student').prefetch_related('component_scores__component')
+
+    #     formset = self.get_formset(queryset, data=request.POST)
+
+    #     errors = False
+
+    #     for score in queryset:
+    #             total = 0
+    #             has_any_score = False # Track if any score is provided
+                
+    #             for component in components:
+    #                 key = f'component_{score.id}_{component.id}'
+    #                 raw = request.POST.get(key)
+                    
+    #                 # Only treat as a score if the user actually typed something
+    #                 if raw not in ['', None]:
+    #                     value = float(raw)
+    #                     has_any_score = True
+                        
+    #                     obj, _ = MidTermComponentScore.objects.get_or_create(
+    #                         midterm_score=score,
+    #                         component=component
+    #                     )
+    #                     obj.score = value
+    #                     obj.save()
+                        
+    #                     total += value
+                
+    #             # Update the score object
+    #             # if has_any_score:
+    #             #     score.exam_total_score = total
+    #             #     score.is_graded = True # Mark as graded
+    #             #     score.save()
+
+    #             if has_any_score:
+    #                 score.is_graded = True
+    #             else:
+    #                 score.is_graded = False
+
+    #             score.save()
+            
+    #             # messages.success(request, "Scores saved successfully.")
+    #             # return redirect('results:midterm_score_success')
+
+    #     if errors:
+    #         return render(request, self.template_name, {
+    #             'formset': formset,
+    #             'assigned_class': assigned_class,
+    #             'subject': subject,
+    #             'term': term,
+    #             'students': students,
+    #             'components': components,
+    #             'exam_setting': exam_setting,
+    #             'central_max': central_max,
+    #             'component_score_map': {},
+    #         })
+
+    #     if formset.is_valid():
+    #         formset.save()
+
+    #         for score in queryset:
+
+    #             total = 0
+
+    #             for component in components:
+
+    #                 key = f'component_{score.id}_{component.id}'
+    #                 raw = request.POST.get(key)
+    #                 value = float(raw) if raw not in ['', None] else 0
+
+    #                 obj, _ = MidTermComponentScore.objects.get_or_create(
+    #                     midterm_score=score,
+    #                     component=component
+    #                 )
+
+    #                 obj.score = value
+    #                 obj.save()
+
+    #                 total += value
+
+    #             score.exam_total_score = total
+    #             score.save()
+
+    #         messages.success(request, "Scores saved successfully.")
+
+    #         return redirect('results:midterm_score_success',
+    #             class_id=class_id,
+    #             subject_id=subject_id,
+    #             term_id=term_id
+    #         )
+
+    #     return render(request, self.template_name, {
+    #         'formset': formset,
+    #         'assigned_class': assigned_class,
+    #         'subject': subject,
+    #         'term': term,
+    #         'students': students,
+    #         'components': components,
+    #         'exam_setting': exam_setting,
+    #         'central_max': central_max,
+    #         'component_score_map': {},
+    #     })
+        # ============================================
+    # POST: saves each student independently.
+    # Blank rows are left untouched; one bad value
+    # never blocks the other students.
+    # ============================================
     def post(self, request, class_id, subject_id, term_id):
 
         assigned_class = get_object_or_404(Standard, id=class_id)
@@ -1704,7 +1856,6 @@ class MidTermScoreEntryView(TeacherRequiredMixin, LoginRequiredMixin, View):
         term = get_object_or_404(Term, id=term_id)
 
         if request.user.is_superuser or request.user.is_staff:
-            teacher = None
             assigned_subjects = Subject.objects.all()
             assigned_classes = Standard.objects.all()
         else:
@@ -1712,127 +1863,126 @@ class MidTermScoreEntryView(TeacherRequiredMixin, LoginRequiredMixin, View):
             assigned_subjects = teacher.subjects_taught.all()
             assigned_classes = teacher.standards_assigned.all()
 
-        if (
-            assigned_class not in assigned_classes
-            or subject not in assigned_subjects
-        ):
+        if assigned_class not in assigned_classes or subject not in assigned_subjects:
             messages.error(request, "Unauthorized access.")
             return redirect('results:teacher_dashboard')
 
-        exam_setting = get_object_or_404(
-            ExamSetting,
-            term=term,
-            exam_type="Midterm"
-        )
-
+        exam_setting = get_object_or_404(ExamSetting, term=term, exam_type="Midterm")
         central_max = exam_setting.max_score
 
-        components = MidTermComponent.objects.filter(
-            term=term,
-            is_active=True
-        ).order_by('order')
-
-        students = Student.objects.filter(
-            current_class=assigned_class
+        components = list(
+            MidTermComponent.objects.filter(term=term, is_active=True).order_by('order')
         )
+        students = Student.objects.filter(current_class=assigned_class).order_by('last_name')
 
-        queryset = MidTermScore.objects.filter(
-            student__in=students,
-            subject=subject,
-            term=term
-        ).select_related('student').prefetch_related('component_scores__component')
+        base_qs = MidTermScore.objects.filter(
+            student__in=students, subject=subject, term=term
+        ).select_related('student')
 
-        formset = self.get_formset(queryset, data=request.POST)
+        # --------------------------------------------
+        # 1. Save any other formset fields, form by form.
+        #    Invalid/blank forms are skipped, not fatal.
+        #    (Done BEFORE the score loop so stale instances
+        #    below don't overwrite what the forms saved.)
+        # --------------------------------------------
+        formset = self.get_formset(base_qs, data=request.POST)
+        try:
+            for form in formset.forms:
+                if form.has_changed() and form.is_valid():
+                    form.save()
+        except ValidationError:
+            pass  # management form missing/tampered: ignore, component scores still save
 
-        errors = False
+        # --------------------------------------------
+        # 2. Save component scores per student
+        # --------------------------------------------
+        scores = list(base_qs.all().prefetch_related('component_scores'))  # fresh query
+        errors, invalid_ids, saved = [], set(), 0
 
-        for score in queryset:
-                total = 0
-                has_any_score = False # Track if any score is provided
-                
-                for component in components:
-                    key = f'component_{score.id}_{component.id}'
-                    raw = request.POST.get(key)
-                    
-                    # Only treat as a score if the user actually typed something
-                    if raw not in ['', None]:
+        with transaction.atomic():
+            for score in scores:
+                existing = {cs.component_id: cs for cs in score.component_scores.all()}
+                entries, problem = {}, None
+
+                for comp in components:
+                    raw = (request.POST.get(f'component_{score.id}_{comp.id}') or '').strip()
+                    if raw == '':
+                        entries[comp.id] = None      # nothing typed: leave blank
+                        continue
+                    try:
                         value = float(raw)
-                        has_any_score = True
-                        
-                        obj, _ = MidTermComponentScore.objects.get_or_create(
-                            midterm_score=score,
-                            component=component
+                        if not math.isfinite(value):
+                            raise ValueError
+                    except ValueError:
+                        problem = f'"{raw}" is not a valid number for {comp}'
+                        break
+                    # Use the component's own max if it has one, else the central max
+                    cap = getattr(comp, 'max_score', None) or central_max
+                    if value < 0 or (cap and value > cap):
+                        problem = f'{comp} must be between 0 and {cap} (got {raw})'
+                        break
+                    entries[comp.id] = value
+
+                if problem:
+                    errors.append(f'{score.student}: {problem}')
+                    invalid_ids.add(score.id)
+                    continue  # skip this student only
+
+                cleared_any = False
+                for comp in components:
+                    value = entries.get(comp.id)
+                    current = existing.get(comp.id)
+                    if value is None:
+                        if current:                   # teacher emptied a field
+                            current.delete()
+                            cleared_any = True
+                    elif current:
+                        if current.score != value:
+                            current.score = value
+                            current.save(update_fields=['score'])
+                    else:
+                        MidTermComponentScore.objects.create(
+                            midterm_score=score, component=comp, score=value
                         )
-                        obj.score = value
-                        obj.save()
-                        
-                        total += value
-                
-                # Update the score object
-                # if has_any_score:
-                #     score.exam_total_score = total
-                #     score.is_graded = True # Mark as graded
-                #     score.save()
 
-                if has_any_score:
-                    score.is_graded = True
-                else:
-                    score.is_graded = False
+                entered = [v for v in entries.values() if v is not None]
+                if entered or cleared_any:
+                    score.exam_total_score = sum(entered)   # 0 only if everything was cleared
+                    score.is_graded = bool(entered)
+                    score.save()
+                    if entered:
+                        saved += 1
 
-                score.save()
-            
-                # messages.success(request, "Scores saved successfully.")
-                # return redirect('results:midterm_score_success')
-
-        if errors:
-            return render(request, self.template_name, {
-                'formset': formset,
-                'assigned_class': assigned_class,
-                'subject': subject,
-                'term': term,
-                'students': students,
-                'components': components,
-                'exam_setting': exam_setting,
-                'central_max': central_max,
-                'component_score_map': {},
-            })
-
-        if formset.is_valid():
-            formset.save()
-
-            for score in queryset:
-
-                total = 0
-
-                for component in components:
-
-                    key = f'component_{score.id}_{component.id}'
-                    raw = request.POST.get(key)
-                    value = float(raw) if raw not in ['', None] else 0
-
-                    obj, _ = MidTermComponentScore.objects.get_or_create(
-                        midterm_score=score,
-                        component=component
-                    )
-
-                    obj.score = value
-                    obj.save()
-
-                    total += value
-
-                score.exam_total_score = total
-                score.save()
-
-            messages.success(request, "Scores saved successfully.")
-
-            return redirect('results:midterm_score_success',
-                class_id=class_id,
-                subject_id=subject_id,
-                term_id=term_id
+        # --------------------------------------------
+        # 3. Feedback
+        # --------------------------------------------
+        if not errors:
+            messages.success(request, f"Scores saved for {saved} student(s).")
+            return redirect(
+                'results:midterm_score_success',
+                class_id=class_id, subject_id=subject_id, term_id=term_id
             )
 
+        for err in errors:
+            messages.error(request, err)
+        if saved:
+            messages.warning(
+                request, f"Scores for {saved} other student(s) were saved. Fix the errors above and save again."
+            )
+
+        # Re-render with what is now in the DB; keep the teacher's typed values for rejected rows
+        fresh = base_qs.all().prefetch_related('component_scores')
+        component_score_map = {
+            s.id: {cs.component_id: cs.score for cs in s.component_scores.all()} for s in fresh
+        }
+        for sid in invalid_ids:
+            for comp in components:
+                raw = (request.POST.get(f'component_{sid}_{comp.id}') or '').strip()
+                if raw:
+                    component_score_map[sid][comp.id] = raw
+
         return render(request, self.template_name, {
-            'formset': formset,
+            'formset': self.get_formset(fresh),
             'assigned_class': assigned_class,
             'subject': subject,
             'term': term,
@@ -1840,7 +1990,9 @@ class MidTermScoreEntryView(TeacherRequiredMixin, LoginRequiredMixin, View):
             'components': components,
             'exam_setting': exam_setting,
             'central_max': central_max,
-            'component_score_map': {},
+            'component_score_map': component_score_map,
+            'assigned_subjects': assigned_subjects,
+            'assigned_classes': assigned_classes,
         })
 
 # MID TERM REPORT CARD VIEW
