@@ -415,6 +415,34 @@ class ResultPublication(models.Model):
 
 
 # Exam Score Setting
+# class ExamSetting(models.Model):
+#     MIDTERM = "Midterm"
+#     FINAL = "Final"
+
+#     EXAM_TYPES = [
+#         (MIDTERM, "Midterm"),
+#         (FINAL, "Final"),
+#     ]
+
+#     term = models.ForeignKey(Term, on_delete=models.CASCADE)
+#     exam_type = models.CharField(max_length=50, choices=EXAM_TYPES)
+#     max_score = models.PositiveIntegerField()
+
+#     class Meta:
+#         unique_together = ('term', 'exam_type')
+
+#     def __str__(self):
+#         return f"{self.exam_type} - {self.term.name}"
+    
+#     class Meta:
+#         verbose_name = "Mid-Term Score Setting"
+#         verbose_name_plural = 'Mid-Term Score Settings'
+
+
+from django.db import models
+from django.core.exceptions import ValidationError
+
+
 class ExamSetting(models.Model):
     MIDTERM = "Midterm"
     FINAL = "Final"
@@ -429,14 +457,35 @@ class ExamSetting(models.Model):
     max_score = models.PositiveIntegerField()
 
     class Meta:
-        unique_together = ('term', 'exam_type')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['term', 'exam_type'],
+                name='unique_exam_type_per_term'
+            )
+        ]
+        verbose_name = "Mid-Term Score Setting"
+        verbose_name_plural = "Mid-Term Score Settings"
+
+    def clean(self):
+        super().clean()
+
+        if self.term_id and self.exam_type:
+            existing = ExamSetting.objects.filter(
+                term_id=self.term_id,
+                exam_type=self.exam_type
+            )
+
+            if self.pk:
+                existing = existing.exclude(pk=self.pk)
+
+            if existing.exists():
+                raise ValidationError({
+                    'exam_type': 'This exam has already been registered for the selected term.'
+                })
 
     def __str__(self):
         return f"{self.exam_type} - {self.term.name}"
-    
-    class Meta:
-        verbose_name = "Mid-Term Score Setting"
-        verbose_name_plural = 'Mid-Term Score Settings'
+
 
 
 # New addition for midterm scores
