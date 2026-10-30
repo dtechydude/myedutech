@@ -439,9 +439,6 @@ class ResultPublication(models.Model):
 #         verbose_name_plural = 'Mid-Term Score Settings'
 
 
-from django.db import models
-from django.core.exceptions import ValidationError
-
 
 class ExamSetting(models.Model):
     MIDTERM = "Midterm"
