@@ -173,6 +173,7 @@ USE_THOUSAND_SEPARATOR = True
 # Locally serving
 STATIC_URL = '/static/'
 
+
 # Remotely serving from Kwikschools
 #STATIC_URL = 'https://kwikschools.com/kwikschools_external_files/static/'
 
