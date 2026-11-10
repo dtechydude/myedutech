@@ -77,6 +77,9 @@ INSTALLED_APPS = [
     'tinymce',
     'django_cleanup.apps.CleanupConfig',
 
+    'django.contrib.humanize',   # for |intcomma on integer money, if you have any
+    # 'pages.apps.PagesConfig',      # must be listed by its AppConfig so ready() runs
+
 
 ]
 
@@ -85,6 +88,9 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+
+    'pages.middleware.NormalizeIdParamsMiddleware',  # place after CsrfViewMiddleware
+
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'studentstatus.middleware.StudentStatusAccessMiddleware',  # must come AFTER Auth + Messages

@@ -1,5 +1,6 @@
 {% extends base_template %}
 {% load finance_extras %}
+{% load l10n %}
 {% block content %}
 <div class="table-card">
     <div class="alert alert-secondary small mb-3">
@@ -46,7 +47,7 @@
                         {% endif %}
                     </td>
                     <td class="text-end">
-                        <a href="{% url 'finance:make_payment' %}?student={{ row.student.pk }}" class="btn btn-sm btn-primary">
+                        <a href="{% url 'finance:make_payment' %}?student={{ row.student.pk|unlocalize }}" class="btn btn-sm btn-primary">
                             <i class="fa-solid fa-cash-register me-1"></i> Record Payment
                         </a>
                         <a href="{% url 'finance:invoice_list' %}?student={{ row.student.pk }}" class="btn btn-sm btn-outline-secondary">
