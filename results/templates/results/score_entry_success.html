@@ -95,7 +95,13 @@
 <body>
 
     <header class="header">
+         {% if school_info and school_info.logo %}
+        
+        <a href="#" class="logo"><img src="{{school_info.logo.url}}" alt="Logo"></a>
+
+        {% else %}
         <a href="#" class="logo"><img src="{% static 'pages/images/kwikschool_logo.png' %}" alt="Logo"></a>
+        {% endif %}
         <a href="/dashboard" class="btn btn-outline-danger">Back to Dashboard</a>
     </header>
 
