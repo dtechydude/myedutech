@@ -7,7 +7,11 @@
     <div class="container-fluid">
         <div class="row page-titles">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'elearning:standard_list' %}">E-Learning</a></li>
+                  {% if user.is_authenticated and user.is_superuser or user.is_staff or user.teacher %}
+                <li class="breadcrumb-item"><a href="{% url 'elearning:standard_list' %}">E-LEARNING</a></li>
+                {% elif user.student %}
+                 <li class="breadcrumb-item"><a href="{% url 'elearning:my-standard' %}">E-LEARNING</a></li>
+                {% endif %}
                 <li class="breadcrumb-item active"><a href="javascript:void(0)">{{ standards.name }} Subjects</a></li>
             </ol>
         </div>

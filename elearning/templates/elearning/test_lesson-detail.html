@@ -148,12 +148,25 @@
 
                                                         {% if user.is_authenticated and user.is_superuser or user.teacher %}
                                                         <div class="d-flex gap-2">
-                                                            <a href="{% url 'elearning:assignment_update' standard=lessons.standard.slug subject=lessons.subject.slug lesson_slug=lessons.slug slug=assignment.slug %}" class="btn btn-sm btn-outline-info">
+                                                            {% comment %} <a href="{% url 'elearning:assignment_update' standard=lessons.standard.slug subject=lessons.subject.slug lesson_slug=lessons.slug slug=assignment.slug %}" class="btn btn-sm btn-outline-info">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
                                                             <a href="{% url 'elearning:assignment_delete' standard=lessons.standard.slug subject=lessons.subject.slug lesson_slug=lessons.slug slug=assignment.slug %}" class="btn btn-sm btn-outline-danger">
                                                                 <i class="fas fa-trash"></i>
                                                             </a>
+                                                            <a href="{% url 'elearning:submission_list' %}?assignment={{ assignment.id }}">View submissions</a> {% endcomment %}
+                                                        <a href="{% url 'elearning:assignment_update' standard=lessons.standard.slug subject=lessons.subject.slug lesson_slug=lessons.slug slug=assignment.slug %}"
+   class="btn btn-sm btn-outline-info" title="Edit assignment" aria-label="Edit assignment">
+    <i class="fas fa-edit"></i>
+</a>
+<a href="{% url 'elearning:submission_list' %}?assignment={{ assignment.id }}"
+   class="btn btn-sm btn-outline-success" title="View and grade submissions" aria-label="View and grade submissions">
+    <i class="fas fa-clipboard-check"></i>
+</a>
+<a href="{% url 'elearning:assignment_delete' standard=lessons.standard.slug subject=lessons.subject.slug lesson_slug=lessons.slug slug=assignment.slug %}"
+   class="btn btn-sm btn-outline-danger" title="Delete assignment" aria-label="Delete assignment">
+    <i class="fas fa-trash"></i>
+</a>
                                                         </div>
                                                         {% endif %}
                                                     </div>

@@ -1,0 +1,64 @@
+{% extends "elearning/_base.html" %}
+{% block kg_body %}
+<h1>Submitted Assignments</h1>
+<p class="sub">{% if full_access %}All classes and subjects.{% else %}Assignments from the lessons you created.{% endif %}</p>
+
+<nav class="kg-tabs" aria-label="Filter by grading status">
+  {% for t in tabs %}<a href="{{ t.url }}"{% if t.active %} class="on" aria-current="page"{% endif %}>{{ t.label }} <b>{{ t.count }}</b></a>{% endfor %}
+</nav>
+
+<form method="get" class="kg-card kg-filters">
+  {% if status != 'all' %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+  {% if assignment %}<input type="hidden" name="assignment" value="{{ assignment.pk }}">{% endif %}
+  <label>Class
+    <select name="standard" onchange="this.form.elements['subject'].value='';this.form.submit()">
+      <option value="">All classes</option>
+      {% for s in standards %}<option value="{{ s.pk }}"{% if s.pk == standard_id %} selected{% endif %}>{{ s.name }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Subject
+    <select name="subject" onchange="this.form.submit()">
+      <option value="">All subjects</option>
+      {% for s in subjects %}<option value="{{ s.pk }}"{% if s.pk == subject_id %} selected{% endif %}>{{ s.name }}{% if not standard_id %} ({{ s.standard.name }}){% endif %}</option>{% endfor %}
+    </select>
+  </label>
+  <noscript><button class="kg-btn" type="submit">Apply filters</button></noscript>
+  {% if has_filters %}<a class="kg-btn alt sm" href="{% url 'elearning:submission_list' %}">Clear filters</a>{% endif %}
+</form>
+
+{% if assignment %}
+<p class="kg-chip">Showing submissions for <b>{{ assignment.title }}</b> ({{ assignment.lesson.name }}). <a href="{{ clear_assignment_url }}">Show all assignments</a></p>
+{% endif %}
+
+<div class="kg-card kg-tbl">
+{% if submissions %}
+<table>
+  <thead><tr><th>Student</th><th>Class and subject</th><th>Lesson and assignment</th><th>Submitted</th><th>Grade</th><th></th></tr></thead>
+  <tbody>
+  {% for s in submissions %}
+  <tr>
+    <td class="stu" data-label="Student">{{ s.student }}</td>
+    <td data-label="Class and subject">{{ s.assignment.lesson.standard.name }}<span class="muted">{{ s.assignment.lesson.subject.name }}</span></td>
+    <td data-label="Lesson and assignment">{{ s.assignment.title }}<span class="muted">{{ s.assignment.lesson.name }}</span></td>
+    <td data-label="Submitted">{{ s.submitted_at|date:"j M Y, g:i A" }}{% if s.is_late %} <span class="tag no">Late</span>{% endif %}</td>
+    <td data-label="Grade">{% if s.is_graded %}<span class="tag ok">{{ s.score }}{% if s.assignment.max_score is not None %} / {{ s.assignment.max_score }}{% endif %}</span>{% else %}<span class="tag wn">Awaiting grading</span>{% endif %}</td>
+    <td><a class="kg-btn sm{% if s.is_graded %} alt{% endif %}" href="{% url 'elearning:submission_grade' s.pk %}?next={{ current_url|urlencode }}">{% if s.is_graded %}Edit grade{% else %}Grade{% endif %}</a></td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="kg-empty"><b>No submissions found.</b><br>{% if has_filters %}Try a different class, subject or status, or clear the filters.{% else %}Submitted work will appear here.{% endif %}</div>
+{% endif %}
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="kg-pager">
+  <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} ({{ page_obj.paginator.count }} submissions)</span>
+  <span>
+    {% if page_obj.has_previous %}<a class="kg-btn alt sm" href="?{{ qs_nopage }}{% if qs_nopage %}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}
+    {% if page_obj.has_next %}<a class="kg-btn alt sm" href="?{{ qs_nopage }}{% if qs_nopage %}&amp;{% endif %}page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+  </span>
+</div>
+{% endif %}
+{% endblock %}

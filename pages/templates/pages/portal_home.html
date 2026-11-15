@@ -615,12 +615,17 @@
 							{% if user.is_authenticated and user.student %}
 							<li><a href="{% url 'elearning:my-standard' %}">Learning Center</a></li>
 							<li><a href="{% url 'notices:list' %}">My Notifications</a></li>
+
 							{% elif user.is_authenticated and user.teacher %}
 							<li><a href="{% url 'curriculum:standard_list' %}">E-Class List</a></li>
+							<li><a href="	{% url 'elearning:submission_list' %}">Submission</a></li>
+						
 							
 							{% elif user.is_authenticated and user.is_superuser or user.is_staff %}
 							<li><a href="/admin/elearning/elearningsubject/" target="_blank">Add Subjects & Lessons </a></li>
-							<li><a href="{% url 'elearning:standard_list' %}">E-Class List</a></li>										
+							<li><a href="{% url 'elearning:standard_list' %}">E-Class List</a></li>	
+							<li><a href="	{% url 'elearning:submission_list' %}">Submission</a></li>
+									
 																
 							{% endif %}
 						</ul>					

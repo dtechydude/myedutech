@@ -1,0 +1,72 @@
+{% comment %} {# ======================================================================
+   ONE LINE TO MATCH YOUR SITE: make the next line the same as the first
+   line of your other elearning templates (e.g. test_course_list.html),
+   and use that template's content block name in place of "content" below.
+   ====================================================================== #}
+{% extends "base.html" %} {% endcomment %}
+
+
+{% block content %}
+<style>
+.kg{--or:#e8651a;--rd:#b3261e;--ink:#1f2937;--mut:#5b6677;--line:#e3e7ee;--bg:#f6f8fb;--ok:#0f7b4f;--okbg:#e7f6ee;--inf:#1d5fa8;--infbg:#e9f1fb;--wn:#8a5a00;--wnbg:#fff3d6;--no:#a1262b;--nobg:#fdecec;
+ max-width:1100px;margin:0 auto;padding:1rem;color:var(--ink);line-height:1.55;overflow-wrap:break-word}
+.kg *{box-sizing:border-box}
+.kg h1{font-size:1.6rem;margin:0 0 .15rem;letter-spacing:-.02em}
+.kg .sub{margin:0 0 1.1rem;color:var(--mut)}
+.kg a{color:var(--rd)}
+.kg-card{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 .4rem 1.4rem rgba(24,39,75,.06)}
+/* status tabs */
+.kg-tabs{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem}
+.kg-tabs a{display:inline-flex;gap:.5rem;align-items:center;padding:.45rem .9rem;border:1px solid var(--line);border-radius:99px;background:#fff;color:var(--ink);text-decoration:none;font-weight:600;font-size:.93rem}
+.kg-tabs a b{background:var(--bg);border-radius:99px;padding:0 .55rem;font-size:.85rem}
+.kg-tabs a.on{background:var(--or);border-color:var(--or);color:#fff}
+.kg-tabs a.on b{background:rgba(255,255,255,.25);color:#fff}
+/* filters */
+.kg-filters{display:flex;flex-wrap:wrap;gap:.75rem 1rem;align-items:end;padding:1rem;margin-bottom:1rem}
+.kg-filters label{display:flex;flex-direction:column;gap:.2rem;font-size:.85rem;font-weight:700;color:var(--mut);flex:1 1 200px;min-width:0}
+.kg select,.kg input[type=number],.kg textarea{width:100%;padding:.55rem .65rem;border:1px solid #c9d0dc;border-radius:8px;font:inherit;color:var(--ink);background:#fff}
+.kg select:focus,.kg input:focus,.kg textarea:focus{outline:3px solid rgba(232,101,26,.35);border-color:var(--or)}
+.kg-chip{margin:0 0 1rem;padding:.5rem .8rem;background:var(--infbg);border-radius:8px;font-size:.93rem}
+/* buttons */
+.kg-btn{display:inline-block;padding:.55rem 1.1rem;border:0;border-radius:8px;background:var(--or);color:#fff!important;font-weight:700;text-decoration:none;cursor:pointer;font-size:.95rem}
+.kg-btn:hover{background:#cf560f}
+.kg-btn.alt{background:#fff;color:var(--rd)!important;border:1px solid var(--line)}
+.kg-btn.sm{padding:.35rem .8rem;font-size:.88rem}
+/* table */
+.kg-tbl{overflow:hidden}
+.kg table{width:100%;border-collapse:collapse;font-size:.95rem}
+.kg thead th{background:#26303f;color:#fff;text-align:left;font-weight:600;padding:.7rem .9rem;white-space:nowrap}
+.kg td{padding:.75rem .9rem;vertical-align:top;border-top:1px solid var(--line)}
+.kg tbody tr:nth-child(even){background:#fafbfd}
+.kg td .muted{display:block;color:var(--mut);font-size:.85rem}
+.kg td.stu{font-weight:700}
+.tag{display:inline-block;border-radius:99px;padding:.05rem .7rem;font-size:.82rem;font-weight:700;white-space:nowrap}
+.tag.ok{background:var(--okbg);color:var(--ok)}.tag.wn{background:var(--wnbg);color:var(--wn)}.tag.no{background:var(--nobg);color:var(--no)}
+.kg-empty{padding:2.5rem 1rem;text-align:center;color:var(--mut)}
+.kg-pager{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;justify-content:space-between;margin-top:1rem}
+/* grade page */
+.kg-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:1.25rem;align-items:start}
+.kg-pad{padding:1.25rem}
+.kg dl{margin:0}
+.kg dl div{display:grid;grid-template-columns:130px minmax(0,1fr);gap:.75rem;padding:.55rem 0;border-top:1px solid var(--line)}
+.kg dl div:first-child{border-top:0}
+.kg dt{font-weight:700;color:var(--mut)}.kg dd{margin:0}
+.kg .note{background:var(--bg);border-radius:8px;padding:.6rem .8rem;margin:0}
+.kg .field{margin-bottom:1rem}.kg .field>label{display:block;font-weight:700;margin-bottom:.3rem}
+.kg .err{color:var(--no);font-size:.88rem;margin:.25rem 0 0}
+.kg .hint{color:var(--mut);font-size:.85rem;margin:.25rem 0 0}
+.kg-alert{background:var(--nobg);color:var(--no);border-radius:8px;padding:.6rem .8rem;margin-bottom:1rem}
+.kg-actions{display:flex;gap:.6rem;flex-wrap:wrap}
+@media(max-width:820px){
+ .kg-grid{grid-template-columns:minmax(0,1fr)}
+ .kg dl div{grid-template-columns:minmax(0,1fr);gap:.1rem}
+ .kg table,.kg thead,.kg tbody,.kg tr,.kg td{display:block;width:100%}
+ .kg thead{position:absolute;left:-9999px}
+ .kg tbody tr{padding:.5rem 0;border-top:8px solid var(--bg);background:#fff!important}
+ .kg tbody tr:first-child{border-top:0}
+ .kg td{border:0;padding:.3rem .9rem}
+ .kg td[data-label]::before{content:attr(data-label);display:block;font-size:.78rem;font-weight:700;color:var(--mut)}
+}
+</style>
+<div class="kg">{% block kg_body %}{% endblock %}</div>
+{% endblock %}

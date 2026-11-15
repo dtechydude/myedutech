@@ -1,0 +1,51 @@
+{% extends "elearning/_base.html" %}
+{% block kg_body %}
+<p><a href="{{ next_url }}">&larr; Back to submissions</a></p>
+<h1>{% if submission.is_graded %}Edit grade{% else %}Grade submission{% endif %}</h1>
+<p class="sub">{{ submission.student }} &middot; {{ submission.assignment.title }}</p>
+
+<div class="kg-grid">
+  <section class="kg-card kg-pad" aria-label="Submission details">
+    <dl>
+      <div><dt>Student</dt><dd><b>{{ submission.student }}</b></dd></div>
+      <div><dt>Class</dt><dd>{{ lesson.standard.name }}</dd></div>
+      <div><dt>Subject</dt><dd>{{ lesson.subject.name }}</dd></div>
+      <div><dt>Lesson</dt><dd>{{ lesson.name }}</dd></div>
+      <div><dt>Assignment</dt><dd>{{ submission.assignment.title }}</dd></div>
+      <div><dt>Due</dt><dd>{% if submission.assignment.due_date %}{{ submission.assignment.due_date|date:"j M Y, g:i A" }}{% else %}No due date{% endif %}</dd></div>
+      <div><dt>Submitted</dt><dd>{{ submission.submitted_at|date:"j M Y, g:i A" }}{% if submission.is_late %} <span class="tag no">Late</span>{% endif %}</dd></div>
+      <div><dt>Student&rsquo;s work</dt><dd><a class="kg-btn sm" href="{{ submission.submission_link }}" target="_blank" rel="noopener noreferrer">Open work in new tab</a></dd></div>
+      <div><dt>Note from student</dt><dd>{% if submission.comment %}<p class="note">{{ submission.comment|linebreaksbr }}</p>{% else %}<span class="muted">None</span>{% endif %}</dd></div>
+      {% if submission.is_graded %}
+      <div><dt>Last graded</dt><dd>{{ submission.graded_at|date:"j M Y, g:i A" }}{% if submission.graded_by %} by {{ submission.graded_by.get_full_name|default:submission.graded_by.get_username }}{% endif %}</dd></div>
+      {% endif %}
+    </dl>
+  </section>
+
+  <section class="kg-card kg-pad" aria-label="Grade">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next_url }}">
+      {% if form.non_field_errors %}<div class="kg-alert">{{ form.non_field_errors }}</div>{% endif %}
+
+      <div class="field">
+        <label for="{{ form.score.id_for_label }}">Score{% if submission.assignment.max_score is not None %} (out of {{ submission.assignment.max_score }}){% endif %}</label>
+        {{ form.score }}
+        {% for e in form.score.errors %}<p class="err">{{ e }}</p>{% endfor %}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.teacher_feedback.id_for_label }}">{{ form.teacher_feedback.label }}</label>
+        {{ form.teacher_feedback }}
+        <p class="hint">Up to 500 characters. The student sees this on the lesson page.</p>
+        {% for e in form.teacher_feedback.errors %}<p class="err">{{ e }}</p>{% endfor %}
+      </div>
+
+      <div class="kg-actions">
+        <button type="submit" class="kg-btn">{% if submission.is_graded %}Update grade{% else %}Save grade{% endif %}</button>
+        <a class="kg-btn alt" href="{{ next_url }}">Cancel</a>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}

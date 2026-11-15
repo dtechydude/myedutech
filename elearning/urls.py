@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .grading_views import SubmissionListView, SubmissionGradeView
 
 # =====================================================================
 # ✅ Fully independent namespace
@@ -20,6 +21,10 @@ from . import views
 app_name = 'elearning'
 
 urlpatterns = [
+        # Assignment Submission ront End
+    path('grading/', SubmissionListView.as_view(), name='submission_list'),
+    path('grading/<int:pk>/', SubmissionGradeView.as_view(), name='submission_grade'),
+
     path('', views.ClassListView.as_view(), name='standard_list'),
     path('my-standard/', views.StandardSelfListView.as_view(), name='my-standard'),
     path('<slug:slug>/', views.SubjectListView.as_view(), name='subject_list'),
@@ -29,8 +34,35 @@ urlpatterns = [
     path('<str:standard>/<str:subject>/<slug:slug>/update/', views.LessonUpdateView.as_view(), name='lesson_update'),
     path('<str:standard>/<str:subject>/<slug:slug>/delete/', views.LessonDeleteView.as_view(), name='lesson_delete'),
 
+    
     # Assignments / Homework
     path('<str:standard>/<str:subject>/<slug:lesson_slug>/assignment/create/', views.AssignmentCreateView.as_view(), name='assignment_create'),
     path('<str:standard>/<str:subject>/<slug:lesson_slug>/assignment/<slug:slug>/update/', views.AssignmentUpdateView.as_view(), name='assignment_update'),
     path('<str:standard>/<str:subject>/<slug:lesson_slug>/assignment/<slug:slug>/delete/', views.AssignmentDeleteView.as_view(), name='assignment_delete'),
+
 ]
+
+
+# # ---------------------------------------------------------------------
+# # Add to elearning/urls.py (app_name = 'elearning' is already set there).
+# # Place these lines ABOVE any catch-all  <slug:...>/  patterns so "grading/"
+# # is not swallowed by them.
+# # ---------------------------------------------------------------------
+# from .grading_views import SubmissionListView, SubmissionGradeView
+
+# urlpatterns = [
+#     # ... your existing patterns stay as they are ...
+
+#     path('grading/', SubmissionListView.as_view(), name='submission_list'),
+#     path('grading/<int:pk>/', SubmissionGradeView.as_view(), name='submission_grade'),
+# ]
+
+# # ---------------------------------------------------------------------
+# # Links to add in your templates (menu / lesson page "Teacher Tools"):
+# #
+# #   All submissions:        {% url 'elearning:submission_list' %}
+# #   One assignment only:    {% url 'elearning:submission_list' %}?assignment={{ assignment.id }}
+# #
+# # Show them only to teachers/staff, e.g. wrap in the condition you already
+# # use for the "Add Assignment" button.
+# # ---------------------------------------------------------------------
