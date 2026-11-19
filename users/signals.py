@@ -122,7 +122,7 @@ def delete_old_profile_image_on_update(sender, instance, **kwargs):
 # ── Updated Profile.save() patch ─────────────────────────────────────────────
 # 
 # ALTERNATIVE: If you prefer not to use signals, replace your Profile.save()
-# with the version below. It does the same thing inline.
+# with the version below. It does the same thing inline.    
 #
 # def save(self, *args, **kwargs):
 #     # ── Auto-generate referral code ───────────────────────────────────
