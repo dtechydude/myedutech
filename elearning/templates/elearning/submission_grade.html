@@ -1,4 +1,5 @@
 {% extends "elearning/_base.html" %}
+{% block page_title %}Grade Submission{% endblock %}
 {% block kg_body %}
 <p><a href="{{ next_url }}">&larr; Back to submissions</a></p>
 <h1>{% if submission.is_graded %}Edit grade{% else %}Grade submission{% endif %}</h1>
