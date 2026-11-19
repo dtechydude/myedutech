@@ -3,6 +3,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+	{% include "pwa_head.html" %}
+	
 	{% block htmlhead %}
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -44,6 +46,8 @@
 	<link href="{% static 'pages/css/style.css' %}" rel="stylesheet">
 	
 	{% endblock style %}
+
+	
 	
 </head>
 <body>
@@ -1479,5 +1483,7 @@
 		});
 	</script>
 	{% endblock scripts %}
+
+	{% include "pwa_footer.html" %}
 </body>
 </html>

@@ -8,8 +8,65 @@ from django.views.generic import TemplateView # For a simple placeholder home pa
 
 
 
+from django.contrib import admin
+from django.http import JsonResponse
+from django.templatetags.static import static
+from django.urls import path, include
+from django.views.decorators.cache import never_cache
+from django.views.generic import TemplateView
+from django.conf import settings
+from django.conf.urls.static import static                       # yours: used in urlpatterns += static(...)
+from django.templatetags.static import static as static_url      # mine: renamed
+
+
+def manifest(request):
+    data = {
+        "name": "KwikSchools",
+        "short_name": "KwikSchools",
+        "description": "Fast access to KwikSchools",
+        "start_url": "/?source=pwa",
+        "scope": "/",
+        "display": "standalone",
+        "orientation": "portrait",
+        "background_color": "#ffffff",
+        "theme_color": "#1d4ed8",
+        "icons": [
+            {"src": static_url("icons/icon-192.png"), "sizes": "192x192",
+             "type": "image/png", "purpose": "any"},
+            {"src": static_url("icons/icon-512.png"), "sizes": "512x512",
+             "type": "image/png", "purpose": "any"},
+            {"src": static_url("icons/icon-maskable-512.png"), "sizes": "512x512",
+             "type": "image/png", "purpose": "maskable"},
+        ],
+    }
+    return JsonResponse(data, content_type="application/manifest+json")
+
+
+class ServiceWorkerView(TemplateView):
+    template_name = "sw.js"
+    content_type = "application/javascript"
+
+    def render_to_response(self, context, **kwargs):
+        response = super().render_to_response(context, **kwargs)
+        response["Service-Worker-Allowed"] = "/"
+        response["Cache-Control"] = "no-cache"
+        return response
+
 
 urlpatterns = [
+    # path("admin/", admin.site.urls),
+
+    # PWA
+    path("manifest.json", manifest, name="manifest"),
+    path("sw.js", never_cache(ServiceWorkerView.as_view()), name="sw"),
+    path("offline/", TemplateView.as_view(template_name="offline.html"), name="offline"),
+
+    # ... your existing urls
+    # path("", include("yourapp.urls")),
+# ]
+
+
+# urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('pages.urls', namespace='pages')),
     path('users/', include('users.urls')),

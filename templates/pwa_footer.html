@@ -1,0 +1,73 @@
+{% load static %}
+<style>
+  /* Install card: bottom-right on desktop, full-width strip on phones */
+  .kwik-pwa {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 2147483000;
+    width: 340px;
+    max-width: calc(100vw - 24px);
+    display: none;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #ffffff;
+    color: #1f2937;
+    border: 1px solid rgba(0, 0, 0, .06);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+    text-align: left;
+  }
+  .kwik-pwa.is-visible { display: flex; animation: kwik-pwa-in .3s ease-out; }
+  @keyframes kwik-pwa-in {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kwik-pwa.is-visible { animation: none; }
+  }
+  @media (max-width: 480px) {
+    .kwik-pwa {
+      left: 12px;
+      right: 12px;
+      bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+      width: auto;
+      max-width: none;
+    }
+  }
+  .kwik-pwa__icon { width: 44px; height: 44px; border-radius: 10px; flex: none; }
+  .kwik-pwa__body { flex: 1; min-width: 0; }
+  .kwik-pwa__title { display: block; font-size: 15px; color: #111827; }
+  .kwik-pwa__text { margin: 2px 0 10px; color: #4b5563; }
+  .kwik-pwa__actions { display: flex; gap: 8px; }
+  .kwik-pwa__btn {
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .kwik-pwa__btn--primary { background: var(--pwa-accent, #1d4ed8); color: #ffffff; }
+  .kwik-pwa__btn--primary:hover { filter: brightness(.92); }
+  .kwik-pwa__btn--ghost { background: transparent; color: #6b7280; }
+  .kwik-pwa__btn--ghost:hover { background: #f3f4f6; }
+</style>
+
+<div id="kwik-pwa-card" class="kwik-pwa" role="dialog" aria-live="polite" aria-label="Install KwikSchools">
+  <img class="kwik-pwa__icon" src="{% static 'icons/icon-192.png' %}" alt="" width="44" height="44">
+  <div class="kwik-pwa__body">
+    <strong class="kwik-pwa__title">Install KwikSchools</strong>
+    <p id="kwik-pwa-text" class="kwik-pwa__text">Add it to your home screen for faster access.</p>
+    <div class="kwik-pwa__actions">
+      <button type="button" id="kwik-pwa-install" class="kwik-pwa__btn kwik-pwa__btn--primary">Install</button>
+      <button type="button" id="kwik-pwa-later" class="kwik-pwa__btn kwik-pwa__btn--ghost">Not now</button>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'pwa.js' %}"></script>

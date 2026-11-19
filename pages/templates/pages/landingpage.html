@@ -3,8 +3,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{school_info.name }} PORTAL</title>
+    <title>{{ school_info.name }} PORTAL</title>
+    {% include "pwa_head.html" %}
 
   <!-- FAVICONS ICON -->	
 	
@@ -22,6 +22,7 @@
             --dark-blue: #0A2647;
             --orange: #FF6700;
             --white: #ffffff;
+            --pwa-accent: var(--orange);
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -178,5 +179,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  {% include "pwa_footer.html" %}
 </body>
 </html>
